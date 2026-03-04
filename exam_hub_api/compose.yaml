@@ -1,0 +1,7 @@
+﻿services:
+  examhub.api:
+    image: examhub.api
+    build:
+      context: .
+      dockerfile: ExamHub.API/Dockerfile
+

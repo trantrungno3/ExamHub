@@ -1,4 +1,4 @@
-@ExamHub.API_HostAddress = http://localhost:5195
+@ExamHub.API_HostAddress = http://localhost:5171
 
 GET {{ExamHub.API_HostAddress}}/weatherforecast/
 Accept: application/json
