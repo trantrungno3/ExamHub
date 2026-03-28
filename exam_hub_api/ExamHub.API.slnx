@@ -1,4 +1,15 @@
 <Solution>
+  <Folder Name="/Libs/">
+    <Project Path="../../trungtv_core/Database/TVT_Core_Db_MongoDb/TVT_Core_Db_MongoDb.csproj" />
+    <Project Path="../../trungtv_core/Database/TVT_Core_Db_PostgreSql/TVT_Core_Db_PostgreSql.csproj" />
+    <Project Path="../../trungtv_core/IdentityUser/TVT_Core_Identity_PostgreSql/TVT_Core_Identity_PostgreSql.csproj" />
+    <Project Path="../../trungtv_core/TVT_Core/TVT_Core.csproj" />
+    <Project Path="../../trungtv_core/TVT_Core_Log/TVT_Core_Log.csproj" />
+    <Project Path="../../trungtv_core/TVT_Core_Middleware/TVT_Core_Middleware.csproj" />
+    <Project Path="../../trungtv_core/TVT_Core_MinIOStorage/TVT_Core_MinIOStorage.csproj" />
+    <Project Path="../../trungtv_core/TVT_Core_RabbitMQ/TVT_Core_RabbitMQ.csproj" />
+    <Project Path="ExamHub.Core/ExamHub.Core.csproj" />
+  </Folder>
   <Folder Name="/Solution Items/">
     <File Path="..\context.md" />
     <File Path="compose.yaml" />

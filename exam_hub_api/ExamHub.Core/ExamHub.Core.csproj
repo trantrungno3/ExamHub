@@ -1,0 +1,29 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <GenerateDocumentationFile>True</GenerateDocumentationFile>
+        <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <WarningsAsErrors>$(WarningsAsErrors);CS0472;CS8632;CS0108;CS8974;CS9113;CS0169;CS0649;CS0414;CS8073;ASP0026;</WarningsAsErrors>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson"/>
+        <PackageReference Include="Microsoft.Extensions.Configuration"/>
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection"/>
+        <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions"/>
+        <PackageReference Include="Microsoft.Extensions.Options.DataAnnotations"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\..\trungtv_core\IdentityUser\TVT_Core_Identity_PostgreSql\TVT_Core_Identity_PostgreSql.csproj"/>
+        <ProjectReference Include="..\..\..\trungtv_core\TVT_Core\TVT_Core.csproj"/>
+        <ProjectReference Include="..\..\..\trungtv_core\TVT_Core_Middleware\TVT_Core_Middleware.csproj"/>
+        <ProjectReference Include="..\..\..\trungtv_core\TVT_Core_MinIOStorage\TVT_Core_MinIOStorage.csproj"/>
+        <ProjectReference Include="..\..\..\trungtv_core\TVT_Core_RabbitMQ\TVT_Core_RabbitMQ.csproj"/>
+    </ItemGroup>
+</Project>
