@@ -3,6 +3,7 @@
     <File Path="..\context.md" />
     <File Path="compose.yaml" />
     <File Path="cs.instructions.md" />
+    <File Path="database_schema.sql" />
     <File Path="Directory.Packages.props" />
   </Folder>
   <Project Path="ExamHub.API/ExamHub.API.csproj" />
