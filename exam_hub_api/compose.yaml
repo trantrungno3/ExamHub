@@ -90,12 +90,12 @@ services:
       - "5432:5432"
     environment:
       POSTGRES_USER: admin
-      POSTGRES_PASSWORD: content@123
+      POSTGRES_PASSWORD: examhub@123
       POSTGRES_DB: examhub
     volumes:
       - ./database_schema.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
-      test: "pg_isready -U admin --dbname=content"
+      test: "pg_isready -U admin --dbname=examhub"
       interval: 10s
       timeout: 5s
       retries: 5
