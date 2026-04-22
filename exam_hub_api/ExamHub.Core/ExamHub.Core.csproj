@@ -1,29 +1,44 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-
+<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <GenerateDocumentationFile>True</GenerateDocumentationFile>
         <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
     </PropertyGroup>
-
     <PropertyGroup>
         <WarningsAsErrors>$(WarningsAsErrors);CS0472;CS8632;CS0108;CS8974;CS9113;CS0169;CS0649;CS0414;CS8073;ASP0026;</WarningsAsErrors>
+        <NoWarn>$(NoWarn);CS1591</NoWarn>
     </PropertyGroup>
-
     <ItemGroup>
+        <!-- EF Core + PostgreSQL -->
         <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson"/>
         <PackageReference Include="Microsoft.Extensions.Configuration"/>
         <PackageReference Include="Microsoft.Extensions.DependencyInjection"/>
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions"/>
         <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions"/>
         <PackageReference Include="Microsoft.Extensions.Options.DataAnnotations"/>
+        <PackageReference Include="Microsoft.EntityFrameworkCore"/>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design"/>
+        <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL"/>
+        <PackageReference Include="EFCore.NamingConventions"/>
+        <!-- CQRS / Validation -->
+        <PackageReference Include="MediatR"/>
+        <PackageReference Include="FluentValidation"/>
+        <PackageReference Include="FluentValidation.DependencyInjectionExtensions"/>
+        <!-- Storage / Cache -->
+        <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions"/>
+        <PackageReference Include="Microsoft.Extensions.Caching.Abstractions"/>
+        <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis"/>
+        <PackageReference Include="Minio"/>
     </ItemGroup>
-
     <ItemGroup>
         <ProjectReference Include="..\..\..\trungtv_core\IdentityUser\TVT_Core_Identity_PostgreSql\TVT_Core_Identity_PostgreSql.csproj"/>
         <ProjectReference Include="..\..\..\trungtv_core\TVT_Core\TVT_Core.csproj"/>
         <ProjectReference Include="..\..\..\trungtv_core\TVT_Core_Middleware\TVT_Core_Middleware.csproj"/>
         <ProjectReference Include="..\..\..\trungtv_core\TVT_Core_MinIOStorage\TVT_Core_MinIOStorage.csproj"/>
         <ProjectReference Include="..\..\..\trungtv_core\TVT_Core_RabbitMQ\TVT_Core_RabbitMQ.csproj"/>
+    </ItemGroup>
+    <ItemGroup>
+      <Folder Include="Storage\" />
     </ItemGroup>
 </Project>

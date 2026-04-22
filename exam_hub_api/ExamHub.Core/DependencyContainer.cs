@@ -1,7 +1,15 @@
+using ExamHub.Core.Infrastructure.Caching;
+using ExamHub.Core.Domain.Interfaces;
+using ExamHub.Core.Infrastructure.Persistence;
+using ExamHub.Core.Infrastructure.Persistence.Repositories.Implementations;
+using ExamHub.Core.Infrastructure.Persistence.Services.Implementations;
+using FluentValidation;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using TVT.Core.Db.PostgreSql.Infrastructures;
+using Minio;
+using System.Reflection;
 using TVT.Core.Extensions;
 using TVT.Core.Filters;
 using TVT.Core.Identity.PostgreSql;
@@ -13,15 +21,11 @@ using TVT.Core.RabbitMQ;
 namespace ExamHub.Core;
 
 /// <summary>
-/// Lớp khởi động cho ứng dụng, cung cấp các phương thức để cấu hình và đăng ký các dịch vụ.
+/// Điểm khởi động duy nhất — đăng ký toàn bộ services cho ExamHub.Core.
 /// </summary>
 public static class DependencyContainer
 {
-    /// <summary>
-    /// Áp dụng các dịch vụ cho ứng dụng web.
-    /// </summary>
-    /// <param name="app">Đối tượng WebApplication để cấu hình.</param>
-    /// <returns>Đối tượng WebApplication đã được cấu hình với các tùy chỉnh.</returns>
+    /// <summary>Áp dụng middleware pipeline.</summary>
     public static void UseServices(this WebApplication app)
     {
         app.UseCustomMiddleware();
@@ -31,40 +35,91 @@ public static class DependencyContainer
     extension(IServiceCollection services)
     {
         /// <summary>
-        /// Đăng ký các dịch vụ API vào `IServiceCollection`.
+        /// Đăng ký toàn bộ services: cross-cutting, CQRS, EF Core, Repositories, Application Services, Storage, Cache.
         /// </summary>
-        /// <param name="config">Cấu hình ứng dụng.</param>
-        /// <param name="isDev"></param>
         public void AddServicesApi(IConfiguration config, bool isDev = true)
         {
             services
-                .AddCustomGlobalFilterControllers();
-            // .AddNewtonsoftJson(opt =>
-            // {
-            //     opt.SerializerSettings.ContractResolver = null;
-            //     opt.SerializerSettings.DateTimeZoneHandling = DateTimeZoneHandling.Unspecified;
-            // });
-            services
                 .AddIdentityPostgreSqlUserApi()
                 .AddMinioService(config)
-                .AddProjectAuthService(config)
-                .AddProjectService()
                 .AddMiddlewareServices()
                 .AddRabbitMQService(isDev)
-                ;
+                .AddProjectAuthService(config)
+                .AddCqrsServices()
+                .AddAppDbContext(config)
+                .AddRedisCache(config)
+                .AddRepositories()
+                .AddAppServices()
+                .AddCustomGlobalFilterControllers();
         }
 
-        private IServiceCollection AddProjectService()
+        private IServiceCollection AddCqrsServices()
+        {
+            var assembly = Assembly.Load("ExamHub.Core");
+            services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(assembly));
+            services.AddValidatorsFromAssembly(assembly);
+            return services;
+        }
+
+        private IServiceCollection AddAppDbContext(IConfiguration config)
+        {
+            var cs = config.GetSection("PostgreSqlConfig:ConnectionString").Value
+                ?? throw new InvalidOperationException(
+                    "PostgreSQL connection string 'PostgreSqlConfig:ConnectionString' is not configured.");
+            services.AddDbContext<AppDbContext>(opt =>
+                opt.UseNpgsql(cs, npgsql =>
+                    {
+                        npgsql.EnableRetryOnFailure(maxRetryCount: 5,
+                            maxRetryDelay: TimeSpan.FromSeconds(10), errorCodesToAdd: null);
+                        npgsql.CommandTimeout(60);
+                    })
+                    .UseSnakeCaseNamingConvention());
+            return services;
+        }
+
+        private IServiceCollection AddRedisCache(IConfiguration config)
+        {
+            var conn = config["Redis:ConnectionString"];
+            if (string.IsNullOrWhiteSpace(conn)) return services;
+            services.AddStackExchangeRedisCache(opt => opt.Configuration = conn);
+            services.AddSingleton<RedisCacheService>();
+            return services;
+        }
+
+        private IServiceCollection AddRepositories()
         {
             return services
-                ;
+                .AddScoped<IGradeLevelRepository, GradeLevelRepository>()
+                .AddScoped<ISubjectRepository, SubjectRepository>()
+                .AddScoped<ITopicRepository, TopicRepository>()
+                .AddScoped<IDifficultyLevelRepository, DifficultyLevelRepository>()
+                .AddScoped<IQuestionTypeRepository, QuestionTypeRepository>()
+                .AddScoped<IQuestionRepository, QuestionRepository>()
+                .AddScoped<IQuestionAnswerRepository, QuestionAnswerRepository>()
+                .AddScoped<ITeacherSubjectRepository, TeacherSubjectRepository>()
+                .AddScoped<IExamTemplateRepository, ExamTemplateRepository>()
+                .AddScoped<IExamTemplateSectionRepository, ExamTemplateSectionRepository>()
+                .AddScoped<IExamRepository, ExamRepository>()
+                .AddScoped<IExamQuestionRepository, ExamQuestionRepository>()
+                .AddScoped<IExamSubmissionRepository, ExamSubmissionRepository>()
+                .AddScoped<ISubmissionAnswerRepository, SubmissionAnswerRepository>();
         }
 
-        /// <summary>
-        /// Đăng ký dịch vụ xác thực JWT vào `IServiceCollection`.
-        /// </summary>
-        /// <param name="config">Cấu hình ứng dụng.</param>
-        /// <returns>Bộ sưu tập dịch vụ đã được cấu hình.</returns>
+        private IServiceCollection AddAppServices()
+        {
+            return services
+                .AddScoped<IGradeLevelService, GradeLevelService>()
+                .AddScoped<ISubjectService, SubjectService>()
+                .AddScoped<ITopicService, TopicService>()
+                .AddScoped<IDifficultyLevelService, DifficultyLevelService>()
+                .AddScoped<IQuestionTypeService, QuestionTypeService>()
+                .AddScoped<IQuestionService, QuestionService>()
+                .AddScoped<ITeacherSubjectService, TeacherSubjectService>()
+                .AddScoped<IExamTemplateService, ExamTemplateService>()
+                .AddScoped<IExamService, ExamService>()
+                .AddScoped<IExamSubmissionService, ExamSubmissionService>();
+        }
+
         private IServiceCollection AddProjectAuthService(IConfiguration config)
         {
             var configAudience = config.GetSection("AudienceConfig:Audience").Get<ConfigAudience>();
@@ -74,6 +129,7 @@ public static class DependencyContainer
                     "AudienceConfig:AudienceRefresh");
             ArgumentNullException.ThrowIfNull(configAudience);
             services.AddAuthJwt(configAudience);
+
             return services;
         }
     }

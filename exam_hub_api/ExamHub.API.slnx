@@ -8,7 +8,6 @@
     <Project Path="../../trungtv_core/TVT_Core_Middleware/TVT_Core_Middleware.csproj" />
     <Project Path="../../trungtv_core/TVT_Core_MinIOStorage/TVT_Core_MinIOStorage.csproj" />
     <Project Path="../../trungtv_core/TVT_Core_RabbitMQ/TVT_Core_RabbitMQ.csproj" />
-    <Project Path="ExamHub.Core/ExamHub.Core.csproj" />
   </Folder>
   <Folder Name="/Solution Items/">
     <File Path="..\context.md" />
@@ -18,4 +17,5 @@
     <File Path="Directory.Packages.props" />
   </Folder>
   <Project Path="ExamHub.API/ExamHub.API.csproj" />
+  <Project Path="ExamHub.Core/ExamHub.Core.csproj" />
 </Solution>
