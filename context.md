@@ -1,6 +1,6 @@
-# Hệ Thống Tạo Sinh Đề Thi (ExamForge)
+# Hệ Thống Tạo Sinh Đề Thi (ExamHub)
 > Context file — paste vào đầu cuộc hội thoại mới để tiếp tục làm việc.
-> Phiên bản: v2 — Cập nhật Bloom's Taxonomy (cognitive_levels)
+> Phiên bản: v3 — Cập nhật Bloom's Taxonomy (cognitive_levels) + Đổi tên dự án → ExamHub + School Management Module
 
 ---
 
@@ -64,6 +64,7 @@ Hệ thống tạo sinh đề thi tự động cho phép giáo viên/admin cấu
 | **Result & Analytics** | Lưu kết quả, thống kê theo cấp độ Bloom, báo cáo | Background Service + CQRS/MediatR |
 | **Export Module** | Xuất PDF, Word, Excel | QuestPDF + ClosedXML |
 | **File Storage** | Upload/download ảnh, file đề thi | MinIO SDK (S3-compatible) |
+| **School Management Module** | Quản lý trường, khoá học, lớp học, phân công giáo viên, enroll học sinh | Controller + Service + EF Core |
 
 ### 2.3 Luồng Hoạt Động Chính
 
@@ -211,9 +212,9 @@ CREATE INDEX idx_q_pool_cognitive ON questions(topic_id, cognitive_level_id, dif
 ## 6. Project Structure (.NET Core)
 
 ```
-ExamForge.sln
+ExamHub.sln
 │
-├── ExamGen.API/                            # Entry point — ASP.NET Core Web API
+├── ExamHub.API/                            # Entry point — ASP.NET Core Web API
 │   ├── Controllers/
 │   │   ├── ConfigController.cs            # Grade, Subject, Topic, Difficulty,
 │   │   │                                  # QuestionType, CognitiveLevel  ← [MỚI]
@@ -541,7 +542,7 @@ public async Task<string> UploadAsync(IFormFile file, string folder)
 {
     var objectName = $"{folder}/{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
     await _minio.PutObjectAsync(new PutObjectArgs()
-        .WithBucket("exam-gen")
+        .WithBucket("examhub")
         .WithObject(objectName)
         .WithStreamData(file.OpenReadStream())
         .WithObjectSize(file.Length)
@@ -549,7 +550,7 @@ public async Task<string> UploadAsync(IFormFile file, string folder)
 
     return await _minio.PresignedGetObjectAsync(
         new PresignedGetObjectArgs()
-            .WithBucket("exam-gen")
+            .WithBucket("examhub")
             .WithObject(objectName)
             .WithExpiry(3600));  // Presigned URL hết hạn sau 1 giờ
 }
@@ -557,7 +558,7 @@ public async Task<string> UploadAsync(IFormFile file, string folder)
 
 **MinIO Bucket Structure:**
 ```
-exam-gen/
+examhub/
 ├── questions/      # Ảnh/file đính kèm câu hỏi
 ├── exports/        # File PDF/Word đề thi đã xuất
 └── imports/        # File Excel import câu hỏi (tạm)
@@ -598,8 +599,8 @@ public async Task<IActionResult> SubmitExam(...)
 {
   "Jwt": {
     "SecretKey": "your-256-bit-secret",
-    "Issuer": "ExamGen",
-    "Audience": "ExamGenUsers",
+    "Issuer": "ExamHub",
+    "Audience": "ExamHubUsers",
     "AccessTokenExpireMinutes": 15,
     "RefreshTokenExpireDays": 7
   }
@@ -654,11 +655,11 @@ version: '3.9'
 services:
   api:
     build:
-      context: ./ExamGen.API
+      context: ./ExamHub.API
       dockerfile: Dockerfile
     ports: ["5000:8080"]
     environment:
-      ConnectionStrings__Default: "Host=postgres;Database=examgen;Username=postgres;Password=secret"
+      ConnectionStrings__Default: "Host=postgres;Database=examhub;Username=postgres;Password=secret"
       Redis__ConnectionString: "redis:6379"
       MinIO__Endpoint: "minio:9000"
       MinIO__AccessKey: "minioadmin"
@@ -674,7 +675,7 @@ services:
   postgres:
     image: postgres:16-alpine
     environment:
-      POSTGRES_DB: examgen
+      POSTGRES_DB: examhub
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: secret
     volumes: ["pgdata:/var/lib/postgresql/data"]
@@ -707,27 +708,3 @@ volumes:
 ```
 
 ---
-
-## 16. Tiến Độ Thực Hiện
-
-| Module | Trạng thái | Ghi chú |
-|--------|-----------|---------|
-| Thiết kế Database (15 bảng) | ✅ Hoàn thành | Bao gồm cognitive_levels v2 |
-| Module Authentication (JWT + RBAC) | ✅ Hoàn thành | Access Token + Refresh Token |
-| Config Module (CRUD danh mục) | 🔲 Chưa làm | Nằm ngoài phạm vi 4 tuần |
-| Ngân hàng câu hỏi | 🔲 Chưa làm | Nằm ngoài phạm vi 4 tuần |
-| Sinh đề thi | 🔲 Chưa làm | Nằm ngoài phạm vi 4 tuần |
-| Xuất PDF/Word | 🔲 Chưa làm | Nằm ngoài phạm vi 4 tuần |
-| Mockup UI (Figma) | ✅ Hoàn thành | 11 màn hình (file GH61SaKO03NpQtJEVRxQvS) |
-
----
-
-## 17. Files Đã Tạo
-
-| File | Nội dung | Phiên bản |
-|------|---------|-----------|
-| `context.md` | File này — system design đầy đủ | v2 |
-| `database_schema_v2.sql` | DDL PostgreSQL 15 bảng + indexes + seed data + cognitive_levels | v2 |
-| `Entities.cs` | C# entity classes toàn bộ domain | v1 (cần cập nhật CognitiveLevel) |
-| `AppDbContext.cs` | EF Core DbContext + Fluent API | v1 (cần thêm CognitiveLevelConfiguration) |
-| Figma Mockup | 11 màn hình UI | file: GH61SaKO03NpQtJEVRxQvS |
