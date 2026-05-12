@@ -37,7 +37,6 @@ public class QuestionRepository : BaseRepository<Question, Guid>, IQuestionRepos
         IEnumerable<Guid>? excludeIds = null,
         CancellationToken ct = default)
     {
-        // Build IQueryable<Question> with all filters first, then Include at the end
         IQueryable<Question> query = Set.AsNoTracking()
             .Where(x => x.IsActive && x.IsVerified);
 
@@ -120,57 +119,3 @@ public class QuestionRepository : BaseRepository<Question, Guid>, IQuestionRepos
                 .SetProperty(x => x.VerifiedBy, verifiedBy)
                 .SetProperty(x => x.VerifiedAt, DateTime.UtcNow), ct);
 }
-
-/// <summary>Triển khai repository cho QuestionAnswer</summary>
-public class QuestionAnswerRepository : BaseRepository<QuestionAnswer, Guid>, IQuestionAnswerRepository
-{
-    /// <inheritdoc/>
-    public QuestionAnswerRepository(AppDbContext db) : base(db) { }
-
-    /// <inheritdoc/>
-    public async Task<IReadOnlyList<QuestionAnswer>> GetByQuestionAsync(Guid questionId, CancellationToken ct = default)
-        => await Set.AsNoTracking()
-            .Where(x => x.QuestionId == questionId)
-            .OrderBy(x => x.SortOrder)
-            .ToListAsync(ct);
-
-    /// <inheritdoc/>
-    public async Task DeleteByQuestionAsync(Guid questionId, CancellationToken ct = default)
-        => await Set.Where(x => x.QuestionId == questionId).ExecuteDeleteAsync(ct);
-}
-
-/// <summary>Triển khai repository cho TeacherSubject</summary>
-public class TeacherSubjectRepository : BaseRepository<TeacherSubject, int>, ITeacherSubjectRepository
-{
-    /// <inheritdoc/>
-    public TeacherSubjectRepository(AppDbContext db) : base(db) { }
-
-    /// <inheritdoc/>
-    public async Task<IReadOnlyList<TeacherSubject>> GetByTeacherAsync(Guid userId, CancellationToken ct = default)
-        => await Set.AsNoTracking()
-            .Where(x => x.UserId == userId)
-            .Include(x => x.Subject)
-            .ToListAsync(ct);
-
-    /// <inheritdoc/>
-    public async Task<bool> IsTeacherOfSubjectAsync(Guid userId, int subjectId, CancellationToken ct = default)
-        => await Set.AnyAsync(x => x.UserId == userId && x.SubjectId == subjectId, ct);
-
-    /// <inheritdoc/>
-    public async Task AssignSubjectAsync(Guid userId, int subjectId, CancellationToken ct = default)
-    {
-        var exists = await IsTeacherOfSubjectAsync(userId, subjectId, ct);
-        if (!exists)
-        {
-            await Set.AddAsync(new TeacherSubject { UserId = userId, SubjectId = subjectId }, ct);
-            await Db.SaveChangesAsync(ct);
-        }
-    }
-
-    /// <inheritdoc/>
-    public async Task RemoveSubjectAsync(Guid userId, int subjectId, CancellationToken ct = default)
-        => await Set
-            .Where(x => x.UserId == userId && x.SubjectId == subjectId)
-            .ExecuteDeleteAsync(ct);
-}
-

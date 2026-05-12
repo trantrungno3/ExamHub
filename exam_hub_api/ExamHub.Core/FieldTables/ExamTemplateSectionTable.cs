@@ -17,6 +17,9 @@ public readonly struct ExamTemplateSectionTable
     /// <summary>Khóa ngoại loại câu hỏi (null = tất cả loại)</summary>
     public const string QuestionTypeId = "question_type_id";
 
+    /// <summary>Khóa ngoại cấp độ nhận thức Bloom để lọc pool (nullable)</summary>
+    public const string CognitiveLevelId = "cognitive_level_id";
+
     /// <summary>Tên phần thi</summary>
     public const string SectionName = "section_name";
 

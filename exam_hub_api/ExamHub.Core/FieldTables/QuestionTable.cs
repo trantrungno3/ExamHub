@@ -17,6 +17,9 @@ public readonly struct QuestionTable
     /// <summary>Khóa ngoại mức độ khó</summary>
     public const string DifficultyLevelId = "difficulty_level_id";
 
+    /// <summary>Khóa ngoại cấp độ nhận thức Bloom (nullable)</summary>
+    public const string CognitiveLevelId = "cognitive_level_id";
+
     /// <summary>Người tạo</summary>
     public const string CreatedBy = "created_by";
 

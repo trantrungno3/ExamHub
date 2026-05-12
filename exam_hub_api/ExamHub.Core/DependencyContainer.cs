@@ -10,6 +10,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Minio;
 using System.Reflection;
+using ExamHub.Core.Application.Services;
 using TVT.Core.Extensions;
 using TVT.Core.Filters;
 using TVT.Core.Identity.PostgreSql;
@@ -47,7 +48,7 @@ public static class DependencyContainer
                 .AddProjectAuthService(config)
                 .AddCqrsServices()
                 .AddAppDbContext(config)
-                .AddRedisCache(config)
+                // .AddRedisCache(config)
                 .AddRepositories()
                 .AddAppServices()
                 .AddCustomGlobalFilterControllers();
@@ -89,35 +90,56 @@ public static class DependencyContainer
         private IServiceCollection AddRepositories()
         {
             return services
+                // Config / Lookup
                 .AddScoped<IGradeLevelRepository, GradeLevelRepository>()
                 .AddScoped<ISubjectRepository, SubjectRepository>()
                 .AddScoped<ITopicRepository, TopicRepository>()
                 .AddScoped<IDifficultyLevelRepository, DifficultyLevelRepository>()
                 .AddScoped<IQuestionTypeRepository, QuestionTypeRepository>()
+                .AddScoped<ICognitiveLevelRepository, CognitiveLevelRepository>()
+                // Question Bank
                 .AddScoped<IQuestionRepository, QuestionRepository>()
                 .AddScoped<IQuestionAnswerRepository, QuestionAnswerRepository>()
                 .AddScoped<ITeacherSubjectRepository, TeacherSubjectRepository>()
+                // Exam Templates & Exams
                 .AddScoped<IExamTemplateRepository, ExamTemplateRepository>()
                 .AddScoped<IExamTemplateSectionRepository, ExamTemplateSectionRepository>()
                 .AddScoped<IExamRepository, ExamRepository>()
                 .AddScoped<IExamQuestionRepository, ExamQuestionRepository>()
                 .AddScoped<IExamSubmissionRepository, ExamSubmissionRepository>()
-                .AddScoped<ISubmissionAnswerRepository, SubmissionAnswerRepository>();
+                .AddScoped<ISubmissionAnswerRepository, SubmissionAnswerRepository>()
+                // School Management
+                .AddScoped<ISchoolRepository, SchoolRepository>()
+                .AddScoped<ICohortRepository, CohortRepository>()
+                .AddScoped<ICohortClassRepository, CohortClassRepository>()
+                .AddScoped<ICohortMemberRepository, CohortMemberRepository>()
+                .AddScoped<ISchoolMemberRepository, SchoolMemberRepository>()
+                .AddScoped<IAuthService, AuthService>();
         }
 
         private IServiceCollection AddAppServices()
         {
             return services
+                // Config / Lookup
                 .AddScoped<IGradeLevelService, GradeLevelService>()
                 .AddScoped<ISubjectService, SubjectService>()
                 .AddScoped<ITopicService, TopicService>()
                 .AddScoped<IDifficultyLevelService, DifficultyLevelService>()
                 .AddScoped<IQuestionTypeService, QuestionTypeService>()
+                .AddScoped<ICognitiveLevelService, CognitiveLevelService>()
+                // Question Bank
                 .AddScoped<IQuestionService, QuestionService>()
                 .AddScoped<ITeacherSubjectService, TeacherSubjectService>()
+                // Exam Templates & Exams
                 .AddScoped<IExamTemplateService, ExamTemplateService>()
                 .AddScoped<IExamService, ExamService>()
-                .AddScoped<IExamSubmissionService, ExamSubmissionService>();
+                .AddScoped<IExamSubmissionService, ExamSubmissionService>()
+                // School Management
+                .AddScoped<ISchoolService, SchoolService>()
+                .AddScoped<ICohortService, CohortService>()
+                .AddScoped<ICohortClassService, CohortClassService>()
+                .AddScoped<ICohortMemberService, CohortMemberService>()
+                .AddScoped<ISchoolMemberService, SchoolMemberService>();
         }
 
         private IServiceCollection AddProjectAuthService(IConfiguration config)

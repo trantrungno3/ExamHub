@@ -8,6 +8,7 @@ import {
   TagsOutlined,
   LogoutOutlined,
 } from '@ant-design/icons'
+import { useAuth } from '../AuthProvider'
 
 const NAV_ITEMS = [
   { path: '/app/dashboard',  label: 'Tổng quan',   icon: <AppstoreOutlined /> },
@@ -21,6 +22,12 @@ const NAV_ITEMS = [
 export default function AppLayout() {
   const location = useLocation()
   const navigate = useNavigate()
+  const { logout } = useAuth()
+
+  const handleLogout = () => {
+    logout()
+    navigate('/login')
+  }
 
   return (
     <div className="app-layout">
@@ -47,7 +54,7 @@ export default function AppLayout() {
 
         <div className="sidebar-footer">
           <button
-            onClick={() => navigate('/login')}
+            onClick={handleLogout}
             className="sidebar-nav-item text-red-400 hover:!text-red-300 hover:!bg-red-500/10"
           >
             <LogoutOutlined />

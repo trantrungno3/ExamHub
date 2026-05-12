@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem -Path \"D:\\\\My-Project\\\\ExamHub\\\\exam_hub_api\" -Recurse -Force)",
+      "Bash(Select-Object FullName)",
+      "Bash(Sort-Object FullName)",
+      "Bash(Get-ChildItem *)",
+      "Bash(dotnet build *)"
+    ]
+  }
+}

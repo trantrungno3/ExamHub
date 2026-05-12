@@ -23,6 +23,18 @@ public class AppDbContext : DbContext
     public DbSet<DifficultyLevel> DifficultyLevels { get; set; }
     /// <summary>Loại câu hỏi</summary>
     public DbSet<QuestionType> QuestionTypes { get; set; }
+    /// <summary>Cấp độ nhận thức Bloom's Taxonomy</summary>
+    public DbSet<CognitiveLevel> CognitiveLevels { get; set; }
+    /// <summary>Trường học</summary>
+    public DbSet<School> Schools { get; set; }
+    /// <summary>Khoá học tuyển sinh</summary>
+    public DbSet<Cohort> Cohorts { get; set; }
+    /// <summary>Lớp học (sinh tự động từ khoá)</summary>
+    public DbSet<CohortClass> CohortClasses { get; set; }
+    /// <summary>Học sinh thuộc khoá</summary>
+    public DbSet<CohortMember> CohortMembers { get; set; }
+    /// <summary>Giáo viên/Admin thuộc trường</summary>
+    public DbSet<SchoolMember> SchoolMembers { get; set; }
     /// <summary>Câu hỏi trong ngân hàng</summary>
     public DbSet<Question> Questions { get; set; }
     /// <summary>Đáp án câu hỏi</summary>
@@ -132,6 +144,21 @@ public class AppDbContext : DbContext
             e.HasIndex(x => x.Code).IsUnique();
         });
 
+        // ── CognitiveLevel ─────────────────────────────────────────────────
+        modelBuilder.Entity<CognitiveLevel>(e =>
+        {
+            e.ToTable("cognitive_levels");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).UseIdentityAlwaysColumn();
+            e.Property(x => x.Code).HasMaxLength(30).IsRequired();
+            e.Property(x => x.Name).HasMaxLength(100).IsRequired();
+            e.Property(x => x.NameEn).HasMaxLength(100).IsRequired();
+            e.Property(x => x.ColorCode).HasMaxLength(10);
+            e.Property(x => x.IsActive).HasDefaultValue(true);
+            e.HasIndex(x => x.Code).IsUnique();
+            e.HasIndex(x => x.LevelOrder).IsUnique();
+        });
+
         // ── Question ───────────────────────────────────────────────────────
         modelBuilder.Entity<Question>(e =>
         {
@@ -158,6 +185,10 @@ public class AppDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(x => x.DifficultyLevelId)
                 .OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(x => x.CognitiveLevel)
+                .WithMany()
+                .HasForeignKey(x => x.CognitiveLevelId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         // ── QuestionAnswer ─────────────────────────────────────────────────
@@ -240,6 +271,94 @@ public class AppDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(x => x.QuestionTypeId)
                 .OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(x => x.CognitiveLevel)
+                .WithMany()
+                .HasForeignKey(x => x.CognitiveLevelId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        // ── School ─────────────────────────────────────────────────────────
+        modelBuilder.Entity<School>(e =>
+        {
+            e.ToTable("schools");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).UseIdentityAlwaysColumn();
+            e.Property(x => x.Name).HasMaxLength(255).IsRequired();
+            e.Property(x => x.Code).HasMaxLength(50).IsRequired();
+            e.Property(x => x.Phone).HasMaxLength(20);
+            e.Property(x => x.Email).HasMaxLength(100);
+            e.Property(x => x.IsActive).HasDefaultValue(true);
+            e.Property(x => x.CreatedAt).HasDefaultValueSql("now()");
+            e.Property(x => x.UpdatedAt).HasDefaultValueSql("now()");
+            e.HasIndex(x => x.Code).IsUnique();
+        });
+
+        // ── Cohort ─────────────────────────────────────────────────────────
+        modelBuilder.Entity<Cohort>(e =>
+        {
+            e.ToTable("cohorts");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).UseIdentityAlwaysColumn();
+            e.Property(x => x.Name).HasMaxLength(100).IsRequired();
+            e.Property(x => x.ClassSuffix).HasMaxLength(10).HasDefaultValue("A");
+            e.Property(x => x.IsActive).HasDefaultValue(true);
+            e.Property(x => x.CreatedAt).HasDefaultValueSql("now()");
+            e.HasIndex(x => new { x.SchoolId, x.StartYear, x.GradeStart }).IsUnique();
+            e.HasOne(x => x.School)
+                .WithMany(x => x.Cohorts)
+                .HasForeignKey(x => x.SchoolId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // ── CohortClass ────────────────────────────────────────────────────
+        modelBuilder.Entity<CohortClass>(e =>
+        {
+            e.ToTable("cohort_classes");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).UseIdentityAlwaysColumn();
+            e.Property(x => x.ClassName).HasMaxLength(20).IsRequired();
+            e.Property(x => x.SchoolYear).HasMaxLength(20).IsRequired();
+            e.Property(x => x.CreatedAt).HasDefaultValueSql("now()");
+            e.HasIndex(x => new { x.CohortId, x.YearIndex }).IsUnique();
+            e.HasOne(x => x.Cohort)
+                .WithMany(x => x.Classes)
+                .HasForeignKey(x => x.CohortId)
+                .OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(x => x.GradeLevel)
+                .WithMany()
+                .HasForeignKey(x => x.GradeLevelId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // ── CohortMember ───────────────────────────────────────────────────
+        modelBuilder.Entity<CohortMember>(e =>
+        {
+            e.ToTable("cohort_members");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).HasDefaultValueSql("gen_random_uuid()");
+            e.Property(x => x.JoinedAt).HasDefaultValueSql("CURRENT_DATE");
+            e.Property(x => x.IsActive).HasDefaultValue(true);
+            e.HasIndex(x => new { x.CohortId, x.StudentId }).IsUnique();
+            e.HasOne(x => x.Cohort)
+                .WithMany(x => x.Members)
+                .HasForeignKey(x => x.CohortId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // ── SchoolMember ───────────────────────────────────────────────────
+        modelBuilder.Entity<SchoolMember>(e =>
+        {
+            e.ToTable("school_members");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).HasDefaultValueSql("gen_random_uuid()");
+            e.Property(x => x.Role).HasMaxLength(20).IsRequired();
+            e.Property(x => x.IsActive).HasDefaultValue(true);
+            e.Property(x => x.JoinedAt).HasDefaultValueSql("now()");
+            e.HasIndex(x => new { x.SchoolId, x.UserId }).IsUnique();
+            e.HasOne(x => x.School)
+                .WithMany(x => x.Members)
+                .HasForeignKey(x => x.SchoolId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         // ── Exam ───────────────────────────────────────────────────────────

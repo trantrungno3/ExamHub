@@ -1,0 +1,10 @@
+using ExamHub.Core.Domain.Entities;
+
+namespace ExamHub.Core.Domain.Interfaces;
+
+/// <summary>Service interface cho CognitiveLevel (Bloom's Taxonomy)</summary>
+public interface ICognitiveLevelService : ICategoryService<CognitiveLevel, int>
+{
+    /// <summary>Lấy theo mã (remember, understand, apply, ...)</summary>
+    Task<CognitiveLevel?> GetByCodeAsync(string code, CancellationToken ct = default);
+}

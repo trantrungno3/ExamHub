@@ -35,6 +35,11 @@ public class ExamTemplateSection : IModelBaseSql<Guid>
     [SqlBuilderProperty(ExamTemplateSectionTable.QuestionTypeId, Insert = true, Update = true)]
     public int? QuestionTypeId { get; set; }
 
+    /// <summary>Lọc pool theo cấp độ nhận thức Bloom (null = không lọc)</summary>
+    [Column(ExamTemplateSectionTable.CognitiveLevelId)]
+    [SqlBuilderProperty(ExamTemplateSectionTable.CognitiveLevelId, Insert = true, Update = true)]
+    public int? CognitiveLevelId { get; set; }
+
     /// <summary>Tên phần thi</summary>
     [Column(ExamTemplateSectionTable.SectionName)]
     [SqlBuilderProperty(ExamTemplateSectionTable.SectionName, Insert = true, Update = true)]
@@ -90,6 +95,9 @@ public class ExamTemplateSection : IModelBaseSql<Guid>
     /// <summary>Loại câu hỏi được chỉ định</summary>
     public QuestionType? QuestionType { get; set; }
 
+    /// <summary>Cấp độ nhận thức Bloom dùng để lọc pool</summary>
+    public CognitiveLevel? CognitiveLevel { get; set; }
+
     // ── Domain Logic ────────────────────────────────────────────
     /// <summary>
     /// Xác nhận tổng % độ khó có hợp lệ (bằng 100) không
@@ -105,6 +113,7 @@ public class ExamTemplateSection : IModelBaseSql<Guid>
         exam_template_id    = ExamTemplateId,
         topic_id            = TopicId,
         question_type_id    = QuestionTypeId,
+        cognitive_level_id  = CognitiveLevelId,
         section_name        = SectionName,
         question_count      = QuestionCount,
         score_per_question  = ScorePerQuestion,
@@ -122,6 +131,7 @@ public class ExamTemplateSection : IModelBaseSql<Guid>
         id                  = Id,
         topic_id            = TopicId,
         question_type_id    = QuestionTypeId,
+        cognitive_level_id  = CognitiveLevelId,
         section_name        = SectionName,
         question_count      = QuestionCount,
         score_per_question  = ScorePerQuestion,

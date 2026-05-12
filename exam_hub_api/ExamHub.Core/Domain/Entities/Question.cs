@@ -33,6 +33,11 @@ public class Question : IModelBaseSql<Guid>
     [SqlBuilderProperty(QuestionTable.DifficultyLevelId, Insert = true, Update = true)]
     public int DifficultyLevelId { get; set; }
 
+    /// <summary>Cấp độ nhận thức Bloom's Taxonomy (nullable — chưa phân loại)</summary>
+    [Column(QuestionTable.CognitiveLevelId)]
+    [SqlBuilderProperty(QuestionTable.CognitiveLevelId, Insert = true, Update = true)]
+    public int? CognitiveLevelId { get; set; }
+
     /// <summary>ID người tạo câu hỏi</summary>
     [Column(QuestionTable.CreatedBy)]
     [SqlBuilderProperty(QuestionTable.CreatedBy, Insert = true, Update = false)]
@@ -118,6 +123,9 @@ public class Question : IModelBaseSql<Guid>
     /// <summary>Mức độ khó</summary>
     public DifficultyLevel? DifficultyLevel { get; set; }
 
+    /// <summary>Cấp độ nhận thức Bloom</summary>
+    public CognitiveLevel? CognitiveLevel { get; set; }
+
     /// <summary>Danh sách đáp án</summary>
     public List<QuestionAnswer> Answers { get; set; } = [];
 
@@ -129,6 +137,7 @@ public class Question : IModelBaseSql<Guid>
         topic_id             = TopicId,
         question_type_id     = QuestionTypeId,
         difficulty_level_id  = DifficultyLevelId,
+        cognitive_level_id   = CognitiveLevelId,
         created_by           = CreatedBy,
         content              = Content,
         content_plain        = ContentPlain,
@@ -153,6 +162,7 @@ public class Question : IModelBaseSql<Guid>
         topic_id             = TopicId,
         question_type_id     = QuestionTypeId,
         difficulty_level_id  = DifficultyLevelId,
+        cognitive_level_id   = CognitiveLevelId,
         content              = Content,
         content_plain        = ContentPlain,
         explanation          = Explanation,

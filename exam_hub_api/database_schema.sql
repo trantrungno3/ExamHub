@@ -8,6 +8,40 @@
 --     Trigger tự động sinh cohort_classes khi INSERT cohort
 -- ============================================================
 
+
+-- ============================================================
+-- QUẢN LÝ NGƯỜI DÙNG (Users)
+-- ============================================================
+
+CREATE TABLE public.app_users (
+                                  id                  UUID                     NOT NULL PRIMARY KEY,
+                                  username            VARCHAR(50)              NOT NULL,
+                                  avartar             TEXT,
+                                  normalizedusername  VARCHAR(50)              NOT NULL,
+                                  displayname         VARCHAR(150)             NOT NULL,
+                                  description         VARCHAR(500),
+                                  phonenumber         VARCHAR(20),
+                                  sex                 BOOLEAN,
+                                  refreshtoken        VARCHAR(500),
+                                  email               JSON,
+                                  accessfailedcount   SMALLINT,
+                                  deleted             TIMESTAMP WITH TIME ZONE,
+                                  lockoutenabled      BOOLEAN,
+                                  lockoutenddateutc   TIMESTAMP WITH TIME ZONE,
+                                  normalizedemail     VARCHAR(100),
+                                  passwordhash        VARCHAR(100),
+                                  roles               VARCHAR(50)[],
+                                  providerkey         VARCHAR(50),
+                                  loginprovider       VARCHAR(50),
+                                  claims              JSON[],
+                                  created             TIMESTAMP WITH TIME ZONE NOT NULL,
+                                  createby            VARCHAR(150),
+                                  modified            TIMESTAMP WITH TIME ZONE,
+                                  modifyby            VARCHAR(150)
+);
+
+
+
 -- ============================================================
 -- PHẦN 1: CẤU HÌNH HỆ THỐNG (Configuration)
 -- ============================================================
@@ -218,37 +252,6 @@ CREATE TRIGGER trg_after_cohort_insert
     AFTER INSERT ON public.cohorts
     FOR EACH ROW
     EXECUTE FUNCTION public.trg_generate_cohort_classes();
-
--- ============================================================
--- PHẦN 3: QUẢN LÝ NGƯỜI DÙNG (Users)
--- ============================================================
-
-CREATE TABLE public.app_users (
-                                  id                  UUID                     NOT NULL PRIMARY KEY,
-                                  username            VARCHAR(50)              NOT NULL,
-                                  avartar             TEXT,
-                                  normalizedusername  VARCHAR(50)              NOT NULL,
-                                  displayname         VARCHAR(150)             NOT NULL,
-                                  description         VARCHAR(500),
-                                  phonenumber         VARCHAR(20),
-                                  sex                 BOOLEAN,
-                                  refreshtoken        VARCHAR(500),
-                                  email               JSON,
-                                  accessfailedcount   SMALLINT,
-                                  deleted             TIMESTAMP WITH TIME ZONE,
-                                  lockoutenabled      BOOLEAN,
-                                  lockoutenddateutc   TIMESTAMP WITH TIME ZONE,
-                                  normalizedemail     VARCHAR(100),
-                                  passwordhash        VARCHAR(100),
-                                  roles               VARCHAR(50)[],
-                                  providerkey         VARCHAR(50),
-                                  loginprovider       VARCHAR(50),
-                                  claims              JSON[],
-                                  created             TIMESTAMP WITH TIME ZONE NOT NULL,
-                                  createby            VARCHAR(150),
-                                  modified            TIMESTAMP WITH TIME ZONE,
-                                  modifyby            VARCHAR(150)
-);
 
 -- Giáo viên phụ trách môn/lớp
 CREATE TABLE public.teacher_subjects (

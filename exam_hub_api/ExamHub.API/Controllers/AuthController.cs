@@ -1,5 +1,11 @@
-using Microsoft.AspNetCore.Http;
+using ExamHub.Core.Application.Services;
+using ExamHub.Core.DataAccessObjects;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using TVT.Core;
+using TVT.Core.Extensions;
+using TVT.Core.IdentityUser.PostgreSql.Models;
+using TVT.Core.Models;
 
 namespace ExamHub.API.Controllers;
 
@@ -8,31 +14,45 @@ namespace ExamHub.API.Controllers;
 /// </summary>
 [Route("api/[controller]")]
 [ApiController]
-public class AuthController : ControllerBase
+public class AuthController(IAuthService service) : ControllerBase
 {
-    [HttpGet("test")]
-    public IActionResult Test()
-    {
-        return Ok("AuthController is working!");
-    }
+    /// <summary>
+    /// </summary>
+    /// <param name="dto"></param>
+    /// <returns></returns>
     [HttpPost("login")]
-    public IActionResult Login()
+    public async Task<RequestResponse<TokenModel>> Login([FromBody] LoginDto dto)
     {
-        // Implement login logic here
-        return Ok("Login successful");
+        return await service.Login(dto);
     }
 
+    /// <summary>
+    /// </summary>
+    /// <param name="dto"></param>
+    /// <returns></returns>
     [HttpPost("register")]
-    public IActionResult Register()
+    public async Task<RequestResponse<object>> Register([FromBody] RegisterDto dto)
     {
-        // Implement registration logic here
-        return Ok("Registration successful");
+        return await service.Register(dto);
     }
 
-    [HttpPost("logout")]
-    public IActionResult Logout()
+    /// <summary>
+    /// </summary>
+    /// <param name="dto"></param>
+    /// <returns></returns>
+    [HttpGet("refresh-token")]
+    public async Task<RequestResponse<string>> RefreshToken([FromQuery] TokenModel dto)
     {
-        // Implement logout logic here
-        return Ok("Logout successful");
+        return await service.RefreshToken(dto);
+    }
+
+    /// <summary>
+    /// </summary>
+    /// <returns></returns>
+    [HttpGet("info")]
+    [Authorize]
+    public async Task<RequestResponse<UserInfo>> GetInfo()
+    {
+        return await service.GetUserInfo(User.GetUserName());
     }
 }

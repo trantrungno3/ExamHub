@@ -5,31 +5,53 @@
     "version": "1.0.0"
   },
   "paths": {
-    "/api/Auth/test": {
-      "get": {
-        "tags": [
-          "Auth"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        },
-        "security": [
-          {
-            "Bearer": [ ]
-          }
-        ]
-      }
-    },
     "/api/Auth/login": {
       "post": {
         "tags": [
           "Auth"
         ],
+        "summary": "",
+        "requestBody": {
+          "description": "",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginDto"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfTokenModel"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfTokenModel"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfTokenModel"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -44,9 +66,48 @@
         "tags": [
           "Auth"
         ],
+        "summary": "",
+        "requestBody": {
+          "description": "",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterDto"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfObject"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfObject"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfObject"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -56,14 +117,83 @@
         ]
       }
     },
-    "/api/Auth/logout": {
-      "post": {
+    "/api/Auth/refresh-token": {
+      "get": {
         "tags": [
           "Auth"
         ],
+        "summary": "",
+        "parameters": [
+          {
+            "name": "AccessToken",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "RefreshToken",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfstring"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfstring"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfstring"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/Auth/info": {
+      "get": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfUserInfo"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfUserInfo"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfUserInfo"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -75,6 +205,254 @@
     }
   },
   "components": {
+    "schemas": {
+      "LoginDto": {
+        "required": [
+          "userName",
+          "password"
+        ],
+        "type": "object",
+        "properties": {
+          "isRemember": {
+            "type": "boolean"
+          },
+          "userName": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          }
+        },
+        "description": ""
+      },
+      "RegisterDto": {
+        "required": [
+          "displayName",
+          "userName",
+          "password"
+        ],
+        "type": "object",
+        "properties": {
+          "displayName": {
+            "type": "string"
+          },
+          "phoneNumber": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "userName": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          }
+        },
+        "description": ""
+      },
+      "RequestResponseOfObject": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "description": "Trạng thái",
+            "$ref": "#/components/schemas/RequestResponseStatus"
+          },
+          "message": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Message"
+          },
+          "data": {
+            "description": "Dữ liệu"
+          },
+          "totalRecord": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Tổng số bản ghi",
+            "format": "int64"
+          }
+        },
+        "description": ""
+      },
+      "RequestResponseOfstring": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "description": "Trạng thái",
+            "$ref": "#/components/schemas/RequestResponseStatus"
+          },
+          "message": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Message"
+          },
+          "data": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Dữ liệu"
+          },
+          "totalRecord": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Tổng số bản ghi",
+            "format": "int64"
+          }
+        },
+        "description": ""
+      },
+      "RequestResponseOfTokenModel": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "description": "Trạng thái",
+            "$ref": "#/components/schemas/RequestResponseStatus"
+          },
+          "message": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Message"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "Dữ liệu",
+                "$ref": "#/components/schemas/TokenModel"
+              }
+            ]
+          },
+          "totalRecord": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Tổng số bản ghi",
+            "format": "int64"
+          }
+        },
+        "description": ""
+      },
+      "RequestResponseOfUserInfo": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "description": "Trạng thái",
+            "$ref": "#/components/schemas/RequestResponseStatus"
+          },
+          "message": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Message"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "Dữ liệu",
+                "$ref": "#/components/schemas/UserInfo"
+              }
+            ]
+          },
+          "totalRecord": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Tổng số bản ghi",
+            "format": "int64"
+          }
+        },
+        "description": ""
+      },
+      "RequestResponseStatus": {
+        "type": "integer",
+        "description": "Trạng thái trả về"
+      },
+      "TokenModel": {
+        "required": [
+          "accessToken",
+          "refreshToken"
+        ],
+        "type": "object",
+        "properties": {
+          "accessToken": {
+            "type": "string"
+          },
+          "refreshToken": {
+            "type": "string"
+          }
+        },
+        "description": ""
+      },
+      "UserInfo": {
+        "type": "object",
+        "properties": {
+          "displayName": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Tên hiển thị của người dùng."
+          },
+          "userName": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Tên đăng nhập của người dùng."
+          },
+          "phoneNumber": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Số điện thoại của người dùng."
+          },
+          "sex": {
+            "type": "boolean",
+            "description": "Giới tính của người dùng. Mặc định là \"NAM\"."
+          },
+          "avartar": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Ảnh đại diện của người dùng."
+          },
+          "roles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Danh sách vai trò của người dùng."
+          }
+        },
+        "description": "Lớp đại diện thông tin người dùng."
+      }
+    },
     "securitySchemes": {
       "Bearer": {
         "type": "http",
