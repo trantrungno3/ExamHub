@@ -1,68 +1,441 @@
-:root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+@import "tailwindcss";
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+/* ─── Reset ─────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
 
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
+body {
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
+#root { width: 100%; height: 100%; }
+
+/* ─── Auth layout ────────────────────────────────── */
+.auth-layout {
+  @apply flex h-screen w-screen;
 }
 
-body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
+/* ─── Brand panel (left) ─────────────────────────── */
+.brand-panel {
+  @apply w-[44%] flex flex-col justify-center px-14 py-16 text-white bg-[#2563EB];
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+.brand-logo {
+  @apply flex items-center gap-3.5 mb-6;
 }
 
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+.brand-logo-icon {
+  @apply w-[52px] h-[52px] rounded-xl flex items-center justify-center
+         text-xl font-bold tracking-tight text-white
+         bg-white/20 border border-white/30;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
+.brand-logo-name {
+  @apply text-[28px] font-bold tracking-tight;
+}
+
+.brand-subtitle {
+  @apply text-white/75 text-[15px] mb-12;
+}
+
+.brand-features {
+  @apply flex flex-col gap-5;
+}
+
+.brand-feature-item {
+  @apply flex items-center gap-3;
+}
+
+.brand-feature-dot {
+  @apply w-2 h-2 rounded-full bg-white/50 shrink-0;
+}
+
+.brand-feature-text {
+  @apply text-white/85 text-[15px];
+}
+
+/* ─── Form panel (right) ─────────────────────────── */
+.form-panel {
+  @apply flex-1 bg-gray-100 flex items-center justify-center p-6;
+}
+
+.login-card {
+  @apply bg-white rounded-2xl w-full max-w-[400px] p-11 shadow-lg;
+}
+
+.login-title {
+  @apply text-[26px] font-bold text-gray-900 mb-1 leading-snug;
+}
+
+.login-desc {
+  @apply text-sm text-gray-500 mb-7;
+}
+
+/* ─── Role badge ─────────────────────────────────── */
+.role-badge {
+  @apply bg-blue-50 border border-blue-100 rounded-lg px-4 py-2.5
+         text-center text-[13px] text-gray-500 mb-5;
+}
+
+.role-badge-name {
+  @apply text-[13px] text-gray-700 font-medium;
+}
+
+/* ─── Forgot / Register links ────────────────────── */
+.forgot-link-row {
+  @apply flex justify-end mb-5;
+}
+
+.auth-footer {
+  @apply text-center text-[13px] text-gray-500;
+}
+
+/* ─── App layout (sidebar + page canvas) ─────────── */
+.app-layout {
+  @apply flex h-screen w-screen overflow-hidden;
+}
+
+/* ─── Sidebar ────────────────────────────────────── */
+.sidebar {
+  @apply w-44 bg-[#1c2131] flex flex-col shrink-0;
+}
+
+.sidebar-logo {
+  @apply flex items-center gap-2.5 px-4 py-[18px];
+}
+
+.sidebar-logo-icon {
+  @apply w-[30px] h-[30px] rounded-lg bg-blue-600 flex items-center justify-center
+         text-xs font-bold text-white shrink-0;
+}
+
+.sidebar-logo-name {
+  @apply text-white font-bold text-sm;
+}
+
+.sidebar-nav {
+  @apply flex-1 flex flex-col gap-0.5 px-2 py-3;
+}
+
+.sidebar-nav-item {
+  @apply flex items-center gap-2 px-3 py-2.5 rounded-lg text-[13px]
+         text-gray-400 hover:text-white hover:bg-white/10 cursor-pointer
+         transition-colors select-none border-0 bg-transparent w-full text-left;
+}
+
+.sidebar-nav-item--active {
+  @apply bg-blue-600 text-white hover:bg-blue-600;
+}
+
+.sidebar-footer {
+  @apply px-2 pb-4;
+}
+
+/* ─── Page canvas (right of sidebar) ────────────── */
+.page-canvas {
+  @apply flex-1 flex flex-col overflow-hidden bg-gray-50;
+}
+
+/* ─── Top bar ────────────────────────────────────── */
+.top-bar {
+  @apply flex items-center justify-between px-8 py-4 bg-white
+         border-b border-gray-100 shrink-0;
+}
+
+.top-bar-title {
+  @apply text-[19px] font-bold text-gray-900 leading-tight;
+}
+
+.top-bar-subtitle {
+  @apply text-xs text-gray-400 mt-0.5;
+}
+
+.top-bar-avatar {
+  @apply w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center
+         text-sm font-bold text-white shrink-0;
+}
+
+/* ─── Stat cards ─────────────────────────────────── */
+.stat-card {
+  @apply bg-white rounded-xl p-5 shadow-sm flex items-start gap-3.5 flex-1;
+}
+
+.stat-card-icon {
+  @apply w-10 h-10 rounded-lg flex items-center justify-center text-base shrink-0;
+}
+
+.stat-card-value {
+  @apply text-[22px] font-bold text-gray-900 leading-snug;
+}
+
+.stat-card-label {
+  @apply text-[11px] text-gray-500;
+}
+
+.stat-card-trend {
+  @apply text-[11px] text-green-600 font-medium mt-1;
+}
+
+/* ─── Section card ───────────────────────────────── */
+.section-card {
+  @apply bg-white rounded-xl shadow-sm overflow-hidden;
+}
+
+.section-card-header {
+  @apply flex items-center justify-between px-5 py-4;
+}
+
+.section-card-title {
+  @apply text-sm font-semibold text-gray-800;
+}
+
+/* ─── Data table ─────────────────────────────────── */
+.data-table {
+  @apply w-full text-sm;
+}
+
+.table-th {
+  @apply px-4 py-3 text-left text-[11px] font-semibold text-gray-400
+         uppercase tracking-wide bg-gray-50;
+}
+
+.table-td {
+  @apply px-4 py-3.5 text-[13px] text-gray-700;
+}
+
+.table-row {
+  @apply border-t border-gray-50 hover:bg-blue-50/30 transition-colors;
+}
+
+/* ─── Badges ─────────────────────────────────────── */
+.badge {
+  @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold;
+}
+
+.badge-green  { @apply bg-green-100  text-green-700;  }
+.badge-yellow { @apply bg-yellow-100 text-yellow-700; }
+.badge-red    { @apply bg-red-100    text-red-600;    }
+.badge-blue   { @apply bg-blue-100   text-blue-700;   }
+.badge-purple { @apply bg-purple-100 text-purple-700; }
+.badge-orange { @apply bg-orange-100 text-orange-700; }
+.badge-gray   { @apply bg-gray-100   text-gray-500;   }
+
+/* ─── Buttons ────────────────────────────────────── */
+.btn-primary {
+  @apply flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white text-sm
+         font-semibold rounded-lg hover:bg-blue-700 transition-colors cursor-pointer;
+}
+
+.btn-edit {
+  @apply px-3 py-1 text-xs font-medium rounded-md text-blue-600 bg-blue-50
+         hover:bg-blue-100 transition-colors cursor-pointer;
+}
+
+.btn-delete {
+  @apply px-3 py-1 text-xs font-medium rounded-md text-red-500 bg-red-50
+         hover:bg-red-100 transition-colors cursor-pointer;
+}
+
+/* ─── Category tabs ──────────────────────────────── */
+.cat-tabs {
+  @apply flex border-b border-gray-200;
+}
+
+.cat-tab {
+  @apply px-5 py-3 text-sm text-gray-500 cursor-pointer whitespace-nowrap
+         border-b-2 border-transparent -mb-px hover:text-gray-700 transition-colors;
+}
+
+.cat-tab--active {
+  @apply text-blue-600 border-blue-600 font-medium;
+}
+
+/* ─── Quick action buttons ───────────────────────── */
+.quick-action {
+  @apply flex items-center gap-2.5 p-3 rounded-xl text-[13px] font-semibold
+         cursor-pointer transition-colors;
+}
+
+/* ─── Filter chips (type filter row) ────────────── */
+.filter-chip {
+  @apply px-3.5 py-1.5 rounded-full text-[12px] font-medium cursor-pointer
+         border transition-colors whitespace-nowrap select-none;
+}
+
+/* ─── Form sections (Add/Create pages) ───────────── */
+.form-section {
+  @apply bg-white rounded-xl p-5 shadow-sm;
+}
+
+.form-section-title {
+  @apply text-[13px] font-semibold text-gray-700 mb-4 pb-3 border-b border-gray-50;
+}
+
+.form-label {
+  @apply block text-[12px] font-medium text-gray-500 mb-1.5;
+}
+
+/* ─── Answer options ─────────────────────────────── */
+.answer-option {
+  @apply flex items-center gap-3 p-3 rounded-lg border border-gray-100 mb-2
+         cursor-pointer hover:border-blue-200 transition-all select-none;
+}
+
+.answer-option--correct {
+  @apply border-green-300 bg-green-50;
+}
+
+/* ─── Bottom action bar ──────────────────────────── */
+.action-bar {
+  @apply flex items-center justify-end gap-3 px-6 py-4 bg-white
+         border-t border-gray-100 shrink-0;
+}
+
+/* ─── Exam section panels ────────────────────────── */
+.exam-section-panel {
+  @apply rounded-xl overflow-hidden border border-gray-200;
+}
+
+.exam-section-header {
+  @apply flex items-center justify-between px-4 py-3 bg-gray-800
+         text-white text-[13px] font-semibold;
+}
+
+.exam-section-body {
+  @apply bg-white p-4 flex flex-col gap-3;
+}
+
+/* ─── Toggle rows ────────────────────────────────── */
+.toggle-row {
+  @apply flex items-center justify-between py-3 border-b border-gray-50;
+}
+
+.toggle-label {
+  @apply text-[13px] text-gray-700 font-medium;
+}
+
+.toggle-sublabel {
+  @apply text-[11px] text-gray-400 mt-0.5;
+}
+
+/* ─── Extra action buttons ───────────────────────── */
+.btn-view {
+  @apply px-3 py-1 text-xs font-medium rounded-md text-gray-600 bg-gray-100
+         hover:bg-gray-200 transition-colors cursor-pointer;
+}
+
+.btn-outline-blue {
+  @apply px-5 py-2 border border-blue-600 text-sm font-semibold text-blue-600
+         rounded-lg hover:bg-blue-50 transition-colors cursor-pointer;
+}
+
+/* ═══════════════════════════════════════════════════
+   STUDENT / EXAM PAGES
+   ═══════════════════════════════════════════════════ */
+
+/* ─── Cover page navbar ──────────────────────────── */
+.student-navbar {
+  @apply flex items-center justify-between px-8 h-14 bg-white
+         border-b border-gray-200 shrink-0 z-10;
+}
+
+.student-logo-icon {
+  @apply w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center
+         text-xs font-bold text-white shrink-0;
+}
+
+/* ─── Blue hero section ──────────────────────────── */
+.exam-hero {
+  @apply bg-blue-600 text-white pt-10 pb-16 px-8 text-center;
+}
+
+.exam-hero-title {
+  @apply text-[2rem] font-bold mb-1.5 leading-tight;
+}
+
+.exam-hero-sub {
+  @apply text-blue-100 text-sm mb-8;
+}
+
+.exam-info-card {
+  @apply bg-white/20 rounded-2xl px-5 py-4 text-center flex-1 backdrop-blur-sm;
+}
+
+.exam-info-card-icon {
+  @apply text-2xl mb-1.5 opacity-90;
+}
+
+.exam-info-card-value {
+  @apply text-[18px] font-bold;
+}
+
+.exam-info-card-label {
+  @apply text-blue-100 text-[11px] mt-0.5;
+}
+
+/* ─── Exam detail rows ───────────────────────────── */
+.exam-detail-row {
+  @apply flex items-center text-sm last:border-b-0 border-b border-gray-50 py-3;
+}
+
+.exam-detail-label {
+  @apply w-40 text-gray-400 text-right pr-6 shrink-0 text-[13px];
+}
+
+.exam-detail-value {
+  @apply text-gray-800 font-medium text-[13px];
+}
+
+/* ─── Exam taking top bar ────────────────────────── */
+.taking-topbar {
+  @apply flex items-center gap-4 px-6 py-3 bg-gray-900 text-white shrink-0;
+}
+
+.taking-timer {
+  @apply px-4 py-1.5 bg-red-500 text-white font-bold text-lg rounded-lg
+         font-mono tracking-widest tabular-nums;
+}
+
+/* ─── Answer options (exam taking) ──────────────── */
+.exam-answer-opt {
+  @apply flex items-start gap-4 p-4 rounded-xl border-2 border-gray-100
+         bg-white cursor-pointer hover:border-blue-300 hover:bg-blue-50/40
+         transition-all;
+}
+
+.exam-answer-opt--selected {
+  @apply border-blue-600 bg-blue-600 hover:border-blue-600 hover:bg-blue-600;
+}
+
+.answer-circle {
+  @apply w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center
+         justify-center text-sm font-bold shrink-0 mt-0.5;
+}
+
+.answer-circle--selected {
+  @apply bg-white/25 text-white;
+}
+
+/* ─── Question number grid ───────────────────────── */
+.q-grid-btn {
+  @apply w-9 h-9 rounded-lg text-[12px] font-semibold flex items-center
+         justify-center cursor-pointer border border-gray-200 text-gray-500
+         hover:border-blue-400 hover:text-blue-600 transition-colors;
+}
+
+.q-grid-btn--answered {
+  @apply bg-orange-400 border-orange-400 text-white hover:border-orange-500;
+}
+
+.q-grid-btn--current {
+  @apply bg-blue-600 border-blue-600 text-white ring-2 ring-blue-300
+         hover:border-blue-700;
+}
+
+.q-grid-btn--flagged {
+  @apply bg-yellow-50 border-yellow-400 text-yellow-700 hover:border-yellow-500;
 }

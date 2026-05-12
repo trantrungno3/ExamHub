@@ -1,0 +1,47 @@
+@startuml
+skinparam actorStyle default
+skinparam usecase {
+    BackgroundColor #DDEEFF
+    BorderColor #336699
+    FontSize 12
+    FontName Arial
+}
+skinparam actor {
+    BackgroundColor White
+    BorderColor #333333
+    FontSize 12
+    FontName Arial
+}
+skinparam rectangle {
+    BackgroundColor #EEF4FF
+    BorderColor #336699
+    FontSize 13
+    FontName Arial
+    FontStyle bold
+}
+skinparam ArrowFontSize 10
+skinparam ArrowFontName Arial
+
+' ── Actors ──
+actor "Admin"     as Admin
+actor "Giáo viên" as Teacher
+actor "Học sinh"  as Student
+
+usecase "Đăng nhập"           as UC_Login
+usecase "Xác thực JWT"        as UC_JWT
+usecase "Kiểm tra phân quyền" as UC_Role
+
+' ── Admin associations ──
+Admin --> UC_Login
+
+' ── Teacher associations ──
+Teacher --> UC_Login
+
+' ── Student associations ──
+Student --> UC_Login
+
+' ── <<include>> ──
+UC_Login    ..> UC_JWT       : <<include>>
+UC_Login    ..> UC_Role      : <<include>>
+
+@enduml
