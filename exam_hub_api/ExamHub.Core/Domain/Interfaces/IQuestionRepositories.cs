@@ -3,6 +3,9 @@ using ExamHub.Core.Domain.Interfaces;
 
 namespace ExamHub.Core.Domain.Interfaces;
 
+/// <summary>Câu hỏi đã được pick từ pool — chứa đủ dữ liệu để tạo snapshot.</summary>
+public sealed record PickedQuestion(Guid QuestionId, string Content, string? AnswersJson);
+
 /// <summary>Interface repository cho Question</summary>
 public interface IQuestionRepository : IBaseRepository<Question, Guid>
 {
@@ -29,6 +32,17 @@ public interface IQuestionRepository : IBaseRepository<Question, Guid>
         int? difficultyLevelId = null,
         string? keyword = null,
         bool? isVerified = null,
+        CancellationToken ct = default);
+
+    /// <summary>
+    /// Pick ngẫu nhiên N câu hỏi từ pool bằng ORDER BY RANDOM() — dùng Dapper để tránh load toàn bộ pool.
+    /// </summary>
+    Task<IReadOnlyList<PickedQuestion>> PickRandomAsync(
+        int topicId,
+        int? questionTypeId,
+        int difficultyId,
+        int count,
+        IReadOnlySet<Guid> excludeIds,
         CancellationToken ct = default);
 
     /// <summary>Tăng số lần sử dụng câu hỏi</summary>
