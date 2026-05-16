@@ -67,8 +67,8 @@ public class ExamRepository : BaseRepository<Exam, Guid>, IExamRepository
 
         if (!string.IsNullOrWhiteSpace(keyword))
             query = query.Where(x =>
-                x.Title.ToLower().Contains(keyword.ToLower()) ||
-                (x.ExamCode != null && x.ExamCode.ToLower().Contains(keyword.ToLower())));
+                EF.Functions.ILike(x.Title, $"%{keyword}%") ||
+                (x.ExamCode != null && EF.Functions.ILike(x.ExamCode, $"%{keyword}%")));
 
         var total = await query.CountAsync(ct);
         var items = await query

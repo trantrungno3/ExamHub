@@ -15,7 +15,9 @@ public sealed record GenerateExamRequest(
     Guid? ExamTemplateId,
     int GradeLevelId,
     int SubjectId,
+    int DurationMinutes,
     bool ShuffleQuestions,
+    Guid CreatedBy,
     IReadOnlyList<SectionConfig> Sections);
 
 /// <summary>Cấu hình một phần thi.</summary>
@@ -29,4 +31,3 @@ public sealed record SectionConfig(
     decimal PctHard,
     decimal PctVeryHard,
     decimal ScorePerQuestion);
-

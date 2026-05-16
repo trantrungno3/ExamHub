@@ -30,8 +30,10 @@
         <PackageReference Include="Microsoft.Extensions.Caching.Abstractions"/>
         <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis"/>
         <PackageReference Include="Minio"/>
+        <PackageReference Include="Dapper"/>
     </ItemGroup>
     <ItemGroup>
+        <ProjectReference Include="..\..\..\trungtv_core\Database\TVT_Core_Db_PostgreSql\TVT_Core_Db_PostgreSql.csproj"/>
         <ProjectReference Include="..\..\..\trungtv_core\IdentityUser\TVT_Core_Identity_PostgreSql\TVT_Core_Identity_PostgreSql.csproj"/>
         <ProjectReference Include="..\..\..\trungtv_core\TVT_Core\TVT_Core.csproj"/>
         <ProjectReference Include="..\..\..\trungtv_core\TVT_Core_Middleware\TVT_Core_Middleware.csproj"/>

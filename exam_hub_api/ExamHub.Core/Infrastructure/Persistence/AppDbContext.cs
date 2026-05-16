@@ -166,6 +166,8 @@ public class AppDbContext : DbContext
             e.HasKey(x => x.Id);
             e.Property(x => x.Id).HasDefaultValueSql("gen_random_uuid()");
             e.Property(x => x.Content).IsRequired();
+            e.Property(x => x.ImageUrl).HasMaxLength(500);
+            e.Property(x => x.AudioUrl).HasMaxLength(500);
             e.Property(x => x.Source).HasMaxLength(300);
             e.Property(x => x.Tags).HasColumnType("text[]");
             e.Property(x => x.UsageCount).HasDefaultValue(0);

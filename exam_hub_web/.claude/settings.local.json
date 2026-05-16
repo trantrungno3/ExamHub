@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx tsc *)",
+      "Bash(Get-ChildItem -Path \"D:\\\\My-Project\\\\ExamHub\\\\exam_hub_api\\\\ExamHub.API\\\\Controllers\" -Filter \"*.cs\")",
+      "Bash(Select-Object Name)",
+      "Bash(grep -E \"\\\\.cs$\")",
+      "Bash(xargs grep -l \"class GradeLevel\\\\|class Subject\\\\|class Topic\\\\|class DifficultyLevel\\\\|class QuestionType\\\\|class CognitiveLevel\\\\|class School\")",
+      "Bash(Get-ChildItem *)",
+      "Skill(vercel-react-best-practices)",
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Bash(Sort-Object)"
+    ]
+  }
+}

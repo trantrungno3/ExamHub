@@ -13,11 +13,12 @@ public class QuestionRepository : BaseRepository<Question, Guid>, IQuestionRepos
 
     /// <inheritdoc/>
     public async Task<Question?> GetWithAnswersAsync(Guid id, CancellationToken ct = default)
-        => await Set
+        => await Set.AsNoTracking()
             .Include(x => x.Answers.OrderBy(a => a.SortOrder))
             .Include(x => x.Topic)
             .Include(x => x.QuestionType)
             .Include(x => x.DifficultyLevel)
+            .Include(x => x.CognitiveLevel)
             .FirstOrDefaultAsync(x => x.Id == id, ct);
 
     /// <inheritdoc/>
@@ -86,7 +87,9 @@ public class QuestionRepository : BaseRepository<Question, Guid>, IQuestionRepos
             query = query.Where(x => x.DifficultyLevelId == difficultyLevelId.Value);
 
         if (!string.IsNullOrWhiteSpace(keyword))
-            query = query.Where(x => x.ContentPlain != null && x.ContentPlain.ToLower().Contains(keyword.ToLower()));
+            query = query.Where(x =>
+                EF.Functions.ILike(x.Content, $"%{keyword}%") ||
+                (x.ContentPlain != null && EF.Functions.ILike(x.ContentPlain, $"%{keyword}%")));
 
         if (isVerified.HasValue)
             query = query.Where(x => x.IsVerified == isVerified.Value);

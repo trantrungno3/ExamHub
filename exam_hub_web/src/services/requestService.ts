@@ -1,6 +1,6 @@
 import {globalConfig} from '../configs/common'
 
-interface ApiResponse<T> {
+export interface ApiResponse<T> {
     isSuccess: boolean
     message: string
     data?: T
@@ -11,18 +11,11 @@ function getToken(): string | null {
     try {
         const stored = localStorage.getItem(globalConfig.storageKey.token)
         if (!stored) return null
-        const parsed = JSON.parse(stored)
+        const parsed = JSON.parse(stored) as {accessToken?: string}
         return parsed?.accessToken ?? null
     } catch {
         return null
     }
-}
-
-function buildHeaders(extra?: HeadersInit, isAuth: boolean = true): Headers {
-    const headers = new Headers({'Content-Type': 'application/json', ...extra})
-    const token = getToken()
-    if (token && isAuth) headers.set('Authorization', `Bearer ${token}`)
-    return headers
 }
 
 function buildUrl(path: string, params?: Record<string, string | number | boolean>): string {
@@ -37,69 +30,46 @@ async function handleResponse<T>(res: Response): Promise<ApiResponse<T>> {
     if (!res.ok) {
         return {isSuccess: false, message: `Lỗi ${res.status}: ${res.statusText}`}
     }
-    return res.json()
+    return res.json() as Promise<ApiResponse<T>>
 }
 
-export const AuthHttp = {
-    get<T>(path: string, params?: Record<string, string | number | boolean>): Promise<ApiResponse<T>> {
-        return fetch(buildUrl(path, params), {
-            method: 'GET',
-            headers: buildHeaders(),
-        }).then(handleResponse<T>)
-    },
-
-    post<T>(path: string, body?: unknown): Promise<ApiResponse<T>> {
-        return fetch(buildUrl(path), {
-            method: 'POST',
-            headers: buildHeaders(),
-            body: body === undefined ? undefined : JSON.stringify(body),
-        }).then(handleResponse<T>)
-    },
-
-    put<T>(path: string, body?: unknown): Promise<ApiResponse<T>> {
-        return fetch(buildUrl(path), {
-            method: 'PUT',
-            headers: buildHeaders(),
-            body: body === undefined ? undefined : JSON.stringify(body),
-        }).then(handleResponse<T>)
-    },
-
-    delete<T>(path: string): Promise<ApiResponse<T>> {
-        return fetch(buildUrl(path), {
-            method: 'DELETE',
-            headers: buildHeaders(),
-        }).then(handleResponse<T>)
-    },
+function buildHeaders(auth: boolean): Headers {
+    const headers = new Headers({'Content-Type': 'application/json'})
+    if (auth) {
+        const token = getToken()
+        if (token) headers.set('Authorization', `Bearer ${token}`)
+    }
+    return headers
 }
 
-export const Http = {
-    get<T>(path: string, params?: Record<string, string | number | boolean>): Promise<ApiResponse<T>> {
-        return fetch(buildUrl(path, params), {
-            method: 'GET',
-            headers: buildHeaders(undefined, false),
-        }).then(handleResponse<T>)
-    },
-
-    post<T>(path: string, body?: unknown): Promise<ApiResponse<T>> {
-        return fetch(buildUrl(path), {
-            method: 'POST',
-            headers: buildHeaders(undefined, false),
-            body: body === undefined ? undefined : JSON.stringify(body),
-        }).then(handleResponse<T>)
-    },
-
-    put<T>(path: string, body?: unknown): Promise<ApiResponse<T>> {
-        return fetch(buildUrl(path), {
-            method: 'PUT',
-            headers: buildHeaders(undefined, false),
-            body: body === undefined ? undefined : JSON.stringify(body),
-        }).then(handleResponse<T>)
-    },
-
-    delete<T>(path: string): Promise<ApiResponse<T>> {
-        return fetch(buildUrl(path), {
-            method: 'DELETE',
-            headers: buildHeaders(undefined, false),
-        }).then(handleResponse<T>)
-    },
+function createHttp(auth: boolean) {
+    return {
+        get<T>(path: string, params?: Record<string, string | number | boolean>): Promise<ApiResponse<T>> {
+            return fetch(buildUrl(path, params), {method: 'GET', headers: buildHeaders(auth)}).then(handleResponse<T>)
+        },
+        post<T>(path: string, body?: unknown): Promise<ApiResponse<T>> {
+            return fetch(buildUrl(path), {
+                method: 'POST', headers: buildHeaders(auth),
+                body: body !== undefined ? JSON.stringify(body) : undefined,
+            }).then(handleResponse<T>)
+        },
+        put<T>(path: string, body?: unknown): Promise<ApiResponse<T>> {
+            return fetch(buildUrl(path), {
+                method: 'PUT', headers: buildHeaders(auth),
+                body: body !== undefined ? JSON.stringify(body) : undefined,
+            }).then(handleResponse<T>)
+        },
+        delete<T>(path: string): Promise<ApiResponse<T>> {
+            return fetch(buildUrl(path), {method: 'DELETE', headers: buildHeaders(auth)}).then(handleResponse<T>)
+        },
+        patch<T>(path: string, body?: unknown): Promise<ApiResponse<T>> {
+            return fetch(buildUrl(path), {
+                method: 'PATCH', headers: buildHeaders(auth),
+                body: body !== undefined ? JSON.stringify(body) : undefined,
+            }).then(handleResponse<T>)
+        },
+    }
 }
+
+export const AuthHttp = createHttp(true)
+export const Http = createHttp(false)

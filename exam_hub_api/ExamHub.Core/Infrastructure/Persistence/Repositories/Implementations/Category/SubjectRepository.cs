@@ -21,7 +21,7 @@ public class SubjectRepository : CategoryRepository<Subject, int>, ISubjectRepos
     /// <inheritdoc/>
     public override async Task<IReadOnlyList<Subject>> SearchByNameAsync(string keyword, CancellationToken ct = default)
         => await Set.AsNoTracking()
-            .Where(x => x.Name.ToLower().Contains(keyword.ToLower()))
+            .Where(x => EF.Functions.ILike(x.Name, $"%{keyword}%"))
             .OrderBy(x => x.Name)
             .ToListAsync(ct);
 
@@ -40,7 +40,7 @@ public class SubjectRepository : CategoryRepository<Subject, int>, ISubjectRepos
 
     /// <inheritdoc/>
     public async Task<Subject?> GetWithTopicsAsync(int id, CancellationToken ct = default)
-        => await Set
+        => await Set.AsNoTracking()
             .Include(x => x.Topics)
             .FirstOrDefaultAsync(x => x.Id == id, ct);
 }

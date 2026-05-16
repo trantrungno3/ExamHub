@@ -21,8 +21,8 @@ public class CognitiveLevelRepository : CategoryRepository<CognitiveLevel, int>,
     /// <inheritdoc/>
     public override async Task<IReadOnlyList<CognitiveLevel>> SearchByNameAsync(string keyword, CancellationToken ct = default)
         => await Set.AsNoTracking()
-            .Where(x => x.Name.ToLower().Contains(keyword.ToLower())
-                     || x.NameEn.ToLower().Contains(keyword.ToLower()))
+            .Where(x => EF.Functions.ILike(x.Name, $"%{keyword}%")
+                     || EF.Functions.ILike(x.NameEn, $"%{keyword}%"))
             .OrderBy(x => x.LevelOrder)
             .ToListAsync(ct);
 

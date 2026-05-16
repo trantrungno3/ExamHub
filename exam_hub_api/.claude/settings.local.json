@@ -5,7 +5,16 @@
       "Bash(Select-Object FullName)",
       "Bash(Sort-Object FullName)",
       "Bash(Get-ChildItem *)",
-      "Bash(dotnet build *)"
+      "Bash(dotnet build *)",
+      "mcp__ide__getDiagnostics",
+      "Bash(Remove-Item *)",
+      "Skill(dotnet-msbuild:msbuild-antipatterns)",
+      "Skill(dotnet-data:optimizing-ef-core-queries)",
+      "PowerShell(dotnet build *)",
+      "PowerShell(Get-ChildItem \"D:\\\\My-Project\\\\trungtv_core\" -Recurse -Filter \"IBaseRepository.cs\" | ForEach-Object { $_.FullName })",
+      "PowerShell(Get-Content *)",
+      "PowerShell(Get-ChildItem \"D:\\\\My-Project\\\\trungtv_core\" -Recurse -Filter \"TVT_Core_Db_PostgreSql.csproj\" | ForEach-Object { $_.FullName })",
+      "PowerShell(Get-ChildItem \"D:\\\\My-Project\\\\trungtv_core\\\\Database\\\\TVT_Core_Db_PostgreSql\" -Recurse -Filter \"InsertTable.cs\" | ForEach-Object { $_.FullName })"
     ]
   }
 }

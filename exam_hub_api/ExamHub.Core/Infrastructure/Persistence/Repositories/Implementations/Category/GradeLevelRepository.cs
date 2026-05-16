@@ -21,7 +21,7 @@ public class GradeLevelRepository : CategoryRepository<GradeLevel, int>, IGradeL
     /// <inheritdoc/>
     public override async Task<IReadOnlyList<GradeLevel>> SearchByNameAsync(string keyword, CancellationToken ct = default)
         => await Set.AsNoTracking()
-            .Where(x => x.Name.Contains(keyword, StringComparison.CurrentCultureIgnoreCase))
+            .Where(x => EF.Functions.ILike(x.Name, $"%{keyword}%"))
             .OrderBy(x => x.GradeNumber)
             .ToListAsync(ct);
 
@@ -33,7 +33,7 @@ public class GradeLevelRepository : CategoryRepository<GradeLevel, int>, IGradeL
 
     /// <inheritdoc/>
     public async Task<GradeLevel?> GetWithSubjectsAsync(int id, CancellationToken ct = default)
-        => await Set
+        => await Set.AsNoTracking()
             .Include(x => x.Subjects)
             .FirstOrDefaultAsync(x => x.Id == id, ct);
 }

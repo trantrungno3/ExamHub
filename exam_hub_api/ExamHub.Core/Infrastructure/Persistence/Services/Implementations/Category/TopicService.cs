@@ -1,49 +1,65 @@
 using ExamHub.Core.Domain.Entities;
 using ExamHub.Core.Domain.Interfaces;
+using ExamHub.Core.Infrastructure.Caching;
 
 namespace ExamHub.Core.Infrastructure.Persistence.Services.Implementations;
 
 /// <summary>Triển khai service cho Topic</summary>
-public class TopicService : ITopicService
+public class TopicService(ITopicRepository repo, RedisCacheService cache)
+    : ITopicService
 {
-    private readonly ITopicRepository _repo;
-    public TopicService(ITopicRepository repo) => _repo = repo;
+    private const string AllKey    = "category:topics:all";
+    private const string ActiveKey = "category:topics:active";
+    private static readonly TimeSpan Ttl = TimeSpan.FromMinutes(5);
 
     public Task<IReadOnlyList<Topic>> GetAllAsync(CancellationToken ct = default)
-        => _repo.GetAllAsync(ct);
+        => cache.GetOrSetAsync(AllKey, () => repo.GetAllAsync(ct), Ttl, ct)!;
 
     public Task<IReadOnlyList<Topic>> GetActiveAsync(CancellationToken ct = default)
-        => _repo.GetActiveAsync(ct);
+        => cache.GetOrSetAsync(ActiveKey, () => repo.GetActiveAsync(ct), Ttl, ct)!;
 
     public Task<IReadOnlyList<Topic>> GetBySubjectAsync(int subjectId, CancellationToken ct = default)
-        => _repo.GetBySubjectAsync(subjectId, ct);
+        => repo.GetBySubjectAsync(subjectId, ct);
 
     public Task<IReadOnlyList<Topic>> GetRootTopicsAsync(int subjectId, CancellationToken ct = default)
-        => _repo.GetRootTopicsAsync(subjectId, ct);
+        => repo.GetRootTopicsAsync(subjectId, ct);
 
     public Task<IReadOnlyList<Topic>> GetChildrenAsync(int parentId, CancellationToken ct = default)
-        => _repo.GetChildrenAsync(parentId, ct);
+        => repo.GetChildrenAsync(parentId, ct);
 
     public Task<Topic?> GetByIdAsync(int id, CancellationToken ct = default)
-        => _repo.GetByIdAsync(id, ct);
+        => repo.GetByIdAsync(id, ct);
 
     public async Task<Topic> CreateAsync(Topic entity, CancellationToken ct = default)
     {
         entity.CreatedAt = DateTime.UtcNow;
         entity.UpdatedAt = DateTime.UtcNow;
-        return await _repo.AddAsync(entity, ct);
+        var result = await repo.AddAsync(entity, ct);
+        await InvalidateCacheAsync(ct);
+        return result;
     }
 
     public async Task<Topic> UpdateAsync(Topic entity, CancellationToken ct = default)
     {
         entity.UpdatedAt = DateTime.UtcNow;
-        await _repo.UpdateAsync(entity, ct);
+        await repo.UpdateAsync(entity, ct);
+        await InvalidateCacheAsync(ct);
         return entity;
     }
 
-    public Task DeleteAsync(int id, CancellationToken ct = default)
-        => _repo.DeleteByIdAsync(id, ct);
+    public async Task DeleteAsync(int id, CancellationToken ct = default)
+    {
+        await repo.DeleteByIdAsync(id, ct);
+        await InvalidateCacheAsync(ct);
+    }
 
-    public Task<bool> SetActiveAsync(int id, bool isActive, CancellationToken ct = default)
-        => _repo.SetActiveAsync(id, isActive, ct);
+    public async Task<bool> SetActiveAsync(int id, bool isActive, CancellationToken ct = default)
+    {
+        var result = await repo.SetActiveAsync(id, isActive, ct);
+        await InvalidateCacheAsync(ct);
+        return result;
+    }
+
+    private Task InvalidateCacheAsync(CancellationToken ct) =>
+        Task.WhenAll(cache.RemoveAsync(AllKey, ct), cache.RemoveAsync(ActiveKey, ct));
 }

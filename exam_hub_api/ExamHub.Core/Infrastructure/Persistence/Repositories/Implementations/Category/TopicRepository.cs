@@ -21,7 +21,7 @@ public class TopicRepository : CategoryRepository<Topic, int>, ITopicRepository
     /// <inheritdoc/>
     public override async Task<IReadOnlyList<Topic>> SearchByNameAsync(string keyword, CancellationToken ct = default)
         => await Set.AsNoTracking()
-            .Where(x => x.Name.ToLower().Contains(keyword.ToLower()))
+            .Where(x => EF.Functions.ILike(x.Name, $"%{keyword}%"))
             .OrderBy(x => x.SortOrder).ThenBy(x => x.Name)
             .ToListAsync(ct);
 

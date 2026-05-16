@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
+using System.Collections.Concurrent;
 using System.Text.Json;
 
 namespace ExamHub.Core.Infrastructure.Caching;
@@ -11,6 +12,8 @@ public class RedisCacheService
 {
     private readonly IDistributedCache _cache;
     private readonly TimeSpan _defaultExpiry;
+    // SemaphoreSlim per-key để tránh cache stampede
+    private readonly ConcurrentDictionary<string, SemaphoreSlim> _locks = new();
 
     /// <inheritdoc cref="RedisCacheService"/>
     public RedisCacheService(IDistributedCache cache, IConfiguration config)
@@ -27,16 +30,30 @@ public class RedisCacheService
         if (bytes is not null)
             return JsonSerializer.Deserialize<T>(bytes);
 
-        var value = await factory();
-        if (value is not null)
+        var semaphore = _locks.GetOrAdd(key, _ => new SemaphoreSlim(1, 1));
+        await semaphore.WaitAsync(ct);
+        try
         {
-            var options = new DistributedCacheEntryOptions
+            // Double-check sau khi vào lock
+            bytes = await _cache.GetAsync(key, ct);
+            if (bytes is not null)
+                return JsonSerializer.Deserialize<T>(bytes);
+
+            var value = await factory();
+            if (value is not null)
             {
-                AbsoluteExpirationRelativeToNow = expiry ?? _defaultExpiry
-            };
-            await _cache.SetAsync(key, JsonSerializer.SerializeToUtf8Bytes(value), options, ct);
+                var options = new DistributedCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow = expiry ?? _defaultExpiry
+                };
+                await _cache.SetAsync(key, JsonSerializer.SerializeToUtf8Bytes(value), options, ct);
+            }
+            return value;
         }
-        return value;
+        finally
+        {
+            semaphore.Release();
+        }
     }
 
     /// <summary>Xóa cache theo key.</summary>

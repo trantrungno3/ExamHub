@@ -15,12 +15,14 @@ interface RegisterFormValues {
 interface TokenModel {
     accessToken: string
     refreshToken: string
+    expiresAt: number
+    refreshExpiresAt: number
 }
 
 interface UserInfo {
     userName: string
     displayName?: string
     phoneNumber?: string
-    roles?: string[]
+    roles: string[]
 }
 

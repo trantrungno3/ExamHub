@@ -37,5 +37,6 @@
     <PackageVersion Include="Microsoft.Extensions.Caching.Abstractions" Version="9.0.4" />
     <PackageVersion Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="9.0.4" />
     <PackageVersion Include="Minio" Version="7.0.0" />
+    <PackageVersion Include="Dapper" Version="2.1.66" />
   </ItemGroup>
 </Project>

@@ -18,6 +18,7 @@ using TVT.Core.Middleware;
 using TVT.Core.MinioStorage;
 using TVT.Core.Models;
 using TVT.Core.RabbitMQ;
+using TVT.Core.Db.PostgreSql;
 
 namespace ExamHub.Core;
 
@@ -49,6 +50,7 @@ public static class DependencyContainer
                 .AddCqrsServices()
                 .AddAppDbContext(config)
                 // .AddRedisCache(config)
+                .AddPostgreSqlService()
                 .AddRepositories()
                 .AddAppServices()
                 .AddCustomGlobalFilterControllers();
@@ -101,6 +103,7 @@ public static class DependencyContainer
                 .AddScoped<IQuestionRepository, QuestionRepository>()
                 .AddScoped<IQuestionAnswerRepository, QuestionAnswerRepository>()
                 .AddScoped<ITeacherSubjectRepository, TeacherSubjectRepository>()
+                .AddScoped<IExamGeneratorRepository, ExamGeneratorRepository>()
                 // Exam Templates & Exams
                 .AddScoped<IExamTemplateRepository, ExamTemplateRepository>()
                 .AddScoped<IExamTemplateSectionRepository, ExamTemplateSectionRepository>()
@@ -134,6 +137,7 @@ public static class DependencyContainer
                 .AddScoped<IExamTemplateService, ExamTemplateService>()
                 .AddScoped<IExamService, ExamService>()
                 .AddScoped<IExamSubmissionService, ExamSubmissionService>()
+                .AddScoped<IExamGeneratorService, ExamGeneratorService>()
                 // School Management
                 .AddScoped<ISchoolService, SchoolService>()
                 .AddScoped<ICohortService, CohortService>()
