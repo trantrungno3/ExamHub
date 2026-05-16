@@ -7,9 +7,8 @@ namespace ExamHub.Core.Infrastructure.Persistence.Services.Implementations;
 
 /// <summary>
 /// Sinh đề thi tự động — service layer, không phụ thuộc vào infrastructure trực tiếp.
-/// Giao tiếp với DB thông qua <see cref="IExamGeneratorRepository"/>.
 /// </summary>
-public class ExamGeneratorService(IExamGeneratorRepository repo) : IExamGeneratorService
+public class ExamGeneratorService(IExamGeneratorRepository repo, IQuestionRepository questionRepo) : IExamGeneratorService
 {
     /// <inheritdoc/>
     public async Task<Guid> GenerateAsync(GenerateExamRequest request, CancellationToken ct = default)
@@ -17,7 +16,7 @@ public class ExamGeneratorService(IExamGeneratorRepository repo) : IExamGenerato
         var usedIds    = new HashSet<Guid>();
         var selections = new List<(int SectionIndex, PickedQuestion Question)>();
 
-        // ── 1. Pick câu hỏi ngẫu nhiên (qua Dapper RANDOM()) ─────────────
+        // ── 1. Pick câu hỏi ngẫu nhiên (ORDER BY RANDOM() qua Dapper) ────
         for (int si = 0; si < request.Sections.Count; si++)
         {
             var sec    = request.Sections[si];
@@ -27,7 +26,7 @@ public class ExamGeneratorService(IExamGeneratorRepository repo) : IExamGenerato
             {
                 if (n <= 0) continue;
 
-                var picked = await repo.PickRandomAsync(
+                var picked = await questionRepo.PickRandomAsync(
                     sec.TopicId, sec.QuestionTypeId, (int)diffId, n, usedIds, ct);
 
                 if (picked.Count < n)

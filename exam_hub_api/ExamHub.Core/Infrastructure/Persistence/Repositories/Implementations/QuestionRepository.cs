@@ -1,7 +1,9 @@
+using Dapper;
 using ExamHub.Core.Domain.Entities;
 using ExamHub.Core.Domain.Interfaces;
 using ExamHub.Core.Infrastructure.Persistence.Repositories.Base;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 
 namespace ExamHub.Core.Infrastructure.Persistence.Repositories.Implementations;
 
@@ -105,6 +107,28 @@ public class QuestionRepository : BaseRepository<Question, Guid>, IQuestionRepos
     }
 
     /// <inheritdoc/>
+    public async Task<IReadOnlyList<PickedQuestion>> PickRandomAsync(
+        int topicId,
+        int? questionTypeId,
+        int difficultyId,
+        int count,
+        IReadOnlySet<Guid> excludeIds,
+        CancellationToken ct = default)
+    {
+        var sql = questionTypeId.HasValue ? PickSqlWithType : PickSqlNoType;
+        await using var conn = new NpgsqlConnection(Db.Database.GetConnectionString());
+        var rows = await conn.QueryAsync<PickedQuestion>(sql, new
+        {
+            TopicId        = topicId,
+            QuestionTypeId = questionTypeId,
+            DifficultyId   = difficultyId,
+            ExcludedIds    = excludeIds.Count > 0 ? excludeIds.ToArray() : Array.Empty<Guid>(),
+            Count          = count
+        });
+        return rows.ToList();
+    }
+
+    /// <inheritdoc/>
     public async Task IncrementUsageCountAsync(IEnumerable<Guid> questionIds, CancellationToken ct = default)
     {
         var ids = questionIds.ToList();
@@ -121,4 +145,37 @@ public class QuestionRepository : BaseRepository<Question, Guid>, IQuestionRepos
                 .SetProperty(x => x.IsVerified, true)
                 .SetProperty(x => x.VerifiedBy, verifiedBy)
                 .SetProperty(x => x.VerifiedAt, DateTime.UtcNow), ct);
+
+    // ── SQL cho PickRandomAsync ───────────────────────────────────────────
+    // 2 biến thể tránh truyền NULL int gây lỗi type-inference trong Npgsql.
+
+    private static readonly string PickSqlWithType = BuildPickSql(filterByType: true);
+    private static readonly string PickSqlNoType   = BuildPickSql(filterByType: false);
+
+    private static string BuildPickSql(bool filterByType) => $"""
+        SELECT
+            q.id      AS QuestionId,
+            q.content AS Content,
+            (
+                SELECT jsonb_agg(
+                    jsonb_build_object(
+                        'content',     a.content,
+                        'is_correct',  a.is_correct,
+                        'sort_order',  a.sort_order,
+                        'explanation', a.explanation
+                    ) ORDER BY a.sort_order
+                )::text
+                FROM public.question_answers a
+                WHERE a.question_id = q.id
+            ) AS AnswersJson
+        FROM public.questions q
+        WHERE q.is_active           = true
+          AND q.is_verified         = true
+          AND q.topic_id            = @TopicId
+          AND q.difficulty_level_id = @DifficultyId
+          {(filterByType ? "AND q.question_type_id = @QuestionTypeId" : "")}
+          AND NOT (q.id = ANY(@ExcludedIds))
+        ORDER BY RANDOM()
+        LIMIT @Count
+        """;
 }
