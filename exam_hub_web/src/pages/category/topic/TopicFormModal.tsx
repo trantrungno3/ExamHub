@@ -10,7 +10,7 @@ type Props = {
     onSave: (body: TopicBody) => Promise<boolean>
 }
 
-export function TopicFormModal({open, record, subjects, onClose, onSave}: Props) {
+export function TopicFormModal({open, record, subjects, onClose, onSave}: Readonly<Props>) {
     const [form] = Form.useForm()
     const [saving, setSaving] = useState(false)
     const [parentOptions, setParentOptions] = useState<Topic[]>([])
@@ -48,7 +48,7 @@ export function TopicFormModal({open, record, subjects, onClose, onSave}: Props)
             )
             if (record?.subjectId) void loadParentOptions(record.subjectId, record.id)
         }
-    }, [open, record, loadParentOptions])
+    }, [form, open, record, loadParentOptions])
 
     const onSubjectChange = (subjectId: number) => {
         form.setFieldValue('parentId', undefined)
