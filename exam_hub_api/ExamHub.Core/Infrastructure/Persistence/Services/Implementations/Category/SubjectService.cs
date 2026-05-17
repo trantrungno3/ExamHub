@@ -1,11 +1,11 @@
 using ExamHub.Core.Domain.Entities;
 using ExamHub.Core.Domain.Interfaces;
-using ExamHub.Core.Infrastructure.Caching;
+using TVT.Core.Db.Redis;
 
 namespace ExamHub.Core.Infrastructure.Persistence.Services.Implementations;
 
 /// <summary>Triển khai service cho Subject</summary>
-public class SubjectService(ISubjectRepository repo, RedisCacheService cache)
+public class SubjectService(ISubjectRepository repo, IRedisService cache)
     : ISubjectService
 {
     private const string AllKey    = "category:subjects:all";

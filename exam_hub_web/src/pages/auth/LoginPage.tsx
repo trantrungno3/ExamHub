@@ -31,7 +31,8 @@ export default function LoginPage() {
     const onFinish = async (values: LoginFormValues) => {
         setLoading(true)
         try {
-            const error = await login(values.username, values.password)
+            const error = await login(values.username, values.password);
+            console.log(error)
             if (error) {
                 messageApi.error(error)
             } else {

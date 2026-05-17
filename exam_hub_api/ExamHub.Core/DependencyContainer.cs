@@ -1,4 +1,3 @@
-using ExamHub.Core.Infrastructure.Caching;
 using ExamHub.Core.Domain.Interfaces;
 using ExamHub.Core.Infrastructure.Persistence;
 using ExamHub.Core.Infrastructure.Persistence.Repositories.Implementations;
@@ -19,6 +18,7 @@ using TVT.Core.MinioStorage;
 using TVT.Core.Models;
 using TVT.Core.RabbitMQ;
 using TVT.Core.Db.PostgreSql;
+using TVT.Core.Db.Redis;
 
 namespace ExamHub.Core;
 
@@ -49,7 +49,7 @@ public static class DependencyContainer
                 .AddProjectAuthService(config)
                 .AddCqrsServices()
                 .AddAppDbContext(config)
-                // .AddRedisCache(config)
+                .AddRedisStorage("examhub-core", isDev)
                 .AddPostgreSqlService()
                 .AddRepositories()
                 .AddAppServices()
@@ -77,15 +77,6 @@ public static class DependencyContainer
                         npgsql.CommandTimeout(60);
                     })
                     .UseSnakeCaseNamingConvention());
-            return services;
-        }
-
-        private IServiceCollection AddRedisCache(IConfiguration config)
-        {
-            var conn = config["Redis:ConnectionString"];
-            if (string.IsNullOrWhiteSpace(conn)) return services;
-            services.AddStackExchangeRedisCache(opt => opt.Configuration = conn);
-            services.AddSingleton<RedisCacheService>();
             return services;
         }
 

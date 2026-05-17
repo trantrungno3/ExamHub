@@ -1,11 +1,11 @@
 using ExamHub.Core.Domain.Entities;
 using ExamHub.Core.Domain.Interfaces;
-using ExamHub.Core.Infrastructure.Caching;
+using TVT.Core.Db.Redis;
 
 namespace ExamHub.Core.Infrastructure.Persistence.Services.Implementations;
 
 /// <summary>Triển khai service cho GradeLevel</summary>
-public class GradeLevelService(IGradeLevelRepository repo, RedisCacheService cache)
+public class GradeLevelService(IGradeLevelRepository repo, IRedisService cache)
     : IGradeLevelService
 {
     private const string AllKey    = "category:grade-levels:all";

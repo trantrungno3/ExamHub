@@ -2,6 +2,7 @@
   <Folder Name="/Libs/">
     <Project Path="../../trungtv_core/Database/TVT_Core_Db_MongoDb/TVT_Core_Db_MongoDb.csproj" />
     <Project Path="../../trungtv_core/Database/TVT_Core_Db_PostgreSql/TVT_Core_Db_PostgreSql.csproj" />
+    <Project Path="../../trungtv_core/Database/TVT_Core_Db_Redis/TVT_Core_Db_Redis.csproj" />
     <Project Path="../../trungtv_core/IdentityUser/TVT_Core_Identity_PostgreSql/TVT_Core_Identity_PostgreSql.csproj" />
     <Project Path="../../trungtv_core/TVT_Core/TVT_Core.csproj" />
     <Project Path="../../trungtv_core/TVT_Core_Log/TVT_Core_Log.csproj" />

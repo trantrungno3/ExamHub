@@ -1,11 +1,11 @@
 using ExamHub.Core.Domain.Entities;
 using ExamHub.Core.Domain.Interfaces;
-using ExamHub.Core.Infrastructure.Caching;
+using TVT.Core.Db.Redis;
 
 namespace ExamHub.Core.Infrastructure.Persistence.Services.Implementations;
 
 /// <summary>Triển khai service cho Topic</summary>
-public class TopicService(ITopicRepository repo, RedisCacheService cache)
+public class TopicService(ITopicRepository repo, IRedisService cache)
     : ITopicService
 {
     private const string AllKey    = "category:topics:all";

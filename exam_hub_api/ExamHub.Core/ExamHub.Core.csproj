@@ -34,6 +34,7 @@
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="..\..\..\trungtv_core\Database\TVT_Core_Db_PostgreSql\TVT_Core_Db_PostgreSql.csproj"/>
+        <ProjectReference Include="..\..\..\trungtv_core\Database\TVT_Core_Db_Redis\TVT_Core_Db_Redis.csproj" />
         <ProjectReference Include="..\..\..\trungtv_core\IdentityUser\TVT_Core_Identity_PostgreSql\TVT_Core_Identity_PostgreSql.csproj"/>
         <ProjectReference Include="..\..\..\trungtv_core\TVT_Core\TVT_Core.csproj"/>
         <ProjectReference Include="..\..\..\trungtv_core\TVT_Core_Middleware\TVT_Core_Middleware.csproj"/>

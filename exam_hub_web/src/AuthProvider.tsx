@@ -3,6 +3,7 @@ import {createContext, useCallback, useContext, useLayoutEffect, useMemo, useRef
 import {globalConfig} from './configs/common'
 import {authService} from './services/authService.ts'
 import {extractUserFromToken, getTokenExpiresAt} from './utils/jwt.ts'
+import {statusCode} from "./services/requestService.ts";
 
 interface AuthContextValue {
     token: TokenModel | null
@@ -31,7 +32,7 @@ function readStoredToken(): TokenModel | null {
     }
 }
 
-export function AuthProvider({children}: Readonly<{children: ReactNode}>) {
+export function AuthProvider({children}: Readonly<{ children: ReactNode }>) {
     const [token, setToken] = useState<TokenModel | null>(readStoredToken)
     const [user, setUser] = useState<UserInfo | null>(() => {
         const t = readStoredToken()
@@ -39,7 +40,9 @@ export function AuthProvider({children}: Readonly<{children: ReactNode}>) {
     })
     const isRefreshingRef = useRef(false)
     const tokenRef = useRef(token)
-    useLayoutEffect(() => { tokenRef.current = token }, [token])
+    useLayoutEffect(() => {
+        tokenRef.current = token
+    }, [token])
 
     const saveToken = useCallback((t: TokenModel) => {
         localStorage.setItem(TOKEN_KEY, JSON.stringify(t))
@@ -56,8 +59,8 @@ export function AuthProvider({children}: Readonly<{children: ReactNode}>) {
     const login = useCallback(async (userName: string, password: string, isRemember = false): Promise<string | null> => {
         try {
             const res = await authService.login({userName, password, isRemember})
-            if (!res.isSuccess || !res.data) return res.message ?? 'Đăng nhập thất bại!'
-            const raw = res.data as {accessToken: string; refreshToken: string}
+            if (res.status === statusCode.Error || !res.data) return res.message ?? 'Đăng nhập thất bại!'
+            const raw = res.data as { accessToken: string; refreshToken: string }
             const expiresAt = getTokenExpiresAt(raw.accessToken)
             const refreshExpiresAt = getTokenExpiresAt(raw.refreshToken)
             saveToken({...raw, expiresAt, refreshExpiresAt})
@@ -78,7 +81,7 @@ export function AuthProvider({children}: Readonly<{children: ReactNode}>) {
                 logout()
                 return false
             }
-            const raw = res.data as {accessToken: string; refreshToken: string}
+            const raw = res.data as { accessToken: string; refreshToken: string }
             const expiresAt = getTokenExpiresAt(raw.accessToken)
             const refreshExpiresAt = getTokenExpiresAt(raw.refreshToken)
             saveToken({...raw, expiresAt, refreshExpiresAt})

@@ -1,7 +1,16 @@
 import {globalConfig} from '../configs/common'
 
+export const statusCode = {
+    Error: 0,
+    Success: 1,
+    Created: 2,
+    Updated: 3,
+    Deleted: 4,
+    NotFound: 5,
+}
+
 export interface ApiResponse<T> {
-    isSuccess: boolean
+    status: number
     message: string
     data?: T
     total?: number
@@ -11,7 +20,7 @@ function getToken(): string | null {
     try {
         const stored = localStorage.getItem(globalConfig.storageKey.token)
         if (!stored) return null
-        const parsed = JSON.parse(stored) as {accessToken?: string}
+        const parsed = JSON.parse(stored) as { accessToken?: string }
         return parsed?.accessToken ?? null
     } catch {
         return null
@@ -27,10 +36,7 @@ function buildUrl(path: string, params?: Record<string, string | number | boolea
 }
 
 async function handleResponse<T>(res: Response): Promise<ApiResponse<T>> {
-    if (!res.ok) {
-        return {isSuccess: false, message: `Lỗi ${res.status}: ${res.statusText}`}
-    }
-    return res.json() as Promise<ApiResponse<T>>
+    return res.json().then(r => r as ApiResponse<T>) as Promise<ApiResponse<T>>
 }
 
 function buildHeaders(auth: boolean): Headers {
