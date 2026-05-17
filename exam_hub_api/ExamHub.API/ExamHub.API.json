@@ -6580,7 +6580,7 @@
             "format": "int64"
           }
         },
-        "description": "Response DTO cho CohortClass.\r\nCohortClass được sinh tự động bởi DB trigger khi tạo Cohort — không có Create request."
+        "description": "Response DTO cho CohortClass.\nCohortClass được sinh tự động bởi DB trigger khi tạo Cohort — không có Create request."
       },
       "CohortMemberRequest": {
         "required": [
