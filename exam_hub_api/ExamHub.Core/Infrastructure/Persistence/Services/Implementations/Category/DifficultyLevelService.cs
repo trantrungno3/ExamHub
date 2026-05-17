@@ -21,6 +21,9 @@ public class DifficultyLevelService(IDifficultyLevelRepository repo, IRedisServi
     public Task<DifficultyLevel?> GetByIdAsync(int id, CancellationToken ct = default)
         => repo.GetByIdAsync(id, ct);
 
+    public Task<bool> ExistsAsync(int id, CancellationToken ct = default)
+        => repo.ExistsAsync(e => e.Id == id, ct);
+
     public Task<DifficultyLevel?> GetByCodeAsync(string code, CancellationToken ct = default)
         => repo.GetByCodeAsync(code, ct);
 

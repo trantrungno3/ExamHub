@@ -30,6 +30,9 @@ public class TopicService(ITopicRepository repo, IRedisService cache)
     public Task<Topic?> GetByIdAsync(int id, CancellationToken ct = default)
         => repo.GetByIdAsync(id, ct);
 
+    public Task<bool> ExistsAsync(int id, CancellationToken ct = default)
+        => repo.ExistsAsync(e => e.Id == id, ct);
+
     public async Task<Topic> CreateAsync(Topic entity, CancellationToken ct = default)
     {
         entity.CreatedAt = DateTime.UtcNow;

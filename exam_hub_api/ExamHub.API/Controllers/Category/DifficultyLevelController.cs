@@ -3,6 +3,7 @@ using ExamHub.Core.Domain.Entities;
 using ExamHub.Core.Domain.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using TVT.Core;
 
 namespace ExamHub.API.Controllers.Category;
 
@@ -22,10 +23,10 @@ public class DifficultyLevelController(IDifficultyLevelService service)
     /// <summary>Lấy theo mã</summary>
     [HttpGet("code/{code}")]
     [Authorize]
-    public async Task<ActionResult<DifficultyLevelResponse>> GetByCode(string code, CancellationToken ct = default)
+    public async Task<ActionResult<RequestResponse<DifficultyLevelResponse>>> GetByCode(string code, CancellationToken ct = default)
     {
         var result = await service.GetByCodeAsync(code, ct);
         if (result is null) return NotFound();
-        return Ok(ToResponse(result));
+        return Ok(RequestResponse<DifficultyLevelResponse>.Success("Lấy dữ liệu thành công!", ToResponse(result), 1));
     }
 }

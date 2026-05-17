@@ -32,7 +32,6 @@ export default function LoginPage() {
         setLoading(true)
         try {
             const error = await login(values.username, values.password);
-            console.log(error)
             if (error) {
                 messageApi.error(error)
             } else {

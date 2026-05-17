@@ -17,6 +17,9 @@ public interface ICategoryService<TEntity, TKey> where TEntity : class
     /// <summary>Lấy theo ID</summary>
     Task<TEntity?> GetByIdAsync(TKey id, CancellationToken ct = default);
 
+    /// <summary>Kiểm tra tồn tại theo ID (không tracking)</summary>
+    Task<bool> ExistsAsync(TKey id, CancellationToken ct = default);
+
     /// <summary>Tạo mới</summary>
     Task<TEntity> CreateAsync(TEntity entity, CancellationToken ct = default);
 

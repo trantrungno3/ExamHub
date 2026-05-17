@@ -66,7 +66,10 @@ function createHttp(auth: boolean) {
             }).then(handleResponse<T>)
         },
         delete<T>(path: string): Promise<ApiResponse<T>> {
-            return fetch(buildUrl(path), {method: 'DELETE', headers: buildHeaders(auth)}).then(handleResponse<T>)
+            return fetch(buildUrl(path), {method: 'DELETE', headers: buildHeaders(auth)}).then(res => {
+                if (res.status === 204) return {status: statusCode.Deleted, message: 'Xoá thành công'} as ApiResponse<T>
+                return handleResponse<T>(res)
+            })
         },
         patch<T>(path: string, body?: unknown): Promise<ApiResponse<T>> {
             return fetch(buildUrl(path), {

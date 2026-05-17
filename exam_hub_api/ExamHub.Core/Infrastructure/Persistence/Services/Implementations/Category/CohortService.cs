@@ -21,6 +21,9 @@ public class CohortService : ICohortService
     public Task<Cohort?> GetByIdAsync(int id, CancellationToken ct = default)
         => _repo.GetByIdAsync(id, ct);
 
+    public Task<bool> ExistsAsync(int id, CancellationToken ct = default)
+        => _repo.ExistsAsync(e => e.Id == id, ct);
+
     public Task<Cohort?> GetWithClassesAsync(int id, CancellationToken ct = default)
         => _repo.GetWithClassesAsync(id, ct);
 

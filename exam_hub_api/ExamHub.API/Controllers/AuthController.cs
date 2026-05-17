@@ -16,43 +16,32 @@ namespace ExamHub.API.Controllers;
 [ApiController]
 public class AuthController(IAuthService service) : ControllerBase
 {
-    /// <summary>
-    /// </summary>
-    /// <param name="dto"></param>
-    /// <returns></returns>
+    /// <summary>Đăng nhập và nhận JWT token</summary>
     [HttpPost("login")]
-    public async Task<RequestResponse<TokenModel>> Login([FromBody] LoginDto dto)
+    public async Task<ActionResult<RequestResponse<TokenModel>>> Login([FromBody] LoginDto dto)
     {
-        return await service.Login(dto);
+        return Ok(await service.Login(dto));
     }
 
-    /// <summary>
-    /// </summary>
-    /// <param name="dto"></param>
-    /// <returns></returns>
+    /// <summary>Đăng ký tài khoản mới</summary>
     [HttpPost("register")]
-    public async Task<RequestResponse<object>> Register([FromBody] RegisterDto dto)
+    public async Task<ActionResult<RequestResponse<object>>> Register([FromBody] RegisterDto dto)
     {
-        return await service.Register(dto);
+        return Ok(await service.Register(dto));
     }
 
-    /// <summary>
-    /// </summary>
-    /// <param name="dto"></param>
-    /// <returns></returns>
+    /// <summary>Làm mới access token bằng refresh token</summary>
     [HttpGet("refresh-token")]
-    public async Task<RequestResponse<string>> RefreshToken([FromQuery] TokenModel dto)
+    public async Task<ActionResult<RequestResponse<string>>> RefreshToken([FromQuery] TokenModel dto)
     {
-        return await service.RefreshToken(dto);
+        return Ok(await service.RefreshToken(dto));
     }
 
-    /// <summary>
-    /// </summary>
-    /// <returns></returns>
+    /// <summary>Lấy thông tin tài khoản đang đăng nhập</summary>
     [HttpGet("info")]
     [Authorize]
-    public async Task<RequestResponse<UserInfo>> GetInfo()
+    public async Task<ActionResult<RequestResponse<UserInfo>>> GetInfo()
     {
-        return await service.GetUserInfo(User.GetUserName());
+        return Ok(await service.GetUserInfo(User.GetUserName()));
     }
 }

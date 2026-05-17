@@ -113,7 +113,9 @@ public static class DependencyContainer
 
         private IServiceCollection AddAppServices()
         {
+            services.AddHttpContextAccessor();
             return services
+                .AddScoped<IUserManagementService, UserManagementService>()
                 // Config / Lookup
                 .AddScoped<IGradeLevelService, GradeLevelService>()
                 .AddScoped<ISubjectService, SubjectService>()

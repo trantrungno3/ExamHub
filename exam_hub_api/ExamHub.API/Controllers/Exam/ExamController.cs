@@ -2,6 +2,7 @@ using ExamHub.Core.DataTransferObjects.Exam;
 using ExamHub.Core.Domain.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using TVT.Core;
 
 namespace ExamHub.API.Controllers.Exam;
 
@@ -13,51 +14,52 @@ public class ExamController(IExamService service) : ControllerBase
 {
     /// <summary>Lấy đề thi theo ID</summary>
     [HttpGet("{id:guid}")]
-    public async Task<ActionResult<ExamResponse>> GetById(Guid id, CancellationToken ct)
+    public async Task<ActionResult<RequestResponse<ExamResponse>>> GetById(Guid id, CancellationToken ct)
     {
         var result = await service.GetByIdAsync(id, ct);
         if (result is null) return NotFound();
-        return Ok(ExamResponse.FromEntity(result));
+        return Ok(RequestResponse<ExamResponse>.Success("Lấy dữ liệu thành công!", ExamResponse.FromEntity(result), 1));
     }
 
     /// <summary>Lấy đề thi kèm câu hỏi snapshot</summary>
     [HttpGet("{id:guid}/with-questions")]
-    public async Task<ActionResult<ExamResponse>> GetWithQuestions(Guid id, CancellationToken ct)
+    public async Task<ActionResult<RequestResponse<ExamResponse>>> GetWithQuestions(Guid id, CancellationToken ct)
     {
         var result = await service.GetWithQuestionsAsync(id, ct);
         if (result is null) return NotFound();
-        return Ok(ExamResponse.FromEntity(result, includeQuestions: true));
+        return Ok(RequestResponse<ExamResponse>.Success("Lấy dữ liệu thành công!", ExamResponse.FromEntity(result, includeQuestions: true), 1));
     }
 
     /// <summary>Lấy danh sách đề thi phân trang với bộ lọc</summary>
     [HttpGet]
-    public async Task<ActionResult<object>> GetPaged([FromQuery] ExamPagedRequest request, CancellationToken ct)
+    public async Task<ActionResult<RequestResponse<object>>> GetPaged([FromQuery] ExamPagedRequest request, CancellationToken ct)
     {
         var (items, total) = await service.GetPagedAsync(
             request.Page, request.PageSize,
             request.GradeLevelId, request.SubjectId,
             request.Status, request.Keyword, ct);
 
-        return Ok(new
+        return Ok(RequestResponse<object>.Success("Lấy danh sách thành công!", new
         {
             Total    = total,
             Page     = request.Page,
             PageSize = request.PageSize,
             Items    = items.Select(e => ExamResponse.FromEntity(e)).ToList()
-        });
+        }, total));
     }
 
     /// <summary>Lấy danh sách đề thi biến thể cùng lô</summary>
     [HttpGet("{parentId:guid}/variants")]
-    public async Task<ActionResult<IReadOnlyList<ExamResponse>>> GetVariants(Guid parentId, CancellationToken ct)
+    public async Task<ActionResult<RequestResponse<IReadOnlyList<ExamResponse>>>> GetVariants(Guid parentId, CancellationToken ct)
     {
         var result = await service.GetVariantsAsync(parentId, ct);
-        return Ok(result.Select(e => ExamResponse.FromEntity(e)).ToList());
+        var list = result.Select(e => ExamResponse.FromEntity(e)).ToList();
+        return Ok(RequestResponse<IReadOnlyList<ExamResponse>>.Success("Lấy danh sách thành công!", list, list.Count));
     }
 
     /// <summary>Tạo đề thi kèm câu hỏi snapshot</summary>
     [HttpPost]
-    public async Task<ActionResult<ExamResponse>> Create(
+    public async Task<ActionResult<RequestResponse<ExamResponse>>> Create(
         [FromBody] ExamRequest request,
         CancellationToken ct)
     {
@@ -65,25 +67,25 @@ public class ExamController(IExamService service) : ControllerBase
         var entity    = request.ToEntity(userId);
         var questions = request.ToQuestions();
         var result    = await service.CreateAsync(entity, questions, ct);
-        return StatusCode(201, ExamResponse.FromEntity(result));
+        return StatusCode(201, RequestResponse<ExamResponse>.Success("Tạo đề thi thành công!", ExamResponse.FromEntity(result), 1));
     }
 
     /// <summary>Phát hành đề thi (Draft → Published)</summary>
     [HttpPost("{id:guid}/publish")]
-    public async Task<ActionResult<bool>> Publish(Guid id, CancellationToken ct)
+    public async Task<ActionResult<RequestResponse<bool>>> Publish(Guid id, CancellationToken ct)
     {
         var result = await service.PublishAsync(id, ct);
         if (!result) return NotFound();
-        return Ok(result);
+        return Ok(RequestResponse<bool>.Success("Phát hành đề thi thành công!", result, 1));
     }
 
     /// <summary>Lưu trữ đề thi (Published → Archived)</summary>
     [HttpPost("{id:guid}/archive")]
-    public async Task<ActionResult<bool>> Archive(Guid id, CancellationToken ct)
+    public async Task<ActionResult<RequestResponse<bool>>> Archive(Guid id, CancellationToken ct)
     {
         var result = await service.ArchiveAsync(id, ct);
         if (!result) return NotFound();
-        return Ok(result);
+        return Ok(RequestResponse<bool>.Success("Lưu trữ đề thi thành công!", result, 1));
     }
 
     /// <summary>Xóa đề thi</summary>

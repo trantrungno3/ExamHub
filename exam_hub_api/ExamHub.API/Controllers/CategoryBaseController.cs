@@ -1,6 +1,7 @@
 using ExamHub.Core.Domain.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using TVT.Core;
 
 namespace ExamHub.API.Controllers;
 
@@ -28,47 +29,48 @@ public abstract class CategoryBaseController<TEntity, TKey, TRequest, TResponse>
 
     /// <summary>Lấy toàn bộ danh sách</summary>
     [HttpGet("")]
-    public virtual async Task<ActionResult<IReadOnlyList<TResponse>>> GetAll(CancellationToken ct = default)
+    public virtual async Task<ActionResult<RequestResponse<IReadOnlyList<TResponse>>>> GetAll(CancellationToken ct = default)
     {
         var result = await service.GetAllAsync(ct);
-        return Ok(result.Select(ToResponse).ToList());
+        var list = result.Select(ToResponse).ToList();
+        return Ok(RequestResponse<IReadOnlyList<TResponse>>.Success("Lấy danh sách thành công!", list, list.Count));
     }
 
     /// <summary>Lấy danh sách đang kích hoạt</summary>
     [HttpGet("active")]
-    public virtual async Task<ActionResult<IReadOnlyList<TResponse>>> GetActive(CancellationToken ct = default)
+    public virtual async Task<ActionResult<RequestResponse<IReadOnlyList<TResponse>>>> GetActive(CancellationToken ct = default)
     {
         var result = await service.GetActiveAsync(ct);
-        return Ok(result.Select(ToResponse).ToList());
+        var list = result.Select(ToResponse).ToList();
+        return Ok(RequestResponse<IReadOnlyList<TResponse>>.Success("Lấy danh sách thành công!", list, list.Count));
     }
 
     /// <summary>Lấy theo ID</summary>
     [HttpGet("{id}")]
-    public virtual async Task<ActionResult<TResponse>> GetById(TKey id, CancellationToken ct = default)
+    public virtual async Task<ActionResult<RequestResponse<TResponse>>> GetById(TKey id, CancellationToken ct = default)
     {
         var result = await service.GetByIdAsync(id, ct);
         if (result is null) return NotFound();
-        return Ok(ToResponse(result));
+        return Ok(RequestResponse<TResponse>.Success("Lấy dữ liệu thành công!", ToResponse(result), 1));
     }
 
     /// <summary>Tạo mới</summary>
     [HttpPost("")]
-    public virtual async Task<ActionResult<TResponse>> Create([FromBody] TRequest request, CancellationToken ct = default)
+    public virtual async Task<ActionResult<RequestResponse<TResponse>>> Create([FromBody] TRequest request, CancellationToken ct = default)
     {
         var entity = ToEntity(request);
         var result = await service.CreateAsync(entity, ct);
-        return StatusCode(201, ToResponse(result));
+        return StatusCode(201, RequestResponse<TResponse>.Success("Tạo mới thành công!", ToResponse(result), 1));
     }
 
     /// <summary>Cập nhật</summary>
     [HttpPut("{id}")]
-    public virtual async Task<ActionResult<TResponse>> Update(TKey id, [FromBody] TRequest request, CancellationToken ct = default)
+    public virtual async Task<ActionResult<RequestResponse<TResponse>>> Update(TKey id, [FromBody] TRequest request, CancellationToken ct = default)
     {
-        var existing = await service.GetByIdAsync(id, ct);
-        if (existing is null) return NotFound();
+        if (!await service.ExistsAsync(id, ct)) return NotFound();
         var entity = ToEntityForUpdate(id, request);
         var result = await service.UpdateAsync(entity, ct);
-        return Ok(ToResponse(result));
+        return Ok(RequestResponse<TResponse>.Success("Cập nhật thành công!", ToResponse(result), 1));
     }
 
     /// <summary>Xóa theo ID</summary>
@@ -81,9 +83,9 @@ public abstract class CategoryBaseController<TEntity, TKey, TRequest, TResponse>
 
     /// <summary>Bật/tắt kích hoạt</summary>
     [HttpPatch("{id}/active")]
-    public virtual async Task<ActionResult<bool>> SetActive(TKey id, [FromBody] bool isActive, CancellationToken ct = default)
+    public virtual async Task<ActionResult<RequestResponse<bool>>> SetActive(TKey id, [FromBody] bool isActive, CancellationToken ct = default)
     {
         var result = await service.SetActiveAsync(id, isActive, ct);
-        return Ok(result);
+        return Ok(RequestResponse<bool>.Success("Cập nhật trạng thái thành công!", result, 1));
     }
 }

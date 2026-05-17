@@ -21,6 +21,9 @@ public class GradeLevelService(IGradeLevelRepository repo, IRedisService cache)
     public Task<GradeLevel?> GetByIdAsync(int id, CancellationToken ct = default)
         => repo.GetByIdAsync(id, ct);
 
+    public Task<bool> ExistsAsync(int id, CancellationToken ct = default)
+        => repo.ExistsAsync(e => e.Id == id, ct);
+
     public Task<GradeLevel?> GetWithSubjectsAsync(int id, CancellationToken ct = default)
         => repo.GetWithSubjectsAsync(id, ct);
 

@@ -18,6 +18,9 @@ public class SchoolService : ISchoolService
     public Task<School?> GetByIdAsync(int id, CancellationToken ct = default)
         => _repo.GetByIdAsync(id, ct);
 
+    public Task<bool> ExistsAsync(int id, CancellationToken ct = default)
+        => _repo.ExistsAsync(e => e.Id == id, ct);
+
     public Task<School?> GetByCodeAsync(string code, CancellationToken ct = default)
         => _repo.GetByCodeAsync(code, ct);
 

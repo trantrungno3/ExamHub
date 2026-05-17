@@ -21,6 +21,9 @@ public class QuestionTypeService(IQuestionTypeRepository repo, IRedisService cac
     public Task<QuestionType?> GetByIdAsync(int id, CancellationToken ct = default)
         => repo.GetByIdAsync(id, ct);
 
+    public Task<bool> ExistsAsync(int id, CancellationToken ct = default)
+        => repo.ExistsAsync(e => e.Id == id, ct);
+
     public Task<QuestionType?> GetByCodeAsync(string code, CancellationToken ct = default)
         => repo.GetByCodeAsync(code, ct);
 

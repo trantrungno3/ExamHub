@@ -24,6 +24,9 @@ public class SubjectService(ISubjectRepository repo, IRedisService cache)
     public Task<Subject?> GetByIdAsync(int id, CancellationToken ct = default)
         => repo.GetByIdAsync(id, ct);
 
+    public Task<bool> ExistsAsync(int id, CancellationToken ct = default)
+        => repo.ExistsAsync(e => e.Id == id, ct);
+
     public Task<Subject?> GetWithTopicsAsync(int id, CancellationToken ct = default)
         => repo.GetWithTopicsAsync(id, ct);
 

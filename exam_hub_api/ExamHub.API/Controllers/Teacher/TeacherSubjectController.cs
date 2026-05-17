@@ -2,6 +2,7 @@ using ExamHub.Core.Domain.Entities;
 using ExamHub.Core.Domain.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using TVT.Core;
 
 namespace ExamHub.API.Controllers.Teacher;
 
@@ -13,18 +14,19 @@ public class TeacherSubjectController(ITeacherSubjectService service) : Controll
 {
     /// <summary>Lấy danh sách môn học của giáo viên</summary>
     [HttpGet("teacher/{userId:guid}")]
-    public async Task<ActionResult<IReadOnlyList<TeacherSubject>>> GetByTeacher(Guid userId, CancellationToken ct)
+    public async Task<ActionResult<RequestResponse<IReadOnlyList<TeacherSubject>>>> GetByTeacher(Guid userId, CancellationToken ct)
     {
         var result = await service.GetByTeacherAsync(userId, ct);
-        return Ok(result);
+        var list = result.ToList();
+        return Ok(RequestResponse<IReadOnlyList<TeacherSubject>>.Success("Lấy danh sách thành công!", list, list.Count));
     }
 
     /// <summary>Kiểm tra giáo viên có phụ trách môn học không</summary>
     [HttpGet("teacher/{userId:guid}/subject/{subjectId:int}/check")]
-    public async Task<ActionResult<bool>> IsTeacherOfSubject(Guid userId, int subjectId, CancellationToken ct)
+    public async Task<ActionResult<RequestResponse<bool>>> IsTeacherOfSubject(Guid userId, int subjectId, CancellationToken ct)
     {
         var result = await service.IsTeacherOfSubjectAsync(userId, subjectId, ct);
-        return Ok(result);
+        return Ok(RequestResponse<bool>.Success("Kiểm tra thành công!", result, 1));
     }
 
     /// <summary>Gán môn học cho giáo viên</summary>

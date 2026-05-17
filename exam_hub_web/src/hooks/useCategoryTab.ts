@@ -2,7 +2,7 @@ import {useCallback, useEffect, useState} from 'react'
 import {message} from 'antd'
 import type {CategoryServiceBase} from '../services/categoryServiceBase'
 
-export function useCategoryTab<TEntity extends {id: number}, TBody>(
+export function useCategoryTab<TEntity extends { id: number }, TBody>(
     service: CategoryServiceBase<TEntity, TBody>,
     entityLabel: string,
 ) {
@@ -19,14 +19,16 @@ export function useCategoryTab<TEntity extends {id: number}, TBody>(
     }, [service, entityLabel])
 
     // loading starts as true, so no setState needed here
-    useEffect(() => { fetchData() }, [fetchData])
+    useEffect(() => {
+        fetchData()
+    }, [fetchData])
 
     const handleSave = useCallback(async (body: TBody): Promise<boolean> => {
         try {
             const res = editing
                 ? await service.update(editing.id, body)
                 : await service.create(body)
-            if (!res.isSuccess) {
+            if (!res.status || !res.data) {
                 message.error(res.message || 'Có lỗi xảy ra')
                 return false
             }
@@ -50,8 +52,14 @@ export function useCategoryTab<TEntity extends {id: number}, TBody>(
         }
     }, [service])
 
-    const openCreate = useCallback(() => { setEditing(null); setModalOpen(true) }, [])
-    const openEdit = useCallback((record: TEntity) => { setEditing(record); setModalOpen(true) }, [])
+    const openCreate = useCallback(() => {
+        setEditing(null);
+        setModalOpen(true)
+    }, [])
+    const openEdit = useCallback((record: TEntity) => {
+        setEditing(record);
+        setModalOpen(true)
+    }, [])
     const closeModal = useCallback(() => setModalOpen(false), [])
 
     return {data, loading, modalOpen, editing, fetchData, handleSave, handleDelete, openCreate, openEdit, closeModal}

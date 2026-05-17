@@ -11,6 +11,7 @@ import CreateExamTemplatePage from '../pages/exams/CreateExamTemplatePage'
 import ExamCoverPage from '../pages/student/ExamCoverPage'
 import ExamTakingPage from '../pages/student/ExamTakingPage'
 import { Placeholder } from '../components/Placeholder'
+import UserPage from '../pages/user/UserPage'
 
 export const router = createBrowserRouter([
   { path: '/',         element: <Navigate to="/login" replace /> },
@@ -34,7 +35,7 @@ export const router = createBrowserRouter([
       { path: 'exams/create',   element: <CreateExamTemplatePage /> },
       { path: 'category',       element: <CategoryPage /> },
       { path: 'generate',       element: <Placeholder title="Sinh đề thi" /> },
-      { path: 'users',          element: <Placeholder title="Người dùng" /> },
+      { path: 'users',          element: <UserPage /> },
     ],
   },
 ])

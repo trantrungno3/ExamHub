@@ -10,9 +10,8 @@
         "tags": [
           "Auth"
         ],
-        "summary": "",
+        "summary": "Đăng nhập và nhận JWT token",
         "requestBody": {
-          "description": "",
           "content": {
             "application/json": {
               "schema": {
@@ -34,7 +33,7 @@
         },
         "responses": {
           "200": {
-            "description": "",
+            "description": "OK",
             "content": {
               "text/plain": {
                 "schema": {
@@ -66,9 +65,8 @@
         "tags": [
           "Auth"
         ],
-        "summary": "",
+        "summary": "Đăng ký tài khoản mới",
         "requestBody": {
-          "description": "",
           "content": {
             "application/json": {
               "schema": {
@@ -90,7 +88,7 @@
         },
         "responses": {
           "200": {
-            "description": "",
+            "description": "OK",
             "content": {
               "text/plain": {
                 "schema": {
@@ -122,7 +120,7 @@
         "tags": [
           "Auth"
         ],
-        "summary": "",
+        "summary": "Làm mới access token bằng refresh token",
         "parameters": [
           {
             "name": "AccessToken",
@@ -141,7 +139,7 @@
         ],
         "responses": {
           "200": {
-            "description": "",
+            "description": "OK",
             "content": {
               "text/plain": {
                 "schema": {
@@ -173,10 +171,10 @@
         "tags": [
           "Auth"
         ],
-        "summary": "",
+        "summary": "Lấy thông tin tài khoản đang đăng nhập",
         "responses": {
           "200": {
-            "description": "",
+            "description": "OK",
             "content": {
               "text/plain": {
                 "schema": {
@@ -191,6 +189,579 @@
               "text/json": {
                 "schema": {
                   "$ref": "#/components/schemas/RequestResponseOfUserInfo"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/users": {
+      "get": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Lấy danh sách toàn bộ người dùng",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfUserResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfUserResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfUserResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Tạo người dùng mới",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUserRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUserRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUserRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfUserResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfUserResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfUserResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/users/{id}": {
+      "get": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Lấy người dùng theo ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfUserResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfUserResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfUserResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Cập nhật thông tin người dùng",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfUserResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfUserResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfUserResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Xóa người dùng",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/users/{id}/lock": {
+      "patch": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Khóa / mở khóa tài khoản",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "boolean"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "type": "boolean"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "type": "boolean"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/users/{id}/reset-password": {
+      "patch": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Đặt lại mật khẩu cho người dùng",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetPasswordRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetPasswordRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetPasswordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/users/{id}/roles": {
+      "get": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Lấy danh sách role của người dùng",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfstring"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfstring"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfstring"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Đặt lại toàn bộ roles (thay thế tất cả)",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetRolesRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetRolesRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetRolesRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfstring"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfstring"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfstring"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/users/{id}/roles/{role}": {
+      "post": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Thêm một role cho người dùng",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "role",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfstring"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfstring"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfstring"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Xóa một role khỏi người dùng",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "role",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfstring"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfstring"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfstring"
                 }
               }
             }
@@ -226,26 +797,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/TeacherSubject"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfTeacherSubject"
                 }
               },
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/TeacherSubject"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfTeacherSubject"
                 }
               },
               "text/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/TeacherSubject"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfTeacherSubject"
                 }
               }
             }
@@ -291,17 +853,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "type": "boolean"
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
                 }
               },
               "application/json": {
                 "schema": {
-                  "type": "boolean"
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
                 }
               },
               "text/json": {
                 "schema": {
-                  "type": "boolean"
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
                 }
               }
             }
@@ -414,17 +976,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/CohortClassResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfCohortClassResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CohortClassResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfCohortClassResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CohortClassResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfCohortClassResponse"
                 }
               }
             }
@@ -461,26 +1023,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/CohortClassResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfCohortClassResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/CohortClassResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfCohortClassResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/CohortClassResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfCohortClassResponse"
                 }
               }
             }
@@ -515,26 +1068,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/CohortClassResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfCohortClassResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/CohortClassResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfCohortClassResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/CohortClassResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfCohortClassResponse"
                 }
               }
             }
@@ -591,17 +1135,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "type": "boolean"
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
                 }
               },
               "application/json": {
                 "schema": {
-                  "type": "boolean"
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
                 }
               },
               "text/json": {
                 "schema": {
-                  "type": "boolean"
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
                 }
               }
             }
@@ -638,26 +1182,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/CohortResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfCohortResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/CohortResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfCohortResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/CohortResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfCohortResponse"
                 }
               }
             }
@@ -694,17 +1229,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/CohortResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfCohortResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CohortResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfCohortResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CohortResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfCohortResponse"
                 }
               }
             }
@@ -741,17 +1276,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/CohortResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfCohortResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CohortResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfCohortResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CohortResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfCohortResponse"
                 }
               }
             }
@@ -776,26 +1311,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/CohortResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfCohortResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/CohortResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfCohortResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/CohortResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfCohortResponse"
                 }
               }
             }
@@ -837,17 +1363,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/CohortResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfCohortResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CohortResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfCohortResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CohortResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfCohortResponse"
                 }
               }
             }
@@ -872,26 +1398,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/CohortResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfCohortResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/CohortResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfCohortResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/CohortResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfCohortResponse"
                 }
               }
             }
@@ -930,17 +1447,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/CohortResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfCohortResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CohortResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfCohortResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CohortResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfCohortResponse"
                 }
               }
             }
@@ -997,17 +1514,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/CohortResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfCohortResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CohortResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfCohortResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CohortResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfCohortResponse"
                 }
               }
             }
@@ -1096,17 +1613,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "type": "boolean"
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
                 }
               },
               "application/json": {
                 "schema": {
-                  "type": "boolean"
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
                 }
               },
               "text/json": {
                 "schema": {
-                  "type": "boolean"
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
                 }
               }
             }
@@ -1142,17 +1659,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/CohortMemberResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfCohortMemberResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CohortMemberResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfCohortMemberResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CohortMemberResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfCohortMemberResponse"
                 }
               }
             }
@@ -1216,26 +1733,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/CohortMemberResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfCohortMemberResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/CohortMemberResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfCohortMemberResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/CohortMemberResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfCohortMemberResponse"
                 }
               }
             }
@@ -1271,26 +1779,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/CohortMemberResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfCohortMemberResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/CohortMemberResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfCohortMemberResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/CohortMemberResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfCohortMemberResponse"
                 }
               }
             }
@@ -1335,17 +1834,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/CohortMemberResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfCohortMemberResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CohortMemberResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfCohortMemberResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CohortMemberResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfCohortMemberResponse"
                 }
               }
             }
@@ -1401,17 +1900,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "type": "boolean"
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
                 }
               },
               "application/json": {
                 "schema": {
-                  "type": "boolean"
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
                 }
               },
               "text/json": {
                 "schema": {
-                  "type": "boolean"
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
                 }
               }
             }
@@ -1446,17 +1945,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/SchoolResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfSchoolResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SchoolResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfSchoolResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SchoolResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfSchoolResponse"
                 }
               }
             }
@@ -1493,17 +1992,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/SchoolResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfSchoolResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SchoolResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfSchoolResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SchoolResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfSchoolResponse"
                 }
               }
             }
@@ -1540,17 +2039,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/SchoolResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfSchoolResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SchoolResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfSchoolResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SchoolResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfSchoolResponse"
                 }
               }
             }
@@ -1575,26 +2074,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/SchoolResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfSchoolResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/SchoolResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfSchoolResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/SchoolResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfSchoolResponse"
                 }
               }
             }
@@ -1636,17 +2126,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/SchoolResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfSchoolResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SchoolResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfSchoolResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SchoolResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfSchoolResponse"
                 }
               }
             }
@@ -1671,26 +2161,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/SchoolResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfSchoolResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/SchoolResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfSchoolResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/SchoolResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfSchoolResponse"
                 }
               }
             }
@@ -1729,17 +2210,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/SchoolResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfSchoolResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SchoolResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfSchoolResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SchoolResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfSchoolResponse"
                 }
               }
             }
@@ -1796,17 +2277,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/SchoolResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfSchoolResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SchoolResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfSchoolResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SchoolResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfSchoolResponse"
                 }
               }
             }
@@ -1895,17 +2376,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "type": "boolean"
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
                 }
               },
               "application/json": {
                 "schema": {
-                  "type": "boolean"
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
                 }
               },
               "text/json": {
                 "schema": {
-                  "type": "boolean"
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
                 }
               }
             }
@@ -1941,17 +2422,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/SchoolMemberResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfSchoolMemberResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SchoolMemberResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfSchoolMemberResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SchoolMemberResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfSchoolMemberResponse"
                 }
               }
             }
@@ -2005,17 +2486,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/SchoolMemberResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfSchoolMemberResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SchoolMemberResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfSchoolMemberResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SchoolMemberResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfSchoolMemberResponse"
                 }
               }
             }
@@ -2079,26 +2560,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/SchoolMemberResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfSchoolMemberResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/SchoolMemberResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfSchoolMemberResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/SchoolMemberResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfSchoolMemberResponse"
                 }
               }
             }
@@ -2143,26 +2615,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/SchoolMemberResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfSchoolMemberResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/SchoolMemberResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfSchoolMemberResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/SchoolMemberResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfSchoolMemberResponse"
                 }
               }
             }
@@ -2198,26 +2661,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/SchoolMemberResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfSchoolMemberResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/SchoolMemberResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfSchoolMemberResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/SchoolMemberResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfSchoolMemberResponse"
                 }
               }
             }
@@ -2262,17 +2716,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/SchoolMemberResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfSchoolMemberResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SchoolMemberResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfSchoolMemberResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SchoolMemberResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfSchoolMemberResponse"
                 }
               }
             }
@@ -2328,17 +2782,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "type": "boolean"
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
                 }
               },
               "application/json": {
                 "schema": {
-                  "type": "boolean"
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
                 }
               },
               "text/json": {
                 "schema": {
-                  "type": "boolean"
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
                 }
               }
             }
@@ -2374,17 +2828,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/QuestionResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfQuestionResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/QuestionResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfQuestionResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/QuestionResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfQuestionResponse"
                 }
               }
             }
@@ -2438,17 +2892,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/QuestionResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfQuestionResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/QuestionResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfQuestionResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/QuestionResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfQuestionResponse"
                 }
               }
             }
@@ -2572,7 +3026,24 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfObject"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfObject"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfObject"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -2612,17 +3083,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/QuestionResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfQuestionResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/QuestionResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfQuestionResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/QuestionResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfQuestionResponse"
                 }
               }
             }
@@ -2659,26 +3130,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/QuestionResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfQuestionResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/QuestionResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfQuestionResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/QuestionResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfQuestionResponse"
                 }
               }
             }
@@ -2743,17 +3205,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/ExamResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfExamResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ExamResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfExamResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ExamResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfExamResponse"
                 }
               }
             }
@@ -2816,17 +3278,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/ExamResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfExamResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ExamResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfExamResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ExamResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfExamResponse"
                 }
               }
             }
@@ -2911,7 +3373,24 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfObject"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfObject"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfObject"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -2951,17 +3430,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/ExamResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfExamResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ExamResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfExamResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ExamResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfExamResponse"
                 }
               }
             }
@@ -2997,26 +3476,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ExamResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfExamResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ExamResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfExamResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ExamResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfExamResponse"
                 }
               }
             }
@@ -3052,17 +3522,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "type": "boolean"
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
                 }
               },
               "application/json": {
                 "schema": {
-                  "type": "boolean"
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
                 }
               },
               "text/json": {
                 "schema": {
-                  "type": "boolean"
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
                 }
               }
             }
@@ -3098,17 +3568,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "type": "boolean"
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
                 }
               },
               "application/json": {
                 "schema": {
-                  "type": "boolean"
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
                 }
               },
               "text/json": {
                 "schema": {
-                  "type": "boolean"
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
                 }
               }
             }
@@ -3149,7 +3619,24 @@
         },
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfObject"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfObject"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfObject"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -3182,17 +3669,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/ExamSubmissionResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfExamSubmissionResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ExamSubmissionResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfExamSubmissionResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ExamSubmissionResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfExamSubmissionResponse"
                 }
               }
             }
@@ -3228,26 +3715,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ExamSubmissionResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfExamSubmissionResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ExamSubmissionResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfExamSubmissionResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ExamSubmissionResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfExamSubmissionResponse"
                 }
               }
             }
@@ -3283,26 +3761,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ExamSubmissionResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfExamSubmissionResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ExamSubmissionResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfExamSubmissionResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ExamSubmissionResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfExamSubmissionResponse"
                 }
               }
             }
@@ -3347,17 +3816,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/ExamSubmissionResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfExamSubmissionResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ExamSubmissionResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfExamSubmissionResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ExamSubmissionResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfExamSubmissionResponse"
                 }
               }
             }
@@ -3402,17 +3871,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/ExamSubmissionResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfExamSubmissionResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ExamSubmissionResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfExamSubmissionResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ExamSubmissionResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfExamSubmissionResponse"
                 }
               }
             }
@@ -3497,17 +3966,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/ExamTemplateResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfExamTemplateResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ExamTemplateResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfExamTemplateResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ExamTemplateResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfExamTemplateResponse"
                 }
               }
             }
@@ -3561,17 +4030,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/ExamTemplateResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfExamTemplateResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ExamTemplateResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfExamTemplateResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ExamTemplateResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfExamTemplateResponse"
                 }
               }
             }
@@ -3634,17 +4103,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/ExamTemplateResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfExamTemplateResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ExamTemplateResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfExamTemplateResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ExamTemplateResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfExamTemplateResponse"
                 }
               }
             }
@@ -3681,26 +4150,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ExamTemplateResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfExamTemplateResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ExamTemplateResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfExamTemplateResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ExamTemplateResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfExamTemplateResponse"
                 }
               }
             }
@@ -3737,26 +4197,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ExamTemplateResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfExamTemplateResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ExamTemplateResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfExamTemplateResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ExamTemplateResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfExamTemplateResponse"
                 }
               }
             }
@@ -3801,17 +4252,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/ExamTemplateResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfExamTemplateResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ExamTemplateResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfExamTemplateResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ExamTemplateResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfExamTemplateResponse"
                 }
               }
             }
@@ -3846,17 +4297,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/CognitiveLevelResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfCognitiveLevelResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CognitiveLevelResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfCognitiveLevelResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CognitiveLevelResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfCognitiveLevelResponse"
                 }
               }
             }
@@ -3881,26 +4332,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/CognitiveLevelResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfCognitiveLevelResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/CognitiveLevelResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfCognitiveLevelResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/CognitiveLevelResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfCognitiveLevelResponse"
                 }
               }
             }
@@ -3942,17 +4384,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/CognitiveLevelResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfCognitiveLevelResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CognitiveLevelResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfCognitiveLevelResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CognitiveLevelResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfCognitiveLevelResponse"
                 }
               }
             }
@@ -3977,26 +4419,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/CognitiveLevelResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfCognitiveLevelResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/CognitiveLevelResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfCognitiveLevelResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/CognitiveLevelResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfCognitiveLevelResponse"
                 }
               }
             }
@@ -4035,17 +4468,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/CognitiveLevelResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfCognitiveLevelResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CognitiveLevelResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfCognitiveLevelResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CognitiveLevelResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfCognitiveLevelResponse"
                 }
               }
             }
@@ -4102,17 +4535,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/CognitiveLevelResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfCognitiveLevelResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CognitiveLevelResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfCognitiveLevelResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CognitiveLevelResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfCognitiveLevelResponse"
                 }
               }
             }
@@ -4201,17 +4634,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "type": "boolean"
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
                 }
               },
               "application/json": {
                 "schema": {
-                  "type": "boolean"
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
                 }
               },
               "text/json": {
                 "schema": {
-                  "type": "boolean"
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
                 }
               }
             }
@@ -4246,17 +4679,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/DifficultyLevelResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfDifficultyLevelResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DifficultyLevelResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfDifficultyLevelResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DifficultyLevelResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfDifficultyLevelResponse"
                 }
               }
             }
@@ -4281,26 +4714,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/DifficultyLevelResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfDifficultyLevelResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/DifficultyLevelResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfDifficultyLevelResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/DifficultyLevelResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfDifficultyLevelResponse"
                 }
               }
             }
@@ -4342,17 +4766,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/DifficultyLevelResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfDifficultyLevelResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DifficultyLevelResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfDifficultyLevelResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DifficultyLevelResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfDifficultyLevelResponse"
                 }
               }
             }
@@ -4377,26 +4801,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/DifficultyLevelResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfDifficultyLevelResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/DifficultyLevelResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfDifficultyLevelResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/DifficultyLevelResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfDifficultyLevelResponse"
                 }
               }
             }
@@ -4435,17 +4850,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/DifficultyLevelResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfDifficultyLevelResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DifficultyLevelResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfDifficultyLevelResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DifficultyLevelResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfDifficultyLevelResponse"
                 }
               }
             }
@@ -4502,17 +4917,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/DifficultyLevelResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfDifficultyLevelResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DifficultyLevelResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfDifficultyLevelResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DifficultyLevelResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfDifficultyLevelResponse"
                 }
               }
             }
@@ -4601,17 +5016,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "type": "boolean"
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
                 }
               },
               "application/json": {
                 "schema": {
-                  "type": "boolean"
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
                 }
               },
               "text/json": {
                 "schema": {
-                  "type": "boolean"
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
                 }
               }
             }
@@ -4648,17 +5063,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/GradeLevelResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfGradeLevelResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/GradeLevelResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfGradeLevelResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/GradeLevelResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfGradeLevelResponse"
                 }
               }
             }
@@ -4683,26 +5098,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/GradeLevelResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfGradeLevelResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/GradeLevelResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfGradeLevelResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/GradeLevelResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfGradeLevelResponse"
                 }
               }
             }
@@ -4744,17 +5150,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/GradeLevelResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfGradeLevelResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/GradeLevelResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfGradeLevelResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/GradeLevelResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfGradeLevelResponse"
                 }
               }
             }
@@ -4779,26 +5185,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/GradeLevelResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfGradeLevelResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/GradeLevelResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfGradeLevelResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/GradeLevelResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfGradeLevelResponse"
                 }
               }
             }
@@ -4837,17 +5234,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/GradeLevelResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfGradeLevelResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/GradeLevelResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfGradeLevelResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/GradeLevelResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfGradeLevelResponse"
                 }
               }
             }
@@ -4904,17 +5301,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/GradeLevelResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfGradeLevelResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/GradeLevelResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfGradeLevelResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/GradeLevelResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfGradeLevelResponse"
                 }
               }
             }
@@ -5003,17 +5400,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "type": "boolean"
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
                 }
               },
               "application/json": {
                 "schema": {
-                  "type": "boolean"
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
                 }
               },
               "text/json": {
                 "schema": {
-                  "type": "boolean"
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
                 }
               }
             }
@@ -5048,17 +5445,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/QuestionTypeResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfQuestionTypeResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/QuestionTypeResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfQuestionTypeResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/QuestionTypeResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfQuestionTypeResponse"
                 }
               }
             }
@@ -5083,26 +5480,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/QuestionTypeResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfQuestionTypeResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/QuestionTypeResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfQuestionTypeResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/QuestionTypeResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfQuestionTypeResponse"
                 }
               }
             }
@@ -5144,17 +5532,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/QuestionTypeResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfQuestionTypeResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/QuestionTypeResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfQuestionTypeResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/QuestionTypeResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfQuestionTypeResponse"
                 }
               }
             }
@@ -5179,26 +5567,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/QuestionTypeResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfQuestionTypeResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/QuestionTypeResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfQuestionTypeResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/QuestionTypeResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfQuestionTypeResponse"
                 }
               }
             }
@@ -5237,17 +5616,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/QuestionTypeResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfQuestionTypeResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/QuestionTypeResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfQuestionTypeResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/QuestionTypeResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfQuestionTypeResponse"
                 }
               }
             }
@@ -5304,17 +5683,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/QuestionTypeResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfQuestionTypeResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/QuestionTypeResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfQuestionTypeResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/QuestionTypeResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfQuestionTypeResponse"
                 }
               }
             }
@@ -5403,17 +5782,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "type": "boolean"
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
                 }
               },
               "application/json": {
                 "schema": {
-                  "type": "boolean"
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
                 }
               },
               "text/json": {
                 "schema": {
-                  "type": "boolean"
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
                 }
               }
             }
@@ -5450,26 +5829,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/SubjectResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfSubjectResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/SubjectResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfSubjectResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/SubjectResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfSubjectResponse"
                 }
               }
             }
@@ -5506,17 +5876,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/SubjectResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfSubjectResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SubjectResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfSubjectResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SubjectResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfSubjectResponse"
                 }
               }
             }
@@ -5541,26 +5911,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/SubjectResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfSubjectResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/SubjectResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfSubjectResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/SubjectResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfSubjectResponse"
                 }
               }
             }
@@ -5602,17 +5963,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/SubjectResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfSubjectResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SubjectResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfSubjectResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SubjectResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfSubjectResponse"
                 }
               }
             }
@@ -5637,26 +5998,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/SubjectResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfSubjectResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/SubjectResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfSubjectResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/SubjectResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfSubjectResponse"
                 }
               }
             }
@@ -5695,17 +6047,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/SubjectResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfSubjectResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SubjectResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfSubjectResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SubjectResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfSubjectResponse"
                 }
               }
             }
@@ -5762,17 +6114,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/SubjectResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfSubjectResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SubjectResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfSubjectResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SubjectResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfSubjectResponse"
                 }
               }
             }
@@ -5861,17 +6213,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "type": "boolean"
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
                 }
               },
               "application/json": {
                 "schema": {
-                  "type": "boolean"
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
                 }
               },
               "text/json": {
                 "schema": {
-                  "type": "boolean"
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
                 }
               }
             }
@@ -5908,26 +6260,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/TopicResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfTopicResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/TopicResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfTopicResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/TopicResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfTopicResponse"
                 }
               }
             }
@@ -5964,26 +6307,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/TopicResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfTopicResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/TopicResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfTopicResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/TopicResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfTopicResponse"
                 }
               }
             }
@@ -6020,26 +6354,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/TopicResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfTopicResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/TopicResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfTopicResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/TopicResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfTopicResponse"
                 }
               }
             }
@@ -6064,26 +6389,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/TopicResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfTopicResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/TopicResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfTopicResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/TopicResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfTopicResponse"
                 }
               }
             }
@@ -6125,17 +6441,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/TopicResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfTopicResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/TopicResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfTopicResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/TopicResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfTopicResponse"
                 }
               }
             }
@@ -6160,26 +6476,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/TopicResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfTopicResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/TopicResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfTopicResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/TopicResponse"
-                  }
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfTopicResponse"
                 }
               }
             }
@@ -6218,17 +6525,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/TopicResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfTopicResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/TopicResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfTopicResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/TopicResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfTopicResponse"
                 }
               }
             }
@@ -6285,17 +6592,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/TopicResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfTopicResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/TopicResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfTopicResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/TopicResponse"
+                  "$ref": "#/components/schemas/RequestResponseOfTopicResponse"
                 }
               }
             }
@@ -6384,17 +6691,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "type": "boolean"
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
                 }
               },
               "application/json": {
                 "schema": {
-                  "type": "boolean"
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
                 }
               },
               "text/json": {
                 "schema": {
-                  "type": "boolean"
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
                 }
               }
             }
@@ -6786,6 +7093,47 @@
           }
         },
         "description": "Response DTO cho Cohort"
+      },
+      "CreateUserRequest": {
+        "required": [
+          "userName",
+          "password",
+          "displayName"
+        ],
+        "type": "object",
+        "properties": {
+          "userName": {
+            "type": "string",
+            "description": "Tên đăng nhập"
+          },
+          "password": {
+            "type": "string",
+            "description": "Mật khẩu"
+          },
+          "displayName": {
+            "type": "string",
+            "description": "Tên hiển thị"
+          },
+          "email": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Email"
+          },
+          "phoneNumber": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Số điện thoại"
+          },
+          "sex": {
+            "type": "boolean",
+            "description": "Giới tính (false = Nam, true = Nữ)"
+          }
+        },
+        "description": "Request tạo người dùng mới"
       },
       "DifficultyLevelRequest": {
         "required": [
@@ -8568,6 +8916,1017 @@
         },
         "description": ""
       },
+      "RequestResponseOfboolean": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "description": "Trạng thái",
+            "$ref": "#/components/schemas/RequestResponseStatus"
+          },
+          "message": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Message"
+          },
+          "data": {
+            "type": "boolean",
+            "description": "Dữ liệu"
+          },
+          "totalRecord": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Tổng số bản ghi",
+            "format": "int64"
+          }
+        },
+        "description": ""
+      },
+      "RequestResponseOfCognitiveLevelResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "description": "Trạng thái",
+            "$ref": "#/components/schemas/RequestResponseStatus"
+          },
+          "message": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Message"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "Dữ liệu",
+                "$ref": "#/components/schemas/CognitiveLevelResponse"
+              }
+            ]
+          },
+          "totalRecord": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Tổng số bản ghi",
+            "format": "int64"
+          }
+        },
+        "description": ""
+      },
+      "RequestResponseOfCohortClassResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "description": "Trạng thái",
+            "$ref": "#/components/schemas/RequestResponseStatus"
+          },
+          "message": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Message"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "Dữ liệu",
+                "$ref": "#/components/schemas/CohortClassResponse"
+              }
+            ]
+          },
+          "totalRecord": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Tổng số bản ghi",
+            "format": "int64"
+          }
+        },
+        "description": ""
+      },
+      "RequestResponseOfCohortMemberResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "description": "Trạng thái",
+            "$ref": "#/components/schemas/RequestResponseStatus"
+          },
+          "message": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Message"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "Dữ liệu",
+                "$ref": "#/components/schemas/CohortMemberResponse"
+              }
+            ]
+          },
+          "totalRecord": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Tổng số bản ghi",
+            "format": "int64"
+          }
+        },
+        "description": ""
+      },
+      "RequestResponseOfCohortResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "description": "Trạng thái",
+            "$ref": "#/components/schemas/RequestResponseStatus"
+          },
+          "message": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Message"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "Dữ liệu",
+                "$ref": "#/components/schemas/CohortResponse"
+              }
+            ]
+          },
+          "totalRecord": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Tổng số bản ghi",
+            "format": "int64"
+          }
+        },
+        "description": ""
+      },
+      "RequestResponseOfDifficultyLevelResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "description": "Trạng thái",
+            "$ref": "#/components/schemas/RequestResponseStatus"
+          },
+          "message": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Message"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "Dữ liệu",
+                "$ref": "#/components/schemas/DifficultyLevelResponse"
+              }
+            ]
+          },
+          "totalRecord": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Tổng số bản ghi",
+            "format": "int64"
+          }
+        },
+        "description": ""
+      },
+      "RequestResponseOfExamResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "description": "Trạng thái",
+            "$ref": "#/components/schemas/RequestResponseStatus"
+          },
+          "message": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Message"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "Dữ liệu",
+                "$ref": "#/components/schemas/ExamResponse"
+              }
+            ]
+          },
+          "totalRecord": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Tổng số bản ghi",
+            "format": "int64"
+          }
+        },
+        "description": ""
+      },
+      "RequestResponseOfExamSubmissionResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "description": "Trạng thái",
+            "$ref": "#/components/schemas/RequestResponseStatus"
+          },
+          "message": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Message"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "Dữ liệu",
+                "$ref": "#/components/schemas/ExamSubmissionResponse"
+              }
+            ]
+          },
+          "totalRecord": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Tổng số bản ghi",
+            "format": "int64"
+          }
+        },
+        "description": ""
+      },
+      "RequestResponseOfExamTemplateResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "description": "Trạng thái",
+            "$ref": "#/components/schemas/RequestResponseStatus"
+          },
+          "message": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Message"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "Dữ liệu",
+                "$ref": "#/components/schemas/ExamTemplateResponse"
+              }
+            ]
+          },
+          "totalRecord": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Tổng số bản ghi",
+            "format": "int64"
+          }
+        },
+        "description": ""
+      },
+      "RequestResponseOfGradeLevelResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "description": "Trạng thái",
+            "$ref": "#/components/schemas/RequestResponseStatus"
+          },
+          "message": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Message"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "Dữ liệu",
+                "$ref": "#/components/schemas/GradeLevelResponse"
+              }
+            ]
+          },
+          "totalRecord": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Tổng số bản ghi",
+            "format": "int64"
+          }
+        },
+        "description": ""
+      },
+      "RequestResponseOfIReadOnlyListOfCognitiveLevelResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "description": "Trạng thái",
+            "$ref": "#/components/schemas/RequestResponseStatus"
+          },
+          "message": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Message"
+          },
+          "data": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/CognitiveLevelResponse"
+            },
+            "description": "Dữ liệu"
+          },
+          "totalRecord": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Tổng số bản ghi",
+            "format": "int64"
+          }
+        },
+        "description": ""
+      },
+      "RequestResponseOfIReadOnlyListOfCohortClassResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "description": "Trạng thái",
+            "$ref": "#/components/schemas/RequestResponseStatus"
+          },
+          "message": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Message"
+          },
+          "data": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/CohortClassResponse"
+            },
+            "description": "Dữ liệu"
+          },
+          "totalRecord": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Tổng số bản ghi",
+            "format": "int64"
+          }
+        },
+        "description": ""
+      },
+      "RequestResponseOfIReadOnlyListOfCohortMemberResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "description": "Trạng thái",
+            "$ref": "#/components/schemas/RequestResponseStatus"
+          },
+          "message": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Message"
+          },
+          "data": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/CohortMemberResponse"
+            },
+            "description": "Dữ liệu"
+          },
+          "totalRecord": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Tổng số bản ghi",
+            "format": "int64"
+          }
+        },
+        "description": ""
+      },
+      "RequestResponseOfIReadOnlyListOfCohortResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "description": "Trạng thái",
+            "$ref": "#/components/schemas/RequestResponseStatus"
+          },
+          "message": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Message"
+          },
+          "data": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/CohortResponse"
+            },
+            "description": "Dữ liệu"
+          },
+          "totalRecord": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Tổng số bản ghi",
+            "format": "int64"
+          }
+        },
+        "description": ""
+      },
+      "RequestResponseOfIReadOnlyListOfDifficultyLevelResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "description": "Trạng thái",
+            "$ref": "#/components/schemas/RequestResponseStatus"
+          },
+          "message": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Message"
+          },
+          "data": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/DifficultyLevelResponse"
+            },
+            "description": "Dữ liệu"
+          },
+          "totalRecord": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Tổng số bản ghi",
+            "format": "int64"
+          }
+        },
+        "description": ""
+      },
+      "RequestResponseOfIReadOnlyListOfExamResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "description": "Trạng thái",
+            "$ref": "#/components/schemas/RequestResponseStatus"
+          },
+          "message": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Message"
+          },
+          "data": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/ExamResponse"
+            },
+            "description": "Dữ liệu"
+          },
+          "totalRecord": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Tổng số bản ghi",
+            "format": "int64"
+          }
+        },
+        "description": ""
+      },
+      "RequestResponseOfIReadOnlyListOfExamSubmissionResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "description": "Trạng thái",
+            "$ref": "#/components/schemas/RequestResponseStatus"
+          },
+          "message": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Message"
+          },
+          "data": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/ExamSubmissionResponse"
+            },
+            "description": "Dữ liệu"
+          },
+          "totalRecord": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Tổng số bản ghi",
+            "format": "int64"
+          }
+        },
+        "description": ""
+      },
+      "RequestResponseOfIReadOnlyListOfExamTemplateResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "description": "Trạng thái",
+            "$ref": "#/components/schemas/RequestResponseStatus"
+          },
+          "message": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Message"
+          },
+          "data": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/ExamTemplateResponse"
+            },
+            "description": "Dữ liệu"
+          },
+          "totalRecord": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Tổng số bản ghi",
+            "format": "int64"
+          }
+        },
+        "description": ""
+      },
+      "RequestResponseOfIReadOnlyListOfGradeLevelResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "description": "Trạng thái",
+            "$ref": "#/components/schemas/RequestResponseStatus"
+          },
+          "message": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Message"
+          },
+          "data": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/GradeLevelResponse"
+            },
+            "description": "Dữ liệu"
+          },
+          "totalRecord": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Tổng số bản ghi",
+            "format": "int64"
+          }
+        },
+        "description": ""
+      },
+      "RequestResponseOfIReadOnlyListOfQuestionResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "description": "Trạng thái",
+            "$ref": "#/components/schemas/RequestResponseStatus"
+          },
+          "message": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Message"
+          },
+          "data": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/QuestionResponse"
+            },
+            "description": "Dữ liệu"
+          },
+          "totalRecord": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Tổng số bản ghi",
+            "format": "int64"
+          }
+        },
+        "description": ""
+      },
+      "RequestResponseOfIReadOnlyListOfQuestionTypeResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "description": "Trạng thái",
+            "$ref": "#/components/schemas/RequestResponseStatus"
+          },
+          "message": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Message"
+          },
+          "data": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/QuestionTypeResponse"
+            },
+            "description": "Dữ liệu"
+          },
+          "totalRecord": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Tổng số bản ghi",
+            "format": "int64"
+          }
+        },
+        "description": ""
+      },
+      "RequestResponseOfIReadOnlyListOfSchoolMemberResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "description": "Trạng thái",
+            "$ref": "#/components/schemas/RequestResponseStatus"
+          },
+          "message": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Message"
+          },
+          "data": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/SchoolMemberResponse"
+            },
+            "description": "Dữ liệu"
+          },
+          "totalRecord": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Tổng số bản ghi",
+            "format": "int64"
+          }
+        },
+        "description": ""
+      },
+      "RequestResponseOfIReadOnlyListOfSchoolResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "description": "Trạng thái",
+            "$ref": "#/components/schemas/RequestResponseStatus"
+          },
+          "message": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Message"
+          },
+          "data": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/SchoolResponse"
+            },
+            "description": "Dữ liệu"
+          },
+          "totalRecord": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Tổng số bản ghi",
+            "format": "int64"
+          }
+        },
+        "description": ""
+      },
+      "RequestResponseOfIReadOnlyListOfstring": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "description": "Trạng thái",
+            "$ref": "#/components/schemas/RequestResponseStatus"
+          },
+          "message": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Message"
+          },
+          "data": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "description": "Dữ liệu"
+          },
+          "totalRecord": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Tổng số bản ghi",
+            "format": "int64"
+          }
+        },
+        "description": ""
+      },
+      "RequestResponseOfIReadOnlyListOfSubjectResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "description": "Trạng thái",
+            "$ref": "#/components/schemas/RequestResponseStatus"
+          },
+          "message": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Message"
+          },
+          "data": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/SubjectResponse"
+            },
+            "description": "Dữ liệu"
+          },
+          "totalRecord": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Tổng số bản ghi",
+            "format": "int64"
+          }
+        },
+        "description": ""
+      },
+      "RequestResponseOfIReadOnlyListOfTeacherSubject": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "description": "Trạng thái",
+            "$ref": "#/components/schemas/RequestResponseStatus"
+          },
+          "message": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Message"
+          },
+          "data": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/TeacherSubject"
+            },
+            "description": "Dữ liệu"
+          },
+          "totalRecord": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Tổng số bản ghi",
+            "format": "int64"
+          }
+        },
+        "description": ""
+      },
+      "RequestResponseOfIReadOnlyListOfTopicResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "description": "Trạng thái",
+            "$ref": "#/components/schemas/RequestResponseStatus"
+          },
+          "message": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Message"
+          },
+          "data": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/TopicResponse"
+            },
+            "description": "Dữ liệu"
+          },
+          "totalRecord": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Tổng số bản ghi",
+            "format": "int64"
+          }
+        },
+        "description": ""
+      },
+      "RequestResponseOfIReadOnlyListOfUserResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "description": "Trạng thái",
+            "$ref": "#/components/schemas/RequestResponseStatus"
+          },
+          "message": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Message"
+          },
+          "data": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/UserResponse"
+            },
+            "description": "Dữ liệu"
+          },
+          "totalRecord": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Tổng số bản ghi",
+            "format": "int64"
+          }
+        },
+        "description": ""
+      },
       "RequestResponseOfObject": {
         "type": "object",
         "properties": {
@@ -8584,6 +9943,154 @@
           },
           "data": {
             "description": "Dữ liệu"
+          },
+          "totalRecord": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Tổng số bản ghi",
+            "format": "int64"
+          }
+        },
+        "description": ""
+      },
+      "RequestResponseOfQuestionResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "description": "Trạng thái",
+            "$ref": "#/components/schemas/RequestResponseStatus"
+          },
+          "message": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Message"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "Dữ liệu",
+                "$ref": "#/components/schemas/QuestionResponse"
+              }
+            ]
+          },
+          "totalRecord": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Tổng số bản ghi",
+            "format": "int64"
+          }
+        },
+        "description": ""
+      },
+      "RequestResponseOfQuestionTypeResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "description": "Trạng thái",
+            "$ref": "#/components/schemas/RequestResponseStatus"
+          },
+          "message": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Message"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "Dữ liệu",
+                "$ref": "#/components/schemas/QuestionTypeResponse"
+              }
+            ]
+          },
+          "totalRecord": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Tổng số bản ghi",
+            "format": "int64"
+          }
+        },
+        "description": ""
+      },
+      "RequestResponseOfSchoolMemberResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "description": "Trạng thái",
+            "$ref": "#/components/schemas/RequestResponseStatus"
+          },
+          "message": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Message"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "Dữ liệu",
+                "$ref": "#/components/schemas/SchoolMemberResponse"
+              }
+            ]
+          },
+          "totalRecord": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Tổng số bản ghi",
+            "format": "int64"
+          }
+        },
+        "description": ""
+      },
+      "RequestResponseOfSchoolResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "description": "Trạng thái",
+            "$ref": "#/components/schemas/RequestResponseStatus"
+          },
+          "message": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Message"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "Dữ liệu",
+                "$ref": "#/components/schemas/SchoolResponse"
+              }
+            ]
           },
           "totalRecord": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
@@ -8630,6 +10137,43 @@
         },
         "description": ""
       },
+      "RequestResponseOfSubjectResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "description": "Trạng thái",
+            "$ref": "#/components/schemas/RequestResponseStatus"
+          },
+          "message": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Message"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "Dữ liệu",
+                "$ref": "#/components/schemas/SubjectResponse"
+              }
+            ]
+          },
+          "totalRecord": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Tổng số bản ghi",
+            "format": "int64"
+          }
+        },
+        "description": ""
+      },
       "RequestResponseOfTokenModel": {
         "type": "object",
         "properties": {
@@ -8652,6 +10196,43 @@
               {
                 "description": "Dữ liệu",
                 "$ref": "#/components/schemas/TokenModel"
+              }
+            ]
+          },
+          "totalRecord": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Tổng số bản ghi",
+            "format": "int64"
+          }
+        },
+        "description": ""
+      },
+      "RequestResponseOfTopicResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "description": "Trạng thái",
+            "$ref": "#/components/schemas/RequestResponseStatus"
+          },
+          "message": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Message"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "Dữ liệu",
+                "$ref": "#/components/schemas/TopicResponse"
               }
             ]
           },
@@ -8704,9 +10285,59 @@
         },
         "description": ""
       },
+      "RequestResponseOfUserResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "description": "Trạng thái",
+            "$ref": "#/components/schemas/RequestResponseStatus"
+          },
+          "message": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Message"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "Dữ liệu",
+                "$ref": "#/components/schemas/UserResponse"
+              }
+            ]
+          },
+          "totalRecord": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Tổng số bản ghi",
+            "format": "int64"
+          }
+        },
+        "description": ""
+      },
       "RequestResponseStatus": {
         "type": "integer",
         "description": "Trạng thái trả về"
+      },
+      "ResetPasswordRequest": {
+        "required": [
+          "newPassword"
+        ],
+        "type": "object",
+        "properties": {
+          "newPassword": {
+            "type": "string",
+            "description": "Mật khẩu mới"
+          }
+        },
+        "description": "Request đặt lại mật khẩu"
       },
       "SchoolMemberRequest": {
         "required": [
@@ -8994,6 +10625,22 @@
           }
         },
         "description": "Request DTO để cập nhật giáo viên chủ nhiệm"
+      },
+      "SetRolesRequest": {
+        "required": [
+          "roles"
+        ],
+        "type": "object",
+        "properties": {
+          "roles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Danh sách vai trò mới"
+          }
+        },
+        "description": "Request đặt lại toàn bộ roles"
       },
       "Subject": {
         "required": [
@@ -9593,6 +11240,58 @@
         },
         "description": "Response DTO cho Topic"
       },
+      "UpdateUserRequest": {
+        "required": [
+          "displayName"
+        ],
+        "type": "object",
+        "properties": {
+          "displayName": {
+            "type": "string",
+            "description": "Tên hiển thị"
+          },
+          "email": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Email"
+          },
+          "phoneNumber": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Số điện thoại"
+          },
+          "sex": {
+            "type": "boolean",
+            "description": "Giới tính (false = Nam, true = Nữ)"
+          },
+          "avartar": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Ảnh đại diện"
+          },
+          "address": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Địa chỉ"
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Mô tả"
+          }
+        },
+        "description": "Request cập nhật thông tin người dùng"
+      },
       "UserInfo": {
         "type": "object",
         "properties": {
@@ -9637,6 +11336,82 @@
           }
         },
         "description": "Lớp đại diện thông tin người dùng."
+      },
+      "UserResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "ID người dùng",
+            "format": "uuid"
+          },
+          "userName": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Tên đăng nhập"
+          },
+          "displayName": {
+            "type": "string",
+            "description": "Tên hiển thị"
+          },
+          "email": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Email"
+          },
+          "phoneNumber": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Số điện thoại"
+          },
+          "sex": {
+            "type": "boolean",
+            "description": "Giới tính (false = Nam, true = Nữ)"
+          },
+          "avartar": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Ảnh đại diện"
+          },
+          "address": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Địa chỉ"
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Mô tả"
+          },
+          "roles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Danh sách vai trò"
+          },
+          "lockoutEnabled": {
+            "type": "boolean",
+            "description": "Tài khoản đang bị khóa"
+          },
+          "isDeleted": {
+            "type": "boolean",
+            "description": "Tài khoản đã bị xóa"
+          }
+        },
+        "description": "Response DTO thông tin người dùng"
       }
     },
     "securitySchemes": {
@@ -9650,6 +11425,9 @@
   "tags": [
     {
       "name": "Auth"
+    },
+    {
+      "name": "User"
     },
     {
       "name": "TeacherSubject"

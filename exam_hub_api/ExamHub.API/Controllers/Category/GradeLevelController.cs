@@ -3,6 +3,7 @@ using ExamHub.Core.Domain.Entities;
 using ExamHub.Core.Domain.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using TVT.Core;
 
 namespace ExamHub.API.Controllers.Category;
 
@@ -22,10 +23,10 @@ public class GradeLevelController(IGradeLevelService service)
     /// <summary>Lấy kèm môn học</summary>
     [HttpGet("{id:int}/with-subjects")]
     [Authorize]
-    public async Task<ActionResult<GradeLevelResponse>> GetWithSubjects(int id, CancellationToken ct = default)
+    public async Task<ActionResult<RequestResponse<GradeLevelResponse>>> GetWithSubjects(int id, CancellationToken ct = default)
     {
         var result = await service.GetWithSubjectsAsync(id, ct);
         if (result is null) return NotFound();
-        return Ok(ToResponse(result));
+        return Ok(RequestResponse<GradeLevelResponse>.Success("Lấy dữ liệu thành công!", ToResponse(result), 1));
     }
 }

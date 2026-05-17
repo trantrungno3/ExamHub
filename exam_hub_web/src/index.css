@@ -240,6 +240,15 @@ body {
          hover:bg-red-100 transition-colors cursor-pointer;
 }
 
+.btn-icon {
+  @apply w-7 h-7 flex items-center justify-center rounded-md text-gray-500
+         hover:bg-gray-100 hover:text-gray-700 transition-colors cursor-pointer text-sm;
+}
+
+.btn-icon-danger {
+  @apply hover:bg-red-50 hover:text-red-500;
+}
+
 /* ─── Category tabs ──────────────────────────────── */
 .cat-tabs {
   @apply flex border-b border-gray-200;

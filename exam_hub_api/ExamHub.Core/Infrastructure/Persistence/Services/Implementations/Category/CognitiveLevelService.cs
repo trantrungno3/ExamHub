@@ -21,6 +21,9 @@ public class CognitiveLevelService(ICognitiveLevelRepository repo, IRedisService
     public Task<CognitiveLevel?> GetByIdAsync(int id, CancellationToken ct = default)
         => repo.GetByIdAsync(id, ct);
 
+    public Task<bool> ExistsAsync(int id, CancellationToken ct = default)
+        => repo.ExistsAsync(e => e.Id == id, ct);
+
     public Task<CognitiveLevel?> GetByCodeAsync(string code, CancellationToken ct = default)
         => repo.GetByCodeAsync(code, ct);
 

@@ -80,7 +80,7 @@ export function GradeFormModal({open, record, onClose, onSave}: Props) {
                     name="gradeNumber"
                     rules={[{required: true, message: 'Vui lòng nhập số lớp'}]}
                 >
-                    <InputNumber min={1} max={12} className="w-full" placeholder="1 – 12"/>
+                    <InputNumber min={1} max={20} className="w-full" placeholder="1 – 12"/>
                 </Form.Item>
                 <Form.Item label="Mô tả" name="description">
                     <Input.TextArea rows={2} placeholder="VD: Cấp THPT"/>

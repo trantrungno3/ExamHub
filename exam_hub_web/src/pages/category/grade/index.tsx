@@ -1,6 +1,6 @@
 import {useMemo, useState} from 'react'
-import {Button, Input, Popconfirm, Table, Tag} from 'antd'
 import type {TableColumnsType} from 'antd'
+import {Button, Input, Popconfirm, Table, Tag} from 'antd'
 import {PlusOutlined, SearchOutlined} from '@ant-design/icons'
 import {gradeLevelService} from '../../../services/gradeLevelService'
 import {GradeFormModal} from './GradeFormModal'
@@ -10,7 +10,6 @@ export function GradeTab() {
     const [search, setSearch] = useState('')
     const {data, loading, modalOpen, editing, handleSave, handleDelete, openCreate, openEdit, closeModal} =
         useCategoryTab(gradeLevelService, 'cấp lớp')
-
     const filtered = useMemo(
         () => data.filter(g => g.name.toLowerCase().includes(search.toLowerCase())),
         [data, search],

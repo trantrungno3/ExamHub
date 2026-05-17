@@ -2,6 +2,7 @@ using ExamHub.Core.DataTransferObjects.School;
 using ExamHub.Core.Domain.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using TVT.Core;
 using SchoolEntity = ExamHub.Core.Domain.Entities.School;
 
 namespace ExamHub.API.Controllers.School;
@@ -22,30 +23,30 @@ public class SchoolController(ISchoolService service)
     /// <summary>Lấy theo mã trường</summary>
     [HttpGet("code/{code}")]
     [Authorize]
-    public async Task<ActionResult<SchoolResponse>> GetByCode(string code, CancellationToken ct = default)
+    public async Task<ActionResult<RequestResponse<SchoolResponse>>> GetByCode(string code, CancellationToken ct = default)
     {
         var result = await service.GetByCodeAsync(code, ct);
         if (result is null) return NotFound();
-        return Ok(ToResponse(result));
+        return Ok(RequestResponse<SchoolResponse>.Success("Lấy dữ liệu thành công!", ToResponse(result), 1));
     }
 
     /// <summary>Lấy trường kèm danh sách khoá học</summary>
     [HttpGet("{id:int}/with-cohorts")]
     [Authorize]
-    public async Task<ActionResult<SchoolResponse>> GetWithCohorts(int id, CancellationToken ct = default)
+    public async Task<ActionResult<RequestResponse<SchoolResponse>>> GetWithCohorts(int id, CancellationToken ct = default)
     {
         var result = await service.GetWithCohortsAsync(id, ct);
         if (result is null) return NotFound();
-        return Ok(ToResponse(result));
+        return Ok(RequestResponse<SchoolResponse>.Success("Lấy dữ liệu thành công!", ToResponse(result), 1));
     }
 
     /// <summary>Lấy trường kèm danh sách thành viên</summary>
     [HttpGet("{id:int}/with-members")]
     [Authorize]
-    public async Task<ActionResult<SchoolResponse>> GetWithMembers(int id, CancellationToken ct = default)
+    public async Task<ActionResult<RequestResponse<SchoolResponse>>> GetWithMembers(int id, CancellationToken ct = default)
     {
         var result = await service.GetWithMembersAsync(id, ct);
         if (result is null) return NotFound();
-        return Ok(ToResponse(result));
+        return Ok(RequestResponse<SchoolResponse>.Success("Lấy dữ liệu thành công!", ToResponse(result), 1));
     }
 }

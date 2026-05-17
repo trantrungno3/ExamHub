@@ -7,12 +7,12 @@ import {TopicTab} from './topic'
 import {QuestionTypeTab} from './question-type'
 
 const TAB_ITEMS = [
-    {key: 'grade',         label: 'Cấp lớp',           children: <GradeTab/>},
-    {key: 'subject',       label: 'Môn học',            children: <SubjectTab/>},
-    {key: 'topic',         label: 'Chủ đề',             children: <TopicTab/>},
-    {key: 'difficulty',    label: 'Độ khó',             children: <DifficultyTab/>},
-    {key: 'question-type', label: 'Loại câu hỏi',       children: <QuestionTypeTab/>},
-    {key: 'cognitive',     label: 'Cấp độ nhận thức',   children: <CognitiveTab/>},
+    {key: 'grade', label: 'Cấp lớp', children: <GradeTab/>},
+    {key: 'subject', label: 'Môn học', children: <SubjectTab/>},
+    {key: 'topic', label: 'Chủ đề', children: <TopicTab/>},
+    {key: 'difficulty', label: 'Độ khó', children: <DifficultyTab/>},
+    {key: 'question-type', label: 'Loại câu hỏi', children: <QuestionTypeTab/>},
+    {key: 'cognitive', label: 'Cấp độ nhận thức', children: <CognitiveTab/>},
 ]
 
 export default function CategoryPage() {
@@ -21,9 +21,6 @@ export default function CategoryPage() {
             <div className="top-bar">
                 <div>
                     <p className="top-bar-title">Danh mục cấu hình</p>
-                    <p className="top-bar-subtitle">
-                        Quản lý cấp lớp · môn học · chủ đề · độ khó · loại câu hỏi · cấp độ nhận thức
-                    </p>
                 </div>
                 <div className="top-bar-avatar">TT</div>
             </div>

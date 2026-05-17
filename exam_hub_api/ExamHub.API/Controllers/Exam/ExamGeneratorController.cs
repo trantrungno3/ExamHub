@@ -1,6 +1,7 @@
 using ExamHub.Core.Application.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using TVT.Core;
 
 namespace ExamHub.API.Controllers.Exam;
 
@@ -12,12 +13,12 @@ public class ExamGeneratorController(IExamGeneratorService service) : Controller
 {
     /// <summary>Sinh đề thi theo cấu hình phần thi và tỉ lệ độ khó</summary>
     [HttpPost]
-    public async Task<ActionResult<object>> Generate(
+    public async Task<ActionResult<RequestResponse<object>>> Generate(
         [FromBody] GenerateExamApiRequest request,
         CancellationToken ct)
     {
         var examId = await service.GenerateAsync(request.ToServiceRequest(GetCurrentUserId()), ct);
-        return StatusCode(201, new { ExamId = examId });
+        return StatusCode(201, RequestResponse<object>.Success("Sinh đề thi thành công!", new { ExamId = examId }, 1));
     }
 
     private Guid GetCurrentUserId()

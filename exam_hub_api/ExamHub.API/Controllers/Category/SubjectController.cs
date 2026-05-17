@@ -3,6 +3,7 @@ using ExamHub.Core.Domain.Entities;
 using ExamHub.Core.Domain.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using TVT.Core;
 
 namespace ExamHub.API.Controllers.Category;
 
@@ -22,19 +23,20 @@ public class SubjectController(ISubjectService service)
     /// <summary>Lấy theo khối lớp</summary>
     [HttpGet("by-grade/{gradeLevelId:int}")]
     [Authorize]
-    public async Task<ActionResult<IReadOnlyList<SubjectResponse>>> GetByGradeLevel(int gradeLevelId, CancellationToken ct = default)
+    public async Task<ActionResult<RequestResponse<IReadOnlyList<SubjectResponse>>>> GetByGradeLevel(int gradeLevelId, CancellationToken ct = default)
     {
         var result = await service.GetByGradeLevelAsync(gradeLevelId, ct);
-        return Ok(result.Select(ToResponse).ToList());
+        var list = result.Select(ToResponse).ToList();
+        return Ok(RequestResponse<IReadOnlyList<SubjectResponse>>.Success("Lấy danh sách thành công!", list, list.Count));
     }
 
     /// <summary>Lấy kèm chủ đề</summary>
     [HttpGet("{id:int}/with-topics")]
     [Authorize]
-    public async Task<ActionResult<SubjectResponse>> GetWithTopics(int id, CancellationToken ct = default)
+    public async Task<ActionResult<RequestResponse<SubjectResponse>>> GetWithTopics(int id, CancellationToken ct = default)
     {
         var result = await service.GetWithTopicsAsync(id, ct);
         if (result is null) return NotFound();
-        return Ok(ToResponse(result));
+        return Ok(RequestResponse<SubjectResponse>.Success("Lấy dữ liệu thành công!", ToResponse(result), 1));
     }
 }

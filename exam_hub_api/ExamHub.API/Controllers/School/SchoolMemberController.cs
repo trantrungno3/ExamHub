@@ -2,6 +2,7 @@ using ExamHub.Core.DataTransferObjects.School;
 using ExamHub.Core.Domain.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using TVT.Core;
 
 namespace ExamHub.API.Controllers.School;
 
@@ -13,54 +14,57 @@ public class SchoolMemberController(ISchoolMemberService service) : ControllerBa
 {
     /// <summary>Lấy theo ID</summary>
     [HttpGet("{id:guid}")]
-    public async Task<ActionResult<SchoolMemberResponse>> GetById(Guid id, CancellationToken ct = default)
+    public async Task<ActionResult<RequestResponse<SchoolMemberResponse>>> GetById(Guid id, CancellationToken ct = default)
     {
         var result = await service.GetByIdAsync(id, ct);
         if (result is null) return NotFound();
-        return Ok(SchoolMemberResponse.FromEntity(result));
+        return Ok(RequestResponse<SchoolMemberResponse>.Success("Lấy dữ liệu thành công!", SchoolMemberResponse.FromEntity(result), 1));
     }
 
     /// <summary>Lấy danh sách thành viên theo trường</summary>
     [HttpGet("by-school/{schoolId:int}")]
-    public async Task<ActionResult<IReadOnlyList<SchoolMemberResponse>>> GetBySchool(int schoolId, CancellationToken ct = default)
+    public async Task<ActionResult<RequestResponse<IReadOnlyList<SchoolMemberResponse>>>> GetBySchool(int schoolId, CancellationToken ct = default)
     {
         var result = await service.GetBySchoolAsync(schoolId, ct);
-        return Ok(result.Select(SchoolMemberResponse.FromEntity).ToList());
+        var list = result.Select(SchoolMemberResponse.FromEntity).ToList();
+        return Ok(RequestResponse<IReadOnlyList<SchoolMemberResponse>>.Success("Lấy danh sách thành công!", list, list.Count));
     }
 
     /// <summary>Lấy danh sách thành viên theo trường và vai trò</summary>
     [HttpGet("by-school/{schoolId:int}/role/{role}")]
-    public async Task<ActionResult<IReadOnlyList<SchoolMemberResponse>>> GetBySchoolAndRole(int schoolId, string role, CancellationToken ct = default)
+    public async Task<ActionResult<RequestResponse<IReadOnlyList<SchoolMemberResponse>>>> GetBySchoolAndRole(int schoolId, string role, CancellationToken ct = default)
     {
         var result = await service.GetBySchoolAndRoleAsync(schoolId, role, ct);
-        return Ok(result.Select(SchoolMemberResponse.FromEntity).ToList());
+        var list = result.Select(SchoolMemberResponse.FromEntity).ToList();
+        return Ok(RequestResponse<IReadOnlyList<SchoolMemberResponse>>.Success("Lấy danh sách thành công!", list, list.Count));
     }
 
     /// <summary>Lấy tất cả trường mà một người dùng thuộc vào</summary>
     [HttpGet("by-user/{userId:guid}")]
-    public async Task<ActionResult<IReadOnlyList<SchoolMemberResponse>>> GetByUser(Guid userId, CancellationToken ct = default)
+    public async Task<ActionResult<RequestResponse<IReadOnlyList<SchoolMemberResponse>>>> GetByUser(Guid userId, CancellationToken ct = default)
     {
         var result = await service.GetByUserAsync(userId, ct);
-        return Ok(result.Select(SchoolMemberResponse.FromEntity).ToList());
+        var list = result.Select(SchoolMemberResponse.FromEntity).ToList();
+        return Ok(RequestResponse<IReadOnlyList<SchoolMemberResponse>>.Success("Lấy danh sách thành công!", list, list.Count));
     }
 
     /// <summary>Thêm thành viên vào trường</summary>
     [HttpPost("")]
-    public async Task<ActionResult<SchoolMemberResponse>> AddMember([FromBody] SchoolMemberRequest request, CancellationToken ct = default)
+    public async Task<ActionResult<RequestResponse<SchoolMemberResponse>>> AddMember([FromBody] SchoolMemberRequest request, CancellationToken ct = default)
     {
         var entity = request.ToEntity();
         var result = await service.AddMemberAsync(entity, ct);
-        return Ok(SchoolMemberResponse.FromEntity(result));
+        return Ok(RequestResponse<SchoolMemberResponse>.Success("Thêm thành viên thành công!", SchoolMemberResponse.FromEntity(result), 1));
     }
 
     /// <summary>Cập nhật vai trò thành viên</summary>
     [HttpPut("{id:guid}")]
-    public async Task<ActionResult<SchoolMemberResponse>> Update(Guid id, [FromBody] SchoolMemberRequest request, CancellationToken ct = default)
+    public async Task<ActionResult<RequestResponse<SchoolMemberResponse>>> Update(Guid id, [FromBody] SchoolMemberRequest request, CancellationToken ct = default)
     {
         var entity = request.ToEntity();
         entity.Id = id;
         var result = await service.UpdateAsync(entity, ct);
-        return Ok(SchoolMemberResponse.FromEntity(result));
+        return Ok(RequestResponse<SchoolMemberResponse>.Success("Cập nhật thành công!", SchoolMemberResponse.FromEntity(result), 1));
     }
 
     /// <summary>Xóa thành viên khỏi trường</summary>
@@ -73,9 +77,9 @@ public class SchoolMemberController(ISchoolMemberService service) : ControllerBa
 
     /// <summary>Bật/tắt trạng thái thành viên</summary>
     [HttpPatch("{id:guid}/active")]
-    public async Task<ActionResult<bool>> SetActive(Guid id, [FromBody] bool isActive, CancellationToken ct = default)
+    public async Task<ActionResult<RequestResponse<bool>>> SetActive(Guid id, [FromBody] bool isActive, CancellationToken ct = default)
     {
         var result = await service.SetActiveAsync(id, isActive, ct);
-        return Ok(result);
+        return Ok(RequestResponse<bool>.Success("Cập nhật trạng thái thành công!", result, 1));
     }
 }
