@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace ExamHub.Core.Application.Services;
 
 /// <summary>
@@ -23,11 +25,39 @@ public sealed record GenerateExamRequest(
 /// <summary>Cấu hình một phần thi.</summary>
 public sealed record SectionConfig(
     string? SectionName,
+    [property: Range(1, int.MaxValue, ErrorMessage = "Chủ đề phần thi không hợp lệ.")]
     int TopicId,
     int? QuestionTypeId,
+    [property: Range(1, int.MaxValue, ErrorMessage = "Cấp độ nhận thức không hợp lệ.")]
+    int? CognitiveLevelId,
+    [property: Range(1, 200, ErrorMessage = "Số câu hỏi mỗi phần phải từ 1 đến 200.")]
     int QuestionCount,
     decimal PctEasy,
     decimal PctMedium,
     decimal PctHard,
     decimal PctVeryHard,
-    decimal ScorePerQuestion);
+    [property: Range(typeof(decimal), "0.01", "9999999", ErrorMessage = "Điểm mỗi câu phải lớn hơn 0.")]
+    decimal ScorePerQuestion) : IValidatableObject
+{
+    public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    {
+        if (PctEasy + PctMedium + PctHard + PctVeryHard != 100)
+            yield return new ValidationResult(
+                "Tổng tỉ lệ độ khó phải bằng 100%.",
+                [nameof(PctEasy), nameof(PctMedium), nameof(PctHard), nameof(PctVeryHard)]);
+    }
+}
+
+/// <summary>Request sinh lô đề thi nhiều biến thể.</summary>
+public sealed record BatchGenerateExamRequest(
+    string Title,
+    Guid? ExamTemplateId,
+    int GradeLevelId,
+    int SubjectId,
+    int DurationMinutes,
+    bool ShuffleQuestions,
+    bool ShuffleAnswers,
+    int VariantCount,
+    string VariantNaming,
+    Guid CreatedBy,
+    IReadOnlyList<SectionConfig> Sections);

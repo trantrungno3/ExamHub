@@ -17,6 +17,7 @@ namespace ExamHub.API.Controllers;
 public class AuthController(IAuthService service) : ControllerBase
 {
     /// <summary>Đăng nhập và nhận JWT token</summary>
+    [AllowAnonymous]
     [HttpPost("login")]
     public async Task<ActionResult<RequestResponse<TokenModel>>> Login([FromBody] LoginDto dto)
     {
@@ -24,6 +25,7 @@ public class AuthController(IAuthService service) : ControllerBase
     }
 
     /// <summary>Đăng ký tài khoản mới</summary>
+    [AllowAnonymous]
     [HttpPost("register")]
     public async Task<ActionResult<RequestResponse<object>>> Register([FromBody] RegisterDto dto)
     {
@@ -31,6 +33,7 @@ public class AuthController(IAuthService service) : ControllerBase
     }
 
     /// <summary>Làm mới access token bằng refresh token</summary>
+    [AllowAnonymous]
     [HttpGet("refresh-token")]
     public async Task<ActionResult<RequestResponse<string>>> RefreshToken([FromQuery] TokenModel dto)
     {

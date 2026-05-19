@@ -35,7 +35,7 @@ export function RolesModal({open, userName, currentRoles, onClose, onSave}: Read
             cancelText="Hủy"
             confirmLoading={saving}
             width={360}
-            destroyOnHide
+            destroyOnHidden
         >
             <div className="mt-4">
                 <Space direction="vertical">

@@ -1,19 +1,41 @@
-import {useMemo, useState} from 'react'
-import type {TableColumnsType} from 'antd'
-import {Button, Input, Popconfirm, Table, Tag} from 'antd'
-import {PlusOutlined, SearchOutlined} from '@ant-design/icons'
-import {gradeLevelService} from '../../../services/gradeLevelService'
-import {GradeFormModal} from './GradeFormModal'
-import {useCategoryTab} from '../../../hooks/useCategoryTab'
+import { useMemo, useState } from 'react'
+import type { TableColumnsType } from 'antd'
+import { Button, Input, Popconfirm, Table, Tag } from 'antd'
+import { PlusOutlined, SearchOutlined } from '@ant-design/icons'
+import { GradeFormModal } from './GradeFormModal'
+import {
+    useGradeLevelsQuery,
+    useCreateGradeLevelMutation,
+    useUpdateGradeLevelMutation,
+    useDeleteGradeLevelMutation,
+} from '../../../hooks/queries/useGradeLevels'
+import { statusCode } from '../../../services/requestService'
 
 export function GradeTab() {
     const [search, setSearch] = useState('')
-    const {data, loading, modalOpen, editing, handleSave, handleDelete, openCreate, openEdit, closeModal} =
-        useCategoryTab(gradeLevelService, 'cấp lớp')
+    const [modalOpen, setModalOpen] = useState(false)
+    const [editing, setEditing] = useState<GradeLevel | null>(null)
+
+    const { data = [], isFetching } = useGradeLevelsQuery()
+    const createMutation = useCreateGradeLevelMutation()
+    const updateMutation = useUpdateGradeLevelMutation()
+    const deleteMutation = useDeleteGradeLevelMutation()
+
     const filtered = useMemo(
         () => data.filter(g => g.name.toLowerCase().includes(search.toLowerCase())),
         [data, search],
     )
+
+    const openCreate = () => { setEditing(null); setModalOpen(true) }
+    const openEdit = (record: GradeLevel) => { setEditing(record); setModalOpen(true) }
+    const closeModal = () => setModalOpen(false)
+
+    const handleSave = async (body: GradeLevelBody): Promise<boolean> => {
+        const res = editing
+            ? await updateMutation.mutateAsync({ id: editing.id, body })
+            : await createMutation.mutateAsync(body)
+        return res.status !== statusCode.Error && !!res.data
+    }
 
     const columns: TableColumnsType<GradeLevel> = [
         {
@@ -29,7 +51,7 @@ export function GradeTab() {
                 </span>
             ),
         },
-        {title: 'grade_number', dataIndex: 'gradeNumber', key: 'gradeNumber'},
+        { title: 'grade_number', dataIndex: 'gradeNumber', key: 'gradeNumber' },
         {
             title: 'Mô tả', dataIndex: 'description', key: 'description',
             render: v => <span className="text-gray-500">{v ?? '—'}</span>,
@@ -50,8 +72,8 @@ export function GradeTab() {
                     <Popconfirm
                         title="Xóa cấp lớp này?"
                         okText="Xóa" cancelText="Hủy"
-                        okButtonProps={{danger: true}}
-                        onConfirm={() => handleDelete(record.id)}
+                        okButtonProps={{ danger: true }}
+                        onConfirm={() => deleteMutation.mutate(record.id)}
                     >
                         <button className="btn-delete">Xóa</button>
                     </Popconfirm>
@@ -68,7 +90,7 @@ export function GradeTab() {
                     value={search}
                     onChange={e => setSearch(e.target.value)}
                     placeholder="Tìm cấp lớp..."
-                    style={{width: 224}}
+                    style={{ width: 224 }}
                 />
                 <Button type="primary" icon={<PlusOutlined/>} onClick={openCreate}>
                     Thêm lớp
@@ -81,7 +103,7 @@ export function GradeTab() {
                     dataSource={filtered}
                     rowKey="id"
                     pagination={false}
-                    loading={loading}
+                    loading={isFetching}
                     footer={() => (
                         <span className="text-[12px] text-gray-400">
                             Hiển thị {filtered.length} trong tổng số {data.length} cấp lớp

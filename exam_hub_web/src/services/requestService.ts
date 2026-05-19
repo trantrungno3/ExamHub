@@ -18,10 +18,10 @@ export interface ApiResponse<T> {
 
 function getToken(): string | null {
     try {
-        const stored = localStorage.getItem(globalConfig.storageKey.token)
+        const stored = localStorage.getItem(globalConfig.storageKey.auth)
         if (!stored) return null
-        const parsed = JSON.parse(stored) as { accessToken?: string }
-        return parsed?.accessToken ?? null
+        const parsed = JSON.parse(stored) as { state?: { token?: { accessToken?: string } } }
+        return parsed?.state?.token?.accessToken ?? null
     } catch {
         return null
     }

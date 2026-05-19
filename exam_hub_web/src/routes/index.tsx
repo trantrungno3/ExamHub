@@ -12,30 +12,41 @@ import ExamCoverPage from '../pages/student/ExamCoverPage'
 import ExamTakingPage from '../pages/student/ExamTakingPage'
 import { Placeholder } from '../components/Placeholder'
 import UserPage from '../pages/user/UserPage'
+import { ProtectedRoute } from './ProtectedRoute'
+import { ROUTES } from './paths'
+
+export { ROUTES }
 
 export const router = createBrowserRouter([
-  { path: '/',         element: <Navigate to="/login" replace /> },
-  { path: '/login',    element: <LoginPage /> },
-  { path: '/register', element: <RegisterPage /> },
+    { path: ROUTES.HOME,     element: <Navigate to={ROUTES.LOGIN} replace /> },
+    { path: ROUTES.LOGIN,    element: <LoginPage /> },
+    { path: ROUTES.REGISTER, element: <RegisterPage /> },
 
-  /* ── Student pages (no sidebar) ── */
-  { path: '/student/exam',      element: <ExamCoverPage /> },
-  { path: '/student/exam/take', element: <ExamTakingPage /> },
+    /* ── Student pages (no sidebar, no auth guard) ── */
+    { path: ROUTES.STUDENT_EXAM,      element: <ExamCoverPage /> },
+    { path: ROUTES.STUDENT_EXAM_TAKE, element: <ExamTakingPage /> },
 
-  /* ── Admin / Teacher app ── */
-  {
-    path: '/app',
-    element: <AppLayout />,
-    children: [
-      { index: true,            element: <Navigate to="/app/dashboard" replace /> },
-      { path: 'dashboard',      element: <DashboardPage /> },
-      { path: 'questions',      element: <QuestionBankPage /> },
-      { path: 'questions/add',  element: <AddQuestionPage /> },
-      { path: 'exams',          element: <ExamTemplatePage /> },
-      { path: 'exams/create',   element: <CreateExamTemplatePage /> },
-      { path: 'category',       element: <CategoryPage /> },
-      { path: 'generate',       element: <Placeholder title="Sinh đề thi" /> },
-      { path: 'users',          element: <UserPage /> },
-    ],
-  },
+    { path: ROUTES.FORBIDDEN, element: <Placeholder title="403 — Không có quyền truy cập" /> },
+
+    /* ── Protected admin / teacher app ── */
+    {
+        element: <ProtectedRoute />,
+        children: [
+            {
+                path: ROUTES.APP,
+                element: <AppLayout />,
+                children: [
+                    { index: true,                              element: <Navigate to={ROUTES.DASHBOARD} replace /> },
+                    { path: 'dashboard',                        element: <DashboardPage /> },
+                    { path: 'questions',                        element: <QuestionBankPage /> },
+                    { path: 'questions/add',                    element: <AddQuestionPage /> },
+                    { path: 'exams',                            element: <ExamTemplatePage /> },
+                    { path: 'exams/create',                     element: <CreateExamTemplatePage /> },
+                    { path: 'category',                         element: <CategoryPage /> },
+                    { path: 'generate',                         element: <Placeholder title="Sinh đề thi" /> },
+                    { path: 'users',                            element: <UserPage /> },
+                ],
+            },
+        ],
+    },
 ])

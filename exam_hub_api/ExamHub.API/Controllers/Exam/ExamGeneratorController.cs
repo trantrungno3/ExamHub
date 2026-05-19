@@ -1,4 +1,5 @@
 using ExamHub.Core.Application.Services;
+using ExamHub.Core.DataTransferObjects.Exam;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TVT.Core;
@@ -26,20 +27,4 @@ public class ExamGeneratorController(IExamGeneratorService service) : Controller
         var claim = User.FindFirst("sub") ?? User.FindFirst("userId");
         return claim is not null && Guid.TryParse(claim.Value, out var id) ? id : Guid.Empty;
     }
-}
-
-/// <summary>Request DTO để sinh đề thi qua API — CreatedBy được lấy từ JWT.</summary>
-public sealed record GenerateExamApiRequest(
-    string Title,
-    Guid? ExamTemplateId,
-    int GradeLevelId,
-    int SubjectId,
-    int DurationMinutes,
-    bool ShuffleQuestions,
-    IReadOnlyList<SectionConfig> Sections)
-{
-    /// <summary>Chuyển đổi sang service request với CreatedBy từ JWT.</summary>
-    public GenerateExamRequest ToServiceRequest(Guid createdBy) => new(
-        Title, ExamTemplateId, GradeLevelId, SubjectId,
-        DurationMinutes, ShuffleQuestions, createdBy, Sections);
 }

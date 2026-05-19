@@ -13,6 +13,10 @@ builder.Services.AddCustomGlobalFilterControllers();
 builder.Services.AddExceptionHandler<CustomExceptionHandler>();
 builder.Services.AddOpenApi(op => { op.AddAuthOpenApiDoc(); });
 builder.Services.AddServicesApi(builder.Configuration, builder.Environment.IsDevelopment());
+builder.Services.AddAuthorizationBuilder()
+    .SetFallbackPolicy(new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder()
+        .RequireAuthenticatedUser()
+        .Build());
 builder.Services.AddCors(options =>
 {
     options.AddPolicy(name: "all",

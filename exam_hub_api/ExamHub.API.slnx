@@ -13,6 +13,7 @@
   <Folder Name="/Solution Items/">
     <File Path="..\context.md" />
     <File Path="compose.yaml" />
+    <File Path="CONTEXT.md" />
     <File Path="cs.instructions.md" />
     <File Path="database_schema.sql" />
     <File Path="Directory.Packages.props" />

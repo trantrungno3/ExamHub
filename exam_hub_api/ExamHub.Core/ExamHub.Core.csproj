@@ -21,10 +21,6 @@
         <PackageReference Include="Microsoft.EntityFrameworkCore.Design"/>
         <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL"/>
         <PackageReference Include="EFCore.NamingConventions"/>
-        <!-- CQRS / Validation -->
-        <PackageReference Include="MediatR"/>
-        <PackageReference Include="FluentValidation"/>
-        <PackageReference Include="FluentValidation.DependencyInjectionExtensions"/>
         <!-- Storage / Cache -->
         <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions"/>
         <PackageReference Include="Microsoft.Extensions.Caching.Abstractions"/>

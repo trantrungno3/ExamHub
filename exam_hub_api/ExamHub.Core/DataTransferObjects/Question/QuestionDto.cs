@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using ExamHub.Core.Domain.Entities;
 using TVT.Core.Extensions;
 
@@ -32,10 +33,15 @@ public record QuestionAnswerResponse(
 
 /// <summary>Request DTO để tạo / cập nhật câu hỏi</summary>
 public record QuestionRequest(
+    [property: Range(1, int.MaxValue, ErrorMessage = "Chủ đề không hợp lệ.")]
     int TopicId,
+    [property: Range(1, int.MaxValue, ErrorMessage = "Loại câu hỏi không hợp lệ.")]
     int QuestionTypeId,
+    [property: Range(1, int.MaxValue, ErrorMessage = "Mức độ khó không hợp lệ.")]
     int DifficultyLevelId,
+    [property: Range(1, int.MaxValue, ErrorMessage = "Cấp độ nhận thức không hợp lệ.")]
     int? CognitiveLevelId,
+    [property: Required(ErrorMessage = "Nội dung câu hỏi không được để trống.")]
     string Content,
     string? ContentPlain,
     string? Explanation,
@@ -43,6 +49,8 @@ public record QuestionRequest(
     string? AudioUrl,
     string? Source,
     string[]? Tags,
+    [property: Required(ErrorMessage = "Câu hỏi phải có ít nhất một đáp án.")]
+    [property: HasCorrectAnswer]
     IEnumerable<QuestionAnswerRequest> Answers
 )
 {
@@ -135,6 +143,18 @@ public record QuestionPagedRequest(
     int? TopicId = null,
     int? QuestionTypeId = null,
     int? DifficultyLevelId = null,
+    int? CognitiveLevelId = null,
     string? Keyword = null,
     bool? IsVerified = null
 );
+
+// ── Custom Validation Attribute ───────────────────────────────────────────────
+
+[AttributeUsage(AttributeTargets.Property)]
+public sealed class HasCorrectAnswerAttribute : ValidationAttribute
+{
+    public HasCorrectAnswerAttribute() : base("Câu hỏi phải có ít nhất một đáp án đúng.") { }
+
+    public override bool IsValid(object? value) =>
+        value is not IEnumerable<QuestionAnswerRequest> answers || answers.Any(a => a.IsCorrect);
+}

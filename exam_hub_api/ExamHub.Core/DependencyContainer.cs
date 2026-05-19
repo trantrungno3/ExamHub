@@ -2,13 +2,11 @@ using ExamHub.Core.Domain.Interfaces;
 using ExamHub.Core.Infrastructure.Persistence;
 using ExamHub.Core.Infrastructure.Persistence.Repositories.Implementations;
 using ExamHub.Core.Infrastructure.Persistence.Services.Implementations;
-using FluentValidation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Minio;
-using System.Reflection;
 using ExamHub.Core.Application.Services;
 using TVT.Core.Extensions;
 using TVT.Core.Filters;
@@ -37,7 +35,7 @@ public static class DependencyContainer
     extension(IServiceCollection services)
     {
         /// <summary>
-        /// Đăng ký toàn bộ services: cross-cutting, CQRS, EF Core, Repositories, Application Services, Storage, Cache.
+        /// Đăng ký toàn bộ services: cross-cutting, EF Core, Repositories, Application Services, Storage, Cache.
         /// </summary>
         public void AddServicesApi(IConfiguration config, bool isDev = true)
         {
@@ -47,21 +45,12 @@ public static class DependencyContainer
                 .AddMiddlewareServices()
                 .AddRabbitMQService(isDev)
                 .AddProjectAuthService(config)
-                .AddCqrsServices()
                 .AddAppDbContext(config)
                 .AddRedisStorage("examhub-core", isDev)
                 .AddPostgreSqlService()
                 .AddRepositories()
                 .AddAppServices()
                 .AddCustomGlobalFilterControllers();
-        }
-
-        private IServiceCollection AddCqrsServices()
-        {
-            var assembly = Assembly.Load("ExamHub.Core");
-            services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(assembly));
-            services.AddValidatorsFromAssembly(assembly);
-            return services;
         }
 
         private IServiceCollection AddAppDbContext(IConfiguration config)

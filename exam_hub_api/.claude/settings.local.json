@@ -14,7 +14,11 @@
       "PowerShell(Get-ChildItem \"D:\\\\My-Project\\\\trungtv_core\" -Recurse -Filter \"IBaseRepository.cs\" | ForEach-Object { $_.FullName })",
       "PowerShell(Get-Content *)",
       "PowerShell(Get-ChildItem \"D:\\\\My-Project\\\\trungtv_core\" -Recurse -Filter \"TVT_Core_Db_PostgreSql.csproj\" | ForEach-Object { $_.FullName })",
-      "PowerShell(Get-ChildItem \"D:\\\\My-Project\\\\trungtv_core\\\\Database\\\\TVT_Core_Db_PostgreSql\" -Recurse -Filter \"InsertTable.cs\" | ForEach-Object { $_.FullName })"
+      "PowerShell(Get-ChildItem \"D:\\\\My-Project\\\\trungtv_core\\\\Database\\\\TVT_Core_Db_PostgreSql\" -Recurse -Filter \"InsertTable.cs\" | ForEach-Object { $_.FullName })",
+      "Bash(xargs grep -l \"useState\\\\|useEffect\")",
+      "Bash(git checkout *)",
+      "Bash(pnpm add *)",
+      "Bash(pnpm build *)"
     ]
   }
 }

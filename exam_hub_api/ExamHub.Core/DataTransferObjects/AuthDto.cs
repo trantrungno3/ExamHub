@@ -13,12 +13,16 @@ public record AccountDto
     /// </summary>
     [Display(Name = "Tên đăng nhập")]
     [Required(ErrorMessage = DataAnnotationErrorText.Required)]
+    [MaxLength(100, ErrorMessage = DataAnnotationErrorText.RangeMaxString)]
+    [RegularExpression(@"^[a-zA-Z0-9._@+-]+$",
+        ErrorMessage = "Tên đăng nhập chỉ được chứa chữ, số và ký tự . _ @ + -")]
     public required string UserName { get; set; }
 
     /// <summary>
     /// </summary>
     [Display(Name = "Mật khẩu")]
     [Required(ErrorMessage = DataAnnotationErrorText.Required)]
+    [MinLength(6, ErrorMessage = DataAnnotationErrorText.RangeMinString)]
     public required string Password { get; set; }
 }
 
@@ -39,6 +43,7 @@ public record RegisterDto : AccountDto
     /// </summary>
     [Display(Name = "Tên hiển thị")]
     [Required(ErrorMessage = DataAnnotationErrorText.Required)]
+    [MaxLength(200, ErrorMessage = DataAnnotationErrorText.RangeMaxString)]
     public required string DisplayName { get; set; }
 
     /// <summary>

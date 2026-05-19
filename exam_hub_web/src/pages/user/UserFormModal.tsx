@@ -48,7 +48,7 @@ export function UserFormModal({open, record, onClose, onSave}: Readonly<Props>) 
             cancelText="Hủy"
             confirmLoading={saving}
             width={520}
-            destroyOnHide
+            destroyOnHidden
         >
             <Form form={form} layout="vertical" className="mt-4">
                 {!isEdit && (

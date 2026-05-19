@@ -3010,6 +3010,18 @@
             }
           },
           {
+            "name": "CognitiveLevelId",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
             "name": "Keyword",
             "in": "query",
             "schema": {
@@ -8236,6 +8248,7 @@
         "type": "object",
         "properties": {
           "title": {
+            "maxLength": 500,
             "type": "string"
           },
           "examTemplateId": {
@@ -8246,6 +8259,8 @@
             "format": "uuid"
           },
           "gradeLevelId": {
+            "maximum": 2147483647,
+            "minimum": 1,
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
               "integer",
@@ -8254,6 +8269,8 @@
             "format": "int32"
           },
           "subjectId": {
+            "maximum": 2147483647,
+            "minimum": 1,
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
               "integer",
@@ -8262,6 +8279,8 @@
             "format": "int32"
           },
           "durationMinutes": {
+            "maximum": 2147483647,
+            "minimum": 1,
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
               "integer",
@@ -8273,6 +8292,7 @@
             "type": "boolean"
           },
           "sections": {
+            "minItems": 1,
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/SectionConfig"
@@ -8475,9 +8495,12 @@
             "type": "boolean"
           },
           "userName": {
+            "maxLength": 100,
+            "pattern": "^[a-zA-Z0-9._@+-]+$",
             "type": "string"
           },
           "password": {
+            "minLength": 6,
             "type": "string"
           }
         },
@@ -8575,6 +8598,8 @@
         "type": "object",
         "properties": {
           "topicId": {
+            "maximum": 2147483647,
+            "minimum": 1,
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
               "integer",
@@ -8583,6 +8608,8 @@
             "format": "int32"
           },
           "questionTypeId": {
+            "maximum": 2147483647,
+            "minimum": 1,
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
               "integer",
@@ -8591,6 +8618,8 @@
             "format": "int32"
           },
           "difficultyLevelId": {
+            "maximum": 2147483647,
+            "minimum": 1,
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
               "integer",
@@ -8599,6 +8628,8 @@
             "format": "int32"
           },
           "cognitiveLevelId": {
+            "maximum": 2147483647,
+            "minimum": 1,
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
               "null",
@@ -8899,6 +8930,7 @@
         "type": "object",
         "properties": {
           "displayName": {
+            "maxLength": 200,
             "type": "string"
           },
           "phoneNumber": {
@@ -8908,9 +8940,12 @@
             ]
           },
           "userName": {
+            "maxLength": 100,
+            "pattern": "^[a-zA-Z0-9._@+-]+$",
             "type": "string"
           },
           "password": {
+            "minLength": 6,
             "type": "string"
           }
         },
@@ -10527,6 +10562,7 @@
           "sectionName",
           "topicId",
           "questionTypeId",
+          "cognitiveLevelId",
           "questionCount",
           "pctEasy",
           "pctMedium",
@@ -10543,6 +10579,8 @@
             ]
           },
           "topicId": {
+            "maximum": 2147483647,
+            "minimum": 1,
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
               "integer",
@@ -10559,7 +10597,20 @@
             ],
             "format": "int32"
           },
+          "cognitiveLevelId": {
+            "maximum": 2147483647,
+            "minimum": 1,
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
           "questionCount": {
+            "maximum": 200,
+            "minimum": 1,
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
               "integer",
@@ -10600,6 +10651,8 @@
             "format": "double"
           },
           "scorePerQuestion": {
+            "maximum": 9999999,
+            "minimum": 0.01,
             "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": [
               "number",

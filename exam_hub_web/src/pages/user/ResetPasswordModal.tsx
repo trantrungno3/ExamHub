@@ -30,7 +30,7 @@ export function ResetPasswordModal({open, userName, onClose, onSave}: Readonly<P
             cancelText="Hủy"
             confirmLoading={saving}
             width={420}
-            destroyOnHide
+            destroyOnHidden
         >
             <Form form={form} layout="vertical" className="mt-4">
                 <Form.Item
