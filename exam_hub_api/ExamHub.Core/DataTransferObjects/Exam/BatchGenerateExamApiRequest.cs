@@ -32,3 +32,15 @@ public sealed record BatchGenerateExamApiRequest(
         DurationMinutes, ShuffleQuestions, ShuffleAnswers,
         VariantCount, VariantNaming, createdBy, Sections);
 }
+
+/// <summary>Kết quả sinh lô đề thi.</summary>
+public sealed record BatchGenerateExamResponse(
+    Guid BatchId,
+    IReadOnlyList<VariantSummaryResponse> Variants);
+
+/// <summary>Tóm tắt một biến thể đề thi trong lô.</summary>
+public sealed record VariantSummaryResponse(
+    Guid ExamId,
+    string? ExamCode,
+    int VariantIndex,
+    string VariantCode);

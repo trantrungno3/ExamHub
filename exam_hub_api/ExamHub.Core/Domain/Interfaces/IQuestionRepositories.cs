@@ -43,6 +43,7 @@ public interface IQuestionRepository : IBaseRepository<Question, Guid>
         int difficultyId,
         int count,
         IReadOnlySet<Guid> excludeIds,
+        int? cognitiveLevelId = null,
         CancellationToken ct = default);
 
     /// <summary>Tăng số lần sử dụng câu hỏi</summary>

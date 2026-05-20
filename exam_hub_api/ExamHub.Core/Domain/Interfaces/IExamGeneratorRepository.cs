@@ -16,5 +16,15 @@ public interface IExamGeneratorRepository
         IReadOnlyList<ExamQuestion> questions,
         IReadOnlySet<Guid> usedQuestionIds,
         CancellationToken ct = default);
+
+    /// <summary>
+    /// Lưu nguyên tử toàn bộ lô biến thể: INSERT exams → INSERT exam_questions → UPDATE usage_count.
+    /// Rollback toàn bộ nếu bất kỳ bước nào thất bại.
+    /// </summary>
+    Task<Guid> SaveBatchExamsAsync(
+        IReadOnlyList<Exam> exams,
+        IReadOnlyList<ExamQuestion> questions,
+        IReadOnlySet<Guid> usedQuestionIds,
+        CancellationToken ct = default);
 }
 

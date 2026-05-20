@@ -9,7 +9,22 @@ public interface IExamGeneratorService
 {
     /// <summary>Sinh đề thi từ request cấu hình và lưu vào database.</summary>
     Task<Guid> GenerateAsync(GenerateExamRequest request, CancellationToken ct = default);
+
+    /// <summary>Sinh lô biến thể đề thi (cùng câu hỏi, xáo thứ tự khác nhau) trong một transaction.</summary>
+    Task<BatchGenerateResult> BatchGenerateAsync(BatchGenerateExamRequest request, CancellationToken ct = default);
 }
+
+/// <summary>Kết quả sinh lô đề — trả về batchId và danh sách variant.</summary>
+public sealed record BatchGenerateResult(
+    Guid BatchId,
+    IReadOnlyList<VariantInfo> Variants);
+
+/// <summary>Thông tin một variant trong lô.</summary>
+public sealed record VariantInfo(
+    Guid ExamId,
+    string? ExamCode,
+    int VariantIndex,
+    string VariantCode);
 
 /// <summary>Cấu hình sinh đề thi.</summary>
 public sealed record GenerateExamRequest(

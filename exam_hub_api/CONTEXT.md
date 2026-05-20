@@ -4,6 +4,33 @@ Hệ thống ASP.NET Core (.NET 10) cho phép giáo viên cấu hình ngân hàn
 
 ---
 
+## Infrastructure Conventions
+
+### Repository pattern
+
+**Rule**: Repository classes in `ExamHub.Core` MUST NOT instantiate `NpgsqlConnection` directly. All database access goes through `ICommonRepository<T, TId>` (typed CRUD) or `IBaseRepository` (raw Dapper queries), both from `TVT.Core.Db.PostgreSql.Infrastructures`.
+
+| Need | Use |
+|------|-----|
+| Standard CRUD on a typed entity | `ICommonRepository<T, TId>` |
+| Raw Dapper `QueryAsync` / `ExecuteQueryAsync` / `ExecuteScalarAsync` | `repo.GetBaseRepository()` → `IBaseRepository` |
+| Multi-statement transaction | `ICommonRepository.ExecuteInTransactionAsync(action, ct)` or `IBaseRepository.ExecuteInTransactionAsync` |
+| Bulk binary import | `IBaseRepository.ExecuteBulkAsync` |
+
+**Forbidden in ExamHub.Core:**
+```csharp
+// ❌ never do this
+new NpgsqlConnection(connectionString)
+```
+
+**Correct pattern:**
+```csharp
+// ✅ inject ICommonRepository or IBaseRepository, use its methods
+var items = await _repo.GetBaseRepository().QueryAsync<Foo>(sql, parameters, ct: ct);
+```
+
+---
+
 ## Language
 
 ### Content Hierarchy
@@ -53,12 +80,17 @@ _Avoid_: `QuestionSnapshot`, `ExamItem`, `Item`.
 **Batch (Lô đề)**: Tập **Exam** được sinh cùng lúc từ một **ExamTemplate** chia sẻ `batch_id`; mỗi biến thể có `variant_index` và trỏ về `parent_exam_id`.
 _Avoid_: `Set`, `Group`, `Series`, `Pool`.
 
+### Question Attachments
+
+**QuestionAttachment (Tệp đính kèm câu hỏi)**: File (image or PDF, max 10 MB) uploaded to MinIO and linked to a **Question**. Stored under `questions/{questionId}/` prefix with a permanent public URL. Student file upload is out of scope.
+_Avoid_: `Attachment` (ambiguous), `QuestionFile`, `Media`.
+
 ### Submissions
 
-**ExamSubmission (Bài nộp)**: Bản ghi lần làm bài của một Student trên một **Exam**, lưu `Status` (InProgress/Submitted/Graded), `total_score`, `is_passed`.
+**ExamSubmission (Bài nộp)**: Bản ghi lần làm bài của một Student trên một **Exam**, lưu `Status` (InProgress/Submitted/Graded) và `total_score` (tổng điểm các **SubmissionAnswer**). `is_passed` không dùng trong Phase 2.
 _Avoid_: `Attempt`, `Response`, `ExamResult`, `Submission`.
 
-**SubmissionAnswer (Câu trả lời)**: Câu trả lời của Student cho một **ExamQuestion** bên trong một **ExamSubmission**.
+**SubmissionAnswer (Câu trả lời)**: Câu trả lời của Student cho một **ExamQuestion** bên trong một **ExamSubmission**. Lưu `score`: tự động 0/1 cho multiple_choice (chấm lúc nộp), nhập tay 0–10 cho essay (chấm bởi Teacher). `total_score` của **ExamSubmission** = tổng tất cả `SubmissionAnswer.score`, chỉ cập nhật khi Teacher gọi finalize.
 _Avoid_: `Answer` (xung đột với QuestionAnswer), `Response`, `UserAnswer`.
 
 ### Organization

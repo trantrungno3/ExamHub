@@ -37,4 +37,33 @@ public class ExamGeneratorRepository(AppDbContext db, IQuestionRepository questi
 
         return exam.Id;
     }
+
+    /// <inheritdoc/>
+    public async Task<Guid> SaveBatchExamsAsync(
+        IReadOnlyList<Exam> exams,
+        IReadOnlyList<ExamQuestion> questions,
+        IReadOnlySet<Guid> usedQuestionIds,
+        CancellationToken ct = default)
+    {
+        var batchId = exams[0].BatchId ?? Guid.NewGuid();
+        await using var tx = await db.Database.BeginTransactionAsync(ct);
+        try
+        {
+            db.Set<Exam>().AddRange(exams);
+            db.Set<ExamQuestion>().AddRange(questions);
+            await db.SaveChangesAsync(ct);
+
+            if (usedQuestionIds.Count > 0)
+                await questionRepo.IncrementUsageCountAsync(usedQuestionIds, ct);
+
+            await tx.CommitAsync(ct);
+        }
+        catch
+        {
+            await tx.RollbackAsync(ct);
+            throw;
+        }
+
+        return batchId;
+    }
 }

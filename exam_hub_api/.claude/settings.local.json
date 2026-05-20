@@ -18,7 +18,10 @@
       "Bash(xargs grep -l \"useState\\\\|useEffect\")",
       "Bash(git checkout *)",
       "Bash(pnpm add *)",
-      "Bash(pnpm build *)"
+      "Bash(pnpm build *)",
+      "Bash(grep -E \"\\\\.cs$\")",
+      "Bash(Select-Object Name)",
+      "Bash(Test-Path *)"
     ]
   }
 }

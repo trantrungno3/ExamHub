@@ -113,17 +113,25 @@ public class QuestionRepository : BaseRepository<Question, Guid>, IQuestionRepos
         int difficultyId,
         int count,
         IReadOnlySet<Guid> excludeIds,
+        int? cognitiveLevelId = null,
         CancellationToken ct = default)
     {
-        var sql = questionTypeId.HasValue ? PickSqlWithType : PickSqlNoType;
+        var sql = (questionTypeId.HasValue, cognitiveLevelId.HasValue) switch
+        {
+            (false, false) => PickSqlNoTypeNoCog,
+            (true,  false) => PickSqlWithTypeNoCog,
+            (false, true)  => PickSqlNoTypeWithCog,
+            (true,  true)  => PickSqlWithTypeWithCog,
+        };
         await using var conn = new NpgsqlConnection(Db.Database.GetConnectionString());
         var rows = await conn.QueryAsync<PickedQuestion>(sql, new
         {
-            TopicId        = topicId,
-            QuestionTypeId = questionTypeId,
-            DifficultyId   = difficultyId,
-            ExcludedIds    = excludeIds.Count > 0 ? excludeIds.ToArray() : Array.Empty<Guid>(),
-            Count          = count
+            TopicId          = topicId,
+            QuestionTypeId   = questionTypeId,
+            DifficultyId     = difficultyId,
+            CognitiveLevelId = cognitiveLevelId,
+            ExcludedIds      = excludeIds.Count > 0 ? excludeIds.ToArray() : Array.Empty<Guid>(),
+            Count            = count
         });
         return rows.ToList();
     }
@@ -147,12 +155,14 @@ public class QuestionRepository : BaseRepository<Question, Guid>, IQuestionRepos
                 .SetProperty(x => x.VerifiedAt, DateTime.UtcNow), ct);
 
     // ── SQL cho PickRandomAsync ───────────────────────────────────────────
-    // 2 biến thể tránh truyền NULL int gây lỗi type-inference trong Npgsql.
+    // 4 biến thể tránh truyền NULL int gây lỗi type-inference trong Npgsql.
 
-    private static readonly string PickSqlWithType = BuildPickSql(filterByType: true);
-    private static readonly string PickSqlNoType   = BuildPickSql(filterByType: false);
+    private static readonly string PickSqlNoTypeNoCog    = BuildPickSql(filterByType: false, filterByCog: false);
+    private static readonly string PickSqlWithTypeNoCog  = BuildPickSql(filterByType: true,  filterByCog: false);
+    private static readonly string PickSqlNoTypeWithCog  = BuildPickSql(filterByType: false, filterByCog: true);
+    private static readonly string PickSqlWithTypeWithCog = BuildPickSql(filterByType: true, filterByCog: true);
 
-    private static string BuildPickSql(bool filterByType) => $"""
+    private static string BuildPickSql(bool filterByType, bool filterByCog) => $"""
         SELECT
             q.id      AS QuestionId,
             q.content AS Content,
@@ -173,7 +183,8 @@ public class QuestionRepository : BaseRepository<Question, Guid>, IQuestionRepos
           AND q.is_verified         = true
           AND q.topic_id            = @TopicId
           AND q.difficulty_level_id = @DifficultyId
-          {(filterByType ? "AND q.question_type_id = @QuestionTypeId" : "")}
+          {(filterByType ? "AND q.question_type_id   = @QuestionTypeId" : "")}
+          {(filterByCog  ? "AND q.cognitive_level_id = @CognitiveLevelId" : "")}
           AND NOT (q.id = ANY(@ExcludedIds))
         ORDER BY RANDOM()
         LIMIT @Count

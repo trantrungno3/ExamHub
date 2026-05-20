@@ -10,7 +10,10 @@ namespace ExamHub.API.Controllers.Question;
 [ApiController]
 [Authorize]
 [Route("api/questions")]
-public class QuestionController(IQuestionService service) : ControllerBase
+public class QuestionController(
+    IQuestionService service,
+    IAuthorizationService authorizationService,
+    ITopicRepository topicRepo) : ControllerBase
 {
     /// <summary>Lấy câu hỏi theo ID (kèm đáp án)</summary>
     [HttpGet("{id:guid}")]
@@ -54,6 +57,14 @@ public class QuestionController(IQuestionService service) : ControllerBase
         [FromBody] QuestionRequest request,
         CancellationToken ct)
     {
+        var topic = await topicRepo.GetByIdAsync(request.TopicId, ct);
+        if (topic is null)
+            return NotFound(RequestResponse<object>.Error($"Chủ đề {request.TopicId} không tồn tại."));
+
+        var authResult = await authorizationService.AuthorizeAsync(User, topic.SubjectId, "TeacherOwnsSubject");
+        if (!authResult.Succeeded)
+            return StatusCode(403, RequestResponse<object>.Error("Bạn không phụ trách môn học này."));
+
         var userId  = GetCurrentUserId();
         var entity  = request.ToEntity(userId);
         var answers = request.ToAnswers();
@@ -70,6 +81,14 @@ public class QuestionController(IQuestionService service) : ControllerBase
     {
         var existing = await service.GetByIdAsync(id, ct);
         if (existing is null) return NotFound();
+
+        var topic = await topicRepo.GetByIdAsync(request.TopicId, ct);
+        if (topic is null)
+            return NotFound(RequestResponse<object>.Error($"Chủ đề {request.TopicId} không tồn tại."));
+
+        var authResult = await authorizationService.AuthorizeAsync(User, topic.SubjectId, "TeacherOwnsSubject");
+        if (!authResult.Succeeded)
+            return StatusCode(403, RequestResponse<object>.Error("Bạn không phụ trách môn học này."));
 
         var entity  = request.ToEntity(existing.CreatedBy);
         entity.Id   = id;

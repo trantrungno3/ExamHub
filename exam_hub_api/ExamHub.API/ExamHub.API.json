@@ -3658,6 +3658,61 @@
         ]
       }
     },
+    "/api/exam-generator/batch": {
+      "post": {
+        "tags": [
+          "ExamGenerator"
+        ],
+        "summary": "Sinh lô đề thi nhiều biến thể từ cùng ngân hàng câu hỏi",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BatchGenerateExamApiRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BatchGenerateExamApiRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/BatchGenerateExamApiRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfBatchGenerateExamResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfBatchGenerateExamResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfBatchGenerateExamResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
     "/api/exam-submissions/{id}": {
       "get": {
         "tags": [
@@ -6729,6 +6784,112 @@
   },
   "components": {
     "schemas": {
+      "BatchGenerateExamApiRequest": {
+        "required": [
+          "title",
+          "examTemplateId",
+          "gradeLevelId",
+          "subjectId",
+          "durationMinutes",
+          "shuffleQuestions",
+          "shuffleAnswers",
+          "variantCount",
+          "variantNaming",
+          "sections"
+        ],
+        "type": "object",
+        "properties": {
+          "title": {
+            "maxLength": 500,
+            "type": "string"
+          },
+          "examTemplateId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "gradeLevelId": {
+            "maximum": 2147483647,
+            "minimum": 1,
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "subjectId": {
+            "maximum": 2147483647,
+            "minimum": 1,
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "durationMinutes": {
+            "maximum": 2147483647,
+            "minimum": 1,
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "shuffleQuestions": {
+            "type": "boolean"
+          },
+          "shuffleAnswers": {
+            "type": "boolean"
+          },
+          "variantCount": {
+            "maximum": 20,
+            "minimum": 1,
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "variantNaming": {
+            "pattern": "^(ALPHA|NUMBER)$",
+            "type": "string"
+          },
+          "sections": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SectionConfig"
+            }
+          }
+        },
+        "description": "Request sinh lô đề thi (nhiều biến thể cùng lúc)."
+      },
+      "BatchGenerateExamResponse": {
+        "required": [
+          "batchId",
+          "variants"
+        ],
+        "type": "object",
+        "properties": {
+          "batchId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "variants": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VariantSummaryResponse"
+            }
+          }
+        },
+        "description": "Kết quả sinh lô đề thi."
+      },
       "CognitiveLevelRequest": {
         "required": [
           "code",
@@ -8947,6 +9108,43 @@
           "password": {
             "minLength": 6,
             "type": "string"
+          }
+        },
+        "description": ""
+      },
+      "RequestResponseOfBatchGenerateExamResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "description": "Trạng thái",
+            "$ref": "#/components/schemas/RequestResponseStatus"
+          },
+          "message": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Message"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "Dữ liệu",
+                "$ref": "#/components/schemas/BatchGenerateExamResponse"
+              }
+            ]
+          },
+          "totalRecord": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Tổng số bản ghi",
+            "format": "int64"
           }
         },
         "description": ""
@@ -11465,6 +11663,39 @@
           }
         },
         "description": "Response DTO thông tin người dùng"
+      },
+      "VariantSummaryResponse": {
+        "required": [
+          "examId",
+          "examCode",
+          "variantIndex",
+          "variantCode"
+        ],
+        "type": "object",
+        "properties": {
+          "examId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "examCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "variantIndex": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "variantCode": {
+            "type": "string"
+          }
+        },
+        "description": "Tóm tắt một biến thể đề thi trong lô."
       }
     },
     "securitySchemes": {

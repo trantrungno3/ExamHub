@@ -16,7 +16,12 @@ builder.Services.AddServicesApi(builder.Configuration, builder.Environment.IsDev
 builder.Services.AddAuthorizationBuilder()
     .SetFallbackPolicy(new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder()
         .RequireAuthenticatedUser()
-        .Build());
+        .Build())
+    .AddPolicy("TeacherOwnsSubject", policy =>
+        policy.Requirements.Add(new ExamHub.API.Authorization.TeacherOwnsSubjectRequirement()));
+
+builder.Services.AddScoped<Microsoft.AspNetCore.Authorization.IAuthorizationHandler,
+    ExamHub.API.Authorization.TeacherOwnsSubjectHandler>();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy(name: "all",
