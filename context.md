@@ -17,7 +17,7 @@ Hệ thống tạo sinh đề thi tự động cho phép giáo viên/admin cấu
 ```
 ┌──────────────────────────────────────────────────────────────────┐
 │                          CLIENT LAYER                            │
-│         React + Vite + TypeScript + TailwindCSS                  │
+│         React 19 + Vite + TypeScript + Ant Design v6            │
 │         (Admin Dashboard  |  Teacher Portal  |  Student Portal)  │
 └─────────────────────┬────────────────────────────────────────────┘
                       │ HTTPS / REST API (JSON)
@@ -27,7 +27,7 @@ Hệ thống tạo sinh đề thi tự động cho phép giáo viên/admin cấu
 └─────────────────────┬────────────────────────────────────────────┘
                       │
 ┌─────────────────────▼────────────────────────────────────────────┐
-│             BACKEND — ASP.NET Core Web API (.NET 8)               │
+│             BACKEND — ASP.NET Core Web API (.NET 10)              │
 │                                                                  │
 │  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐  │
 │  │  Config         │  │  Question Bank  │  │  Exam Generator │  │
@@ -40,11 +40,11 @@ Hệ thống tạo sinh đề thi tự động cho phép giáo viên/admin cấu
 │  │  Auth / User    │  │  Result &       │  │  Export         │  │
 │  │  Module         │  │  Analytics      │  │  Module         │  │
 │  │  ASP.NET Core   │  │  Module         │  │  QuestPDF +     │  │
-│  │  Identity + JWT │  │                 │  │  ClosedXML      │  │
+│  │  Identity + JWT │  │                 │  │  OpenXml (Word) │  │
 │  └─────────────────┘  └─────────────────┘  └─────────────────┘  │
 │                                                                  │
 │  ─────────────── Infrastructure Layer ──────────────────────── │
-│  Entity Framework Core 8  |  Repository Pattern  |  CQRS/MediatR │
+│  EF Core 10 + Dapper      |  Repository Pattern  |  TVT.Core     │
 └─────────────────────┬────────────────────────────────────────────┘
                       │
 ┌─────────────────────▼────────────────────────────────────────────┐
@@ -62,7 +62,7 @@ Hệ thống tạo sinh đề thi tự động cho phép giáo viên/admin cấu
 | **Exam Generator Module** | Thuật toán sinh đề theo điều kiện, hỗ trợ lọc Bloom | ExamGeneratorService + Strategy Pattern |
 | **Auth / User Module** | Đăng nhập, phân quyền theo role | ASP.NET Core Identity + JWT Bearer |
 | **Result & Analytics** | Lưu kết quả, thống kê theo cấp độ Bloom, báo cáo | Background Service + CQRS/MediatR |
-| **Export Module** | Xuất PDF, Word, Excel | QuestPDF + ClosedXML |
+| **Export Module** | Xuất PDF, Word, Excel | QuestPDF (PDF) + DocumentFormat.OpenXml (Word) + ClosedXML (Excel) |
 | **File Storage** | Upload/download ảnh, file đề thi | MinIO SDK (S3-compatible) |
 | **School Management Module** | Quản lý trường, khoá học, lớp học, phân công giáo viên, enroll học sinh | Controller + Service + EF Core |
 
@@ -84,7 +84,7 @@ Hệ thống tạo sinh đề thi tự động cho phép giáo viên/admin cấu
                          Fisher-Yates Shuffle → Partition thành N mã đề
     ↓
 [Output] → Đề thi lưu DB → Preview trên React
-         → Export PDF (QuestPDF) / Word (ClosedXML) → MinIO
+         → Export PDF (QuestPDF) / Word (DocumentFormat.OpenXml) → MinIO
     ↓
 [Học sinh] → Làm bài → Nộp → Chấm điểm tự động (trắc nghiệm)
                              / thủ công (tự luận)
@@ -126,9 +126,11 @@ ExamSubmission (Bài nộp)
 
 ---
 
-## 4. Database — 15 Bảng (PostgreSQL 16, schema: public)
+## 4. Database — 15 Bảng cốt lõi (PostgreSQL 16, schema: public)
 
 > Cập nhật v2: Thêm bảng `cognitive_levels` + FK vào `questions` và `exam_template_sections`
+> Lưu ý (drift): con số 15 là phần cốt lõi bên dưới; **School Management Module** bổ sung thêm
+> 5 bảng (`schools`, `cohorts`, `cohort_classes`, `school_members`, `cohort_members`) → ~20 bảng.
 
 ### Nhóm Config (6 bảng)
 | Bảng | Mô tả | PK |
@@ -242,7 +244,7 @@ ExamHub.sln
 │   │   │       └── CognitiveLevels/       # [MỚI] GetCognitiveLevels CRUD
 │   │   ├── Services/
 │   │   │   ├── ExamGeneratorService.cs    # Thuật toán sinh đề (hỗ trợ Bloom filter)
-│   │   │   ├── ExportService.cs           # PDF (QuestPDF) / Word (ClosedXML)
+│   │   │   ├── ExportService.cs           # PDF (QuestPDF) / Word (DocumentFormat.OpenXml)
 │   │   │   └── StorageService.cs          # MinIO upload/download
 │   │   ├── DTOs/
 │   │   └── Validators/                    # FluentValidation
@@ -625,22 +627,22 @@ public async Task<IActionResult> SubmitExam(...)
 
 | Layer | Technology | Ghi chú |
 |-------|-----------|---------|
-| **Frontend** | React 18 + Vite + TypeScript | SPA |
-| **UI** | TailwindCSS + shadcn/ui | |
+| **Frontend** | React 19 + Vite + TypeScript | SPA |
+| **UI** | Ant Design v6 | (drift: spec cũ ghi TailwindCSS + shadcn/ui) |
 | **State** | Zustand | Lightweight |
-| **HTTP** | Axios + TanStack Query | Cache + refetch |
+| **HTTP** | fetch wrapper (`requestService`) + TanStack Query | (drift: spec cũ ghi Axios) |
 | **Rich Text** | TipTap | Soạn câu hỏi có định dạng, công thức |
-| **Backend** | **ASP.NET Core Web API (.NET 8)** | C# |
-| **ORM** | Entity Framework Core 8 | Code-first migrations |
-| **CQRS** | MediatR | Clean Architecture |
+| **Backend** | **ASP.NET Core Web API (.NET 10)** | C# |
+| **ORM** | EF Core 10 + Dapper (qua TVT.Core) | Repository pattern |
+| **CQRS** | — | (drift: không dùng MediatR; service + repository) |
 | **Validation** | FluentValidation | |
 | **Auth** | ASP.NET Core Identity + JWT Bearer | |
 | **Database** | **PostgreSQL 16** | 15 bảng (v2) |
 | **Cache** | **Redis 7** (StackExchange.Redis) | Cache key cập nhật hỗ trợ Bloom |
 | **File Storage** | **MinIO** (Minio.AspNetCore SDK) | S3-compatible, self-hosted |
 | **Export PDF** | **QuestPDF** | Không cần Headless Chrome |
-| **Export Word** | **ClosedXML** | |
-| **Import Excel** | **EPPlus** | Import câu hỏi hàng loạt |
+| **Export Word** | **DocumentFormat.OpenXml** | (drift: spec cũ ghi ClosedXML — ClosedXML chỉ cho Excel) |
+| **Import Excel** | **ClosedXML** | Import câu hỏi hàng loạt (drift: spec cũ ghi EPPlus — đổi sang ClosedXML để tránh license phi thương mại) |
 | **Container** | Docker + Docker Compose | 6 services |
 | **Reverse Proxy** | **Nginx** | |
 | **CI/CD** | GitHub Actions | |

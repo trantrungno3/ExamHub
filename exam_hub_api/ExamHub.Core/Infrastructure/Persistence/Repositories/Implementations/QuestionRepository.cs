@@ -1,17 +1,25 @@
-using Dapper;
 using ExamHub.Core.Domain.Entities;
 using ExamHub.Core.Domain.Interfaces;
+using ExamHub.Core.Infrastructure.Caching;
 using ExamHub.Core.Infrastructure.Persistence.Repositories.Base;
 using Microsoft.EntityFrameworkCore;
-using Npgsql;
+using TVT.Core.Db.PostgreSql.Infrastructures;
+using TVT.Core.Db.Redis;
 
 namespace ExamHub.Core.Infrastructure.Persistence.Repositories.Implementations;
 
 /// <summary>Triển khai repository cho Question</summary>
 public class QuestionRepository : BaseRepository<Question, Guid>, IQuestionRepository
 {
+    private readonly IRedisService _cache;
+    private readonly IBaseRepository _sql;
+
     /// <inheritdoc/>
-    public QuestionRepository(AppDbContext db) : base(db) { }
+    public QuestionRepository(AppDbContext db, IRedisService cache, IBaseRepository sql) : base(db)
+    {
+        _cache = cache;
+        _sql   = sql;
+    }
 
     /// <inheritdoc/>
     public async Task<Question?> GetWithAnswersAsync(Guid id, CancellationToken ct = default)
@@ -69,6 +77,7 @@ public class QuestionRepository : BaseRepository<Question, Guid>, IQuestionRepos
         int? topicId = null,
         int? questionTypeId = null,
         int? difficultyLevelId = null,
+        int? cognitiveLevelId = null,
         string? keyword = null,
         bool? isVerified = null,
         CancellationToken ct = default)
@@ -77,6 +86,7 @@ public class QuestionRepository : BaseRepository<Question, Guid>, IQuestionRepos
             .Include(x => x.Topic)
             .Include(x => x.QuestionType)
             .Include(x => x.DifficultyLevel)
+            .Include(x => x.CognitiveLevel)
             .AsQueryable();
 
         if (topicId.HasValue)
@@ -87,6 +97,9 @@ public class QuestionRepository : BaseRepository<Question, Guid>, IQuestionRepos
 
         if (difficultyLevelId.HasValue)
             query = query.Where(x => x.DifficultyLevelId == difficultyLevelId.Value);
+
+        if (cognitiveLevelId.HasValue)
+            query = query.Where(x => x.CognitiveLevelId == cognitiveLevelId.Value);
 
         if (!string.IsNullOrWhiteSpace(keyword))
             query = query.Where(x =>
@@ -116,24 +129,65 @@ public class QuestionRepository : BaseRepository<Question, Guid>, IQuestionRepos
         int? cognitiveLevelId = null,
         CancellationToken ct = default)
     {
+        if (count <= 0) return [];
+
+        // 1. Pool ID ứng viên — cache 2 phút, chỉ lưu ID (spec §10).
+        //    excludeIds thay đổi mỗi lần sinh đề nên KHÔNG nằm trong khóa cache.
+        var poolKey = QuestionPoolCache.PoolKey(topicId, difficultyId, questionTypeId, cognitiveLevelId);
+        var pool = await _cache.GetOrSetAsync(
+            poolKey,
+            () => FetchPoolIdsAsync(topicId, questionTypeId, difficultyId, cognitiveLevelId, ct),
+            QuestionPoolCache.Ttl, ct);
+
+        // 2. Loại trừ câu đã dùng + trộn Fisher-Yates + lấy count, tất cả trong bộ nhớ.
+        var candidates = pool.Where(id => !excludeIds.Contains(id)).ToList();
+        if (candidates.Count == 0) return [];
+        Shuffle(candidates);
+        var pickedIds = candidates.Take(count).ToList();
+
+        // 3. Nạp nội dung + đáp án snapshot cho các ID đã chọn, giữ thứ tự ngẫu nhiên.
+        var byId = await FetchByIdsAsync(pickedIds, ct);
+        return pickedIds.Where(byId.ContainsKey).Select(id => byId[id]).ToList();
+    }
+
+    private async Task<List<Guid>> FetchPoolIdsAsync(
+        int topicId, int? questionTypeId, int difficultyId, int? cognitiveLevelId, CancellationToken ct)
+    {
         var sql = (questionTypeId.HasValue, cognitiveLevelId.HasValue) switch
         {
-            (false, false) => PickSqlNoTypeNoCog,
-            (true,  false) => PickSqlWithTypeNoCog,
-            (false, true)  => PickSqlNoTypeWithCog,
-            (true,  true)  => PickSqlWithTypeWithCog,
+            (false, false) => PoolIdsSqlNoTypeNoCog,
+            (true,  false) => PoolIdsSqlWithTypeNoCog,
+            (false, true)  => PoolIdsSqlNoTypeWithCog,
+            (true,  true)  => PoolIdsSqlWithTypeWithCog,
         };
-        await using var conn = new NpgsqlConnection(Db.Database.GetConnectionString());
-        var rows = await conn.QueryAsync<PickedQuestion>(sql, new
+        var rows = await _sql.QueryAsync<Guid>(sql, new
         {
             TopicId          = topicId,
             QuestionTypeId   = questionTypeId,
             DifficultyId     = difficultyId,
-            CognitiveLevelId = cognitiveLevelId,
-            ExcludedIds      = excludeIds.Count > 0 ? excludeIds.ToArray() : Array.Empty<Guid>(),
-            Count            = count
-        });
+            CognitiveLevelId = cognitiveLevelId
+        }, cancellationToken: ct);
         return rows.ToList();
+    }
+
+    private async Task<Dictionary<Guid, PickedQuestion>> FetchByIdsAsync(
+        IReadOnlyList<Guid> ids, CancellationToken ct)
+    {
+        if (ids.Count == 0) return new Dictionary<Guid, PickedQuestion>();
+        var rows = await _sql.QueryAsync<PickedQuestion>(FetchByIdsSql, new
+        {
+            Ids = ids.ToArray()
+        }, cancellationToken: ct);
+        return rows.ToDictionary(r => r.QuestionId);
+    }
+
+    private static void Shuffle(IList<Guid> list)
+    {
+        for (var i = list.Count - 1; i > 0; i--)
+        {
+            var j = Random.Shared.Next(i + 1);
+            (list[i], list[j]) = (list[j], list[i]);
+        }
     }
 
     /// <inheritdoc/>
@@ -154,21 +208,42 @@ public class QuestionRepository : BaseRepository<Question, Guid>, IQuestionRepos
                 .SetProperty(x => x.VerifiedBy, verifiedBy)
                 .SetProperty(x => x.VerifiedAt, DateTime.UtcNow), ct);
 
-    // ── SQL cho PickRandomAsync ───────────────────────────────────────────
-    // 4 biến thể tránh truyền NULL int gây lỗi type-inference trong Npgsql.
+    /// <inheritdoc/>
+    public async Task SetImageUrlAsync(Guid id, string imageUrl, CancellationToken ct = default)
+        => await Set
+            .Where(x => x.Id == id)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(x => x.ImageUrl, imageUrl)
+                .SetProperty(x => x.UpdatedAt, DateTime.UtcNow), ct);
 
-    private static readonly string PickSqlNoTypeNoCog    = BuildPickSql(filterByType: false, filterByCog: false);
-    private static readonly string PickSqlWithTypeNoCog  = BuildPickSql(filterByType: true,  filterByCog: false);
-    private static readonly string PickSqlNoTypeWithCog  = BuildPickSql(filterByType: false, filterByCog: true);
-    private static readonly string PickSqlWithTypeWithCog = BuildPickSql(filterByType: true, filterByCog: true);
+    // ── SQL cho pool cache + nạp theo ID ──────────────────────────────────
+    // Pool: chỉ SELECT id (cache được). 4 biến thể tránh truyền NULL int gây lỗi
+    // type-inference trong Npgsql khi không lọc theo type/cognitive.
 
-    private static string BuildPickSql(bool filterByType, bool filterByCog) => $"""
+    private static readonly string PoolIdsSqlNoTypeNoCog     = BuildPoolIdsSql(filterByType: false, filterByCog: false);
+    private static readonly string PoolIdsSqlWithTypeNoCog   = BuildPoolIdsSql(filterByType: true,  filterByCog: false);
+    private static readonly string PoolIdsSqlNoTypeWithCog   = BuildPoolIdsSql(filterByType: false, filterByCog: true);
+    private static readonly string PoolIdsSqlWithTypeWithCog = BuildPoolIdsSql(filterByType: true,  filterByCog: true);
+
+    private static string BuildPoolIdsSql(bool filterByType, bool filterByCog) => $"""
+        SELECT q.id
+        FROM public.questions q
+        WHERE q.is_active           = true
+          AND q.is_verified         = true
+          AND q.topic_id            = @TopicId
+          AND q.difficulty_level_id = @DifficultyId
+          {(filterByType ? "AND q.question_type_id   = @QuestionTypeId" : "")}
+          {(filterByCog  ? "AND q.cognitive_level_id = @CognitiveLevelId" : "")}
+        """;
+
+    private const string FetchByIdsSql = """
         SELECT
             q.id      AS QuestionId,
             q.content AS Content,
             (
                 SELECT jsonb_agg(
                     jsonb_build_object(
+                        'id',          a.id,
                         'content',     a.content,
                         'is_correct',  a.is_correct,
                         'sort_order',  a.sort_order,
@@ -179,14 +254,6 @@ public class QuestionRepository : BaseRepository<Question, Guid>, IQuestionRepos
                 WHERE a.question_id = q.id
             ) AS AnswersJson
         FROM public.questions q
-        WHERE q.is_active           = true
-          AND q.is_verified         = true
-          AND q.topic_id            = @TopicId
-          AND q.difficulty_level_id = @DifficultyId
-          {(filterByType ? "AND q.question_type_id   = @QuestionTypeId" : "")}
-          {(filterByCog  ? "AND q.cognitive_level_id = @CognitiveLevelId" : "")}
-          AND NOT (q.id = ANY(@ExcludedIds))
-        ORDER BY RANDOM()
-        LIMIT @Count
+        WHERE q.id = ANY(@Ids)
         """;
 }

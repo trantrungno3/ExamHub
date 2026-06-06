@@ -19,6 +19,17 @@ public class ExamQuestionRepository : BaseRepository<ExamQuestion, Guid>, IExamQ
             .ToListAsync(ct);
 
     /// <inheritdoc/>
+    public async Task<IReadOnlyList<ExamQuestion>> GetByExamWithClassificationAsync(
+        Guid examId, CancellationToken ct = default)
+        => await Set.AsNoTracking()
+            .Where(x => x.ExamId == examId)
+            .Include(x => x.Question!).ThenInclude(q => q.CognitiveLevel)
+            .Include(x => x.Question!).ThenInclude(q => q.DifficultyLevel)
+            .Include(x => x.Question!).ThenInclude(q => q.Topic)
+            .OrderBy(x => x.SortOrder)
+            .ToListAsync(ct);
+
+    /// <inheritdoc/>
     public async Task DeleteByExamAsync(Guid examId, CancellationToken ct = default)
         => await Set.Where(x => x.ExamId == examId).ExecuteDeleteAsync(ct);
 }

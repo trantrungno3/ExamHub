@@ -25,10 +25,15 @@ export function isTokenExpired(expiresAt: number, bufferMs = 0): boolean {
 export function extractUserFromToken(accessToken: string): UserInfo {
     const p = decodePayload(accessToken)
     const userName = String(
-        p['unique_name'] ?? p['sub'] ?? p['name'] ?? ''
+        p['UserName'] ?? p['unique_name'] ?? p['name'] ?? ''
+    )
+    const id = String(
+        p['UserId'] ?? p['userId'] ??
+        p['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'] ??
+        p['nameid'] ?? p['sub'] ?? ''
     )
     const raw = p['role'] ??
         p['http://schemas.microsoft.com/ws/2008/06/identity/claims/role']
     const roles = Array.isArray(raw) ? (raw as string[]) : raw ? [String(raw)] : []
-    return {userName, roles}
+    return {id, userName, roles}
 }

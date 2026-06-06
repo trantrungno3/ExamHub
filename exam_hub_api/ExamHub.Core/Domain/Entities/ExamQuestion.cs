@@ -52,7 +52,9 @@ public class ExamQuestion : IModelBaseSql<Guid>
     public required string ContentSnapshot { get; set; }
 
     /// <summary>
-    /// Snapshot danh sách đáp án (JSONB) — [{content, is_correct, sort_order}]
+    /// Snapshot danh sách đáp án (JSONB) — [{id, content, is_correct, sort_order, explanation}].
+    /// <c>id</c> là UUID đáp án gốc; học sinh chọn theo id này và lưu vào
+    /// <see cref="SubmissionAnswer.SelectedAnswerIds"/> để chấm trắc nghiệm tự động.
     /// </summary>
     [Column(ExamQuestionTable.AnswersSnapshot)]
     [SqlBuilderProperty(ExamQuestionTable.AnswersSnapshot, Insert = true, Update = false)]

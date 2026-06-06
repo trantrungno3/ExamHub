@@ -114,12 +114,14 @@ public static class DependencyContainer
                 .AddScoped<ICognitiveLevelService, CognitiveLevelService>()
                 // Question Bank
                 .AddScoped<IQuestionService, QuestionService>()
+                .AddScoped<IBulkImportService, BulkImportService>()
                 .AddScoped<ITeacherSubjectService, TeacherSubjectService>()
                 // Exam Templates & Exams
                 .AddScoped<IExamTemplateService, ExamTemplateService>()
                 .AddScoped<IExamService, ExamService>()
                 .AddScoped<IExamSubmissionService, ExamSubmissionService>()
                 .AddScoped<IExamGeneratorService, ExamGeneratorService>()
+                .AddScoped<IExportService, ExportService>()
                 // School Management
                 .AddScoped<ISchoolService, SchoolService>()
                 .AddScoped<ICohortService, CohortService>()

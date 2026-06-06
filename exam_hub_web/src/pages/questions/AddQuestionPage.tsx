@@ -1,259 +1,246 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { Switch } from 'antd'
-import { PaperClipOutlined, PictureOutlined } from '@ant-design/icons'
+import {useEffect} from 'react'
+import {useNavigate, useParams} from 'react-router-dom'
+import {Button, Checkbox, Form, Input, Select, Upload, message} from 'antd'
+import {DeleteOutlined, PaperClipOutlined, PlusOutlined} from '@ant-design/icons'
+import {useMutation, useQueryClient} from '@tanstack/react-query'
+import {questionService} from '../../services/questionService'
+import {statusCode} from '../../services/requestService'
+import {QUESTION_KEYS, useQuestionQuery} from '../../hooks/queries/useQuestions'
+import {
+    useCognitiveLevelsQuery,
+    useDifficultyLevelsQuery,
+    useQuestionTypesQuery,
+    useTopicsQuery,
+} from '../../hooks/queries/useCategoryLists'
 
-type AnswerKey = 'A' | 'B' | 'C' | 'D'
+type AnswerForm = {content: string; isCorrect: boolean}
+type QuestionForm = {
+    topicId?: number
+    questionTypeId?: number
+    difficultyLevelId?: number
+    cognitiveLevelId?: number
+    content: string
+    explanation?: string
+    source?: string
+    tags?: string[]
+    answers: AnswerForm[]
+}
 
-const TOOLBAR_BTNS = ['B', 'I', 'U', '|', 'x²', 'x₂', '|', '√', 'π', '≤', '≥', '∞']
-
-const CLASSIFICATION_FIELDS = [
-  { label: 'Hình thức',  placeholder: 'Chọn hình thức' },
-  { label: 'Môn học',   placeholder: 'Toán' },
-  { label: 'Lớp',       placeholder: 'Chọn lớp' },
-  { label: 'Chủ đề',    placeholder: 'Trắc nghiệm 1 đáp án' },
-  { label: 'Độ khó',    placeholder: 'Chọn độ khó' },
-  { label: 'Từ khoá',   placeholder: 'Chọn từ khoá' },
-]
+const EMPTY: QuestionForm = {
+    content: '',
+    answers: [{content: '', isCorrect: true}, {content: '', isCorrect: false}],
+}
 
 export default function AddQuestionPage() {
-  const navigate = useNavigate()
-  const [correctAnswer, setCorrectAnswer] = useState<AnswerKey>('A')
-  const [answers, setAnswers] = useState<Record<AnswerKey, string>>({
-    A: '5 cm',
-    B: '3 cm',
-    C: '√34 cm',
-    D: '7 cm',
-  })
-  const [isAiPrinted, setIsAiPrinted] = useState(true)
-  const [isVerified, setIsVerified] = useState(false)
+    const navigate = useNavigate()
+    const {id} = useParams<{id: string}>()
+    const isEdit = !!id
+    const [form] = Form.useForm<QuestionForm>()
+    const qc = useQueryClient()
 
-  return (
-    <>
-      {/* Top bar */}
-      <div className="top-bar">
-        <div>
-          <p className="top-bar-title">Thêm câu hỏi mới</p>
-          <p className="top-bar-subtitle">
-            <span
-              className="text-blue-500 cursor-pointer hover:underline"
-              onClick={() => navigate('/app/questions')}
-            >
-              Câu hỏi
-            </span>
-            {' / '}Thêm mới
-          </p>
-        </div>
-        <div className="top-bar-avatar">TT</div>
-      </div>
+    const topics = useTopicsQuery()
+    const questionTypes = useQuestionTypesQuery()
+    const difficulties = useDifficultyLevelsQuery()
+    const cognitives = useCognitiveLevelsQuery()
+    const {data: existing} = useQuestionQuery(id)
 
-      {/* Scrollable content */}
-      <div className="flex-1 overflow-auto p-6">
-        <div className="flex gap-5 items-start">
+    useEffect(() => {
+        if (isEdit && existing) {
+            form.setFieldsValue({
+                topicId: existing.topicId,
+                questionTypeId: existing.questionTypeId,
+                difficultyLevelId: existing.difficultyLevelId,
+                cognitiveLevelId: existing.cognitiveLevelId,
+                content: existing.content,
+                explanation: existing.explanation,
+                source: existing.source,
+                tags: existing.tags,
+                answers: existing.answers?.map(a => ({content: a.content, isCorrect: a.isCorrect}))
+                    ?? EMPTY.answers,
+            })
+        }
+    }, [isEdit, existing, form])
 
-          {/* ── Left: main content ── */}
-          <div className="flex-1 flex flex-col gap-4 min-w-0">
+    const saveMutation = useMutation({
+        mutationFn: (body: QuestionBody) =>
+            isEdit ? questionService.update(id!, body) : questionService.create(body),
+        onSuccess: (res) => {
+            if (res.status === statusCode.Error || !res.data) {
+                message.error(res.message || 'Lưu câu hỏi thất bại')
+                return
+            }
+            message.success(isEdit ? 'Cập nhật câu hỏi thành công' : 'Tạo câu hỏi thành công')
+            void qc.invalidateQueries({queryKey: QUESTION_KEYS.all})
+            navigate('/app/questions')
+        },
+        onError: () => message.error('Lưu câu hỏi thất bại'),
+    })
 
-            {/* Question content */}
-            <div className="form-section">
-              <p className="form-section-title">Nội dung câu hỏi</p>
-              <div className="border border-gray-200 rounded-lg overflow-hidden focus-within:border-blue-400 transition-colors">
-                {/* Toolbar */}
-                <div className="flex items-center gap-0.5 px-2 py-1.5 border-b border-gray-100 bg-gray-50">
-                  {TOOLBAR_BTNS.map((t, i) =>
-                    t === '|' ? (
-                      <span key={i} className="text-gray-300 mx-1 select-none">│</span>
-                    ) : (
-                      <button
-                        key={i}
-                        className="w-7 h-7 rounded flex items-center justify-center
-                                   text-xs font-bold text-gray-500 hover:bg-gray-200 transition-colors"
-                      >
-                        {t}
-                      </button>
-                    )
-                  )}
-                </div>
-                {/* Editor area */}
-                <div className="flex">
-                  <div className="w-8 shrink-0 pt-3 pb-3 text-right pr-2 text-[11px]
-                                  text-gray-300 border-r border-gray-100 bg-gray-50/50
-                                  select-none leading-6">
-                    {[1, 2, 3].map((n) => <div key={n}>{n}</div>)}
-                  </div>
-                  <textarea
-                    className="flex-1 px-3 py-3 text-sm text-gray-800 outline-none
-                               resize-none h-28 leading-6"
-                    defaultValue="Trong tam giác ABC vuông tại B, có AB = 4 cm và BC = 3 cm. Tính độ dài AC?"
-                  />
-                </div>
-              </div>
-            </div>
+    const handleSubmit = async () => {
+        const v = await form.validateFields()
+        const body: QuestionBody = {
+            topicId: v.topicId!,
+            questionTypeId: v.questionTypeId!,
+            difficultyLevelId: v.difficultyLevelId!,
+            cognitiveLevelId: v.cognitiveLevelId,
+            content: v.content,
+            contentPlain: stripHtml(v.content),
+            explanation: v.explanation,
+            source: v.source,
+            tags: v.tags,
+            answers: v.answers.map(a => ({content: a.content, isCorrect: a.isCorrect})),
+        }
+        saveMutation.mutate(body)
+    }
 
-            {/* Explanation */}
-            <div className="form-section">
-              <p className="form-section-title">Giải thích đáp án (explanation)</p>
-              <textarea
-                className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm
-                           text-gray-600 outline-none resize-none h-20
-                           placeholder:text-gray-300 focus:border-blue-400 transition-colors"
-                placeholder="Áp dụng định lý Pythagoras: AC² = AB² + BC² = 16 + 9 = 25 → AC = 5 cm"
-              />
-            </div>
+    const uploadAttachment = async (file: File) => {
+        if (!id) return
+        const res = await questionService.uploadAttachment(id, file)
+        if (res.data?.url) message.success('Đã tải tệp đính kèm lên')
+        else message.error(res.message || 'Tải tệp thất bại')
+    }
 
-            {/* Attachments */}
-            <div className="form-section">
-              <p className="form-section-title">Tệp đính kèm (image, gif, audio, pdf)</p>
-              <div className="flex gap-3">
-                <button className="flex items-center gap-2 px-4 py-2 border border-dashed
-                                    border-gray-300 rounded-lg text-sm text-gray-500
-                                    hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50
-                                    transition-colors">
-                  <PictureOutlined /> Thêm ảnh
-                </button>
-                <button className="flex items-center gap-2 px-4 py-2 border border-dashed
-                                    border-gray-300 rounded-lg text-sm text-gray-500
-                                    hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50
-                                    transition-colors">
-                  <PaperClipOutlined /> Đính kèm file
-                </button>
-              </div>
-            </div>
-
-            {/* Tags & Source */}
-            <div className="form-section">
-              <div className="grid grid-cols-2 gap-4">
+    return (
+        <>
+            <div className="top-bar">
                 <div>
-                  <label className="form-label">Tags (tag[])</label>
-                  <input
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm
-                               text-gray-700 outline-none focus:border-blue-400 transition-colors
-                               placeholder:text-gray-300"
-                    placeholder="tam giác, pythagoras, hình học..."
-                  />
+                    <p className="top-bar-title">{isEdit ? 'Sửa câu hỏi' : 'Thêm câu hỏi mới'}</p>
+                    <p className="top-bar-subtitle">
+                        <span className="text-blue-500 cursor-pointer hover:underline"
+                              onClick={() => navigate('/app/questions')}>Câu hỏi</span>
+                        {' / '}{isEdit ? 'Chỉnh sửa' : 'Thêm mới'}
+                    </p>
                 </div>
-                <div>
-                  <label className="form-label">Nguồn (source)</label>
-                  <input
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm
-                               text-gray-700 outline-none focus:border-blue-400 transition-colors
-                               placeholder:text-gray-300"
-                    placeholder="SGK Toán 10, trang 45..."
-                  />
-                </div>
-              </div>
+                <div className="top-bar-avatar">TT</div>
             </div>
 
-            {/* Answers */}
-            <div className="form-section">
-              <p className="form-section-title">
-                Đáp án (question_answers → lk_content · content · sort_order)
-              </p>
+            <div className="flex-1 overflow-auto p-6">
+                <Form form={form} layout="vertical" initialValues={EMPTY}>
+                    <div className="flex gap-5 items-start">
+                        {/* Left: content + answers */}
+                        <div className="flex-1 flex flex-col gap-4 min-w-0">
+                            <div className="form-section">
+                                <p className="form-section-title">Nội dung câu hỏi</p>
+                                <Form.Item name="content" rules={[{required: true, message: 'Nhập nội dung câu hỏi'}]}>
+                                    <Input.TextArea rows={4} placeholder="Nhập nội dung câu hỏi (hỗ trợ HTML)"/>
+                                </Form.Item>
+                                <p className="form-section-title">Giải thích đáp án</p>
+                                <Form.Item name="explanation">
+                                    <Input.TextArea rows={2} placeholder="Giải thích (tuỳ chọn)"/>
+                                </Form.Item>
+                            </div>
 
-              {(['A', 'B', 'C', 'D'] as AnswerKey[]).map((key) => (
-                <div
-                  key={key}
-                  onClick={() => setCorrectAnswer(key)}
-                  className={`answer-option ${correctAnswer === key ? 'answer-option--correct' : ''}`}
-                >
-                  {/* Radio circle */}
-                  <div
-                    className={`w-5 h-5 rounded-full border-2 flex items-center justify-center
-                                 shrink-0 transition-colors ${
-                                   correctAnswer === key
-                                     ? 'border-green-500 bg-green-500'
-                                     : 'border-gray-300'
-                                 }`}
-                  >
-                    {correctAnswer === key && (
-                      <div className="w-2 h-2 rounded-full bg-white" />
-                    )}
-                  </div>
-                  <span className="text-xs font-bold text-gray-400 w-5 shrink-0">{key}.</span>
-                  <input
-                    value={answers[key]}
-                    onChange={(e) =>
-                      setAnswers((prev) => ({ ...prev, [key]: e.target.value }))
-                    }
-                    onClick={(e) => e.stopPropagation()}
-                    className={`flex-1 text-sm outline-none bg-transparent ${
-                      correctAnswer === key ? 'text-green-700 font-medium' : 'text-gray-700'
-                    }`}
-                    placeholder={`Nhập đáp án ${key}...`}
-                  />
-                  {correctAnswer === key && (
-                    <span className="text-[10px] font-semibold text-green-600 bg-green-100
-                                     px-2 py-0.5 rounded-full shrink-0">
-                      Đáp án đúng
-                    </span>
-                  )}
-                </div>
-              ))}
+                            <div className="form-section">
+                                <p className="form-section-title">Đáp án</p>
+                                <Form.List
+                                    name="answers"
+                                    rules={[{
+                                        validator: async (_, answers: AnswerForm[]) => {
+                                            if (!answers || answers.length < 2)
+                                                return Promise.reject(new Error('Cần ít nhất 2 đáp án'))
+                                            if (!answers.some(a => a?.isCorrect))
+                                                return Promise.reject(new Error('Cần ít nhất 1 đáp án đúng'))
+                                        },
+                                    }]}
+                                >
+                                    {(fields, {add, remove}, {errors}) => (
+                                        <div className="flex flex-col gap-2">
+                                            {fields.map(field => (
+                                                <div key={field.key} className="flex items-center gap-2">
+                                                    <Form.Item
+                                                        name={[field.name, 'isCorrect']}
+                                                        valuePropName="checked"
+                                                        noStyle
+                                                    >
+                                                        <Checkbox/>
+                                                    </Form.Item>
+                                                    <Form.Item
+                                                        name={[field.name, 'content']}
+                                                        className="flex-1 !mb-0"
+                                                        rules={[{required: true, message: 'Nhập nội dung đáp án'}]}
+                                                    >
+                                                        <Input placeholder="Nội dung đáp án"/>
+                                                    </Form.Item>
+                                                    {fields.length > 2 && (
+                                                        <Button type="text" danger icon={<DeleteOutlined/>}
+                                                                onClick={() => remove(field.name)}/>
+                                                    )}
+                                                </div>
+                                            ))}
+                                            <Button type="dashed" icon={<PlusOutlined/>}
+                                                    onClick={() => add({content: '', isCorrect: false})}>
+                                                Thêm đáp án
+                                            </Button>
+                                            <Form.ErrorList errors={errors}/>
+                                        </div>
+                                    )}
+                                </Form.List>
+                            </div>
 
-              {/* No answer option */}
-              <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-default">
-                <div className="w-5 h-5 rounded-full border-2 border-gray-200 shrink-0" />
-                <span className="text-sm text-gray-400 italic">Không xác định</span>
-              </div>
+                            {isEdit && (
+                                <div className="form-section">
+                                    <p className="form-section-title">Tệp đính kèm (ảnh / PDF, ≤ 10 MB)</p>
+                                    <Upload
+                                        accept="image/*,application/pdf"
+                                        maxCount={1}
+                                        showUploadList={false}
+                                        beforeUpload={(file) => {
+                                            void uploadAttachment(file as unknown as File)
+                                            return false
+                                        }}
+                                    >
+                                        <Button icon={<PaperClipOutlined/>}>Đính kèm tệp</Button>
+                                    </Upload>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Right: classification */}
+                        <div className="w-72 flex flex-col gap-4 shrink-0">
+                            <div className="form-section">
+                                <p className="form-section-title">Phân loại câu hỏi</p>
+                                <Form.Item label="Chủ đề" name="topicId" rules={[{required: true, message: 'Chọn chủ đề'}]}>
+                                    <Select placeholder="Chọn chủ đề" showSearch optionFilterProp="label"
+                                            options={(topics.data ?? []).map(t => ({value: t.id, label: t.name}))}/>
+                                </Form.Item>
+                                <Form.Item label="Loại câu hỏi" name="questionTypeId" rules={[{required: true, message: 'Chọn loại'}]}>
+                                    <Select placeholder="Chọn loại"
+                                            options={(questionTypes.data ?? []).map(t => ({value: t.id, label: t.name}))}/>
+                                </Form.Item>
+                                <Form.Item label="Độ khó" name="difficultyLevelId" rules={[{required: true, message: 'Chọn độ khó'}]}>
+                                    <Select placeholder="Chọn độ khó"
+                                            options={(difficulties.data ?? []).map(d => ({value: d.id, label: d.name}))}/>
+                                </Form.Item>
+                                <Form.Item label="Cấp độ nhận thức (Bloom)" name="cognitiveLevelId">
+                                    <Select placeholder="Chưa phân loại" allowClear
+                                            options={(cognitives.data ?? []).map(c => ({value: c.id, label: c.name}))}/>
+                                </Form.Item>
+                            </div>
+
+                            <div className="form-section">
+                                <p className="form-section-title">Khác</p>
+                                <Form.Item label="Nguồn" name="source">
+                                    <Input placeholder="VD: SGK Toán 10, trang 45"/>
+                                </Form.Item>
+                                <Form.Item label="Tags" name="tags">
+                                    <Select mode="tags" placeholder="Thêm từ khoá..." tokenSeparators={[',']}/>
+                                </Form.Item>
+                            </div>
+                        </div>
+                    </div>
+                </Form>
             </div>
-          </div>
 
-          {/* ── Right: classification sidebar ── */}
-          <div className="w-72 flex flex-col gap-4 shrink-0">
-
-            {/* Classification */}
-            <div className="form-section">
-              <p className="form-section-title">Phân loại câu hỏi</p>
-              <div className="flex flex-col gap-3">
-                {CLASSIFICATION_FIELDS.map((f) => (
-                  <div key={f.label}>
-                    <label className="form-label">{f.label}</label>
-                    <select
-                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm
-                                 text-gray-600 bg-white outline-none focus:border-blue-400
-                                 cursor-pointer transition-colors"
-                    >
-                      <option>{f.placeholder}</option>
-                    </select>
-                  </div>
-                ))}
-              </div>
+            <div className="action-bar">
+                <Button onClick={() => navigate('/app/questions')}>Hủy bỏ</Button>
+                <Button type="primary" loading={saveMutation.isPending} onClick={handleSubmit}>
+                    {isEdit ? 'Cập nhật' : 'Lưu câu hỏi'}
+                </Button>
             </div>
+        </>
+    )
+}
 
-            {/* Settings */}
-            <div className="form-section">
-              <p className="form-section-title">Cài đặt</p>
-              <div className="toggle-row">
-                <div>
-                  <p className="toggle-label">is_ai_printed</p>
-                  <p className="toggle-sublabel">Cho phép AI sử dụng câu hỏi</p>
-                </div>
-                <Switch checked={isAiPrinted} onChange={setIsAiPrinted} size="small" />
-              </div>
-              <div className="toggle-row !border-b-0">
-                <div>
-                  <p className="toggle-label">Độ xác nhận</p>
-                  <p className="toggle-sublabel">is_verified</p>
-                </div>
-                <Switch checked={isVerified} onChange={setIsVerified} size="small" />
-              </div>
-            </div>
-
-          </div>
-        </div>
-      </div>
-
-      {/* Action bar */}
-      <div className="action-bar">
-        <button
-          onClick={() => navigate('/app/questions')}
-          className="px-5 py-2 border border-gray-300 text-sm font-medium text-gray-700
-                     rounded-lg hover:bg-gray-50 transition-colors"
-        >
-          Hủy bỏ
-        </button>
-        <button className="btn-primary">Lưu câu hỏi</button>
-      </div>
-    </>
-  )
+function stripHtml(html: string): string {
+    return html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
 }

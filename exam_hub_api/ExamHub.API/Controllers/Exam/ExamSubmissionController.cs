@@ -77,4 +77,19 @@ public class ExamSubmissionController(IExamSubmissionService service) : Controll
             ct);
         return NoContent();
     }
+
+    /// <summary>Chốt điểm bài nộp: tổng hợp điểm từng câu và chuyển trạng thái sang Graded</summary>
+    [HttpPost("{id:guid}/finalize")]
+    [Authorize(Roles = "Admin,Teacher")]
+    public async Task<ActionResult<RequestResponse<ExamSubmissionResponse>>> Finalize(Guid id, CancellationToken ct)
+    {
+        var result = await service.FinalizeAsync(id, GetCurrentUserId(), ct);
+        return Ok(RequestResponse<ExamSubmissionResponse>.Success("Chốt điểm thành công!", ExamSubmissionResponse.FromEntity(result), 1));
+    }
+
+    private Guid GetCurrentUserId()
+    {
+        var claim = User.FindFirst("sub") ?? User.FindFirst("userId");
+        return claim is not null && Guid.TryParse(claim.Value, out var uid) ? uid : Guid.Empty;
+    }
 }

@@ -27,6 +27,11 @@
         <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis"/>
         <PackageReference Include="Minio"/>
         <PackageReference Include="Dapper"/>
+        <!-- Excel import -->
+        <PackageReference Include="ClosedXML"/>
+        <!-- Export: PDF (QuestPDF) + Word (DocumentFormat.OpenXml) -->
+        <PackageReference Include="QuestPDF"/>
+        <PackageReference Include="DocumentFormat.OpenXml"/>
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="..\..\..\trungtv_core\Database\TVT_Core_Db_PostgreSql\TVT_Core_Db_PostgreSql.csproj"/>

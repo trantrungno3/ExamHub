@@ -20,6 +20,7 @@ interface TokenModel {
 }
 
 interface UserInfo {
+    id: string
     userName: string
     displayName?: string
     phoneNumber?: string

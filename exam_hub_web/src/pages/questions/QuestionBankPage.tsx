@@ -1,192 +1,208 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { PlusOutlined, UploadOutlined, SearchOutlined } from '@ant-design/icons'
-import { QUESTION_BANK_STATS as STATS, MOCK_QUESTIONS as QUESTIONS } from '../../__mocks__/questions'
+import {useMemo, useState} from 'react'
+import {useNavigate} from 'react-router-dom'
+import {Button, Input, Popconfirm, Select, Table, Tag} from 'antd'
+import type {TableColumnsType} from 'antd'
+import {CheckOutlined, PlusOutlined, SearchOutlined, UploadOutlined} from '@ant-design/icons'
+import {useDeleteQuestionMutation, useQuestionsQuery, useVerifyQuestionMutation} from '../../hooks/queries/useQuestions'
+import {
+    useCognitiveLevelsQuery,
+    useDifficultyLevelsQuery,
+    useQuestionTypesQuery,
+    useTopicsQuery,
+} from '../../hooks/queries/useCategoryLists'
+import {BulkImportModal} from './BulkImportModal'
 
-type FilterKey = 'all' | 'mc' | 'tf' | 'essay' | 'fill' | 'thptqg' | 'thpt'
+const DIFF_COLOR: Record<string, string> = {easy: 'green', medium: 'gold', hard: 'orange', very_hard: 'red'}
 
-const TYPE_FILTERS: {
-  key: FilterKey
-  label: string
-  off: string
-  on: string
-}[] = [
-  { key: 'all',    label: 'Tất cả',             off: 'bg-gray-100 text-gray-600 border-gray-200',       on: 'bg-gray-700  text-white border-gray-700'  },
-  { key: 'mc',     label: 'Trắc nghiệm',        off: 'bg-blue-50  text-blue-600  border-blue-200',      on: 'bg-blue-600  text-white border-blue-600'  },
-  { key: 'tf',     label: 'Đúng / Sai',         off: 'bg-green-50 text-green-600 border-green-200',     on: 'bg-green-600 text-white border-green-600' },
-  { key: 'essay',  label: 'Tự luận',             off: 'bg-purple-50 text-purple-600 border-purple-200', on: 'bg-purple-600 text-white border-purple-600'},
-  { key: 'fill',   label: 'Điền vào chỗ trống', off: 'bg-orange-50 text-orange-600 border-orange-200', on: 'bg-orange-500 text-white border-orange-500'},
-  { key: 'thptqg', label: 'THPTQG',             off: 'bg-teal-50  text-teal-600  border-teal-200',      on: 'bg-teal-600  text-white border-teal-600'  },
-  { key: 'thpt',   label: 'THPT',               off: 'bg-pink-50  text-pink-600  border-pink-200',      on: 'bg-pink-600  text-white border-pink-600'  },
-]
-
-
-const TYPE_BADGE: Record<string, string> = {
-  'Trắc nghiệm': 'badge badge-blue',
-  'Đúng/Sai':   'badge badge-green',
-  'Điền vào':   'badge badge-orange',
-  'Tự luận':    'badge badge-purple',
-}
-
-const DIFF_BADGE: Record<string, string> = {
-  'Dễ':         'badge badge-green',
-  'Trung bình': 'badge badge-yellow',
-  'Khó':        'badge badge-orange',
-  'Rất khó':    'badge badge-red',
-}
-
-const STATUS_BADGE: Record<string, string> = {
-  'Đã duyệt':  'badge badge-green',
-  'Chờ duyệt': 'badge badge-yellow',
-  'Nháp':       'badge badge-gray',
-}
-
-/* ─── Component ──────────────────────────────────── */
 export default function QuestionBankPage() {
-  const [activeType, setActiveType] = useState<FilterKey>('all')
-  const navigate = useNavigate()
+    const navigate = useNavigate()
 
-  return (
-    <>
-      <div className="top-bar">
-        <div>
-          <p className="top-bar-title">Ngân hàng câu hỏi</p>
-          <p className="top-bar-subtitle">Quản lý, tìm kiếm và phân loại toàn bộ câu hỏi</p>
-        </div>
-        <div className="top-bar-avatar">TT</div>
-      </div>
+    const [page, setPage] = useState(1)
+    const [pageSize, setPageSize] = useState(20)
+    const [keyword, setKeyword] = useState('')
+    const [topicId, setTopicId] = useState<number>()
+    const [questionTypeId, setQuestionTypeId] = useState<number>()
+    const [difficultyLevelId, setDifficultyLevelId] = useState<number>()
+    const [cognitiveLevelId, setCognitiveLevelId] = useState<number>()
+    const [isVerified, setIsVerified] = useState<boolean>()
+    const [importOpen, setImportOpen] = useState(false)
 
-      <div className="flex-1 overflow-auto p-6 flex flex-col gap-4">
-        {/* Stats row */}
-        <div className="flex gap-4">
-          {STATS.map((s) => (
-            <div key={s.label} className="stat-card">
-              <div className={`stat-card-icon ${s.iconBg}`}>{s.icon}</div>
-              <div>
-                <p className="stat-card-value">{s.value}</p>
-                <p className="stat-card-label">{s.label}</p>
-              </div>
+    const query: QuestionPagedQuery = useMemo(
+        () => ({page, pageSize, keyword, topicId, questionTypeId, difficultyLevelId, cognitiveLevelId, isVerified}),
+        [page, pageSize, keyword, topicId, questionTypeId, difficultyLevelId, cognitiveLevelId, isVerified],
+    )
+
+    const {data, isLoading} = useQuestionsQuery(query)
+    const topics = useTopicsQuery()
+    const questionTypes = useQuestionTypesQuery()
+    const difficulties = useDifficultyLevelsQuery()
+    const cognitives = useCognitiveLevelsQuery()
+
+    const deleteMutation = useDeleteQuestionMutation()
+    const verifyMutation = useVerifyQuestionMutation()
+
+    const columns: TableColumnsType<Question> = [
+        {
+            title: 'Nội dung câu hỏi', dataIndex: 'content', key: 'content', ellipsis: true,
+            render: (_, q) => <span className="font-medium text-gray-800">{q.contentPlain || stripHtml(q.content)}</span>,
+        },
+        {
+            title: 'Chủ đề', dataIndex: 'topicName', key: 'topicName', width: 140,
+            render: v => <span className="text-gray-600">{v ?? '—'}</span>,
+        },
+        {
+            title: 'Loại', dataIndex: 'questionTypeName', key: 'questionTypeName', width: 130,
+            render: v => v ? <Tag color="blue">{v}</Tag> : '—',
+        },
+        {
+            title: 'Độ khó', dataIndex: 'difficultyLevelName', key: 'difficultyLevelName', width: 110,
+            render: (_, q) => q.difficultyLevelName
+                ? <Tag color={DIFF_COLOR[difficultyCode(difficulties.data, q.difficultyLevelId)] ?? 'default'}>{q.difficultyLevelName}</Tag>
+                : '—',
+        },
+        {
+            title: 'Bloom', dataIndex: 'cognitiveLevelName', key: 'cognitiveLevelName', width: 120,
+            render: v => v ? <Tag color="purple">{v}</Tag> : <span className="text-gray-300">—</span>,
+        },
+        {
+            title: 'Trạng thái', dataIndex: 'isVerified', key: 'isVerified', width: 110,
+            render: v => <Tag color={v ? 'green' : 'gold'}>{v ? 'Đã duyệt' : 'Chờ duyệt'}</Tag>,
+        },
+        {
+            title: 'Thao tác', key: 'actions', width: 180, fixed: 'right',
+            render: (_, q) => (
+                <div className="flex gap-2 items-center">
+                    <button className="btn-edit" onClick={() => navigate(`/app/questions/${q.id}/edit`)}>Sửa</button>
+                    {!q.isVerified && (
+                        <button
+                            className="text-green-600 text-sm hover:underline flex items-center gap-1"
+                            onClick={() => verifyMutation.mutate(q.id)}
+                        >
+                            <CheckOutlined/> Duyệt
+                        </button>
+                    )}
+                    <Popconfirm
+                        title="Xóa câu hỏi này?"
+                        okText="Xóa" cancelText="Hủy"
+                        okButtonProps={{danger: true}}
+                        onConfirm={() => deleteMutation.mutate(q.id)}
+                    >
+                        <button className="btn-delete">Xóa</button>
+                    </Popconfirm>
+                </div>
+            ),
+        },
+    ]
+
+    return (
+        <>
+            <div className="top-bar">
+                <div>
+                    <p className="top-bar-title">Ngân hàng câu hỏi</p>
+                    <p className="top-bar-subtitle">Quản lý, tìm kiếm và phân loại toàn bộ câu hỏi</p>
+                </div>
+                <div className="top-bar-avatar">TT</div>
             </div>
-          ))}
-        </div>
 
-        {/* Filters */}
-        <div className="flex flex-col gap-2.5">
-          {/* Type chips */}
-          <div className="flex items-center gap-2 flex-wrap">
-            {TYPE_FILTERS.map((f) => (
-              <button
-                key={f.key}
-                onClick={() => setActiveType(f.key)}
-                className={`filter-chip ${activeType === f.key ? f.on : f.off}`}
-              >
-                {f.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Dropdown filters + action buttons */}
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-2 border border-gray-200 rounded-lg
-                            px-3 py-2 bg-white w-52">
-              <SearchOutlined className="text-gray-400 text-sm" />
-              <input
-                className="outline-none text-sm text-gray-700 bg-transparent w-full"
-                placeholder="Tìm câu hỏi..."
-              />
-            </div>
-
-            {['Môn học', 'Lớp', 'Độ khó', 'Chủ đề', 'Trạng thái'].map((f) => (
-              <select
-                key={f}
-                className="border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-500
-                           bg-white outline-none hover:border-blue-400 cursor-pointer transition-colors"
-              >
-                <option>{f}</option>
-              </select>
-            ))}
-
-            <button className="text-sm text-blue-600 px-2 hover:underline whitespace-nowrap">
-              + Bộ lọc khác
-            </button>
-
-            <div className="flex gap-2 ml-auto shrink-0">
-              <button className="flex items-center gap-1.5 px-4 py-2 border border-gray-300 text-sm
-                                  font-medium text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
-                <UploadOutlined /> Nhập Excel
-              </button>
-              <button
-                onClick={() => navigate('/app/questions/add')}
-                className="btn-primary"
-              >
-                <PlusOutlined /> Thêm câu hỏi
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Table */}
-        <div className="section-card">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th className="table-th">Nội dung câu hỏi</th>
-                <th className="table-th">Môn</th>
-                <th className="table-th">Lớp</th>
-                <th className="table-th">Loại</th>
-                <th className="table-th">Độ khó</th>
-                <th className="table-th">Trạng thái</th>
-                <th className="table-th">Thao tác</th>
-              </tr>
-            </thead>
-            <tbody>
-              {QUESTIONS.map((q) => (
-                <tr key={q.id} className="table-row">
-                  <td className="table-td max-w-xs">
-                    <p className="truncate text-gray-800 font-medium">{q.content}</p>
-                  </td>
-                  <td className="table-td">{q.subject}</td>
-                  <td className="table-td">{q.grade}</td>
-                  <td className="table-td">
-                    <span className={TYPE_BADGE[q.type] ?? 'badge badge-gray'}>{q.type}</span>
-                  </td>
-                  <td className="table-td">
-                    <span className={DIFF_BADGE[q.difficulty] ?? 'badge badge-gray'}>{q.difficulty}</span>
-                  </td>
-                  <td className="table-td">
-                    <span className={STATUS_BADGE[q.status] ?? 'badge badge-gray'}>{q.status}</span>
-                  </td>
-                  <td className="table-td">
-                    <div className="flex gap-2">
-                      <button className="btn-edit">Sửa</button>
-                      <button className="btn-delete">Xóa</button>
+            <div className="flex-1 overflow-auto p-6 flex flex-col gap-4">
+                {/* Filters */}
+                <div className="flex items-center gap-2 flex-wrap">
+                    <Input
+                        prefix={<SearchOutlined className="text-gray-400"/>}
+                        placeholder="Tìm câu hỏi..."
+                        style={{width: 220}}
+                        allowClear
+                        value={keyword}
+                        onChange={e => {
+                            setKeyword(e.target.value)
+                            setPage(1)
+                        }}
+                    />
+                    <Select
+                        placeholder="Chủ đề" allowClear showSearch optionFilterProp="label" style={{width: 160}}
+                        value={topicId} onChange={v => {
+                            setTopicId(v)
+                            setPage(1)
+                        }}
+                        options={(topics.data ?? []).map(t => ({value: t.id, label: t.name}))}
+                    />
+                    <Select
+                        placeholder="Loại" allowClear style={{width: 150}}
+                        value={questionTypeId} onChange={v => {
+                            setQuestionTypeId(v)
+                            setPage(1)
+                        }}
+                        options={(questionTypes.data ?? []).map(t => ({value: t.id, label: t.name}))}
+                    />
+                    <Select
+                        placeholder="Độ khó" allowClear style={{width: 130}}
+                        value={difficultyLevelId} onChange={v => {
+                            setDifficultyLevelId(v)
+                            setPage(1)
+                        }}
+                        options={(difficulties.data ?? []).map(d => ({value: d.id, label: d.name}))}
+                    />
+                    <Select
+                        placeholder="Bloom" allowClear style={{width: 140}}
+                        value={cognitiveLevelId} onChange={v => {
+                            setCognitiveLevelId(v)
+                            setPage(1)
+                        }}
+                        options={(cognitives.data ?? []).map(c => ({value: c.id, label: c.name}))}
+                    />
+                    <Select
+                        placeholder="Trạng thái" allowClear style={{width: 130}}
+                        value={isVerified} onChange={v => {
+                            setIsVerified(v)
+                            setPage(1)
+                        }}
+                        options={[{value: true, label: 'Đã duyệt'}, {value: false, label: 'Chờ duyệt'}]}
+                    />
+                    <div className="flex gap-2 ml-auto">
+                        <Button icon={<UploadOutlined/>} onClick={() => setImportOpen(true)}>Nhập Excel</Button>
+                        <Button type="primary" icon={<PlusOutlined/>} onClick={() => navigate('/app/questions/add')}>
+                            Thêm câu hỏi
+                        </Button>
                     </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                </div>
 
-          {/* Pagination */}
-          <div className="px-4 py-3 flex items-center justify-between border-t border-gray-50">
-            <p className="text-[12px] text-gray-400">
-              Hiển thị 1–{QUESTIONS.length} trong tổng số 2,841 câu hỏi
-            </p>
-            <div className="flex gap-1">
-              {[1, 2, 3, '…'].map((p, i) => (
-                <button
-                  key={i}
-                  className={`w-8 h-8 rounded-lg text-xs font-medium transition-colors ${
-                    p === 1 ? 'bg-blue-600 text-white' : 'text-gray-500 hover:bg-gray-100'
-                  }`}
-                >
-                  {p}
-                </button>
-              ))}
+                <div className="section-card">
+                    <Table
+                        columns={columns}
+                        dataSource={data?.items ?? []}
+                        rowKey="id"
+                        loading={isLoading}
+                        scroll={{x: 1000}}
+                        pagination={{
+                            current: page,
+                            pageSize,
+                            total: data?.total ?? 0,
+                            showSizeChanger: true,
+                            showTotal: total => `Tổng số ${total} câu hỏi`,
+                            onChange: (p, ps) => {
+                                setPage(p)
+                                setPageSize(ps)
+                            },
+                        }}
+                    />
+                </div>
             </div>
-          </div>
-        </div>
-      </div>
-    </>
-  )
+
+            <BulkImportModal
+                open={importOpen}
+                onClose={() => setImportOpen(false)}
+                topics={topics.data ?? []}
+                difficulties={difficulties.data ?? []}
+                cognitives={cognitives.data ?? []}
+            />
+        </>
+    )
+}
+
+function stripHtml(html: string): string {
+    return html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
+}
+
+function difficultyCode(list: DifficultyLevel[] | undefined, id: number): string {
+    return list?.find(d => d.id === id)?.code ?? ''
 }

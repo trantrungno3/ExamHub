@@ -16,7 +16,7 @@ public interface IQuestionService
     Task<IReadOnlyList<Question>> GetByTopicAsync(int topicId, CancellationToken ct = default);
 
     /// <summary>Lấy câu hỏi phân trang với bộ lọc</summary>
-    Task<(IReadOnlyList<Question> Items, int Total)> GetPagedAsync(int page, int pageSize, int? topicId = null, int? questionTypeId = null, int? difficultyLevelId = null, string? keyword = null, bool? isVerified = null, CancellationToken ct = default);
+    Task<(IReadOnlyList<Question> Items, int Total)> GetPagedAsync(int page, int pageSize, int? topicId = null, int? questionTypeId = null, int? difficultyLevelId = null, int? cognitiveLevelId = null, string? keyword = null, bool? isVerified = null, CancellationToken ct = default);
 
     /// <summary>Tạo câu hỏi kèm đáp án</summary>
     Task<Question> CreateAsync(Question entity, IEnumerable<QuestionAnswer> answers, CancellationToken ct = default);
@@ -29,6 +29,9 @@ public interface IQuestionService
 
     /// <summary>Kiểm duyệt câu hỏi</summary>
     Task VerifyAsync(Guid id, Guid verifiedBy, CancellationToken ct = default);
+
+    /// <summary>Gán URL tệp đính kèm (ảnh/PDF) cho câu hỏi.</summary>
+    Task SetImageUrlAsync(Guid id, string imageUrl, CancellationToken ct = default);
 }
 
 /// <summary>Service interface cho TeacherSubject</summary>
@@ -98,6 +101,12 @@ public interface IExamService
 
     /// <summary>Xóa đề thi</summary>
     Task DeleteAsync(Guid id, CancellationToken ct = default);
+
+    /// <summary>
+    /// Thống kê phân bổ câu hỏi trong đề thi theo Bloom / độ khó / chủ đề.
+    /// Trả về null nếu đề thi không tồn tại.
+    /// </summary>
+    Task<DataTransferObjects.Exam.ExamAnalyticsResponse?> GetAnalyticsAsync(Guid examId, CancellationToken ct = default);
 }
 
 /// <summary>Service interface cho ExamSubmission</summary>
@@ -123,4 +132,10 @@ public interface IExamSubmissionService
 
     /// <summary>Chấm điểm một câu trả lời tự luận</summary>
     Task GradeAnswerAsync(Guid submissionAnswerId, decimal scoreEarned, bool isCorrect, string? feedback, Guid gradedBy, CancellationToken ct = default);
+
+    /// <summary>
+    /// Chốt điểm bài nộp: cộng tổng <see cref="SubmissionAnswer.ScoreEarned"/> vào
+    /// <see cref="ExamSubmission.TotalScore"/> và chuyển trạng thái sang Graded.
+    /// </summary>
+    Task<ExamSubmission> FinalizeAsync(Guid submissionId, Guid gradedBy, CancellationToken ct = default);
 }

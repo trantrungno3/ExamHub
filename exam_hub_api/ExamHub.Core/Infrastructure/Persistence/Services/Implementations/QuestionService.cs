@@ -1,5 +1,7 @@
 using ExamHub.Core.Domain.Entities;
 using ExamHub.Core.Domain.Interfaces;
+using ExamHub.Core.Infrastructure.Caching;
+using TVT.Core.Db.Redis;
 
 namespace ExamHub.Core.Infrastructure.Persistence.Services.Implementations;
 
@@ -8,11 +10,13 @@ public class QuestionService : IQuestionService
 {
     private readonly IQuestionRepository _questionRepo;
     private readonly IQuestionAnswerRepository _answerRepo;
+    private readonly IRedisService _cache;
 
-    public QuestionService(IQuestionRepository questionRepo, IQuestionAnswerRepository answerRepo)
+    public QuestionService(IQuestionRepository questionRepo, IQuestionAnswerRepository answerRepo, IRedisService cache)
     {
         _questionRepo = questionRepo;
         _answerRepo   = answerRepo;
+        _cache        = cache;
     }
 
     public Task<Question?> GetByIdAsync(Guid id, CancellationToken ct = default)
@@ -27,9 +31,10 @@ public class QuestionService : IQuestionService
     public Task<(IReadOnlyList<Question> Items, int Total)> GetPagedAsync(
         int page, int pageSize,
         int? topicId = null, int? questionTypeId = null,
-        int? difficultyLevelId = null, string? keyword = null,
+        int? difficultyLevelId = null, int? cognitiveLevelId = null,
+        string? keyword = null,
         bool? isVerified = null, CancellationToken ct = default)
-        => _questionRepo.GetPagedAsync(page, pageSize, topicId, questionTypeId, difficultyLevelId, keyword, isVerified, ct);
+        => _questionRepo.GetPagedAsync(page, pageSize, topicId, questionTypeId, difficultyLevelId, cognitiveLevelId, keyword, isVerified, ct);
 
     public async Task<Question> CreateAsync(Question entity, IEnumerable<QuestionAnswer> answers, CancellationToken ct = default)
     {
@@ -50,11 +55,15 @@ public class QuestionService : IQuestionService
         if (answerList.Count > 0)
             await _answerRepo.AddRangeAsync(answerList, ct);
 
+        await InvalidatePoolAsync(entity, ct);
         return entity;
     }
 
     public async Task<Question> UpdateAsync(Question entity, IEnumerable<QuestionAnswer>? answers = null, CancellationToken ct = default)
     {
+        // Lấy phân loại cũ trước khi cập nhật để invalidate cả pool cũ (trường hợp đổi topic/độ khó/loại/Bloom).
+        var old = await _questionRepo.GetByIdAsync(entity.Id, ct);
+
         entity.UpdatedAt = DateTime.UtcNow;
         await _questionRepo.UpdateAsync(entity, ct);
 
@@ -72,12 +81,35 @@ public class QuestionService : IQuestionService
                 await _answerRepo.AddRangeAsync(answerList, ct);
         }
 
+        if (old is not null) await InvalidatePoolAsync(old, ct);
+        await InvalidatePoolAsync(entity, ct);
         return entity;
     }
 
-    public Task DeleteAsync(Guid id, CancellationToken ct = default)
-        => _questionRepo.DeleteByIdAsync(id, ct);
+    public async Task DeleteAsync(Guid id, CancellationToken ct = default)
+    {
+        var existing = await _questionRepo.GetByIdAsync(id, ct);
+        await _questionRepo.DeleteByIdAsync(id, ct);
+        if (existing is not null) await InvalidatePoolAsync(existing, ct);
+    }
 
-    public Task VerifyAsync(Guid id, Guid verifiedBy, CancellationToken ct = default)
-        => _questionRepo.VerifyAsync(id, verifiedBy, ct);
+    public async Task VerifyAsync(Guid id, Guid verifiedBy, CancellationToken ct = default)
+    {
+        await _questionRepo.VerifyAsync(id, verifiedBy, ct);
+        // Duyệt câu hỏi đưa nó vào pool (pool chỉ gồm is_verified=true) → invalidate để refetch.
+        var verified = await _questionRepo.GetByIdAsync(id, ct);
+        if (verified is not null) await InvalidatePoolAsync(verified, ct);
+    }
+
+    public Task SetImageUrlAsync(Guid id, string imageUrl, CancellationToken ct = default)
+        => _questionRepo.SetImageUrlAsync(id, imageUrl, ct);
+
+    /// <summary>Xóa các khóa pool Redis mà câu hỏi này tham gia (≤ 4 khóa).</summary>
+    private Task InvalidatePoolAsync(Question q, CancellationToken ct)
+    {
+        var removals = QuestionPoolCache
+            .KeysForQuestion(q.TopicId, q.DifficultyLevelId, q.QuestionTypeId, q.CognitiveLevelId)
+            .Select(key => _cache.RemoveAsync(key, ct));
+        return Task.WhenAll(removals);
+    }
 }

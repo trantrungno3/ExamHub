@@ -1,3 +1,4 @@
+using System.Text.Json;
 using ExamHub.Core.Domain.Entities;
 using ExamHub.Core.Domain.Enums;
 using ExamHub.Core.Domain.Interfaces;
@@ -9,13 +10,16 @@ public class ExamSubmissionService : IExamSubmissionService
 {
     private readonly IExamSubmissionRepository _submissionRepo;
     private readonly ISubmissionAnswerRepository _answerRepo;
+    private readonly IExamQuestionRepository _examQuestionRepo;
 
     public ExamSubmissionService(
         IExamSubmissionRepository submissionRepo,
-        ISubmissionAnswerRepository answerRepo)
+        ISubmissionAnswerRepository answerRepo,
+        IExamQuestionRepository examQuestionRepo)
     {
-        _submissionRepo = submissionRepo;
-        _answerRepo     = answerRepo;
+        _submissionRepo   = submissionRepo;
+        _answerRepo       = answerRepo;
+        _examQuestionRepo = examQuestionRepo;
     }
 
     public Task<ExamSubmission?> GetByIdAsync(Guid id, CancellationToken ct = default)
@@ -52,9 +56,75 @@ public class ExamSubmissionService : IExamSubmissionService
             return a;
         }).ToList();
 
+        await AutoGradeObjectiveAsync(submission.ExamId, answerList, ct);
+
         if (answerList.Count > 0)
             await _answerRepo.AddRangeAsync(answerList, ct);
 
+        return submission;
+    }
+
+    /// <summary>
+    /// Chấm tự động các câu trắc nghiệm (có <see cref="SubmissionAnswer.SelectedAnswerIds"/>):
+    /// so khớp tập đáp án đã chọn với tập đáp án đúng trong snapshot.
+    /// Câu tự luận (chỉ có EssayContent) giữ nguyên IsCorrect = null để giáo viên chấm tay.
+    /// </summary>
+    private async Task AutoGradeObjectiveAsync(
+        Guid examId, IReadOnlyList<SubmissionAnswer> answers, CancellationToken ct)
+    {
+        if (!answers.Any(a => a.SelectedAnswerIds is { Length: > 0 }))
+            return;
+
+        var examQuestions = await _examQuestionRepo.GetByExamAsync(examId, ct);
+        var byId = examQuestions.ToDictionary(eq => eq.Id);
+
+        foreach (var answer in answers)
+        {
+            if (answer.SelectedAnswerIds is not { Length: > 0 } selected)
+                continue;
+            if (!byId.TryGetValue(answer.ExamQuestionId, out var examQuestion))
+                continue;
+
+            var correctIds = CorrectAnswerIdsFromSnapshot(examQuestion.AnswersSnapshot);
+            var isCorrect  = correctIds.Count > 0 && correctIds.SetEquals(selected);
+
+            answer.IsCorrect   = isCorrect;
+            answer.ScoreEarned = isCorrect ? examQuestion.Score ?? 1m : 0m;
+        }
+    }
+
+    /// <summary>Trích tập UUID đáp án đúng từ snapshot JSON [{id, is_correct, ...}].</summary>
+    private static HashSet<Guid> CorrectAnswerIdsFromSnapshot(string? snapshotJson)
+    {
+        var result = new HashSet<Guid>();
+        if (string.IsNullOrWhiteSpace(snapshotJson))
+            return result;
+
+        using var doc = JsonDocument.Parse(snapshotJson);
+        if (doc.RootElement.ValueKind != JsonValueKind.Array)
+            return result;
+
+        foreach (var el in doc.RootElement.EnumerateArray())
+        {
+            if (el.TryGetProperty("is_correct", out var ic) && ic.ValueKind == JsonValueKind.True &&
+                el.TryGetProperty("id", out var idEl) && idEl.TryGetGuid(out var id))
+                result.Add(id);
+        }
+        return result;
+    }
+
+    public async Task<ExamSubmission> FinalizeAsync(
+        Guid submissionId, Guid gradedBy, CancellationToken ct = default)
+    {
+        var submission = await _submissionRepo.GetByIdAsync(submissionId, ct)
+            ?? throw new KeyNotFoundException($"ExamSubmission '{submissionId}' not found.");
+
+        var answers = await _answerRepo.GetBySubmissionAsync(submissionId, ct);
+
+        submission.TotalScore = answers.Sum(a => a.ScoreEarned);
+        submission.Status     = SubmissionStatusEnum.Graded;
+
+        await _submissionRepo.UpdateAsync(submission, ct);
         return submission;
     }
 

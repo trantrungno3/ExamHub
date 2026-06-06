@@ -4,6 +4,14 @@ interface ApiResponse<T> {
     data?: T
 }
 
+/** Kết quả phân trang trả về trong `data` của ApiResponse. */
+interface PagedResult<T> {
+    total: number
+    page: number
+    pageSize: number
+    items: T[]
+}
+
 enum resStatus {
     error = 0,
     success = 1,

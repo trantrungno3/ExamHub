@@ -48,6 +48,27 @@ function buildHeaders(auth: boolean): Headers {
     return headers
 }
 
+/** Headers cho multipart: KHÔNG set Content-Type để trình duyệt tự thêm boundary. */
+function buildFormHeaders(auth: boolean): Headers {
+    const headers = new Headers()
+    if (auth) {
+        const token = getToken()
+        if (token) headers.set('Authorization', `Bearer ${token}`)
+    }
+    return headers
+}
+
+/** Bỏ các giá trị undefined/null/'' khỏi object query để không gửi param rỗng. */
+export function cleanParams(
+    query: Record<string, string | number | boolean | undefined | null>,
+): Record<string, string | number | boolean> {
+    const out: Record<string, string | number | boolean> = {}
+    Object.entries(query).forEach(([k, v]) => {
+        if (v !== undefined && v !== null && v !== '') out[k] = v
+    })
+    return out
+}
+
 function createHttp(auth: boolean) {
     return {
         get<T>(path: string, params?: Record<string, string | number | boolean>): Promise<ApiResponse<T>> {
@@ -75,6 +96,11 @@ function createHttp(auth: boolean) {
             return fetch(buildUrl(path), {
                 method: 'PATCH', headers: buildHeaders(auth),
                 body: body !== undefined ? JSON.stringify(body) : undefined,
+            }).then(handleResponse<T>)
+        },
+        postForm<T>(path: string, form: FormData): Promise<ApiResponse<T>> {
+            return fetch(buildUrl(path), {
+                method: 'POST', headers: buildFormHeaders(auth), body: form,
             }).then(handleResponse<T>)
         },
     }

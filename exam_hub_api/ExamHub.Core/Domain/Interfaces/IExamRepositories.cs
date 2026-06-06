@@ -62,6 +62,12 @@ public interface IExamQuestionRepository : IBaseRepository<ExamQuestion, Guid>
     /// <summary>Lấy danh sách câu hỏi snapshot theo đề thi</summary>
     Task<IReadOnlyList<ExamQuestion>> GetByExamAsync(Guid examId, CancellationToken ct = default);
 
+    /// <summary>
+    /// Lấy câu hỏi snapshot theo đề thi kèm câu hỏi gốc và phân loại
+    /// (CognitiveLevel / DifficultyLevel / Topic) để thống kê phân bổ.
+    /// </summary>
+    Task<IReadOnlyList<ExamQuestion>> GetByExamWithClassificationAsync(Guid examId, CancellationToken ct = default);
+
     /// <summary>Xóa tất cả câu hỏi của đề thi</summary>
     Task DeleteByExamAsync(Guid examId, CancellationToken ct = default);
 }

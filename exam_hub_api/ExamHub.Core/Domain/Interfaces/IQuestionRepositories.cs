@@ -30,6 +30,7 @@ public interface IQuestionRepository : IBaseRepository<Question, Guid>
         int? topicId = null,
         int? questionTypeId = null,
         int? difficultyLevelId = null,
+        int? cognitiveLevelId = null,
         string? keyword = null,
         bool? isVerified = null,
         CancellationToken ct = default);
@@ -51,6 +52,9 @@ public interface IQuestionRepository : IBaseRepository<Question, Guid>
 
     /// <summary>Kiểm duyệt câu hỏi</summary>
     Task VerifyAsync(Guid id, Guid verifiedBy, CancellationToken ct = default);
+
+    /// <summary>Gán URL tệp đính kèm (ảnh/PDF) cho câu hỏi.</summary>
+    Task SetImageUrlAsync(Guid id, string imageUrl, CancellationToken ct = default);
 }
 
 /// <summary>Interface repository cho QuestionAnswer</summary>

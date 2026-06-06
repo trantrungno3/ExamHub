@@ -17,6 +17,7 @@ const NAV_ITEMS = [
     {path: '/app/questions', label: 'Câu hỏi',     icon: <UnorderedListOutlined/>},
     {path: '/app/exams',     label: 'Mẫu đề thi',  icon: <FileTextOutlined/>},
     {path: '/app/generate',  label: 'Sinh đề thi', icon: <ThunderboltOutlined/>},
+    {path: '/app/exam-list', label: 'Đề thi',      icon: <FileTextOutlined/>},
     {path: '/app/users',     label: 'Người dùng',  icon: <UserOutlined/>},
     {path: '/app/category',  label: 'Danh mục',    icon: <TagsOutlined/>},
 ]

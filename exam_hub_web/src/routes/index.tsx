@@ -8,8 +8,11 @@ import QuestionBankPage from '../pages/questions/QuestionBankPage'
 import AddQuestionPage from '../pages/questions/AddQuestionPage'
 import ExamTemplatePage from '../pages/exams/ExamTemplatePage'
 import CreateExamTemplatePage from '../pages/exams/CreateExamTemplatePage'
+import GeneratePage from '../pages/exams/GeneratePage'
+import ExamListPage from '../pages/exams/ExamListPage'
 import ExamCoverPage from '../pages/student/ExamCoverPage'
 import ExamTakingPage from '../pages/student/ExamTakingPage'
+import ExamResultPage from '../pages/student/ExamResultPage'
 import { Placeholder } from '../components/Placeholder'
 import UserPage from '../pages/user/UserPage'
 import { ProtectedRoute } from './ProtectedRoute'
@@ -25,6 +28,7 @@ export const router = createBrowserRouter([
     /* ── Student pages (no sidebar, no auth guard) ── */
     { path: ROUTES.STUDENT_EXAM,      element: <ExamCoverPage /> },
     { path: ROUTES.STUDENT_EXAM_TAKE, element: <ExamTakingPage /> },
+    { path: '/student/exam/result',   element: <ExamResultPage /> },
 
     { path: ROUTES.FORBIDDEN, element: <Placeholder title="403 — Không có quyền truy cập" /> },
 
@@ -40,10 +44,13 @@ export const router = createBrowserRouter([
                     { path: 'dashboard',                        element: <DashboardPage /> },
                     { path: 'questions',                        element: <QuestionBankPage /> },
                     { path: 'questions/add',                    element: <AddQuestionPage /> },
+                    { path: 'questions/:id/edit',               element: <AddQuestionPage /> },
                     { path: 'exams',                            element: <ExamTemplatePage /> },
                     { path: 'exams/create',                     element: <CreateExamTemplatePage /> },
+                    { path: 'exams/:id/edit',                   element: <CreateExamTemplatePage /> },
                     { path: 'category',                         element: <CategoryPage /> },
-                    { path: 'generate',                         element: <Placeholder title="Sinh đề thi" /> },
+                    { path: 'generate',                         element: <GeneratePage /> },
+                    { path: 'exam-list',                        element: <ExamListPage /> },
                     { path: 'users',                            element: <UserPage /> },
                 ],
             },

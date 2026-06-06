@@ -1,3 +1,4 @@
+using ExamHub.Core.Application.Services;
 using ExamHub.Core.DataTransferObjects.Exam;
 using ExamHub.Core.Domain.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -10,7 +11,7 @@ namespace ExamHub.API.Controllers.Exam;
 [ApiController]
 [Authorize]
 [Route("api/exams")]
-public class ExamController(IExamService service) : ControllerBase
+public class ExamController(IExamService service, IExportService exportService) : ControllerBase
 {
     /// <summary>Lấy đề thi theo ID</summary>
     [HttpGet("{id:guid}")]
@@ -86,6 +87,36 @@ public class ExamController(IExamService service) : ControllerBase
         var result = await service.ArchiveAsync(id, ct);
         if (!result) return NotFound();
         return Ok(RequestResponse<bool>.Success("Lưu trữ đề thi thành công!", result, 1));
+    }
+
+    /// <summary>Thống kê phân bổ câu hỏi trong đề thi (Bloom / độ khó / chủ đề)</summary>
+    [HttpGet("{id:guid}/analytics")]
+    public async Task<ActionResult<RequestResponse<ExamAnalyticsResponse>>> GetAnalytics(Guid id, CancellationToken ct)
+    {
+        var result = await service.GetAnalyticsAsync(id, ct);
+        if (result is null) return NotFound();
+        return Ok(RequestResponse<ExamAnalyticsResponse>.Success("Lấy thống kê thành công!", result, result.TotalQuestions));
+    }
+
+    /// <summary>Xuất đề thi ra PDF / Word, lưu lên MinIO và trả về URL tải về</summary>
+    [HttpGet("{id:guid}/export")]
+    public async Task<ActionResult<RequestResponse<object>>> Export(
+        Guid id, [FromQuery] string format, CancellationToken ct)
+    {
+        var existing = await service.GetByIdAsync(id, ct);
+        if (existing is null) return NotFound();
+
+        var fmt = (format ?? "pdf").Trim().ToLowerInvariant();
+        var url = fmt switch
+        {
+            "pdf"  => await exportService.ExportPdfAsync(id, ct),
+            "docx" => await exportService.ExportDocxAsync(id, ct),
+            _      => null
+        };
+        if (url is null)
+            return BadRequest(RequestResponse<object>.Error("Định dạng không hợp lệ. Chỉ hỗ trợ 'pdf' hoặc 'docx'."));
+
+        return Ok(RequestResponse<object>.Success("Xuất đề thi thành công!", new { Url = url, Format = fmt }, 1));
     }
 
     /// <summary>Xóa đề thi</summary>

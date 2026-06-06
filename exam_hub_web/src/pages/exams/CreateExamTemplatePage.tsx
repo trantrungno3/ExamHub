@@ -1,325 +1,268 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { Switch } from 'antd'
-import { CloseOutlined, PlusOutlined } from '@ant-design/icons'
+import {useEffect} from 'react'
+import {useNavigate, useParams} from 'react-router-dom'
+import {Button, Form, Input, InputNumber, Select, Switch, message} from 'antd'
+import {CloseOutlined, PlusOutlined} from '@ant-design/icons'
+import {useMutation, useQueryClient} from '@tanstack/react-query'
+import {examTemplateService} from '../../services/examTemplateService'
+import {statusCode} from '../../services/requestService'
+import {EXAM_TEMPLATE_KEYS, useExamTemplateQuery} from '../../hooks/queries/useExamTemplates'
+import {
+    useCognitiveLevelsQuery,
+    useGradeLevelsListQuery,
+    useQuestionTypesQuery,
+    useSubjectsQuery,
+    useTopicsQuery,
+} from '../../hooks/queries/useCategoryLists'
 
-/* ─── Types ──────────────────────────────────────── */
-type DiffDist = { easy: number; medium: number; hard: number; vhard: number }
-
-type ExamSection = {
-  id: number
-  name: string
-  type: string
-  count: number
-  pointsPerQ: number
-  dist: DiffDist
+const EMPTY_SECTION: ExamTemplateSectionBody = {
+    sectionName: '',
+    topicId: undefined,
+    questionTypeId: undefined,
+    cognitiveLevelId: undefined,
+    questionCount: 10,
+    scorePerQuestion: 0.25,
+    pctEasy: 40,
+    pctMedium: 30,
+    pctHard: 20,
+    pctVeryHard: 10,
 }
 
-/* ─── Distribution bar ───────────────────────────── */
-const DIST_SEGMENTS = [
-  { key: 'easy',   label: 'Dễ',      color: 'bg-green-400',  text: 'text-green-600'  },
-  { key: 'medium', label: 'TB',       color: 'bg-yellow-400', text: 'text-yellow-600' },
-  { key: 'hard',   label: 'Khó',     color: 'bg-orange-400', text: 'text-orange-600' },
-  { key: 'vhard',  label: 'Rất khó', color: 'bg-red-500',    text: 'text-red-600'    },
-]
-
-function DistributionBar({ dist }: { dist: DiffDist }) {
-  return (
-    <div>
-      <div className="flex h-3 rounded-full overflow-hidden mb-2">
-        {DIST_SEGMENTS.map((s) => (
-          <div
-            key={s.key}
-            className={s.color}
-            style={{ width: `${dist[s.key as keyof DiffDist]}%` }}
-          />
-        ))}
-      </div>
-      <div className="flex gap-3 flex-wrap">
-        {DIST_SEGMENTS.map((s) => (
-          <span key={s.key} className={`text-[11px] font-medium flex items-center gap-1 ${s.text}`}>
-            <span className={`w-2 h-2 rounded-full inline-block ${s.color}`} />
-            {s.label} {dist[s.key as keyof DiffDist]}%
-          </span>
-        ))}
-      </div>
-    </div>
-  )
+const EMPTY: ExamTemplateBody = {
+    gradeLevelId: 0,
+    subjectId: 0,
+    title: '',
+    durationMinutes: 45,
+    totalScore: 10,
+    shuffleQuestions: true,
+    shuffleAnswers: false,
+    preventDuplicate: true,
+    isActive: true,
+    sections: [{...EMPTY_SECTION}],
 }
 
-/* ─── Section panel ──────────────────────────────── */
-function SectionPanel({
-  section,
-  onRemove,
-}: {
-  section: ExamSection
-  onRemove: () => void
-}) {
-  const total = (section.count * section.pointsPerQ).toFixed(2)
-
-  return (
-    <div className="exam-section-panel">
-      <div className="exam-section-header">
-        <span>{section.name}</span>
-        <button
-          onClick={onRemove}
-          className="text-white/50 hover:text-white transition-colors"
-        >
-          <CloseOutlined />
-        </button>
-      </div>
-
-      <div className="exam-section-body">
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="form-label">Loại câu</label>
-            <select
-              className="w-full border border-gray-200 rounded-lg px-2.5 py-2 text-sm
-                         text-gray-600 bg-white outline-none focus:border-blue-400 cursor-pointer"
-            >
-              <option>{section.type}</option>
-              <option>Trắc nghiệm</option>
-              <option>Đúng / Sai</option>
-              <option>Tự luận</option>
-              <option>Điền vào chỗ trống</option>
-            </select>
-          </div>
-          <div>
-            <label className="form-label">Số câu</label>
-            <input
-              type="number"
-              defaultValue={section.count}
-              min={1}
-              className="w-full border border-gray-200 rounded-lg px-2.5 py-2 text-sm
-                         text-gray-700 outline-none focus:border-blue-400"
-            />
-          </div>
-        </div>
-
-        <div>
-          <label className="form-label">Phân bố độ khó</label>
-          <DistributionBar dist={section.dist} />
-        </div>
-
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="form-label">Điểm / Câu</label>
-            <input
-              type="number"
-              step="0.25"
-              defaultValue={section.pointsPerQ}
-              className="w-full border border-gray-200 rounded-lg px-2.5 py-2 text-sm
-                         text-gray-700 outline-none focus:border-blue-400"
-            />
-          </div>
-          <div>
-            <label className="form-label">Tổng điểm</label>
-            <input
-              readOnly
-              value={total}
-              className="w-full border border-gray-100 rounded-lg px-2.5 py-2 text-sm
-                         text-gray-500 bg-gray-50 outline-none"
-            />
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-/* ─── Main component ─────────────────────────────── */
 export default function CreateExamTemplatePage() {
-  const navigate = useNavigate()
-  const [shuffleQ,    setShuffleQ]    = useState(true)
-  const [shuffleA,    setShuffleA]    = useState(false)
-  const [preventDup,  setPreventDup]  = useState(true)
+    const navigate = useNavigate()
+    const {id} = useParams<{id: string}>()
+    const isEdit = !!id
+    const [form] = Form.useForm<ExamTemplateBody>()
+    const qc = useQueryClient()
 
-  const [sections, setSections] = useState<ExamSection[]>([
-    {
-      id: 1, name: 'Phần 1: Trắc nghiệm', type: 'Trắc nghiệm',
-      count: 32, pointsPerQ: 0.25,
-      dist: { easy: 40, medium: 30, hard: 20, vhard: 10 },
-    },
-    {
-      id: 2, name: 'Phần 2: Tự luận', type: 'Tự luận',
-      count: 8, pointsPerQ: 1,
-      dist: { easy: 0, medium: 50, hard: 30, vhard: 20 },
-    },
-  ])
+    const grades = useGradeLevelsListQuery()
+    const subjects = useSubjectsQuery()
+    const topics = useTopicsQuery()
+    const questionTypes = useQuestionTypesQuery()
+    const cognitives = useCognitiveLevelsQuery()
+    const {data: existing} = useExamTemplateQuery(id)
 
-  const addSection = () => {
-    const nextId = Math.max(...sections.map((s) => s.id)) + 1
-    setSections([
-      ...sections,
-      {
-        id: nextId,
-        name: `Phần ${nextId}: Trắc nghiệm`,
-        type: 'Trắc nghiệm',
-        count: 10,
-        pointsPerQ: 0.25,
-        dist: { easy: 40, medium: 30, hard: 20, vhard: 10 },
-      },
-    ])
-  }
+    useEffect(() => {
+        if (isEdit && existing) {
+            form.setFieldsValue({
+                gradeLevelId: existing.gradeLevelId,
+                subjectId: existing.subjectId,
+                title: existing.title,
+                description: existing.description,
+                durationMinutes: existing.durationMinutes,
+                totalQuestions: existing.totalQuestions,
+                totalScore: existing.totalScore,
+                shuffleQuestions: existing.shuffleQuestions,
+                shuffleAnswers: existing.shuffleAnswers,
+                preventDuplicate: existing.preventDuplicate,
+                instructions: existing.instructions,
+                isActive: existing.isActive,
+                sections: existing.sections?.map(s => ({
+                    sectionName: s.sectionName,
+                    topicId: s.topicId,
+                    questionTypeId: s.questionTypeId,
+                    cognitiveLevelId: s.cognitiveLevelId,
+                    questionCount: s.questionCount,
+                    scorePerQuestion: s.scorePerQuestion,
+                    pctEasy: s.pctEasy,
+                    pctMedium: s.pctMedium,
+                    pctHard: s.pctHard,
+                    pctVeryHard: s.pctVeryHard,
+                })) ?? [{...EMPTY_SECTION}],
+            })
+        }
+    }, [isEdit, existing, form])
 
-  const removeSection = (id: number) =>
-    setSections(sections.filter((s) => s.id !== id))
+    const saveMutation = useMutation({
+        mutationFn: (body: ExamTemplateBody) =>
+            isEdit ? examTemplateService.update(id!, body) : examTemplateService.create(body),
+        onSuccess: (res) => {
+            if (res.status === statusCode.Error || !res.data) {
+                message.error(res.message || 'Lưu mẫu đề thất bại')
+                return
+            }
+            message.success(isEdit ? 'Cập nhật mẫu đề thành công' : 'Tạo mẫu đề thành công')
+            void qc.invalidateQueries({queryKey: EXAM_TEMPLATE_KEYS.all})
+            navigate('/app/exams')
+        },
+        onError: () => message.error('Lưu mẫu đề thất bại'),
+    })
 
-  return (
-    <>
-      {/* Top bar */}
-      <div className="top-bar">
-        <div>
-          <p className="top-bar-title">Tạo mẫu đề thi mới</p>
-          <p className="top-bar-subtitle">
-            <span
-              className="text-blue-500 cursor-pointer hover:underline"
-              onClick={() => navigate('/app/exams')}
-            >
-              Mẫu đề thi
-            </span>
-            {' / '}Tạo mới
-          </p>
-        </div>
-        <div className="top-bar-avatar">TT</div>
-      </div>
+    const handleSubmit = async () => {
+        const v = await form.validateFields()
+        saveMutation.mutate(v)
+    }
 
-      {/* Content */}
-      <div className="flex-1 overflow-auto p-6">
-        <div className="flex gap-5 items-start">
-
-          {/* ── Left: form ── */}
-          <div className="flex-[2] flex flex-col gap-4 min-w-0">
-
-            {/* Exam info */}
-            <div className="form-section">
-              <p className="form-section-title">Thông tin mẫu đề (exam_templates)</p>
-              <div className="flex flex-col gap-4">
+    return (
+        <>
+            <div className="top-bar">
                 <div>
-                  <label className="form-label">Tên đề *</label>
-                  <input
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm
-                               text-gray-700 outline-none focus:border-blue-400 transition-colors
-                               placeholder:text-gray-300"
-                    placeholder="VD: Kiểm tra Toán HK1 Lớp 10"
-                  />
+                    <p className="top-bar-title">{isEdit ? 'Sửa mẫu đề thi' : 'Tạo mẫu đề thi mới'}</p>
+                    <p className="top-bar-subtitle">
+                        <span className="text-blue-500 cursor-pointer hover:underline"
+                              onClick={() => navigate('/app/exams')}>Mẫu đề thi</span>
+                        {' / '}{isEdit ? 'Chỉnh sửa' : 'Tạo mới'}
+                    </p>
                 </div>
-
-                <div className="grid grid-cols-3 gap-4">
-                  <div>
-                    <label className="form-label">Lớp *</label>
-                    <select
-                      className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm
-                                 text-gray-600 bg-white outline-none focus:border-blue-400 cursor-pointer"
-                    >
-                      <option value="">Chọn lớp</option>
-                      {Array.from({ length: 12 }, (_, i) => i + 1).map((g) => (
-                        <option key={g}>Lớp {g}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="form-label">Môn học</label>
-                    <select
-                      className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm
-                                 text-gray-600 bg-white outline-none focus:border-blue-400 cursor-pointer"
-                    >
-                      <option value="">Chọn môn</option>
-                      {['Toán', 'Vật lý', 'Hóa học', 'Sinh học', 'Ngữ văn', 'Tiếng Anh', 'Lịch sử', 'Địa lý'].map(
-                        (s) => <option key={s}>{s}</option>,
-                      )}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="form-label">Thời gian (phút)</label>
-                    <input
-                      type="number"
-                      defaultValue={45}
-                      min={1}
-                      className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm
-                                 text-gray-700 outline-none focus:border-blue-400"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="form-label">Hướng dẫn làm bài</label>
-                  <textarea
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm
-                               text-gray-600 outline-none resize-none h-20
-                               placeholder:text-gray-300 focus:border-blue-400 transition-colors"
-                    placeholder="Học sinh đọc kỹ đề trước khi làm bài. Không sử dụng tài liệu..."
-                  />
-                </div>
-              </div>
+                <div className="top-bar-avatar">TT</div>
             </div>
 
-            {/* Generation settings */}
-            <div className="form-section">
-              <p className="form-section-title">Cấu hình sinh đề</p>
-              {[
-                { label: 'Đầu trộn câu hỏi',   sub: 'shuffle_questions',  value: shuffleQ,   set: setShuffleQ   },
-                { label: 'Đầu trộn đáp án',     sub: 'shuffle_answers',    value: shuffleA,   set: setShuffleA   },
-                { label: 'Chống trùng câu hỏi', sub: 'prevent_duplicate',  value: preventDup, set: setPreventDup },
-              ].map((t, i, arr) => (
-                <div
-                  key={t.sub}
-                  className={`toggle-row ${i === arr.length - 1 ? '!border-b-0' : ''}`}
-                >
-                  <div>
-                    <p className="toggle-label">{t.label}</p>
-                    <p className="toggle-sublabel">{t.sub}</p>
-                  </div>
-                  <Switch checked={t.value} onChange={t.set} />
-                </div>
-              ))}
+            <div className="flex-1 overflow-auto p-6">
+                <Form form={form} layout="vertical" initialValues={EMPTY}>
+                    <div className="flex gap-5 items-start">
+                        {/* Left: template info */}
+                        <div className="flex-[2] flex flex-col gap-4 min-w-0">
+                            <div className="form-section">
+                                <p className="form-section-title">Thông tin mẫu đề</p>
+                                <Form.Item label="Tên đề" name="title" rules={[{required: true, message: 'Nhập tên đề'}]}>
+                                    <Input placeholder="VD: Kiểm tra Toán HK1 Lớp 10"/>
+                                </Form.Item>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <Form.Item label="Lớp" name="gradeLevelId" rules={[{required: true, message: 'Chọn lớp'}]}>
+                                        <Select placeholder="Chọn lớp"
+                                                options={(grades.data ?? []).map(g => ({value: g.id, label: g.name}))}/>
+                                    </Form.Item>
+                                    <Form.Item label="Môn học" name="subjectId" rules={[{required: true, message: 'Chọn môn'}]}>
+                                        <Select placeholder="Chọn môn" showSearch optionFilterProp="label"
+                                                options={(subjects.data ?? []).map(s => ({value: s.id, label: s.name}))}/>
+                                    </Form.Item>
+                                </div>
+                                <div className="grid grid-cols-3 gap-4">
+                                    <Form.Item label="Thời gian (phút)" name="durationMinutes" rules={[{required: true}]}>
+                                        <InputNumber min={1} className="w-full"/>
+                                    </Form.Item>
+                                    <Form.Item label="Tổng số câu" name="totalQuestions">
+                                        <InputNumber min={0} className="w-full"/>
+                                    </Form.Item>
+                                    <Form.Item label="Tổng điểm" name="totalScore" rules={[{required: true}]}>
+                                        <InputNumber min={0} step={0.5} className="w-full"/>
+                                    </Form.Item>
+                                </div>
+                                <Form.Item label="Hướng dẫn làm bài" name="instructions">
+                                    <Input.TextArea rows={2} placeholder="Học sinh đọc kỹ đề trước khi làm bài..."/>
+                                </Form.Item>
+                            </div>
+
+                            <div className="form-section">
+                                <p className="form-section-title">Cấu hình sinh đề</p>
+                                <div className="flex flex-col gap-2">
+                                    <Form.Item label="Trộn câu hỏi" name="shuffleQuestions" valuePropName="checked" className="!mb-0">
+                                        <Switch/>
+                                    </Form.Item>
+                                    <Form.Item label="Trộn đáp án" name="shuffleAnswers" valuePropName="checked" className="!mb-0">
+                                        <Switch/>
+                                    </Form.Item>
+                                    <Form.Item label="Chống trùng câu hỏi" name="preventDuplicate" valuePropName="checked" className="!mb-0">
+                                        <Switch/>
+                                    </Form.Item>
+                                    <Form.Item label="Kích hoạt" name="isActive" valuePropName="checked" className="!mb-0">
+                                        <Switch/>
+                                    </Form.Item>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Right: sections */}
+                        <div className="flex-[1.5] flex flex-col gap-3 min-w-0">
+                            <Form.List
+                                name="sections"
+                                rules={[{
+                                    validator: async (_, sections: ExamTemplateSectionBody[]) => {
+                                        if (!sections || sections.length < 1)
+                                            return Promise.reject(new Error('Cần ít nhất 1 phần thi'))
+                                    },
+                                }]}
+                            >
+                                {(fields, {add, remove}, {errors}) => (
+                                    <>
+                                        <div className="flex items-center justify-between">
+                                            <p className="text-[13px] font-semibold text-gray-700">Cấu hình phần thi</p>
+                                            <Button type="primary" size="small" icon={<PlusOutlined/>}
+                                                    onClick={() => add({...EMPTY_SECTION})}>
+                                                Thêm phần
+                                            </Button>
+                                        </div>
+                                        {fields.map((field, idx) => (
+                                            <div key={field.key} className="form-section">
+                                                <div className="flex items-center justify-between mb-2">
+                                                    <span className="text-[13px] font-semibold text-gray-600">Phần {idx + 1}</span>
+                                                    {fields.length > 1 && (
+                                                        <button type="button" className="text-gray-400 hover:text-red-500"
+                                                                onClick={() => remove(field.name)}>
+                                                            <CloseOutlined/>
+                                                        </button>
+                                                    )}
+                                                </div>
+                                                <Form.Item label="Tên phần" name={[field.name, 'sectionName']} className="!mb-2">
+                                                    <Input placeholder="VD: Phần trắc nghiệm"/>
+                                                </Form.Item>
+                                                <div className="grid grid-cols-2 gap-2">
+                                                    <Form.Item label="Chủ đề" name={[field.name, 'topicId']} className="!mb-2">
+                                                        <Select placeholder="Chủ đề" allowClear showSearch optionFilterProp="label"
+                                                                options={(topics.data ?? []).map(t => ({value: t.id, label: t.name}))}/>
+                                                    </Form.Item>
+                                                    <Form.Item label="Loại câu" name={[field.name, 'questionTypeId']} className="!mb-2">
+                                                        <Select placeholder="Loại" allowClear
+                                                                options={(questionTypes.data ?? []).map(t => ({value: t.id, label: t.name}))}/>
+                                                    </Form.Item>
+                                                </div>
+                                                <Form.Item label="Bloom (tuỳ chọn)" name={[field.name, 'cognitiveLevelId']} className="!mb-2">
+                                                    <Select placeholder="Không lọc Bloom" allowClear
+                                                            options={(cognitives.data ?? []).map(c => ({value: c.id, label: c.name}))}/>
+                                                </Form.Item>
+                                                <div className="grid grid-cols-2 gap-2">
+                                                    <Form.Item label="Số câu" name={[field.name, 'questionCount']} className="!mb-2"
+                                                               rules={[{required: true, message: 'Nhập số câu'}]}>
+                                                        <InputNumber min={1} className="w-full"/>
+                                                    </Form.Item>
+                                                    <Form.Item label="Điểm / câu" name={[field.name, 'scorePerQuestion']} className="!mb-2">
+                                                        <InputNumber min={0} step={0.25} className="w-full"/>
+                                                    </Form.Item>
+                                                </div>
+                                                <p className="form-label">Phân bố độ khó (%) — tổng phải = 100</p>
+                                                <div className="grid grid-cols-4 gap-2">
+                                                    <Form.Item name={[field.name, 'pctEasy']} className="!mb-0">
+                                                        <InputNumber min={0} max={100} className="w-full" addonAfter="Dễ"/>
+                                                    </Form.Item>
+                                                    <Form.Item name={[field.name, 'pctMedium']} className="!mb-0">
+                                                        <InputNumber min={0} max={100} className="w-full" addonAfter="TB"/>
+                                                    </Form.Item>
+                                                    <Form.Item name={[field.name, 'pctHard']} className="!mb-0">
+                                                        <InputNumber min={0} max={100} className="w-full" addonAfter="Khó"/>
+                                                    </Form.Item>
+                                                    <Form.Item name={[field.name, 'pctVeryHard']} className="!mb-0">
+                                                        <InputNumber min={0} max={100} className="w-full" addonAfter="RK"/>
+                                                    </Form.Item>
+                                                </div>
+                                            </div>
+                                        ))}
+                                        <Form.ErrorList errors={errors}/>
+                                    </>
+                                )}
+                            </Form.List>
+                        </div>
+                    </div>
+                </Form>
             </div>
-          </div>
 
-          {/* ── Right: sections panel ── */}
-          <div className="flex-[1.3] flex flex-col gap-3 min-w-0">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-[13px] font-semibold text-gray-700">Câu hình phần thi</p>
-                <p className="text-[11px] text-gray-400 mt-0.5">exam_template_sections</p>
-              </div>
-              <button onClick={addSection} className="btn-primary text-xs">
-                <PlusOutlined /> Thêm phần
-              </button>
+            <div className="action-bar">
+                <Button onClick={() => navigate('/app/exams')}>Hủy bỏ</Button>
+                <Button type="primary" loading={saveMutation.isPending} onClick={handleSubmit}>
+                    {isEdit ? 'Cập nhật mẫu đề' : 'Lưu mẫu đề thi'}
+                </Button>
             </div>
-
-            <div className="flex flex-col gap-3">
-              {sections.map((sec) => (
-                <SectionPanel
-                  key={sec.id}
-                  section={sec}
-                  onRemove={() => removeSection(sec.id)}
-                />
-              ))}
-            </div>
-
-            {sections.length === 0 && (
-              <div className="text-center py-10 text-gray-400 text-sm border-2 border-dashed
-                              border-gray-200 rounded-xl">
-                Chưa có phần thi nào. Nhấn "Thêm phần" để bắt đầu.
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Action bar */}
-      <div className="action-bar">
-        <button
-          onClick={() => navigate('/app/exams')}
-          className="px-5 py-2 border border-gray-300 text-sm font-medium text-gray-700
-                     rounded-lg hover:bg-gray-50 transition-colors"
-        >
-          Hủy bỏ
-        </button>
-        <button className="btn-outline-blue">Lưu mẫu đề thi</button>
-        <button className="btn-primary">Lọc &amp; Đề thi ngay</button>
-      </div>
-    </>
-  )
+        </>
+    )
 }

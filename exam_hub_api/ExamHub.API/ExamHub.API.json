@@ -3165,6 +3165,141 @@
         ]
       }
     },
+    "/api/questions/bulk-import": {
+      "post": {
+        "tags": [
+          "Question"
+        ],
+        "summary": "Import câu hỏi hàng loạt từ file Excel (.xlsx)",
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "File": {
+                    "$ref": "#/components/schemas/IFormFile"
+                  },
+                  "DefaultTopicId": {
+                    "pattern": "^-?(?:0|[1-9]\\d*)$",
+                    "type": [
+                      "integer",
+                      "string"
+                    ],
+                    "format": "int32"
+                  },
+                  "DefaultDifficultyLevelId": {
+                    "pattern": "^-?(?:0|[1-9]\\d*)$",
+                    "type": [
+                      "integer",
+                      "string"
+                    ],
+                    "format": "int32"
+                  },
+                  "DefaultCognitiveLevelId": {
+                    "pattern": "^-?(?:0|[1-9]\\d*)$",
+                    "type": [
+                      "integer",
+                      "string"
+                    ],
+                    "format": "int32"
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfBulkImportQuestionResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfBulkImportQuestionResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfBulkImportQuestionResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/questions/{id}/attachment": {
+      "post": {
+        "tags": [
+          "Question"
+        ],
+        "summary": "Tải lên tệp đính kèm (ảnh/PDF, tối đa 10 MB) cho câu hỏi → MinIO",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "$ref": "#/components/schemas/IFormFile"
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfObject"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfObject"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfObject"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
     "/api/questions/{id}/verify": {
       "post": {
         "tags": [
@@ -3603,6 +3738,105 @@
         ]
       }
     },
+    "/api/exams/{id}/analytics": {
+      "get": {
+        "tags": [
+          "Exam"
+        ],
+        "summary": "Thống kê phân bổ câu hỏi trong đề thi (Bloom / độ khó / chủ đề)",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfExamAnalyticsResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfExamAnalyticsResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfExamAnalyticsResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/exams/{id}/export": {
+      "get": {
+        "tags": [
+          "Exam"
+        ],
+        "summary": "Xuất đề thi ra PDF / Word, lưu lên MinIO và trả về URL tải về",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfObject"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfObject"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfObject"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
     "/api/exam-generator": {
       "post": {
         "tags": [
@@ -4001,6 +4235,52 @@
         "responses": {
           "200": {
             "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/exam-submissions/{id}/finalize": {
+      "post": {
+        "tags": [
+          "ExamSubmission"
+        ],
+        "summary": "Chốt điểm bài nộp: tổng hợp điểm từng câu và chuyển trạng thái sang Graded",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfExamSubmissionResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfExamSubmissionResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfExamSubmissionResponse"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -6890,6 +7170,60 @@
         },
         "description": "Kết quả sinh lô đề thi."
       },
+      "BulkImportQuestionResponse": {
+        "required": [
+          "successCount",
+          "errorCount",
+          "errors"
+        ],
+        "type": "object",
+        "properties": {
+          "successCount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "errorCount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BulkImportRowError"
+            }
+          }
+        },
+        "description": "Kết quả tổng hợp sau bulk import."
+      },
+      "BulkImportRowError": {
+        "required": [
+          "rowNumber",
+          "message"
+        ],
+        "type": "object",
+        "properties": {
+          "rowNumber": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "description": "Kết quả import từng hàng."
+      },
       "CognitiveLevelRequest": {
         "required": [
           "code",
@@ -7392,6 +7726,79 @@
           }
         },
         "description": "Response DTO cho DifficultyLevel"
+      },
+      "DistributionItem": {
+        "required": [
+          "label",
+          "count",
+          "percentage"
+        ],
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "count": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "percentage": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          }
+        },
+        "description": "Phân bổ theo một tiêu chí (Bloom / Độ khó / Chủ đề)."
+      },
+      "ExamAnalyticsResponse": {
+        "required": [
+          "examId",
+          "totalQuestions",
+          "bloomDistribution",
+          "difficultyDistribution",
+          "topicDistribution"
+        ],
+        "type": "object",
+        "properties": {
+          "examId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "totalQuestions": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "bloomDistribution": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DistributionItem"
+            }
+          },
+          "difficultyDistribution": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DistributionItem"
+            }
+          },
+          "topicDistribution": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DistributionItem"
+            }
+          }
+        },
+        "description": "Response thống kê phân tích đề thi."
       },
       "ExamQuestionRequest": {
         "required": [
@@ -8645,6 +9052,10 @@
         },
         "description": "Response DTO cho GradeLevel"
       },
+      "IFormFile": {
+        "type": "string",
+        "format": "binary"
+      },
       "LoginDto": {
         "required": [
           "userName",
@@ -9179,6 +9590,43 @@
         },
         "description": ""
       },
+      "RequestResponseOfBulkImportQuestionResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "description": "Trạng thái",
+            "$ref": "#/components/schemas/RequestResponseStatus"
+          },
+          "message": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Message"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "Dữ liệu",
+                "$ref": "#/components/schemas/BulkImportQuestionResponse"
+              }
+            ]
+          },
+          "totalRecord": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Tổng số bản ghi",
+            "format": "int64"
+          }
+        },
+        "description": ""
+      },
       "RequestResponseOfCognitiveLevelResponse": {
         "type": "object",
         "properties": {
@@ -9349,6 +9797,43 @@
               {
                 "description": "Dữ liệu",
                 "$ref": "#/components/schemas/DifficultyLevelResponse"
+              }
+            ]
+          },
+          "totalRecord": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Tổng số bản ghi",
+            "format": "int64"
+          }
+        },
+        "description": ""
+      },
+      "RequestResponseOfExamAnalyticsResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "description": "Trạng thái",
+            "$ref": "#/components/schemas/RequestResponseStatus"
+          },
+          "message": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Message"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "Dữ liệu",
+                "$ref": "#/components/schemas/ExamAnalyticsResponse"
               }
             ]
           },
