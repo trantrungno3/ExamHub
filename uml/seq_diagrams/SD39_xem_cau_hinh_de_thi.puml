@@ -1,0 +1,38 @@
+@startuml SD39_xem_cau_hinh_de_thi
+skinparam sequenceArrowThickness 2
+skinparam roundcorner 8
+skinparam maxmessagesize 160
+skinparam sequence {
+    ArrowColor #2E75B6
+    ActorBorderColor #333333
+    LifeLineBorderColor #336699
+    LifeLineBackgroundColor #EEF4FF
+    ParticipantBorderColor #336699
+    ParticipantBackgroundColor #DDEEFF
+    ParticipantFontSize 14
+    ParticipantFontName "DejaVu Sans"
+    ActorBackgroundColor White
+    ActorFontName "DejaVu Sans"
+    ActorFontSize 14
+    NoteBackgroundColor #FFFFCC
+    NoteBorderColor #CCCC00
+}
+skinparam fontname "DejaVu Sans"
+
+actor "Giáo viên" as Teacher
+participant "Giao diện" as FE
+participant "Hệ thống" as SYS
+
+Teacher -> FE : Truy cập trang Quản lý cấu hình đề thi
+FE -> SYS : Yêu cầu danh sách cấu hình
+SYS -> SYS : Truy vấn danh sách cấu hình
+SYS --> FE : Trả về danh sách cấu hình đề thi
+FE --> Teacher : Hiển thị danh sách cấu hình
+
+Teacher -> FE : Chọn cấu hình cần xem chi tiết
+FE -> SYS : Yêu cầu thông tin đầy đủ cấu hình
+SYS -> SYS : Lấy thông tin đầy đủ cấu hình
+SYS --> FE : Trả về chi tiết cấu hình đề thi
+FE --> Teacher : Hiển thị đầy đủ thông tin cấu hình đề thi
+
+@enduml

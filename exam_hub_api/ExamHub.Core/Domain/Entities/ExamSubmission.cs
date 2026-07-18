@@ -4,6 +4,7 @@ using TVT.Core.Models.PostgreSql;
 using TVT.Core.Models.PostgreSql.FieldTables;
 using ExamHub.Core.Domain.Enums;
 using ExamHub.Core.FieldTables;
+using TVT.Core.Models;
 
 namespace ExamHub.Core.Domain.Entities;
 
@@ -12,7 +13,7 @@ namespace ExamHub.Core.Domain.Entities;
 /// </summary>
 [Table(ExamSubmissionTable.TableName)]
 [SqlBuilderProperty(ExamSubmissionTable.TableName)]
-public class ExamSubmission : IModelBaseSql<Guid>
+public class ExamSubmission : ModifyModelBase, IModelBaseSql<Guid>
 {
     /// <summary>Khóa chính (UUID)</summary>
     [Column(CommonFieldTable.Id)]
@@ -59,11 +60,6 @@ public class ExamSubmission : IModelBaseSql<Guid>
     [SqlBuilderProperty(ExamSubmissionTable.Status, Insert = true, Update = true)]
     public SubmissionStatusEnum Status { get; set; } = SubmissionStatusEnum.InProgress;
 
-    /// <summary>Thời điểm tạo bản ghi</summary>
-    [Column(ExamSubmissionTable.CreatedAt)]
-    [SqlBuilderProperty(ExamSubmissionTable.CreatedAt, Insert = true, Update = false)]
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
     // ── Navigation ──────────────────────────────────────────────
     /// <summary>Đề thi</summary>
     public Exam? Exam { get; set; }
@@ -75,26 +71,29 @@ public class ExamSubmission : IModelBaseSql<Guid>
     /// <summary>Tạo object để INSERT</summary>
     public object ToInsertObject() => new
     {
-        id               = Id,
-        exam_id          = ExamId,
-        student_id       = StudentId,
-        started_at       = StartedAt,
-        submitted_at     = SubmittedAt,
+        id = Id,
+        exam_id = ExamId,
+        student_id = StudentId,
+        started_at = StartedAt,
+        submitted_at = SubmittedAt,
         duration_seconds = DurationSeconds,
-        total_score      = TotalScore,
-        is_passed        = IsPassed,
-        status           = Status.ToString().ToLower(),
-        created_at       = CreatedAt
+        total_score = TotalScore,
+        is_passed = IsPassed,
+        status = Status.ToString().ToLower(),
+        created_by = CreatedBy,
+        modified_by = ModifiedBy
     };
 
     /// <summary>Tạo object để UPDATE</summary>
     public object ToUpdateObject() => new
     {
-        id               = Id,
-        submitted_at     = SubmittedAt,
+        id = Id,
+        submitted_at = SubmittedAt,
         duration_seconds = DurationSeconds,
-        total_score      = TotalScore,
-        is_passed        = IsPassed,
-        status           = Status.ToString().ToLower()
+        total_score = TotalScore,
+        is_passed = IsPassed,
+        status = Status.ToString().ToLower(),
+        modified = Modified,
+        modified_by = ModifiedBy,
     };
 }

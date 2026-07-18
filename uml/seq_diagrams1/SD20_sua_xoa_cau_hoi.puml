@@ -1,0 +1,76 @@
+@startuml SD20_sua_xoa_cau_hoi
+skinparam sequenceArrowThickness 2
+skinparam roundcorner 8
+skinparam maxmessagesize 160
+skinparam sequence {
+    ArrowColor #2E75B6
+    ActorBorderColor #333333
+    LifeLineBorderColor #336699
+    LifeLineBackgroundColor #EEF4FF
+    ParticipantBorderColor #336699
+    ParticipantBackgroundColor #DDEEFF
+    ParticipantFontSize 13
+    ParticipantFontName Arial
+    ActorBackgroundColor White
+    ActorFontName Arial
+    ActorFontSize 13
+    NoteBackgroundColor #FFFFCC
+    NoteBorderColor #CCCC00
+}
+skinparam fontname Arial
+
+actor "Giáo viên" as Teacher
+participant "Giao diện" as FE
+participant "Dịch vụ Câu hỏi" as QS
+participant "MinIO" as MinIO
+database "Cơ sở dữ liệu" as DB
+
+Teacher -> FE : Tìm kiếm và chọn câu hỏi cần xử lý
+FE -> QS : GET /api/questions/{id}
+QS -> DB : Lấy chi tiết câu hỏi
+DB --> QS : {nội dung câu hỏi}
+QS --> FE : Chi tiết câu hỏi
+FE --> Teacher : Hiển thị nội dung đầy đủ
+
+alt Sửa câu hỏi
+    Teacher -> FE : Bấm Sửa
+    FE --> Teacher : Hiển thị form chỉnh sửa với dữ liệu hiện tại
+    Teacher -> FE : Cập nhật nội dung, đáp án, phân loại
+
+    opt Thay ảnh minh hoạ
+        Teacher -> FE : Chọn ảnh mới
+        FE -> MinIO : Upload ảnh mới
+        MinIO --> FE : URL ảnh mới
+    end
+
+    Teacher -> FE : Bấm Lưu
+    FE -> QS : PUT /api/questions/{id}\n{updated content}
+    QS -> QS : Kiểm tra tính hợp lệ
+    QS -> DB : UPDATE câu hỏi
+    DB --> QS : OK
+    QS --> FE : 200 OK
+    FE --> Teacher : Thông báo cập nhật thành công
+
+else Xoá câu hỏi
+    Teacher -> FE : Bấm Xoá
+    FE -> QS : GET /api/questions/{id}/usage
+    QS -> DB : Kiểm tra câu hỏi có dùng trong đề thi không
+    DB --> QS : {usageCount}
+
+    alt Câu hỏi đang được sử dụng
+        QS --> FE : {usageCount > 0}
+        FE --> Teacher : Cảnh báo câu hỏi đang dùng trong đề thi
+        Teacher -> FE : Xác nhận xoá bắt buộc
+    else Câu hỏi chưa được sử dụng
+        FE --> Teacher : Hiển thị hộp thoại xác nhận xoá
+        Teacher -> FE : Xác nhận xoá
+    end
+
+    FE -> QS : DELETE /api/questions/{id}
+    QS -> DB : Xoá câu hỏi khỏi ngân hàng
+    DB --> QS : OK
+    QS --> FE : 200 OK
+    FE --> Teacher : Thông báo xoá thành công
+end
+
+@enduml

@@ -1,0 +1,55 @@
+@startuml SD23_chinh_sua_cau_hoi
+skinparam sequenceArrowThickness 2
+skinparam roundcorner 8
+skinparam maxmessagesize 160
+skinparam sequence {
+    ArrowColor #2E75B6
+    ActorBorderColor #333333
+    LifeLineBorderColor #336699
+    LifeLineBackgroundColor #EEF4FF
+    ParticipantBorderColor #336699
+    ParticipantBackgroundColor #DDEEFF
+    ParticipantFontSize 14
+    ParticipantFontName "DejaVu Sans"
+    ActorBackgroundColor White
+    ActorFontName "DejaVu Sans"
+    ActorFontSize 14
+    NoteBackgroundColor #FFFFCC
+    NoteBorderColor #CCCC00
+}
+skinparam fontname "DejaVu Sans"
+
+actor "Giáo viên" as Teacher
+participant "Giao diện" as FE
+participant "Hệ thống" as SYS
+
+Teacher -> FE : Chọn câu hỏi cần chỉnh sửa và bấm Sửa
+FE -> SYS : Yêu cầu thông tin câu hỏi hiện tại
+SYS -> SYS : Lấy thông tin câu hỏi hiện tại
+SYS --> FE : Trả về dữ liệu câu hỏi
+FE --> Teacher : Hiển thị form chỉnh sửa với dữ liệu hiện tại
+
+Teacher -> FE : Cập nhật nội dung, đáp án, phân loại
+
+opt Thay ảnh minh hoạ
+    Teacher -> FE : Chọn ảnh mới
+    FE -> SYS : Tải ảnh mới lên
+    SYS --> FE : Trả về đường dẫn ảnh mới
+    FE --> Teacher : Hiển thị ảnh mới xem trước
+end
+
+Teacher -> FE : Bấm Lưu
+
+FE -> SYS : Yêu cầu cập nhật câu hỏi
+SYS -> SYS : Kiểm tra tính hợp lệ dữ liệu
+
+alt Dữ liệu hợp lệ
+    SYS -> SYS : Cập nhật câu hỏi
+    SYS --> FE : Trả về kết quả cập nhật thành công
+    FE --> Teacher : Thông báo cập nhật câu hỏi thành công
+else Dữ liệu không hợp lệ
+    SYS --> FE : Trả về chi tiết lỗi
+    FE --> Teacher : Hiển thị thông báo lỗi
+end
+
+@enduml

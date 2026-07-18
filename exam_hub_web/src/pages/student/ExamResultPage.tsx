@@ -47,7 +47,7 @@ export default function ExamResultPage() {
                     ))}
                 </div>
 
-                <Button type="primary" block className="!mt-6" onClick={() => navigate('/login')}>
+                <Button type="primary" block className="!mt-6" onClick={() => navigate('/student/exams')}>
                     Hoàn tất
                 </Button>
             </div>

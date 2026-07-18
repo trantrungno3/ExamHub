@@ -65,7 +65,7 @@ public record ExamRequest(
 )
 {
     /// <summary>Map sang entity</summary>
-    public Domain.Entities.Exam ToEntity(Guid createdBy) => new()
+    public Domain.Entities.Exam ToEntity(string createdBy) => new()
     {
         ExamTemplateId   = ExamTemplateId,
         GradeLevelId     = GradeLevelId,
@@ -111,8 +111,8 @@ public record ExamResponse(
     Guid? ParentExamId,
     short? VariantIndex,
     Guid? BatchId,
-    long CreatedAt,
-    long UpdatedAt,
+    long Created,
+    long Modified,
     IReadOnlyList<ExamQuestionResponse>? Questions
 )
 {
@@ -127,8 +127,8 @@ public record ExamResponse(
             e.Status.ToString(),
             e.SchoolYear, e.Semester, e.ExamDate, e.ClassName,
             e.ParentExamId, e.VariantIndex, e.BatchId,
-            e.CreatedAt.ToTimestamp(),
-            e.UpdatedAt.ToTimestamp(),
+            e.Created.ToTimestamp(),
+            e.Modified.ToTimestamp(),
             includeQuestions ? e.Questions.Select(ExamQuestionResponse.FromEntity).ToList() : null
         );
 }

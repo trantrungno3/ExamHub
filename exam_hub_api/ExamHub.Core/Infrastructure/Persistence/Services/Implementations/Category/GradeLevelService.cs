@@ -29,8 +29,6 @@ public class GradeLevelService(IGradeLevelRepository repo, IRedisService cache)
 
     public async Task<GradeLevel> CreateAsync(GradeLevel entity, CancellationToken ct = default)
     {
-        entity.CreatedAt = DateTime.UtcNow;
-        entity.UpdatedAt = DateTime.UtcNow;
         var result = await repo.AddAsync(entity, ct);
         await InvalidateCacheAsync(ct);
         return result;
@@ -38,7 +36,7 @@ public class GradeLevelService(IGradeLevelRepository repo, IRedisService cache)
 
     public async Task<GradeLevel> UpdateAsync(GradeLevel entity, CancellationToken ct = default)
     {
-        entity.UpdatedAt = DateTime.UtcNow;
+        entity.Modified = DateTime.UtcNow;
         await repo.UpdateAsync(entity, ct);
         await InvalidateCacheAsync(ct);
         return entity;

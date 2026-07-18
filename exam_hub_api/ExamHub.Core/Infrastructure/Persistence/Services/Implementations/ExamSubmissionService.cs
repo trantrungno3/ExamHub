@@ -45,7 +45,7 @@ public class ExamSubmissionService : IExamSubmissionService
         submission.Id          = Guid.NewGuid();
         submission.SubmittedAt = DateTime.UtcNow;
         submission.Status      = SubmissionStatusEnum.Submitted;
-        submission.CreatedAt   = DateTime.UtcNow;
+        submission.Created   = DateTime.UtcNow;
 
         await _submissionRepo.AddAsync(submission, ct);
 

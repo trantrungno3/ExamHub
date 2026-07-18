@@ -39,8 +39,8 @@ public class ExamGeneratorService(
             DurationMinutes = request.DurationMinutes,
             TotalScore      = totalScore,
             Status          = ExamStatusEnum.Draft,
-            CreatedAt       = now,
-            UpdatedAt       = now
+            Created       = now,
+            Modified       = now
         };
 
         var questions = selections.Select((s, i) =>
@@ -106,8 +106,8 @@ public class ExamGeneratorService(
                 VariantIndex    = (short)i,
                 ParentExamId    = i == 0 ? null : firstExamId,
                 Status          = ExamStatusEnum.Draft,
-                CreatedAt       = now,
-                UpdatedAt       = now
+                Created       = now,
+                Modified       = now
             });
 
             var variantSelections = basePool.ToList();

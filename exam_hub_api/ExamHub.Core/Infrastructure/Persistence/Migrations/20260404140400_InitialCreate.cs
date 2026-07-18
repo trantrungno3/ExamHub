@@ -95,7 +95,6 @@ namespace ExamHub.Core.Persistence.Migrations
                     id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
                     grade_level_id = table.Column<int>(type: "integer", nullable: false),
                     subject_id = table.Column<int>(type: "integer", nullable: false),
-                    created_by = table.Column<Guid>(type: "uuid", nullable: false),
                     title = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
                     description = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
                     duration_minutes = table.Column<int>(type: "integer", nullable: false, defaultValue: 45),
@@ -106,8 +105,6 @@ namespace ExamHub.Core.Persistence.Migrations
                     prevent_duplicate = table.Column<bool>(type: "boolean", nullable: false, defaultValue: true),
                     instructions = table.Column<string>(type: "text", nullable: true),
                     is_active = table.Column<bool>(type: "boolean", nullable: false, defaultValue: true),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()"),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()")
                 },
                 constraints: table =>
                 {
@@ -187,7 +184,6 @@ namespace ExamHub.Core.Persistence.Migrations
                     exam_template_id = table.Column<Guid>(type: "uuid", nullable: true),
                     grade_level_id = table.Column<int>(type: "integer", nullable: false),
                     subject_id = table.Column<int>(type: "integer", nullable: false),
-                    created_by = table.Column<Guid>(type: "uuid", nullable: false),
                     title = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
                     exam_code = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: true),
                     duration_minutes = table.Column<int>(type: "integer", nullable: false, defaultValue: 45),
@@ -282,7 +278,6 @@ namespace ExamHub.Core.Persistence.Migrations
                     topic_id = table.Column<int>(type: "integer", nullable: false),
                     question_type_id = table.Column<int>(type: "integer", nullable: false),
                     difficulty_level_id = table.Column<int>(type: "integer", nullable: false),
-                    created_by = table.Column<Guid>(type: "uuid", nullable: false),
                     content = table.Column<string>(type: "text", nullable: false),
                     content_plain = table.Column<string>(type: "text", nullable: true),
                     explanation = table.Column<string>(type: "text", nullable: true),

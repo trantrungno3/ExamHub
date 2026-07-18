@@ -1,0 +1,83 @@
+@startuml AD03_quan_ly_truong_hoc
+skinparam defaultFontName "DejaVu Sans"
+skinparam activity {
+    BackgroundColor #DDEEFF
+    BorderColor #336699
+    FontName "DejaVu Sans"
+    FontSize 16
+    DiamondBackgroundColor #FFF4CE
+    DiamondBorderColor #CC8800
+    DiamondFontName "DejaVu Sans"
+    DiamondFontSize 15
+    StartColor #1F3864
+    EndColor #1F3864
+    BarColor #336699
+}
+skinparam ArrowColor #2E75B6
+skinparam ArrowFontName "DejaVu Sans"
+skinparam ArrowFontSize 15
+skinparam noteBackgroundColor #FFFFCC
+skinparam noteBorderColor #CCCC00
+skinparam noteFontName "DejaVu Sans"
+skinparam swimlaneBorderColor #336699
+skinparam swimlaneFontName "DejaVu Sans"
+skinparam swimlaneFontStyle bold
+skinparam wrapWidth 250
+
+|Quản trị viên|
+start
+:Truy cập mục Quản lý trường;
+
+|Hệ thống|
+:Hiển thị danh sách trường học hiện có;
+
+|Quản trị viên|
+:Chọn thao tác;
+
+if (Thêm mới?) then (Có)
+    |Hệ thống|
+    :Hiển thị form thêm trường;
+    |Quản trị viên|
+    :Điền tên trường, mã trường, địa chỉ, liên hệ;
+    :Bấm Lưu;
+    |Hệ thống|
+    :Kiểm tra tính hợp lệ dữ liệu;
+    if (Dữ liệu hợp lệ?) then (Không)
+        :Hiển thị thông báo lỗi;
+        |Quản trị viên|
+        :Chỉnh sửa lại và bấm Lưu;
+        detach
+    else (Có)
+        |Hệ thống|
+        :Lưu vào cơ sở dữ liệu;
+        :Hiển thị thông báo thành công;
+        :Cập nhật danh sách trường;
+    endif
+else (Không)
+    |Quản trị viên|
+    if (Chỉnh sửa?) then (Có)
+        |Quản trị viên|
+        :Chọn trường cần sửa;
+        |Hệ thống|
+        :Hiển thị form chỉnh sửa với dữ liệu hiện tại;
+        |Quản trị viên|
+        :Cập nhật thông tin và bấm Lưu;
+        |Hệ thống|
+        :Kiểm tra tính hợp lệ dữ liệu;
+        if (Dữ liệu hợp lệ?) then (Không)
+            :Hiển thị thông báo lỗi;
+            |Quản trị viên|
+            :Chỉnh sửa lại;
+            detach
+        else (Có)
+            |Hệ thống|
+            :Lưu vào cơ sở dữ liệu;
+            :Hiển thị thông báo thành công;
+        endif
+    else (Xem chi tiết)
+        |Hệ thống|
+        :Hiển thị chi tiết trường học;
+    endif
+endif
+stop
+@enduml

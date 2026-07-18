@@ -34,4 +34,14 @@ public interface IAuthService
     /// <param name="userName"></param>
     /// <returns></returns>
     Task<RequestResponse<UserInfo>> GetUserInfo(string userName);
+
+    /// <summary>
+    ///     Cập nhật thông tin cá nhân của người dùng đang đăng nhập
+    /// </summary>
+    Task<RequestResponse<UserInfo>> UpdateProfile(string userName, UpdateProfileDto dto);
+
+    /// <summary>
+    ///     Đổi mật khẩu của người dùng đang đăng nhập
+    /// </summary>
+    Task<RequestResponse<bool>> ChangePassword(string userName, ChangePasswordDto dto);
 }

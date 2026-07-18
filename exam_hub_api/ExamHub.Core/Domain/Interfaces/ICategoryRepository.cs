@@ -2,7 +2,7 @@ namespace ExamHub.Core.Domain.Interfaces;
 
 /// <summary>
 /// Category repository interface — CRUD đầy đủ cho các entity dạng danh mục
-/// (có Name, Code, IsActive, CreatedAt, UpdatedAt)
+/// (có Name, Code, IsActive, Created, Modified)
 /// </summary>
 /// <typeparam name="TEntity">Kiểu entity danh mục</typeparam>
 /// <typeparam name="TKey">Kiểu khóa chính</typeparam>

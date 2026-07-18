@@ -35,8 +35,8 @@ public class TopicService(ITopicRepository repo, IRedisService cache)
 
     public async Task<Topic> CreateAsync(Topic entity, CancellationToken ct = default)
     {
-        entity.CreatedAt = DateTime.UtcNow;
-        entity.UpdatedAt = DateTime.UtcNow;
+        entity.Created = DateTime.UtcNow;
+        entity.Modified = DateTime.UtcNow;
         var result = await repo.AddAsync(entity, ct);
         await InvalidateCacheAsync(ct);
         return result;
@@ -44,7 +44,7 @@ public class TopicService(ITopicRepository repo, IRedisService cache)
 
     public async Task<Topic> UpdateAsync(Topic entity, CancellationToken ct = default)
     {
-        entity.UpdatedAt = DateTime.UtcNow;
+        entity.Created = DateTime.UtcNow;
         await repo.UpdateAsync(entity, ct);
         await InvalidateCacheAsync(ct);
         return entity;

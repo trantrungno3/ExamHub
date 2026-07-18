@@ -1,0 +1,46 @@
+@startuml SD38_xoa_cau_hinh_de_thi
+skinparam sequenceArrowThickness 2
+skinparam roundcorner 8
+skinparam maxmessagesize 160
+skinparam sequence {
+    ArrowColor #2E75B6
+    ActorBorderColor #333333
+    LifeLineBorderColor #336699
+    LifeLineBackgroundColor #EEF4FF
+    ParticipantBorderColor #336699
+    ParticipantBackgroundColor #DDEEFF
+    ParticipantFontSize 14
+    ParticipantFontName "DejaVu Sans"
+    ActorBackgroundColor White
+    ActorFontName "DejaVu Sans"
+    ActorFontSize 14
+    NoteBackgroundColor #FFFFCC
+    NoteBorderColor #CCCC00
+}
+skinparam fontname "DejaVu Sans"
+
+actor "Giáo viên" as Teacher
+participant "Giao diện" as FE
+participant "Hệ thống" as SYS
+
+Teacher -> FE : Chọn cấu hình đề thi cần xoá
+FE --> Teacher : Hiển thị hộp thoại xác nhận xoá
+
+alt Giáo viên xác nhận
+    Teacher -> FE : Xác nhận xoá
+    FE -> SYS : Yêu cầu xoá cấu hình đề thi
+    SYS -> SYS : Kiểm tra cấu hình có đang được dùng trong đề thi không
+
+    alt Cấu hình đang được sử dụng
+        SYS --> FE : Trả về cảnh báo đang được sử dụng
+        FE --> Teacher : Cảnh báo cấu hình đang được dùng trong đề thi đã sinh
+    else Cấu hình chưa được sử dụng
+        SYS -> SYS : Xoá cấu hình đề thi
+        SYS --> FE : Trả về kết quả xoá thành công
+        FE --> Teacher : Thông báo xoá thành công
+    end
+else Giáo viên huỷ
+    FE --> Teacher : Đóng hộp thoại, giữ nguyên cấu hình
+end
+
+@enduml

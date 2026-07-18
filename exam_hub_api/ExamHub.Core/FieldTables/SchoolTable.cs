@@ -25,10 +25,4 @@ public readonly struct SchoolTable
 
     /// <summary>Kích hoạt</summary>
     public const string IsActive = "is_active";
-
-    /// <summary>Ngày tạo</summary>
-    public const string CreatedAt = "created_at";
-
-    /// <summary>Ngày cập nhật</summary>
-    public const string UpdatedAt = "updated_at";
 }

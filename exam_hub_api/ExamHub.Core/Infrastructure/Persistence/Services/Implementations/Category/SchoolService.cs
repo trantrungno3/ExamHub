@@ -32,14 +32,14 @@ public class SchoolService : ISchoolService
 
     public async Task<School> CreateAsync(School entity, CancellationToken ct = default)
     {
-        entity.CreatedAt = DateTimeOffset.UtcNow;
-        entity.UpdatedAt = DateTimeOffset.UtcNow;
+        entity.Created = DateTime.UtcNow;
+        entity.Modified = DateTime.UtcNow;
         return await _repo.AddAsync(entity, ct);
     }
 
     public async Task<School> UpdateAsync(School entity, CancellationToken ct = default)
     {
-        entity.UpdatedAt = DateTimeOffset.UtcNow;
+        entity.Modified = DateTime.UtcNow;
         await _repo.UpdateAsync(entity, ct);
         return entity;
     }

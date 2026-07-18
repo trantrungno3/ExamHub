@@ -1,0 +1,59 @@
+@startuml SD05_tao_mau_de_thi
+skinparam sequenceArrowThickness 2
+skinparam roundcorner 8
+skinparam maxmessagesize 160
+skinparam sequence {
+    ArrowColor #2E75B6
+    ActorBorderColor #333333
+    LifeLineBorderColor #336699
+    LifeLineBackgroundColor #EEF4FF
+    ParticipantBorderColor #336699
+    ParticipantBackgroundColor #DDEEFF
+    ParticipantFontSize 13
+    ParticipantFontName Arial
+    ActorBackgroundColor White
+    ActorFontName Arial
+    ActorFontSize 13
+    NoteBackgroundColor #FFFFCC
+    NoteBorderColor #CCCC00
+}
+skinparam fontname Arial
+
+actor "Giáo viên" as Teacher
+participant "Giao diện" as FE
+participant "Dịch vụ Mẫu đề" as TS
+participant "Dịch vụ Cấu hình" as CS
+database "Cơ sở dữ liệu" as DB
+
+Teacher -> FE : Chọn Tạo mẫu đề thi mới
+FE -> CS : Lấy danh mục môn học, loại câu hỏi
+CS -> DB : Truy vấn danh mục hệ thống
+DB --> CS : [{môn học}, {loại câu hỏi}]
+CS --> FE : Danh mục hệ thống
+FE --> Teacher : Hiển thị form tạo mẫu đề
+
+Teacher -> FE : Nhập tên mẫu, môn học, thời gian, tổng số câu
+
+loop Thêm phần thi (có thể nhiều phần)
+    Teacher -> FE : Thêm phần thi mới
+    Teacher -> FE : Cấu hình phần: tên, số câu, loại câu hỏi
+    Teacher -> FE : Cài tỉ lệ độ khó (dễ / trung bình / khó %)
+    opt Cài bộ lọc Bloom
+        Teacher -> FE : Chọn cấp độ Bloom cho phần thi này
+    end
+end
+
+Teacher -> FE : Bấm Lưu mẫu đề
+FE -> FE : Kiểm tra: tổng số câu khớp, tỉ lệ = 100%
+
+alt Kiểm tra không hợp lệ
+    FE --> Teacher : Hiển thị lỗi cấu hình
+else Hợp lệ
+    FE -> TS : POST /api/exam-templates\n{name, subjectId, duration, sections: [...]}
+    TS -> DB : Lưu mẫu đề + các phần thi
+    DB --> TS : templateId
+    TS --> FE : 201 Created + {templateId}
+    FE --> Teacher : Thông báo tạo mẫu đề thành công
+end
+
+@enduml

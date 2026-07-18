@@ -13,8 +13,15 @@ import ExamListPage from '../pages/exams/ExamListPage'
 import ExamCoverPage from '../pages/student/ExamCoverPage'
 import ExamTakingPage from '../pages/student/ExamTakingPage'
 import ExamResultPage from '../pages/student/ExamResultPage'
+import StudentExamListPage from '../pages/student/StudentExamListPage'
+import StudentLayout from '../layouts/StudentLayout'
+import AppProfilePage from '../pages/profile/AppProfilePage'
+import StudentProfilePage from '../pages/profile/StudentProfilePage'
 import { Placeholder } from '../components/Placeholder'
 import UserPage from '../pages/user/UserPage'
+import SchoolListPage from '../pages/school/SchoolListPage'
+import SchoolDetailPage from '../pages/school/SchoolDetailPage'
+import CohortDetailPage from '../pages/school/CohortDetailPage'
 import { ProtectedRoute } from './ProtectedRoute'
 import { ROUTES } from './paths'
 
@@ -25,7 +32,16 @@ export const router = createBrowserRouter([
     { path: ROUTES.LOGIN,    element: <LoginPage /> },
     { path: ROUTES.REGISTER, element: <RegisterPage /> },
 
-    /* ── Student pages (no sidebar, no auth guard) ── */
+    /* ── Student portal (with header layout) ── */
+    {
+        element: <StudentLayout />,
+        children: [
+            { path: ROUTES.STUDENT_EXAMS,   element: <StudentExamListPage /> },
+            { path: ROUTES.STUDENT_PROFILE, element: <StudentProfilePage /> },
+        ],
+    },
+
+    /* ── Student exam-taking flow (full screen, no header) ── */
     { path: ROUTES.STUDENT_EXAM,      element: <ExamCoverPage /> },
     { path: ROUTES.STUDENT_EXAM_TAKE, element: <ExamTakingPage /> },
     { path: '/student/exam/result',   element: <ExamResultPage /> },
@@ -52,6 +68,10 @@ export const router = createBrowserRouter([
                     { path: 'generate',                         element: <GeneratePage /> },
                     { path: 'exam-list',                        element: <ExamListPage /> },
                     { path: 'users',                            element: <UserPage /> },
+                    { path: 'schools',      element: <SchoolListPage /> },
+                    { path: 'schools/:id',  element: <SchoolDetailPage /> },
+                    { path: 'cohorts/:id',  element: <CohortDetailPage /> },
+                    { path: 'profile',      element: <AppProfilePage /> },
                 ],
             },
         ],

@@ -1,0 +1,47 @@
+@startuml SD10_xoa_khoa_hoc
+skinparam sequenceArrowThickness 2
+skinparam roundcorner 8
+skinparam maxmessagesize 160
+skinparam sequence {
+    ArrowColor #2E75B6
+    ActorBorderColor #333333
+    LifeLineBorderColor #336699
+    LifeLineBackgroundColor #EEF4FF
+    ParticipantBorderColor #336699
+    ParticipantBackgroundColor #DDEEFF
+    ParticipantFontSize 14
+    ParticipantFontName "DejaVu Sans"
+    ActorBackgroundColor White
+    ActorFontName "DejaVu Sans"
+    ActorFontSize 14
+    NoteBackgroundColor #FFFFCC
+    NoteBorderColor #CCCC00
+}
+skinparam fontname "DejaVu Sans"
+
+actor "Quản trị viên" as Admin
+participant "Giao diện" as FE
+participant "Hệ thống" as SYS
+
+Admin -> FE : Chọn khoá học cần xoá
+FE --> Admin : Hiển thị hộp thoại xác nhận xoá
+
+alt Quản trị viên xác nhận
+    Admin -> FE : Xác nhận xoá
+    FE -> SYS : Yêu cầu xoá khoá học
+    SYS -> SYS : Kiểm tra khoá học có lớp đang hoạt động
+
+    alt Còn lớp đang hoạt động
+        SYS --> FE : Trả về cảnh báo còn lớp đang hoạt động
+        FE --> Admin : Cảnh báo khoá học còn lớp học đang hoạt động
+    else Không còn lớp hoạt động
+        SYS -> SYS : Xoá khoá học
+        SYS --> FE : Trả về kết quả xoá thành công
+        FE --> Admin : Thông báo xoá thành công
+        FE --> Admin : Cập nhật danh sách khoá học
+    end
+else Quản trị viên huỷ
+    FE --> Admin : Đóng hộp thoại, giữ nguyên danh sách
+end
+
+@enduml

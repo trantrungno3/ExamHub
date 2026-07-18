@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using TVT.Core.Attributes;
+using TVT.Core.Models;
 using TVT.Core.Models.PostgreSql;
 using TVT.Core.Models.PostgreSql.FieldTables;
 using ExamHub.Core.FieldTables;
@@ -11,7 +12,7 @@ namespace ExamHub.Core.Domain.Entities;
 /// </summary>
 [Table(GradeLevelTable.TableName)]
 [SqlBuilderProperty(GradeLevelTable.TableName)]
-public class GradeLevel : IModelBaseSql<int>
+public class GradeLevel : ModifyModelBase, IModelBaseSql<int>
 {
     /// <summary>Khóa chính (SERIAL - tự động tăng)</summary>
     [Column(CommonFieldTable.Id)]
@@ -38,16 +39,6 @@ public class GradeLevel : IModelBaseSql<int>
     [SqlBuilderProperty(GradeLevelTable.IsActive, Insert = true, Update = true)]
     public bool IsActive { get; set; } = true;
 
-    /// <summary>Thời điểm tạo</summary>
-    [Column(GradeLevelTable.CreatedAt)]
-    [SqlBuilderProperty(GradeLevelTable.CreatedAt, Insert = true, Update = false)]
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
-    /// <summary>Thời điểm cập nhật gần nhất</summary>
-    [Column(GradeLevelTable.UpdatedAt)]
-    [SqlBuilderProperty(GradeLevelTable.UpdatedAt, Insert = true, Update = true)]
-    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
-
     // ── Navigation ──────────────────────────────────────────────
     /// <summary>Danh sách môn học thuộc lớp này</summary>
     public List<Subject> Subjects { get; set; } = [];
@@ -56,22 +47,19 @@ public class GradeLevel : IModelBaseSql<int>
     /// <summary>Tạo object để INSERT</summary>
     public object ToInsertObject() => new
     {
-        name        = Name,
+        name         = Name,
         grade_number = GradeNumber,
-        description = Description,
-        is_active   = IsActive,
-        created_at  = CreatedAt,
-        updated_at  = UpdatedAt
+        description  = Description,
+        is_active    = IsActive
     };
 
     /// <summary>Tạo object để UPDATE</summary>
     public object ToUpdateObject() => new
     {
-        id          = Id,
-        name        = Name,
+        id           = Id,
+        name         = Name,
         grade_number = GradeNumber,
-        description = Description,
-        is_active   = IsActive,
-        updated_at  = DateTime.UtcNow
+        description  = Description,
+        is_active    = IsActive
     };
 }

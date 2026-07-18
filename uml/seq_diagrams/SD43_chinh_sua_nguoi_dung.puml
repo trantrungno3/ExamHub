@@ -1,0 +1,41 @@
+@startuml SD43_chinh_sua_nguoi_dung
+skinparam sequenceArrowThickness 2
+skinparam roundcorner 8
+skinparam maxmessagesize 160
+skinparam sequence {
+    ArrowColor #2E75B6
+    ActorBorderColor #333333
+    LifeLineBorderColor #336699
+    LifeLineBackgroundColor #EEF4FF
+    ParticipantBorderColor #336699
+    ParticipantBackgroundColor #DDEEFF
+    ParticipantFontSize 14
+    ParticipantFontName "DejaVu Sans"
+    ActorBackgroundColor White
+    ActorFontName "DejaVu Sans"
+    ActorFontSize 14
+    NoteBackgroundColor #FFFFCC
+    NoteBorderColor #CCCC00
+}
+skinparam fontname "DejaVu Sans"
+
+actor "Quản trị viên" as Admin
+participant "Giao diện" as FE
+participant "Hệ thống" as SYS
+
+Admin -> FE : Chọn người dùng cần chỉnh sửa và bấm Sửa
+FE -> SYS : Yêu cầu thông tin người dùng
+SYS -> SYS : Lấy thông tin người dùng
+SYS --> FE : Trả về dữ liệu người dùng hiện tại
+FE --> Admin : Hiển thị form chỉnh sửa với dữ liệu hiện tại
+
+Admin -> FE : Cập nhật họ tên, vai trò, trạng thái tài khoản
+Admin -> FE : Bấm Lưu
+
+FE -> SYS : Yêu cầu cập nhật thông tin người dùng
+SYS -> SYS : Kiểm tra tính hợp lệ dữ liệu
+SYS -> SYS : Cập nhật thông tin người dùng
+SYS --> FE : Trả về kết quả cập nhật thành công
+FE --> Admin : Thông báo cập nhật thông tin người dùng thành công
+
+@enduml

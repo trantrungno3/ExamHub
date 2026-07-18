@@ -15,13 +15,13 @@ public record CohortClassResponse(
     string SchoolYear,
     short YearIndex,
     Guid? HomeroomTeacherId,
-    long CreatedAt
+    long Created
 )
 {
     /// <summary>Chuyển từ entity sang response DTO</summary>
     public static CohortClassResponse FromEntity(CohortClass e) =>
         new(e.Id, e.CohortId, e.GradeLevelId, e.ClassName, e.SchoolYear, e.YearIndex, e.HomeroomTeacherId,
-            e.CreatedAt.UtcDateTime.ToTimestamp());
+            e.Created.ToTimestamp());
 }
 
 /// <summary>Request DTO để cập nhật giáo viên chủ nhiệm</summary>

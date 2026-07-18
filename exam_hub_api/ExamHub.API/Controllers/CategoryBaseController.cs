@@ -12,10 +12,9 @@ namespace ExamHub.API.Controllers;
 /// <typeparam name="TKey">Kiểu khóa chính</typeparam>
 /// <typeparam name="TRequest">Kiểu DTO request (create/update)</typeparam>
 /// <typeparam name="TResponse">Kiểu DTO response</typeparam>
-[Authorize]
 [ApiController]
 public abstract class CategoryBaseController<TEntity, TKey, TRequest, TResponse>(
-    ICategoryService<TEntity, TKey> service) : ControllerBase
+    ICategoryService<TEntity, TKey> service) : AuthorizeControllerBase
     where TEntity : class
 {
     /// <summary>Map request DTO → entity (dùng cho Create)</summary>

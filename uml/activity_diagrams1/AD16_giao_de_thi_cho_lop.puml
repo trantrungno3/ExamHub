@@ -1,0 +1,62 @@
+@startuml AD16_giao_de_thi_cho_lop
+skinparam defaultFontName "DejaVu Sans"
+skinparam activity {
+    BackgroundColor #DDEEFF
+    BorderColor #336699
+    FontName "DejaVu Sans"
+    FontSize 16
+    DiamondBackgroundColor #FFF4CE
+    DiamondBorderColor #CC8800
+    DiamondFontName "DejaVu Sans"
+    DiamondFontSize 15
+    StartColor #1F3864
+    EndColor #1F3864
+    BarColor #336699
+}
+skinparam ArrowColor #2E75B6
+skinparam ArrowFontName "DejaVu Sans"
+skinparam ArrowFontSize 15
+skinparam noteBackgroundColor #FFFFCC
+skinparam noteBorderColor #CCCC00
+skinparam noteFontName "DejaVu Sans"
+skinparam swimlaneBorderColor #336699
+skinparam swimlaneFontName "DejaVu Sans"
+skinparam swimlaneFontStyle bold
+skinparam wrapWidth 250
+
+|Giáo viên|
+start
+:Chọn đề thi và bấm Giao đề cho lớp;
+
+|Hệ thống|
+:Hiển thị form giao đề;
+
+|Giáo viên|
+if (Muốn xem trước trước khi giao?) then (Có)
+    :Bấm Xem trước đề thi;
+    |Hệ thống|
+    :Hiển thị nội dung đề thi;
+    |Giáo viên|
+else (Không)
+endif
+
+:Chọn lớp học đích;
+:Đặt thời gian mở bài, đóng bài, thời gian làm bài;
+:Bấm Xác nhận giao đề;
+
+|Hệ thống|
+:Kiểm tra tính hợp lệ: thời gian, lớp tồn tại, Giáo viên có quyền;
+if (Hợp lệ?) then (Không)
+    :Hiển thị thông báo lỗi;
+    |Giáo viên|
+    :Chỉnh sửa lại;
+    detach
+else (Có)
+    |Hệ thống|
+    :Lưu thông tin giao đề vào cơ sở dữ liệu;
+    :Lấy danh sách học sinh trong lớp;
+    :Gửi thông báo đến toàn bộ học sinh trong lớp;
+    :Hiển thị xác nhận giao đề thành công;
+endif
+stop
+@enduml

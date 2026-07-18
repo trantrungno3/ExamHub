@@ -1,0 +1,63 @@
+@startuml AD21_duyet_cau_hoi
+skinparam defaultFontName "DejaVu Sans"
+skinparam activity {
+    BackgroundColor #DDEEFF
+    BorderColor #336699
+    FontName "DejaVu Sans"
+    FontSize 16
+    DiamondBackgroundColor #FFF4CE
+    DiamondBorderColor #CC8800
+    DiamondFontName "DejaVu Sans"
+    DiamondFontSize 15
+    StartColor #1F3864
+    EndColor #1F3864
+    BarColor #336699
+}
+skinparam ArrowColor #2E75B6
+skinparam ArrowFontName "DejaVu Sans"
+skinparam ArrowFontSize 15
+skinparam noteBackgroundColor #FFFFCC
+skinparam noteBorderColor #CCCC00
+skinparam noteFontName "DejaVu Sans"
+skinparam swimlaneBorderColor #336699
+skinparam swimlaneFontName "DejaVu Sans"
+skinparam swimlaneFontStyle bold
+skinparam wrapWidth 150
+
+|Quản trị viên / Giáo viên|
+start
+:Truy cập mục Duyệt câu hỏi;
+
+|Hệ thống|
+:Hiển thị danh sách câu hỏi đang chờ duyệt;
+
+|Quản trị viên / Giáo viên|
+:Chọn câu hỏi để xem xét;
+
+|Hệ thống|
+:Hiển thị nội dung câu hỏi, đáp án, Bloom, độ khó;
+
+|Quản trị viên / Giáo viên|
+:Xem xét nội dung câu hỏi;
+if (Phê duyệt?) then (Có)
+    |Hệ thống|
+    :Cập nhật trạng thái = Đã duyệt;
+    :Gửi thông báo đến người tạo;
+    :Hiển thị thông báo phê duyệt thành công;
+else (Từ chối)
+    |Quản trị viên / Giáo viên|
+    :Nhập lý do từ chối;
+    |Hệ thống|
+    :Cập nhật trạng thái = Từ chối kèm lý do;
+    :Gửi thông báo từ chối đến người tạo;
+    :Hiển thị thông báo từ chối thành công;
+endif
+
+|Quản trị viên / Giáo viên|
+if (Tiếp tục duyệt?) then (Có)
+    :Chọn câu hỏi tiếp theo;
+    detach
+else (Không)
+    stop
+endif
+@enduml

@@ -1,0 +1,63 @@
+@startuml SD33_hoc_sinh_lam_bai_thi
+skinparam sequenceArrowThickness 2
+skinparam roundcorner 8
+skinparam maxmessagesize 160
+skinparam sequence {
+    ArrowColor #2E75B6
+    ActorBorderColor #333333
+    LifeLineBorderColor #336699
+    LifeLineBackgroundColor #EEF4FF
+    ParticipantBorderColor #336699
+    ParticipantBackgroundColor #DDEEFF
+    ParticipantFontSize 14
+    ParticipantFontName "DejaVu Sans"
+    ActorBackgroundColor White
+    ActorFontName "DejaVu Sans"
+    ActorFontSize 14
+    NoteBackgroundColor #FFFFCC
+    NoteBorderColor #CCCC00
+}
+skinparam fontname "DejaVu Sans"
+
+actor "Học sinh" as Student
+participant "Giao diện" as FE
+participant "Hệ thống" as SYS
+
+Student -> FE : Đăng nhập và vào mục Đề thi của tôi
+FE -> SYS : Yêu cầu danh sách đề thi được giao
+SYS -> SYS : Lấy danh sách đề thi được giao cho học sinh
+SYS --> FE : Trả về danh sách đề thi và trạng thái
+FE --> Student : Hiển thị danh sách đề thi
+
+Student -> FE : Chọn đề thi và bấm Bắt đầu làm bài
+FE -> SYS : Yêu cầu bắt đầu làm bài
+SYS -> SYS : Kiểm tra điều kiện\n(đang trong thời gian mở, chưa làm hoặc được phép làm lại)
+
+alt Không đủ điều kiện
+    SYS --> FE : Trả về lý do không thể làm bài
+    FE --> Student : Thông báo không thể làm bài
+else Đủ điều kiện
+    SYS -> SYS : Tạo bài làm mới với trạng thái Đang làm
+    SYS --> FE : Trả về nội dung đề thi và thời gian làm bài
+    FE --> Student : Hiển thị giao diện làm bài và đồng hồ đếm ngược
+
+    loop Học sinh trả lời từng câu
+        Student -> FE : Chọn / nhập đáp án câu hỏi
+        FE -> SYS : Tự động lưu tạm đáp án định kỳ (30 giây)
+        SYS -> SYS : Cập nhật đáp án bài làm
+    end
+
+    alt Hết giờ
+        FE -> SYS : Tự động nộp bài khi đồng hồ về 0
+    else Nộp chủ động
+        Student -> FE : Bấm Nộp bài
+        FE -> SYS : Yêu cầu nộp bài
+    end
+
+    SYS -> SYS : Cập nhật bài làm sang trạng thái Đã nộp
+    SYS -> SYS : Kích hoạt chấm điểm tự động
+    SYS --> FE : Trả về kết quả nộp bài
+    FE --> Student : Thông báo nộp bài thành công
+end
+
+@enduml

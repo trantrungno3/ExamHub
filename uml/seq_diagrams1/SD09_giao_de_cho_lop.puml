@@ -1,0 +1,63 @@
+@startuml SD09_giao_de_cho_lop
+skinparam sequenceArrowThickness 2
+skinparam roundcorner 8
+skinparam maxmessagesize 160
+skinparam sequence {
+    ArrowColor #2E75B6
+    ActorBorderColor #333333
+    LifeLineBorderColor #336699
+    LifeLineBackgroundColor #EEF4FF
+    ParticipantBorderColor #336699
+    ParticipantBackgroundColor #DDEEFF
+    ParticipantFontSize 13
+    ParticipantFontName Arial
+    ActorBackgroundColor White
+    ActorFontName Arial
+    ActorFontSize 13
+    NoteBackgroundColor #FFFFCC
+    NoteBorderColor #CCCC00
+}
+skinparam fontname Arial
+
+actor "Giáo viên" as Teacher
+participant "Giao diện" as FE
+participant "Dịch vụ Giao đề" as AS
+participant "Dịch vụ Thông báo" as NS
+database "Cơ sở dữ liệu" as DB
+
+Teacher -> FE : Chọn đề thi + bấm Giao đề cho lớp
+FE --> Teacher : Hiển thị form giao đề
+
+Teacher -> FE : Chọn lớp học
+Teacher -> FE : Đặt thời gian mở bài, đóng bài
+Teacher -> FE : Đặt thời gian làm bài (phút)
+
+opt Xem trước trước khi giao
+    Teacher -> FE : Bấm xem trước đề
+    FE --> Teacher : Hiển thị nội dung đề thi
+end
+
+Teacher -> FE : Bấm Xác nhận giao đề
+FE -> AS : POST /api/assignments\n{examId, classId, openAt, closeAt, duration}
+
+AS -> AS : Kiểm tra thời gian hợp lệ
+AS -> DB : Kiểm tra lớp tồn tại\nvà Giáo viên có quyền quản lý
+
+alt Dữ liệu không hợp lệ
+    AS --> FE : 400 Bad Request + chi tiết lỗi
+    FE --> Teacher : Hiển thị thông báo lỗi
+else Hợp lệ
+    AS -> DB : Thêm bản ghi giao đề\n{examId, classId, openAt, closeAt, duration}
+    DB --> AS : assignmentId
+
+    AS -> DB : Lấy danh sách học sinh trong lớp
+    DB --> AS : [{studentIds}]
+
+    AS -> NS : Gửi thông báo đến toàn bộ học sinh\n{tên đề, thời gian mở, thời gian đóng}
+    NS --> AS : Đã gửi
+
+    AS --> FE : 201 Created + {assignmentId}
+    FE --> Teacher : Thông báo giao đề thành công
+end
+
+@enduml

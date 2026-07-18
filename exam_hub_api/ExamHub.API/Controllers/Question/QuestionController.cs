@@ -10,14 +10,13 @@ namespace ExamHub.API.Controllers.Question;
 
 /// <summary>Controller quản lý ngân hàng câu hỏi</summary>
 [ApiController]
-[Authorize]
 [Route("api/questions")]
 public class QuestionController(
     IQuestionService service,
     IAuthorizationService authorizationService,
     ITopicRepository topicRepo,
     IMinioStorageService storage,
-    IBulkImportService bulkImportService) : ControllerBase
+    IBulkImportService bulkImportService) : AuthorizeControllerBase
 {
     private const long MaxAttachmentBytes = 10 * 1024 * 1024; // 10 MB
     private static readonly string[] AllowedContentTypes =
@@ -73,8 +72,7 @@ public class QuestionController(
         if (!authResult.Succeeded)
             return StatusCode(403, RequestResponse<object>.Error("Bạn không phụ trách môn học này."));
 
-        var userId  = GetCurrentUserId();
-        var entity  = request.ToEntity(userId);
+        var entity  = request.ToEntity(CurrentUser.UserName!);
         var answers = request.ToAnswers();
         var result  = await service.CreateAsync(entity, answers, ct);
         return StatusCode(201, RequestResponse<QuestionResponse>.Success("Tạo câu hỏi thành công!", QuestionResponse.FromEntity(result), 1));
@@ -98,7 +96,7 @@ public class QuestionController(
         if (!authResult.Succeeded)
             return StatusCode(403, RequestResponse<object>.Error("Bạn không phụ trách môn học này."));
 
-        var entity  = request.ToEntity(existing.CreatedBy);
+        var entity  = request.ToEntity(existing.CreatedBy!);
         entity.Id   = id;
         var answers = request.ToAnswers();
         var result  = await service.UpdateAsync(entity, answers, ct);
@@ -124,7 +122,7 @@ public class QuestionController(
         if (request.File is null || request.File.Length == 0)
             return BadRequest(RequestResponse<object>.Error("File import không được để trống."));
 
-        var result = await bulkImportService.ImportAsync(request, GetCurrentUserId(), ct);
+        var result = await bulkImportService.ImportAsync(request, CurrentUser.UserName, ct);
         return Ok(RequestResponse<BulkImportQuestionResponse>.Success(
             $"Import hoàn tất: {result.SuccessCount} thành công, {result.ErrorCount} lỗi.", result, result.SuccessCount));
     }
@@ -167,13 +165,7 @@ public class QuestionController(
     {
         var existing = await service.GetByIdAsync(id, ct);
         if (existing is null) return NotFound();
-        await service.VerifyAsync(id, GetCurrentUserId(), ct);
+        await service.VerifyAsync(id, CurrentUser.UserId!.Value, ct);
         return NoContent();
-    }
-
-    private Guid GetCurrentUserId()
-    {
-        var claim = User.FindFirst("sub") ?? User.FindFirst("userId");
-        return claim is not null && Guid.TryParse(claim.Value, out var id) ? id : Guid.Empty;
     }
 }

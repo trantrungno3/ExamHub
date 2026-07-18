@@ -47,4 +47,20 @@ public class AuthController(IAuthService service) : ControllerBase
     {
         return Ok(await service.GetUserInfo(User.GetUserName()));
     }
+
+    /// <summary>Cập nhật thông tin cá nhân của tài khoản đang đăng nhập</summary>
+    [HttpPut("profile")]
+    [Authorize]
+    public async Task<ActionResult<RequestResponse<UserInfo>>> UpdateProfile([FromBody] UpdateProfileDto dto)
+    {
+        return Ok(await service.UpdateProfile(User.GetUserName(), dto));
+    }
+
+    /// <summary>Đổi mật khẩu của tài khoản đang đăng nhập</summary>
+    [HttpPost("change-password")]
+    [Authorize]
+    public async Task<ActionResult<RequestResponse<bool>>> ChangePassword([FromBody] ChangePasswordDto dto)
+    {
+        return Ok(await service.ChangePassword(User.GetUserName(), dto));
+    }
 }

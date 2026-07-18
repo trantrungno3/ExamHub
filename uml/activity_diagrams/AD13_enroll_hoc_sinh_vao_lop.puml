@@ -1,0 +1,53 @@
+@startuml AD13_enroll_hoc_sinh_vao_lop
+skinparam defaultFontName "DejaVu Sans"
+skinparam activity {
+    BackgroundColor #DDEEFF
+    BorderColor #336699
+    FontName "DejaVu Sans"
+    FontSize 16
+    DiamondBackgroundColor #FFF4CE
+    DiamondBorderColor #CC8800
+    DiamondFontName "DejaVu Sans"
+    DiamondFontSize 15
+    StartColor #1F3864
+    EndColor #1F3864
+    BarColor #336699
+}
+skinparam ArrowColor #2E75B6
+skinparam ArrowFontName "DejaVu Sans"
+skinparam ArrowFontSize 15
+skinparam noteBackgroundColor #FFFFCC
+skinparam noteBorderColor #CCCC00
+skinparam noteFontName "DejaVu Sans"
+skinparam swimlaneBorderColor #336699
+skinparam swimlaneFontName "DejaVu Sans"
+skinparam swimlaneFontStyle bold
+skinparam wrapWidth 150
+
+|Quản trị viên|
+start
+:Truy cập trang chi tiết lớp học;
+:Chọn thêm học sinh;
+
+|Hệ thống|
+:Hiển thị danh sách học sinh chưa thuộc lớp;
+
+|Quản trị viên|
+:Chọn một hoặc nhiều học sinh;
+:Xác nhận;
+
+|Hệ thống|
+:Kiểm tra tính hợp lệ\n(học sinh chưa thuộc lớp khác cùng khối);
+if (Học sinh đã thuộc lớp khác?) then (Có)
+    :Hiển thị cảnh báo học sinh đã thuộc lớp khác cùng khối;
+    |Quản trị viên|
+    :Chọn bỏ qua học sinh đó hoặc huỷ;
+    detach
+else (Không)
+    |Hệ thống|
+    :Lưu bản ghi vào cơ sở dữ liệu;
+    :Hiển thị thông báo thành công;
+    :Cập nhật danh sách thành viên lớp;
+endif
+stop
+@enduml

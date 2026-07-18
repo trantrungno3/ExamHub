@@ -3,6 +3,7 @@ using TVT.Core.Attributes;
 using TVT.Core.Models.PostgreSql;
 using TVT.Core.Models.PostgreSql.FieldTables;
 using ExamHub.Core.FieldTables;
+using TVT.Core.Models;
 
 namespace ExamHub.Core.Domain.Entities;
 
@@ -11,7 +12,7 @@ namespace ExamHub.Core.Domain.Entities;
 /// </summary>
 [Table(ExamTemplateTable.TableName)]
 [SqlBuilderProperty(ExamTemplateTable.TableName)]
-public class ExamTemplate : IModelBaseSql<Guid>
+public class ExamTemplate : ModifyModelBase, IModelBaseSql<Guid>
 {
     /// <summary>Khóa chính (UUID)</summary>
     [Column(CommonFieldTable.Id)]
@@ -27,11 +28,6 @@ public class ExamTemplate : IModelBaseSql<Guid>
     [Column(ExamTemplateTable.SubjectId)]
     [SqlBuilderProperty(ExamTemplateTable.SubjectId, Insert = true, Update = true)]
     public int SubjectId { get; set; }
-
-    /// <summary>ID người tạo mẫu đề</summary>
-    [Column(ExamTemplateTable.CreatedBy)]
-    [SqlBuilderProperty(ExamTemplateTable.CreatedBy, Insert = true, Update = false)]
-    public Guid CreatedBy { get; set; }
 
     /// <summary>Tiêu đề mẫu đề thi</summary>
     [Column(ExamTemplateTable.Title)]
@@ -83,16 +79,6 @@ public class ExamTemplate : IModelBaseSql<Guid>
     [SqlBuilderProperty(ExamTemplateTable.IsActive, Insert = true, Update = true)]
     public bool IsActive { get; set; } = true;
 
-    /// <summary>Thời điểm tạo</summary>
-    [Column(ExamTemplateTable.CreatedAt)]
-    [SqlBuilderProperty(ExamTemplateTable.CreatedAt, Insert = true, Update = false)]
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
-    /// <summary>Thời điểm cập nhật gần nhất</summary>
-    [Column(ExamTemplateTable.UpdatedAt)]
-    [SqlBuilderProperty(ExamTemplateTable.UpdatedAt, Insert = true, Update = true)]
-    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
-
     // ── Navigation ──────────────────────────────────────────────
     /// <summary>Lớp học</summary>
     public GradeLevel? GradeLevel { get; set; }
@@ -107,40 +93,39 @@ public class ExamTemplate : IModelBaseSql<Guid>
     /// <summary>Tạo object để INSERT</summary>
     public object ToInsertObject() => new
     {
-        id                 = Id,
-        grade_level_id     = GradeLevelId,
-        subject_id         = SubjectId,
-        created_by         = CreatedBy,
-        title              = Title,
-        description        = Description,
-        duration_minutes   = DurationMinutes,
-        total_questions    = TotalQuestions,
-        total_score        = TotalScore,
-        shuffle_questions  = ShuffleQuestions,
-        shuffle_answers    = ShuffleAnswers,
-        prevent_duplicate  = PreventDuplicate,
-        instructions       = Instructions,
-        is_active          = IsActive,
-        created_at         = CreatedAt,
-        updated_at         = UpdatedAt
+        id = Id,
+        grade_level_id = GradeLevelId,
+        subject_id = SubjectId,
+        title = Title,
+        description = Description,
+        duration_minutes = DurationMinutes,
+        total_questions = TotalQuestions,
+        total_score = TotalScore,
+        shuffle_questions = ShuffleQuestions,
+        shuffle_answers = ShuffleAnswers,
+        prevent_duplicate = PreventDuplicate,
+        instructions = Instructions,
+        is_active = IsActive,
+        created = Created,
+        modified = Modified
     };
 
     /// <summary>Tạo object để UPDATE</summary>
     public object ToUpdateObject() => new
     {
-        id                 = Id,
-        grade_level_id     = GradeLevelId,
-        subject_id         = SubjectId,
-        title              = Title,
-        description        = Description,
-        duration_minutes   = DurationMinutes,
-        total_questions    = TotalQuestions,
-        total_score        = TotalScore,
-        shuffle_questions  = ShuffleQuestions,
-        shuffle_answers    = ShuffleAnswers,
-        prevent_duplicate  = PreventDuplicate,
-        instructions       = Instructions,
-        is_active          = IsActive,
-        updated_at         = DateTime.UtcNow
+        id = Id,
+        grade_level_id = GradeLevelId,
+        subject_id = SubjectId,
+        title = Title,
+        description = Description,
+        duration_minutes = DurationMinutes,
+        total_questions = TotalQuestions,
+        total_score = TotalScore,
+        shuffle_questions = ShuffleQuestions,
+        shuffle_answers = ShuffleAnswers,
+        prevent_duplicate = PreventDuplicate,
+        instructions = Instructions,
+        is_active = IsActive,
+        modified = DateTime.UtcNow
     };
 }

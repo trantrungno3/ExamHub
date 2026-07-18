@@ -34,7 +34,7 @@ public sealed record GenerateExamRequest(
     int SubjectId,
     int DurationMinutes,
     bool ShuffleQuestions,
-    Guid CreatedBy,
+    string CreatedBy,
     IReadOnlyList<SectionConfig> Sections);
 
 /// <summary>Cấu hình một phần thi.</summary>
@@ -74,5 +74,5 @@ public sealed record BatchGenerateExamRequest(
     bool ShuffleAnswers,
     int VariantCount,
     string VariantNaming,
-    Guid CreatedBy,
+    string CreatedBy,
     IReadOnlyList<SectionConfig> Sections);

@@ -23,13 +23,13 @@ public class ExamTemplateRepository : BaseRepository<ExamTemplate, Guid>, IExamT
     public async Task<IReadOnlyList<ExamTemplate>> GetBySubjectAsync(int subjectId, CancellationToken ct = default)
         => await Set.AsNoTracking()
             .Where(x => x.SubjectId == subjectId && x.IsActive)
-            .OrderByDescending(x => x.CreatedAt)
+            .OrderByDescending(x => x.Created)
             .ToListAsync(ct);
 
     /// <inheritdoc/>
     public async Task<IReadOnlyList<ExamTemplate>> GetByGradeLevelAsync(int gradeLevelId, CancellationToken ct = default)
         => await Set.AsNoTracking()
             .Where(x => x.GradeLevelId == gradeLevelId && x.IsActive)
-            .OrderByDescending(x => x.CreatedAt)
+            .OrderByDescending(x => x.Created)
             .ToListAsync(ct);
 }

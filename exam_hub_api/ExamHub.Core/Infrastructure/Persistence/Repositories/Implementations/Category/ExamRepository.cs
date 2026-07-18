@@ -24,14 +24,14 @@ public class ExamRepository : BaseRepository<Exam, Guid>, IExamRepository
     public async Task<IReadOnlyList<Exam>> GetBySubjectAsync(int subjectId, CancellationToken ct = default)
         => await Set.AsNoTracking()
             .Where(x => x.SubjectId == subjectId)
-            .OrderByDescending(x => x.CreatedAt)
+            .OrderByDescending(x => x.Created)
             .ToListAsync(ct);
 
     /// <inheritdoc/>
     public async Task<IReadOnlyList<Exam>> GetByStatusAsync(ExamStatusEnum status, CancellationToken ct = default)
         => await Set.AsNoTracking()
             .Where(x => x.Status == status)
-            .OrderByDescending(x => x.CreatedAt)
+            .OrderByDescending(x => x.Created)
             .ToListAsync(ct);
 
     /// <inheritdoc/>
@@ -72,7 +72,7 @@ public class ExamRepository : BaseRepository<Exam, Guid>, IExamRepository
 
         var total = await query.CountAsync(ct);
         var items = await query
-            .OrderByDescending(x => x.CreatedAt)
+            .OrderByDescending(x => x.Created)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync(ct);
@@ -86,5 +86,5 @@ public class ExamRepository : BaseRepository<Exam, Guid>, IExamRepository
             .Where(x => x.Id == id)
             .ExecuteUpdateAsync(s => s
                 .SetProperty(x => x.Status, status)
-                .SetProperty(x => x.UpdatedAt, DateTime.UtcNow), ct) > 0;
+                .SetProperty(x => x.Modified, DateTime.UtcNow), ct) > 0;
 }

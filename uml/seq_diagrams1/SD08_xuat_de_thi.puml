@@ -1,0 +1,64 @@
+@startuml SD08_xuat_de_thi
+skinparam sequenceArrowThickness 2
+skinparam roundcorner 8
+skinparam maxmessagesize 160
+skinparam sequence {
+    ArrowColor #2E75B6
+    ActorBorderColor #333333
+    LifeLineBorderColor #336699
+    LifeLineBackgroundColor #EEF4FF
+    ParticipantBorderColor #336699
+    ParticipantBackgroundColor #DDEEFF
+    ParticipantFontSize 13
+    ParticipantFontName Arial
+    ActorBackgroundColor White
+    ActorFontName Arial
+    ActorFontSize 13
+    NoteBackgroundColor #FFFFCC
+    NoteBorderColor #CCCC00
+}
+skinparam fontname Arial
+
+actor "Giáo viên" as Teacher
+participant "Giao diện" as FE
+participant "Dịch vụ Xuất" as ES
+participant "Render PDF" as PDF
+participant "Render Word" as Word
+participant "MinIO" as MinIO
+database "Cơ sở dữ liệu" as DB
+
+Teacher -> FE : Chọn đề thi + bấm Xem trước / Xuất đề
+
+alt Xem trước
+    FE -> ES : GET /api/exams/{id}/preview
+    ES -> DB : Lấy nội dung đề thi + snapshot
+    DB --> ES : {nội dung đề}
+    ES --> FE : HTML xem trước
+    FE --> Teacher : Hiển thị đề thi trực tiếp trên trình duyệt
+
+else Xuất PDF
+    FE -> ES : POST /api/exams/{id}/export\n{format: "pdf"}
+    ES -> DB : Lấy nội dung đề thi
+    DB --> ES : {nội dung đề}
+    ES -> PDF : Render HTML sang PDF
+    PDF --> ES : file.pdf (nhị phân)
+    ES -> MinIO : Upload file.pdf
+    MinIO --> ES : {đường dẫn file}
+    ES -> DB : Lưu đường dẫn file vào bản ghi đề thi
+    ES --> FE : {downloadUrl}
+    FE --> Teacher : Hiển thị liên kết tải PDF
+
+else Xuất Word
+    FE -> ES : POST /api/exams/{id}/export\n{format: "docx"}
+    ES -> DB : Lấy nội dung đề thi
+    DB --> ES : {nội dung đề}
+    ES -> Word : Render nội dung sang DOCX
+    Word --> ES : file.docx (nhị phân)
+    ES -> MinIO : Upload file.docx
+    MinIO --> ES : {đường dẫn file}
+    ES -> DB : Lưu đường dẫn file vào bản ghi đề thi
+    ES --> FE : {downloadUrl}
+    FE --> Teacher : Hiển thị liên kết tải Word
+end
+
+@enduml

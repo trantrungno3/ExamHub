@@ -1,0 +1,59 @@
+@startuml AD13_sinh_de_thi_tu_mau
+skinparam defaultFontName "DejaVu Sans"
+skinparam activity {
+    BackgroundColor #DDEEFF
+    BorderColor #336699
+    FontName "DejaVu Sans"
+    FontSize 16
+    DiamondBackgroundColor #FFF4CE
+    DiamondBorderColor #CC8800
+    DiamondFontName "DejaVu Sans"
+    DiamondFontSize 15
+    StartColor #1F3864
+    EndColor #1F3864
+    BarColor #336699
+}
+skinparam ArrowColor #2E75B6
+skinparam ArrowFontName "DejaVu Sans"
+skinparam ArrowFontSize 15
+skinparam noteBackgroundColor #FFFFCC
+skinparam noteBorderColor #CCCC00
+skinparam noteFontName "DejaVu Sans"
+skinparam swimlaneBorderColor #336699
+skinparam swimlaneFontName "DejaVu Sans"
+skinparam swimlaneFontStyle bold
+skinparam wrapWidth 250
+
+|Giáo viên|
+start
+:Chọn mẫu đề thi và bấm Sinh đề;
+
+|Hệ thống|
+:Lấy cấu hình mẫu đề và danh sách phần thi;
+
+repeat
+    :Lấy pool câu hỏi Đã duyệt theo môn, chủ đề, Bloom, độ khó;
+    if (Pool đủ câu hỏi?) then (Không)
+        :Hiển thị cảnh báo không đủ câu hỏi;
+        |Giáo viên|
+        :Điều chỉnh cấu hình mẫu hoặc bổ sung câu hỏi;
+        stop
+    else (Có)
+        |Hệ thống|
+        :Stratified Sampling - chọn đúng số câu theo từng tầng độ khó và Bloom;
+        :Fisher-Yates Shuffle - xáo trộn thứ tự câu hỏi và đáp án;
+    endif
+repeat while (Còn phần thi?) is (Có)
+
+:Lưu snapshot toàn bộ nội dung câu hỏi tại thời điểm sinh đề;
+note right
+    Đảm bảo tính toàn vẹn
+    dù câu gốc bị sửa sau này
+end note
+:Tạo bản ghi đề thi với mã đề duy nhất;
+:Hiển thị đề thi vừa sinh và cho phép xem trước;
+
+|Giáo viên|
+:Xem trước đề thi;
+stop
+@enduml

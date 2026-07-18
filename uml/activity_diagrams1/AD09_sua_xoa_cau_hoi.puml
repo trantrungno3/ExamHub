@@ -1,0 +1,78 @@
+@startuml AD09_sua_xoa_cau_hoi
+skinparam defaultFontName "DejaVu Sans"
+skinparam activity {
+    BackgroundColor #DDEEFF
+    BorderColor #336699
+    FontName "DejaVu Sans"
+    FontSize 16
+    DiamondBackgroundColor #FFF4CE
+    DiamondBorderColor #CC8800
+    DiamondFontName "DejaVu Sans"
+    DiamondFontSize 15
+    StartColor #1F3864
+    EndColor #1F3864
+    BarColor #336699
+}
+skinparam ArrowColor #2E75B6
+skinparam ArrowFontName "DejaVu Sans"
+skinparam ArrowFontSize 15
+skinparam noteBackgroundColor #FFFFCC
+skinparam noteBorderColor #CCCC00
+skinparam noteFontName "DejaVu Sans"
+skinparam swimlaneBorderColor #336699
+skinparam swimlaneFontName "DejaVu Sans"
+skinparam swimlaneFontStyle bold
+skinparam wrapWidth 250
+
+|Giáo viên|
+start
+:Tìm kiếm và chọn câu hỏi cần xử lý;
+
+|Hệ thống|
+:Hiển thị nội dung chi tiết câu hỏi;
+
+|Giáo viên|
+:Chọn thao tác;
+
+if (Sửa câu hỏi?) then (Có)
+    |Hệ thống|
+    :Hiển thị form chỉnh sửa với dữ liệu hiện tại;
+    |Giáo viên|
+    :Cập nhật nội dung, đáp án, phân loại;
+    if (Cần thay ảnh?) then (Có)
+        :Upload ảnh mới;
+        |Hệ thống|
+        :Lưu ảnh mới lên MinIO;
+        |Giáo viên|
+    else (Không)
+    endif
+    :Bấm Lưu;
+    |Hệ thống|
+    :Kiểm tra tính hợp lệ;
+    if (Hợp lệ?) then (Có)
+        :Cập nhật câu hỏi vào cơ sở dữ liệu;
+        :Hiển thị thông báo cập nhật thành công;
+    else (Không)
+        :Hiển thị thông báo lỗi;
+    endif
+else (Xoá câu hỏi)
+    |Hệ thống|
+    :Kiểm tra câu hỏi có đang dùng trong đề thi đã giao không;
+    if (Đang được sử dụng?) then (Có)
+        :Hiển thị cảnh báo;
+        |Giáo viên|
+        if (Xác nhận xoá bắt buộc?) then (Không)
+            :Huỷ thao tác;
+            stop
+        else (Có)
+        endif
+    else (Không)
+        |Giáo viên|
+        :Xác nhận xoá;
+    endif
+    |Hệ thống|
+    :Xoá câu hỏi khỏi ngân hàng;
+    :Hiển thị thông báo xoá thành công;
+endif
+stop
+@enduml

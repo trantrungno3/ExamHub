@@ -25,7 +25,4 @@ public readonly struct CohortClassTable
 
     /// <summary>ID giáo viên chủ nhiệm</summary>
     public const string HomeroomTeacherId = "homeroom_teacher_id";
-
-    /// <summary>Ngày tạo</summary>
-    public const string CreatedAt = "created_at";
 }

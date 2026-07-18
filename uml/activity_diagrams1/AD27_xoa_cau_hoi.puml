@@ -1,0 +1,55 @@
+@startuml AD27_xoa_cau_hoi
+skinparam defaultFontName "DejaVu Sans"
+skinparam activity {
+    BackgroundColor #DDEEFF
+    BorderColor #336699
+    FontName "DejaVu Sans"
+    FontSize 16
+    DiamondBackgroundColor #FFF4CE
+    DiamondBorderColor #CC8800
+    DiamondFontName "DejaVu Sans"
+    DiamondFontSize 15
+    StartColor #1F3864
+    EndColor #1F3864
+    BarColor #336699
+}
+skinparam ArrowColor #2E75B6
+skinparam ArrowFontName "DejaVu Sans"
+skinparam ArrowFontSize 15
+skinparam noteBackgroundColor #FFFFCC
+skinparam noteBorderColor #CCCC00
+skinparam noteFontName "DejaVu Sans"
+skinparam swimlaneBorderColor #336699
+skinparam swimlaneFontName "DejaVu Sans"
+skinparam swimlaneFontStyle bold
+skinparam wrapWidth 250
+
+|Giáo viên|
+start
+:Truy cập trang Ngân hàng câu hỏi;
+:Chọn câu hỏi cần xoá;
+:Bấm nút Xoá;
+
+|Hệ thống|
+:Kiểm tra câu hỏi có đang dùng trong đề thi không;
+if (Đang được sử dụng?) then (Có)
+    :Hiển thị cảnh báo câu hỏi đang dùng;
+    |Giáo viên|
+    if (Xác nhận xoá bắt buộc?) then (Không)
+        :Huỷ thao tác;
+        stop
+    else (Có)
+    endif
+else (Không)
+    |Giáo viên|
+    |Hệ thống|
+    :Hiển thị hộp thoại xác nhận xoá;
+    |Giáo viên|
+    :Xác nhận xoá;
+endif
+
+|Hệ thống|
+:Xoá câu hỏi khỏi ngân hàng câu hỏi;
+:Hiển thị thông báo xoá thành công;
+stop
+@enduml

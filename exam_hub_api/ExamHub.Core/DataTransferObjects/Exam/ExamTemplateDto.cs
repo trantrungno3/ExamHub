@@ -85,7 +85,7 @@ public record ExamTemplateRequest(
 )
 {
     /// <summary>Map sang entity để tạo mới</summary>
-    public ExamTemplate ToEntity(Guid createdBy) => new()
+    public ExamTemplate ToEntity(string createdBy) => new()
     {
         GradeLevelId      = GradeLevelId,
         SubjectId         = SubjectId,
@@ -124,8 +124,8 @@ public record ExamTemplateResponse(
     bool PreventDuplicate,
     string? Instructions,
     bool IsActive,
-    long CreatedAt,
-    long UpdatedAt,
+    long Created,
+    long Modified,
     IReadOnlyList<ExamTemplateSectionResponse>? Sections
 )
 {
@@ -140,8 +140,8 @@ public record ExamTemplateResponse(
             e.TotalScore, e.ShuffleQuestions, e.ShuffleAnswers,
             e.PreventDuplicate, e.Instructions,
             e.IsActive,
-            e.CreatedAt.ToTimestamp(),
-            e.UpdatedAt.ToTimestamp(),
+            e.Created.ToTimestamp(),
+            e.Modified.ToTimestamp(),
             includeSections ? e.Sections.Select(ExamTemplateSectionResponse.FromEntity).ToList() : null
         );
 }

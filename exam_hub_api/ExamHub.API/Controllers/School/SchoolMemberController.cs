@@ -9,8 +9,7 @@ namespace ExamHub.API.Controllers.School;
 /// <summary>Controller quản lý thành viên trường học</summary>
 [ApiController]
 [Route("api/[controller]")]
-[Authorize]
-public class SchoolMemberController(ISchoolMemberService service) : ControllerBase
+public class SchoolMemberController(ISchoolMemberService service) : AuthorizeControllerBase
 {
     /// <summary>Lấy theo ID</summary>
     [HttpGet("{id:guid}")]

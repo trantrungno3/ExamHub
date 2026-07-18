@@ -1,0 +1,58 @@
+@startuml AD16_them_cau_hinh_danh_muc
+skinparam defaultFontName "DejaVu Sans"
+skinparam activity {
+    BackgroundColor #DDEEFF
+    BorderColor #336699
+    FontName "DejaVu Sans"
+    FontSize 16
+    DiamondBackgroundColor #FFF4CE
+    DiamondBorderColor #CC8800
+    DiamondFontName "DejaVu Sans"
+    DiamondFontSize 15
+    StartColor #1F3864
+    EndColor #1F3864
+    BarColor #336699
+}
+skinparam ArrowColor #2E75B6
+skinparam ArrowFontName "DejaVu Sans"
+skinparam ArrowFontSize 15
+skinparam noteBackgroundColor #FFFFCC
+skinparam noteBorderColor #CCCC00
+skinparam noteFontName "DejaVu Sans"
+skinparam swimlaneBorderColor #336699
+skinparam swimlaneFontName "DejaVu Sans"
+skinparam swimlaneFontStyle bold
+skinparam wrapWidth 150
+
+|Quản trị viên|
+start
+:Truy cập trang Cấu hình danh mục;
+
+|Hệ thống|
+:Hiển thị danh sách danh mục hiện có;
+
+|Quản trị viên|
+:Bấm nút Thêm mới;
+
+|Hệ thống|
+:Hiển thị mẫu điền thông tin danh mục;
+
+|Quản trị viên|
+:Điền tên danh mục và thông tin liên quan;
+:Bấm Lưu;
+
+|Hệ thống|
+:Kiểm tra tính hợp lệ dữ liệu;
+if (Dữ liệu hợp lệ?) then (Không)
+    :Hiển thị thông báo lỗi;
+    |Quản trị viên|
+    :Chỉnh sửa lại thông tin;
+    detach
+else (Có)
+    |Hệ thống|
+    :Lưu danh mục vào cơ sở dữ liệu;
+    :Hiển thị thông báo thêm thành công;
+    :Cập nhật danh sách danh mục;
+endif
+stop
+@enduml

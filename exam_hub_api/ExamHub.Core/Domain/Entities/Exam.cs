@@ -4,6 +4,7 @@ using TVT.Core.Models.PostgreSql;
 using TVT.Core.Models.PostgreSql.FieldTables;
 using ExamHub.Core.Domain.Enums;
 using ExamHub.Core.FieldTables;
+using TVT.Core.Models;
 
 namespace ExamHub.Core.Domain.Entities;
 
@@ -12,7 +13,7 @@ namespace ExamHub.Core.Domain.Entities;
 /// </summary>
 [Table(ExamTable.TableName)]
 [SqlBuilderProperty(ExamTable.TableName)]
-public class Exam : IModelBaseSql<Guid>
+public class Exam :ModifyModelBase, IModelBaseSql<Guid>
 {
     /// <summary>Khóa chính (UUID)</summary>
     [Column(CommonFieldTable.Id)]
@@ -33,11 +34,6 @@ public class Exam : IModelBaseSql<Guid>
     [Column(ExamTable.SubjectId)]
     [SqlBuilderProperty(ExamTable.SubjectId, Insert = true, Update = true)]
     public int SubjectId { get; set; }
-
-    /// <summary>ID người tạo đề thi</summary>
-    [Column(ExamTable.CreatedBy)]
-    [SqlBuilderProperty(ExamTable.CreatedBy, Insert = true, Update = false)]
-    public Guid CreatedBy { get; set; }
 
     /// <summary>Tiêu đề đề thi</summary>
     [Column(ExamTable.Title)]
@@ -104,16 +100,6 @@ public class Exam : IModelBaseSql<Guid>
     [SqlBuilderProperty(ExamTable.BatchId, Insert = true, Update = false)]
     public Guid? BatchId { get; set; }
 
-    /// <summary>Thời điểm tạo</summary>
-    [Column(ExamTable.CreatedAt)]
-    [SqlBuilderProperty(ExamTable.CreatedAt, Insert = true, Update = false)]
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
-    /// <summary>Thời điểm cập nhật gần nhất</summary>
-    [Column(ExamTable.UpdatedAt)]
-    [SqlBuilderProperty(ExamTable.UpdatedAt, Insert = true, Update = true)]
-    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
-
     // ── Navigation ──────────────────────────────────────────────
     /// <summary>Mẫu đề thi gốc</summary>
     public ExamTemplate? ExamTemplate { get; set; }
@@ -141,7 +127,6 @@ public class Exam : IModelBaseSql<Guid>
         exam_template_id = ExamTemplateId,
         grade_level_id   = GradeLevelId,
         subject_id       = SubjectId,
-        created_by       = CreatedBy,
         title            = Title,
         exam_code        = ExamCode,
         duration_minutes = DurationMinutes,
@@ -155,8 +140,8 @@ public class Exam : IModelBaseSql<Guid>
         parent_exam_id   = ParentExamId,
         variant_index    = VariantIndex,
         batch_id         = BatchId,
-        created_at       = CreatedAt,
-        updated_at       = UpdatedAt
+        created = Created,
+        modified = Modified
     };
 
     /// <summary>Tạo object để UPDATE</summary>
@@ -175,6 +160,6 @@ public class Exam : IModelBaseSql<Guid>
         semester         = Semester,
         exam_date        = ExamDate,
         class_name       = ClassName,
-        updated_at       = DateTime.UtcNow
+        modified       = DateTime.UtcNow
     };
 }

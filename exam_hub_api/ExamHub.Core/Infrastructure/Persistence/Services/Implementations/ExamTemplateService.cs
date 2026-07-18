@@ -33,8 +33,8 @@ public class ExamTemplateService : IExamTemplateService
         ExamTemplate entity, IEnumerable<ExamTemplateSection> sections, CancellationToken ct = default)
     {
         entity.Id        = Guid.NewGuid();
-        entity.CreatedAt = DateTime.UtcNow;
-        entity.UpdatedAt = DateTime.UtcNow;
+        entity.Created = DateTime.UtcNow;
+        entity.Modified = DateTime.UtcNow;
         await _templateRepo.AddAsync(entity, ct);
 
         var sectionList = sections.Select((s, i) =>
@@ -42,7 +42,7 @@ public class ExamTemplateService : IExamTemplateService
             s.Id             = Guid.NewGuid();
             s.ExamTemplateId = entity.Id;
             s.SortOrder      = (short)i;
-            s.CreatedAt      = DateTime.UtcNow;
+            s.Created      = DateTime.UtcNow;
             return s;
         }).ToList();
 
@@ -55,7 +55,7 @@ public class ExamTemplateService : IExamTemplateService
     public async Task<ExamTemplate> UpdateAsync(
         ExamTemplate entity, IEnumerable<ExamTemplateSection>? sections = null, CancellationToken ct = default)
     {
-        entity.UpdatedAt = DateTime.UtcNow;
+        entity.Modified = DateTime.UtcNow;
         await _templateRepo.UpdateAsync(entity, ct);
 
         if (sections is not null)
@@ -66,7 +66,7 @@ public class ExamTemplateService : IExamTemplateService
                 s.Id             = Guid.NewGuid();
                 s.ExamTemplateId = entity.Id;
                 s.SortOrder      = (short)i;
-                s.CreatedAt      = DateTime.UtcNow;
+                s.Created      = DateTime.UtcNow;
                 return s;
             }).ToList();
             if (sectionList.Count > 0)

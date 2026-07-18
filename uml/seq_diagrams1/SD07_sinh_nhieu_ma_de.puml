@@ -1,0 +1,47 @@
+@startuml SD07_sinh_nhieu_ma_de
+skinparam sequenceArrowThickness 2
+skinparam roundcorner 8
+skinparam maxmessagesize 160
+skinparam sequence {
+    ArrowColor #2E75B6
+    ActorBorderColor #333333
+    LifeLineBorderColor #336699
+    LifeLineBackgroundColor #EEF4FF
+    ParticipantBorderColor #336699
+    ParticipantBackgroundColor #DDEEFF
+    ParticipantFontSize 13
+    ParticipantFontName Arial
+    ActorBackgroundColor White
+    ActorFontName Arial
+    ActorFontSize 13
+    NoteBackgroundColor #FFFFCC
+    NoteBorderColor #CCCC00
+}
+skinparam fontname Arial
+
+actor "Giáo viên" as Teacher
+participant "Giao diện" as FE
+participant "Dịch vụ Sinh đề" as EGS
+database "Cơ sở dữ liệu" as DB
+
+Teacher -> FE : Chọn mẫu đề + bấm Sinh nhiều mã đề
+FE --> Teacher : Hiển thị form nhập số lượng mã đề
+
+Teacher -> FE : Nhập số lượng mã đề (N)
+Teacher -> FE : Xác nhận
+
+FE -> EGS : POST /api/exams/generate-batch\n{templateId, count: N}
+
+loop i = 1 đến N (mỗi mã đề)
+    EGS -> EGS : Gọi Sinh đề từ mẫu\n(xáo trộn độc lập mỗi lần)
+    EGS -> DB : Thêm đề thi {mã đề: Mã-i, ...}
+    DB --> EGS : examId-i
+end
+
+EGS -> DB : Liên kết N mã đề thành 1 lô
+DB --> EGS : {batchId}
+
+EGS --> FE : 201 Created + {batchId, exams: [{examId, mã đề}]}
+FE --> Teacher : Hiển thị danh sách N mã đề\nvới tuỳ chọn Xuất hàng loạt
+
+@enduml

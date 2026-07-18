@@ -4,13 +4,20 @@
 > (React 19 + Vite + TypeScript frontend). Backend phases are numbered `Phase 1..7`;
 > frontend phases are numbered `FE-1..FE-6` and depend on the matching backend endpoints.
 
-## Progress (updated 2026-06-06)
+## Progress (updated 2026-06-13)
 
-> **Status: all phases complete.** Backend Phases 1–7 + `IBaseRepository` migration of
-> `PickRandomAsync` + `context.md` doc-drift fixes done; `dotnet build` clean. Frontend FE-1–FE-6
-> wired to the real API; `tsc -b` + `vite build` clean, no new lint errors, `__mocks__` removed.
-> Testing was removed from scope per request. Remaining: commit the working-tree changes (both repos
-> are uncommitted; API on `feature/phase-1-foundation`) and run the manual end-to-end smoke against a
+> **Status: Phases 1–7 + FE-1–FE-6 complete; Phase 8, FE-7, FE-8 newly added (not started).**
+> Backend Phases 1–7 + `IBaseRepository` migration of `PickRandomAsync` + `context.md` doc-drift
+> fixes done; `dotnet build` clean. Frontend FE-1–FE-6 wired to the real API; `tsc -b` + `vite build`
+> clean, no new lint errors, `__mocks__` removed. Testing was removed from scope per request.
+>
+> **New scope (2026-06-13):** the spec was missing a **School Management UI** (backend is fully
+> built but the frontend has no pages) and a **role-based navigation menu**. Added below as backend
+> **Phase 8 — Role-based menu endpoint**, frontend **FE-7 — School Management UI** (separate routes
+> per level), and **FE-8 — Role-based menu consumption**. These are not yet started.
+>
+> Remaining: implement Phase 8 / FE-7 / FE-8, commit the working-tree changes (both repos are
+> uncommitted; API on `feature/phase-1-foundation`), and run the manual end-to-end smoke against a
 > live Postgres + Redis + MinIO stack.
 
 ### Backend (`exam_hub_api`)
@@ -41,6 +48,14 @@
   `IRedisService`, then excludes/shuffles (Fisher-Yates)/picks in memory and fetches content for the
   picked IDs. `QuestionService` invalidates the ≤4 pool keys a question participates in on
   create/update (old+new classification)/delete/verify. Shared `QuestionPoolCache` key helper. Build clean.
+- [x] **Phase 8 — Role-based navigation menu endpoint.** `GET /api/menu` returns the nav items the
+  current user's roles (from JWT) are allowed to see. `MenuRegistry` (static config) + `MenuController`
+  extending `AuthorizeControllerBase`. `dotnet build` clean.
+- [x] **Phase 9 — Self-service profile endpoints.** `PUT /api/auth/profile` (update own
+  name/email/phone) + `POST /api/auth/change-password` (verify old, set new) in `AuthController`/
+  `AuthService` (`UpdateProfileDto`/`ChangePasswordDto` in `AuthDto.cs`). Reuses `GET /api/auth/info`.
+  Also added `Email` field to `TVT.Core` `UserInfo` (mapped via `UserAdmin.GetEmailName()`) so
+  `GET /api/auth/info` now returns email. `dotnet build` clean.
 - [x] **Cross-cutting — `context.md` doc-drift fixes.** .NET 8→10, EF Core 8→10, "ClosedXML for
   Word"→DocumentFormat.OpenXml (ClosedXML is Excel-only), React 18→19, shadcn/ui→Ant Design v6,
   Axios→fetch wrapper, table count note (School module adds 5 tables). `CONTEXT.md` left authoritative.
@@ -72,6 +87,26 @@
   from paged `total`, recent-exams table, derived status pie via recharts) with wired quick actions.
   `AnalyticsDrawer` (recharts bar charts for Bloom/difficulty/topic from `GET /exams/{id}/analytics`)
   opened from `ExamListPage`. All three `__mocks__` files deleted. `tsc -b` + `vite build` clean; no new lint errors.
+- [x] **FE-7 — School Management UI.** `SchoolListPage` / `SchoolDetailPage` (tabs: Khoá học +
+  Thành viên) / `CohortDetailPage` (tabs: Lớp học + Học sinh). Services: `cohortService`,
+  `cohortClassService`, `schoolMemberService`, `cohortMemberService`. Hooks: `useSchools`,
+  `useCohorts`, `useCohortClasses`, `useSchoolMembers`, `useCohortMembers`. Routes registered;
+  types extended in `school.d.ts`. `vite build` clean.
+- [x] **FE-8 — Role-based menu consumption.** `menuService` + `useMenuQuery` (5-min stale).
+  `AppLayout.tsx` replaced hardcoded `NAV_ITEMS` with API data + `ICON_MAP` + `FALLBACK_NAV`.
+  `BankOutlined` added for `schools`. `vite build` clean.
+- [x] **FE-10 — Profile / detail screens (3 separate per role).** `StudentProfilePage` (khoá/lớp +
+  thống kê thi), `TeacherProfilePage` (môn phụ trách + trường), `AdminProfilePage` (thống kê hệ
+  thống). Shared `ProfileCard` + `EditProfileModal` + `ChangePasswordModal` (`authService.getInfo/
+  updateProfile/changePassword`). `AppProfilePage` chọn Admin/Teacher theo role tại `/app/profile`;
+  `/student/profile` trong StudentLayout. Entry: nút "Tài khoản" ở sidebar footer + tên ở header HS.
+  `tsc -b` + `vite build` clean.
+- [x] **FE-9 — Student exam list / portal home.** `StudentExamListPage` (`/student/exams`) +
+  `StudentLayout` (first layout for the student flow — header + logout). Client-side merge of
+  published exams (`useExamsQuery`) and the student's submissions (`useMySubmissionsQuery`) →
+  per-exam status (Chưa làm / Đang làm / Đã nộp / Đã chấm) + điểm; filters by subject/grade/status/
+  keyword. Login redirects Student-only accounts here (`homePathForRoles`); `ExamResultPage` "Hoàn
+  tất" now returns to `/student/exams`. `vite build` clean.
 
 ## Context
 
@@ -211,6 +246,63 @@ Generation currently hits Postgres for every section. NFR is <2s on 10k+ questio
 **Verify:** repeated generation against the same template hits the cache (log/metric); editing a
 question invalidates its pool keys.
 
+## Phase 8 — Role-based navigation menu endpoint (NEW, 2026-06-13)
+
+The frontend sidebar (`exam_hub_web/src/layouts/AppLayout.tsx`) hardcodes `NAV_ITEMS` and shows
+every item to every authenticated user. Roles already ride in the JWT (parsed by
+`CurrentUserInfo.Roles` / `User.GetRoles()`), but nothing filters navigation. Add a single endpoint
+that returns the nav items the caller's roles are allowed to see — one authoritative menu the FE
+renders dynamically and reuses for route guarding.
+
+**Approach:** pure API-layer feature — the menu is static config, not domain data, so no
+`ExamHub.Core` service or DB table. Keep it in `ExamHub.API`.
+
+- **DTO** `MenuItemResponse` (new, `ExamHub.API/.../Menu/MenuItemResponse.cs`):
+  `{ string Key, string Label, string Path, string Icon, int Order }`. `Icon` is a **string key**
+  (e.g. `"dashboard"`, `"school"`) — React components can't serialize; the FE maps the key to an
+  AntD icon (FE-8). Do **not** leak the allowed-roles list in the response.
+- **Menu registry** (new static class `MenuRegistry` in the same folder): the full ordered item list,
+  each tagged with `string[] Roles` (which roles may see it). Mirror the current `NAV_ITEMS` plus the
+  new School entry. Suggested mapping (confirm during impl):
+  | Key | Label | Path | Roles |
+  |-----|-------|------|-------|
+  | `dashboard` | Tổng quan | `/app/dashboard` | Admin, Teacher, Student |
+  | `questions` | Câu hỏi | `/app/questions` | Admin, Teacher |
+  | `exams` | Mẫu đề thi | `/app/exams` | Admin, Teacher |
+  | `generate` | Sinh đề thi | `/app/generate` | Admin, Teacher |
+  | `exam-list` | Đề thi | `/app/exam-list` | Admin, Teacher |
+  | `schools` | Quản lý trường | `/app/schools` | Admin |
+  | `users` | Người dùng | `/app/users` | Admin |
+  | `category` | Danh mục | `/app/category` | Admin |
+- **Controller** `MenuController` (new, `ExamHub.API/Controllers/MenuController.cs`) extending
+  `AuthorizeControllerBase` so it can read `CurrentUser.Roles`:
+  `GET /api/menu` → `RequestResponse<IReadOnlyList<MenuItemResponse>>` filtered to items whose
+  `Roles` intersect `CurrentUser.Roles`, ordered by `Order`. `[Authorize]` (any authenticated user).
+  Use the `RequestResponse<T>.Success(...)` envelope like every other controller.
+
+**Verify:** log in as Admin → `GET /api/menu` returns all 8 items; log in as a Teacher → `schools`,
+`users`, `category` are absent; as Student → only `dashboard` (and any student-visible items).
+
+## Phase 9 — Self-service profile endpoints (NEW, 2026-06-13)
+
+Profile screens (FE-10) need the logged-in user to read **and edit** their own info + change
+password. `GET /api/auth/info` (UserInfo) already exists. `UserController` PUT/reset-password are
+`[Authorize(Roles="Admin")]` only — not usable for self-service. Add two endpoints in
+`AuthController` + `AuthService`/`IAuthService` (reuse `IUserService.FindByNameAsync`/`UpdateAsync`
+and `GetPasswordHash(AppCommon.SaltPassHash!)` — same hashing as `Login`).
+
+- **DTOs** (next to `LoginDto`/`RegisterDto` in `ExamHub.Core/DataAccessObjects`):
+  `UpdateProfileDto(string DisplayName, string? Email, string? PhoneNumber)`,
+  `ChangePasswordDto(string OldPassword, string NewPassword)`.
+- **`PUT /api/auth/profile`** `[Authorize]` → `AuthService.UpdateProfile(User.GetUserName(), dto)`:
+  `FindByNameAsync` → set `DisplayName`/`PhoneNumber`/`SetEmail` → `userService.UpdateAsync(user)` →
+  return updated `UserInfo`.
+- **`POST /api/auth/change-password`** `[Authorize]` → verify `user.PasswordHash.Contains(old.GetPasswordHash(...))`
+  (same check as `Login`); if ok set new hash + `UpdateAsync`; else `RequestResponse.Error`.
+
+**Verify:** logged in, `PUT /api/auth/profile` updates name/email/phone (re-fetch `info` shows new
+values); `change-password` with wrong old → error, correct old → next login uses the new password.
+
 ---
 
 ## Cross-cutting: docs
@@ -291,6 +383,126 @@ management pages (`schoolService` exists, no page), and a multipart upload path 
 - Replace `__mocks__/dashboardStats` with real aggregates; render exam analytics
   (`GET /api/exams/{id}/analytics`, backend Phase 3) as recharts Bloom/difficulty/topic charts.
 
+## FE-7 — School Management UI (NEW, 2026-06-13) — separate routes
+
+The backend School module is fully built; the frontend has only `schoolService` and **no pages**
+(`School` listed under "Missing entirely" above). Build the admin UI as **separate routes per level**
+(per decision 2026-06-13), reusing the existing AntD `Table` + `Popconfirm` + form-modal pattern
+(`pages/category/grade/index.tsx`, `useCategoryTab.ts`) and the TanStack Query hook style
+(`hooks/queries/*`).
+
+**Services** (new under `src/services/`, mirror the controllers; follow `schoolService.ts` /
+`categoryServiceBase.ts`):
+- `cohortService` — `getBySchool(schoolId)`, `getWithClasses(id)`, `getWithMembers(id)` + CRUD
+  (extends `CategoryServiceBase`, base `cohort`).
+- `cohortClassService` — `getByCohort(cohortId)`, `getBySchoolYear(year)`,
+  `setHomeroomTeacher(id, teacherId)` (`PATCH /api/cohortclass/{id}/homeroom-teacher`).
+- `schoolMemberService` — GUID-keyed: `getBySchool(schoolId)`, `getBySchoolAndRole`, `getByUser`,
+  `add(body)`, `update(id, body)`, `remove(id)`, `setActive(id, isActive)`.
+- `cohortMemberService` — GUID-keyed: `getByCohort(cohortId)`, `getByStudent`, `add(body)`,
+  `remove(id)`, `setActive(id, isActive)`.
+
+  > Note: member endpoints are **Guid**-keyed and `cohortMember`/parts require `Admin`; keep the
+  > existing `AuthHttp` bearer flow. `schoolMember`/`cohortMember` need a *user picker* — reuse
+  > `userService.getAll()` (Admin-only) to choose the `AppUser` to enrol.
+
+**Types** (extend `src/types/school.d.ts`): add `Cohort`/`CohortBody`, `CohortClass`/`CohortClassBody`,
+`SchoolMember`/`SchoolMemberBody`, `CohortMember`/`CohortMemberBody` matching the API response DTOs
+(`ExamHub.Core/DataTransferObjects/School/*`).
+
+**Query hooks** (new under `src/hooks/queries/`): `useSchools`, `useCohorts(schoolId)`,
+`useCohortClasses(cohortId)`, `useSchoolMembers(schoolId)`, `useCohortMembers(cohortId)` with the
+matching create/update/delete mutations (model on `useGradeLevels.ts`).
+
+**Routes** (register in `src/routes/index.tsx` under the protected `AppLayout` children; add path
+constants to `src/routes/paths.ts`):
+- `schools` → `SchoolListPage` — table of schools, CRUD via form modal, row → navigate to detail.
+- `schools/:id` → `SchoolDetailPage` — school header + two tabs: **Khoá học** (Cohort list via
+  `getBySchool`, CRUD, row → `cohorts/:id`) and **Thành viên trường** (SchoolMember list +
+  add/remove/role-change/active toggle via the user picker).
+- `cohorts/:id` → `CohortDetailPage` — cohort header + two tabs: **Lớp học** (CohortClass list via
+  `getByCohort`, set homeroom teacher) and **Học sinh** (CohortMember list + enrol/remove/active).
+- Add an AntD `Breadcrumb` (Trường → Khoá → Lớp) for cross-level navigation.
+
+Guard all three routes with `<ProtectedRoute allowedRoles={['Admin']} />` (the component already
+supports `allowedRoles`).
+
+**Verify:** as Admin, create a school → open it → add a cohort → open the cohort → add a class and
+enrol a student → set a homeroom teacher; all calls hit the live API and lists refresh. As a
+non-Admin, navigating to `/app/schools` redirects to `/forbidden`.
+
+## FE-8 — Role-based menu consumption (NEW, 2026-06-13) — needs backend Phase 8
+
+`AppLayout.tsx` hardcodes `NAV_ITEMS` for everyone. Drive the sidebar from `GET /api/menu`.
+
+- New `menuService.getMenu()` (`GET /api/menu` via `AuthHttp`) returning `MenuItemResponse[]`, and a
+  `useMenu()` TanStack Query hook.
+- In `AppLayout.tsx`, replace the static `NAV_ITEMS` render with the fetched menu. Map the backend
+  `icon` **string key** → AntD icon component via a small lookup object (the icons currently imported:
+  `AppstoreOutlined`, `UnorderedListOutlined`, `FileTextOutlined`, `ThunderboltOutlined`,
+  `UserOutlined`, `TagsOutlined`, plus a new School icon e.g. `BankOutlined`). Keep the current
+  static list as an offline **fallback** if the query errors, so the shell never renders empty.
+- Add the new `schools` entry to whatever fallback list remains.
+- Type: add `MenuItem` to `src/types/*.d.ts` matching `MenuItemResponse`.
+
+**Verify:** log in as Admin → sidebar shows all items incl. "Quản lý trường"; log in as Teacher →
+school/users/category hidden; the menu matches what `GET /api/menu` returns for that role.
+
+## FE-9 — Student exam list / portal home (NEW, 2026-06-13) — no backend change
+
+Students could previously only reach an exam via a direct `?examId=` link (cover → take → result);
+there was **no list screen** and **no layout** for the student flow (only `AppLayout` for
+admin/teacher existed). All accounts also landed on `/app/dashboard` after login. Add a student home
+at `/student/exams` listing published exams with the student's own status + score and filters.
+
+**No backend change** — both endpoints exist: `examService.getPaged({status:'Published'})` and
+`submissionService.getByStudent(studentId)`. Merge client-side.
+
+- **`StudentLayout`** (`src/layouts/StudentLayout.tsx`, new — first student-flow layout): header
+  (ExamHub logo, student name from `useAuth().user`, logout → `/login`) + `<Outlet/>`; redirects to
+  `/login` if not authenticated. Wraps `/student/exams`. The exam-taking pages (`/student/exam`,
+  `/student/exam/take`, `/student/exam/result`) stay full-screen outside the layout.
+- **`StudentExamListPage`** (`src/pages/student/StudentExamListPage.tsx`, new): reuses the
+  `ExamListPage` table/filter pattern. Loads published exams (`pageSize` large) + the student's
+  submissions (`useMySubmissionsQuery`, added to `useSubmissions.ts`), maps `examId → latest
+  submission`, derives status: no sub → Chưa làm; `InProgress` → Đang làm; `Submitted` → Đã nộp;
+  `Graded` → Đã chấm (+ score). Columns incl. **Điểm của tôi**; row action "Vào thi/Tiếp tục"
+  (→ cover) or "Xem kết quả" (→ result). Filters: subject, grade, student-status (client-side),
+  keyword.
+- **Login redirect** (`LoginPage.tsx`): `homePathForRoles(roles)` → Student-only → `/student/exams`,
+  else `/app/dashboard` (both `onFinish` and the already-authenticated `useEffect`).
+- **`ExamResultPage`**: "Hoàn tất" now → `/student/exams` (was `/login`).
+- Routes/paths: `STUDENT_EXAMS: '/student/exams'`; route group under `<StudentLayout/>`.
+
+**Verify:** see the FE verification list below — log in as a Student-only account → lands on
+`/student/exams` with status/score per exam; filter works; take an exam → status flips to Đã nộp;
+Admin/Teacher still land on `/app/dashboard`; unauthenticated `/student/exams` → `/login`.
+
+## FE-10 — Profile / detail screens, 3 separate per role (NEW, 2026-06-13) — needs Phase 9
+
+Three **separate** profile components, each showing account info + role-specific data, with edit +
+change-password. Reuse `useAuth().user` for identity and the existing read endpoints.
+
+- **`authService`** (`src/services/authService.ts`): add `getInfo()` (`GET /Auth/info`),
+  `updateProfile(body)` (`PUT /Auth/profile`), `changePassword(body)` (`POST /Auth/change-password`).
+  Add a shared `ProfileInfoCard` + `EditProfileModal` + `ChangePasswordModal` (under
+  `src/pages/profile/`) reused by all three pages.
+- **`StudentProfilePage`** (`/student/profile`, inside `StudentLayout`): account info + enrolled
+  cohort/class (`cohortMemberService.getByStudent(user.id)`) + exam stats derived from
+  `submissionService.getByStudent` (số đề đã làm, điểm TB của bài đã chấm).
+- **`TeacherProfilePage`** (`/app/profile`): account info + assigned subjects
+  (`GET /api/teacher-subjects/teacher/{id}`, add `teacherSubjectService`) + schools
+  (`schoolMemberService.getByUser(user.id)`).
+- **`AdminProfilePage`** (`/app/profile`): account info + system stats (counts from
+  `userService.getAll`, `examService.getPaged` total, `schoolService.getAll`, question total).
+- **Routing/entry**: `/app/profile` renders `AdminProfilePage` if role Admin else `TeacherProfilePage`
+  (single route, role switch — keeps 3 separate components). Add a "Tài khoản" button in the
+  `AppLayout` sidebar footer (next to logout) → `/app/profile`; make `StudentLayout` header name/avatar
+  clickable → `/student/profile`. Paths in `src/routes/paths.ts`.
+
+**Verify:** each role opens its own profile, sees role-specific data; edit name/email/phone persists
+(re-fetch shows new values); change-password with correct old works, wrong old shows error.
+
 ## FE verification
 
 `pnpm install` then `pnpm build` (`tsc -b && vite build`) and `pnpm lint` clean. Manually smoke
@@ -308,6 +520,11 @@ latency warrants it. (Phases 1–5 are already done.)
 BE Phases 1/4/5 (done) → FE-3 anytime → FE-4 after BE Phase 6 → FE-5 after BE Phase 2 (done) →
 FE-6 after BE Phase 3 (done). Practically: FE-1, FE-2, FE-3, FE-5, FE-6 are unblocked now; only
 FE-4's export buttons wait on BE Phase 6.
+
+**New work (2026-06-13):** **FE-7** (School Management UI) is unblocked now — the backend School
+module is complete, so it needs no new backend. **Phase 8** (menu endpoint) is small/standalone and
+should land before **FE-8** (menu consumption), which depends on it. Recommended order: Phase 8 →
+FE-7 → FE-8 (FE-7 and Phase 8 are independent and can proceed in parallel).
 
 ## Global verification
 

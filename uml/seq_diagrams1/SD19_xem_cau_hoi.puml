@@ -1,0 +1,41 @@
+@startuml SD19_xem_cau_hoi
+skinparam sequenceArrowThickness 2
+skinparam roundcorner 8
+skinparam maxmessagesize 160
+skinparam sequence {
+    ArrowColor #2E75B6
+    ActorBorderColor #333333
+    LifeLineBorderColor #336699
+    LifeLineBackgroundColor #EEF4FF
+    ParticipantBorderColor #336699
+    ParticipantBackgroundColor #DDEEFF
+    ParticipantFontSize 13
+    ParticipantFontName Arial
+    ActorBackgroundColor White
+    ActorFontName Arial
+    ActorFontSize 13
+    NoteBackgroundColor #FFFFCC
+    NoteBorderColor #CCCC00
+}
+skinparam fontname Arial
+
+actor "Giáo viên" as Teacher
+participant "Giao diện" as FE
+participant "Dịch vụ Câu hỏi" as QS
+database "Cơ sở dữ liệu" as DB
+
+Teacher -> FE : Truy cập trang Ngân hàng câu hỏi
+FE -> QS : GET /api/questions
+QS -> DB : Truy vấn danh sách câu hỏi
+DB --> QS : [{danh sách câu hỏi}]
+QS --> FE : Danh sách câu hỏi
+FE --> Teacher : Hiển thị danh sách câu hỏi
+
+Teacher -> FE : Chọn câu hỏi cần xem chi tiết
+FE -> QS : GET /api/questions/{id}
+QS -> DB : Truy vấn thông tin đầy đủ câu hỏi
+DB --> QS : {nội dung, đáp án, Bloom, độ khó, trạng thái, ảnh}
+QS --> FE : Chi tiết câu hỏi
+FE --> Teacher : Hiển thị đầy đủ:\n- Nội dung câu hỏi\n- Danh sách đáp án\n- Cấp độ Bloom và độ khó\n- Trạng thái duyệt
+
+@enduml

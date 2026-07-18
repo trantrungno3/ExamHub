@@ -27,7 +27,7 @@ public sealed record BatchGenerateExamApiRequest(
     IReadOnlyList<SectionConfig> Sections)
 {
     /// <summary>Chuyển đổi sang service request với CreatedBy từ JWT.</summary>
-    public BatchGenerateExamRequest ToServiceRequest(Guid createdBy) => new(
+    public BatchGenerateExamRequest ToServiceRequest(string createdBy) => new(
         Title, ExamTemplateId, GradeLevelId, SubjectId,
         DurationMinutes, ShuffleQuestions, ShuffleAnswers,
         VariantCount, VariantNaming, createdBy, Sections);

@@ -20,9 +20,6 @@ public readonly struct QuestionTable
     /// <summary>Khóa ngoại cấp độ nhận thức Bloom (nullable)</summary>
     public const string CognitiveLevelId = "cognitive_level_id";
 
-    /// <summary>Người tạo</summary>
-    public const string CreatedBy = "created_by";
-
     /// <summary>Nội dung câu hỏi (HTML/Markdown)</summary>
     public const string Content = "content";
 
@@ -58,11 +55,5 @@ public readonly struct QuestionTable
 
     /// <summary>Thời điểm kiểm duyệt</summary>
     public const string VerifiedAt = "verified_at";
-
-    /// <summary>Ngày tạo</summary>
-    public const string CreatedAt = "created_at";
-
-    /// <summary>Ngày cập nhật</summary>
-    public const string UpdatedAt = "updated_at";
 }
 

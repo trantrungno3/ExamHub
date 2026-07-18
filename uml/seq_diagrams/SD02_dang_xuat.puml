@@ -1,0 +1,39 @@
+@startuml SD02_dang_xuat
+skinparam sequenceArrowThickness 2
+skinparam roundcorner 8
+skinparam maxmessagesize 160
+skinparam sequence {
+    ArrowColor #2E75B6
+    ActorBorderColor #333333
+    LifeLineBorderColor #336699
+    LifeLineBackgroundColor #EEF4FF
+    ParticipantBorderColor #336699
+    ParticipantBackgroundColor #DDEEFF
+    ParticipantFontSize 14
+    ParticipantFontName "DejaVu Sans"
+    ActorBackgroundColor White
+    ActorFontName "DejaVu Sans"
+    ActorFontSize 14
+    NoteBackgroundColor #FFFFCC
+    NoteBorderColor #CCCC00
+}
+skinparam fontname "DejaVu Sans"
+
+actor "Quản trị viên/\nGiáo viên/Học sinh" as User
+participant "Giao diện" as FE
+participant "Hệ thống" as SYS
+
+User -> FE : Bấm nút Đăng xuất
+FE -> FE : Hiển thị hộp thoại xác nhận
+
+alt Người dùng xác nhận (Có)
+    FE -> SYS : Yêu cầu đăng xuất
+    SYS -> SYS : Vô hiệu hoá phiên đăng nhập hiện tại
+    SYS --> FE : Xác nhận đăng xuất thành công
+    FE -> FE : Xoá thông tin phiên đăng nhập khỏi trình duyệt
+    FE --> User : Chuyển đến trang đăng nhập
+else Người dùng huỷ (Không)
+    FE --> User : Đóng hộp thoại, giữ nguyên trang
+end
+
+@enduml

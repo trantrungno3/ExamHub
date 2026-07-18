@@ -1,0 +1,62 @@
+@startuml SD06_sinh_de_thi
+skinparam sequenceArrowThickness 2
+skinparam roundcorner 8
+skinparam maxmessagesize 160
+skinparam sequence {
+    ArrowColor #2E75B6
+    ActorBorderColor #333333
+    LifeLineBorderColor #336699
+    LifeLineBackgroundColor #EEF4FF
+    ParticipantBorderColor #336699
+    ParticipantBackgroundColor #DDEEFF
+    ParticipantFontSize 13
+    ParticipantFontName Arial
+    ActorBackgroundColor White
+    ActorFontName Arial
+    ActorFontSize 13
+    NoteBackgroundColor #FFFFCC
+    NoteBorderColor #CCCC00
+}
+skinparam fontname Arial
+
+actor "Giáo viên" as Teacher
+participant "Giao diện" as FE
+participant "Dịch vụ Sinh đề" as EGS
+participant "Kho câu hỏi" as Pool
+participant "Lấy mẫu phân tầng" as Sampler
+participant "Xáo trộn" as Shuffler
+participant "Snapshot" as Snap
+database "Cơ sở dữ liệu" as DB
+
+Teacher -> FE : Chọn mẫu đề + bấm Sinh đề
+FE -> EGS : POST /api/exams/generate\n{templateId}
+
+EGS -> DB : Lấy cấu hình mẫu đề
+DB --> EGS : {cấu hình mẫu, danh sách phần[]}
+
+loop Mỗi phần thi trong mẫu
+    EGS -> Pool : Lấy pool câu hỏi\n{môn, chủ đề, Bloom, độ khó}
+    Pool -> DB : Truy vấn câu hỏi ĐÃ DUYỆT theo bộ lọc
+    DB --> Pool : [{danh sách câu hỏi}]
+    Pool --> EGS : Pool câu hỏi thoả mãn điều kiện
+
+    EGS -> Sampler : Stratified Sampling\n{pool, số lượng theo tầng}
+    note right of Sampler : Chọn đúng số câu theo\ntừng tầng độ khó & Bloom
+    Sampler --> EGS : [{câu hỏi đã chọn}]
+
+    EGS -> Shuffler : Fisher-Yates Shuffle\n{danh sách câu đã chọn}
+    note right of Shuffler : Xáo trộn thứ tự câu hỏi\nvà thứ tự đáp án
+    Shuffler --> EGS : [{câu hỏi đã xáo trộn}]
+end
+
+EGS -> Snap : Lưu snapshot nội dung câu hỏi
+Snap -> DB : Thêm exam_question_snapshot
+DB --> Snap : OK
+
+EGS -> DB : Thêm đề thi {templateId, mã đề, ngày tạo}
+DB --> EGS : {examId, mã đề}
+
+EGS --> FE : 201 Created + {examId, mã đề}
+FE --> Teacher : Hiển thị đề vừa sinh, cho phép xem trước
+
+@enduml

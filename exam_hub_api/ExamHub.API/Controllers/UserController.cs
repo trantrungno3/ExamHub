@@ -11,7 +11,7 @@ namespace ExamHub.API.Controllers;
 [ApiController]
 [Authorize(Roles = "Admin")]
 [Route("api/users")]
-public class UserController(IUserManagementService userService) : ControllerBase
+public class UserController(IUserManagementService userService) : AuthorizeControllerBase
 {
     // ── Quản lý người dùng ──────────────────────────────────────
 

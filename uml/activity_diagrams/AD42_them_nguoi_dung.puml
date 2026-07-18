@@ -1,0 +1,54 @@
+@startuml AD42_them_nguoi_dung
+skinparam defaultFontName "DejaVu Sans"
+skinparam activity {
+    BackgroundColor #DDEEFF
+    BorderColor #336699
+    FontName "DejaVu Sans"
+    FontSize 16
+    DiamondBackgroundColor #FFF4CE
+    DiamondBorderColor #CC8800
+    DiamondFontName "DejaVu Sans"
+    DiamondFontSize 15
+    StartColor #1F3864
+    EndColor #1F3864
+    BarColor #336699
+}
+skinparam ArrowColor #2E75B6
+skinparam ArrowFontName "DejaVu Sans"
+skinparam ArrowFontSize 15
+skinparam noteBackgroundColor #FFFFCC
+skinparam noteBorderColor #CCCC00
+skinparam noteFontName "DejaVu Sans"
+skinparam swimlaneBorderColor #336699
+skinparam swimlaneFontName "DejaVu Sans"
+skinparam swimlaneFontStyle bold
+skinparam wrapWidth 150
+
+|Quản trị viên|
+start
+:Truy cập trang Quản lý người dùng;
+:Bấm nút Thêm người dùng;
+
+|Hệ thống|
+:Hiển thị mẫu điền thông tin người dùng mới;
+
+|Quản trị viên|
+:Điền họ tên, email, tên đăng nhập,
+mật khẩu tạm, vai trò;
+:Bấm Lưu;
+
+|Hệ thống|
+:Kiểm tra tính hợp lệ dữ liệu;
+if (Dữ liệu hợp lệ?) then (Không)
+    :Hiển thị thông báo lỗi
+    (email / tên đăng nhập đã tồn tại);
+    |Quản trị viên|
+    :Chỉnh sửa lại thông tin;
+    detach
+else (Có)
+    |Hệ thống|
+    :Tạo tài khoản mới và lưu vào CSDL;
+    :Hiển thị thông báo thêm người dùng thành công;
+endif
+stop
+@enduml

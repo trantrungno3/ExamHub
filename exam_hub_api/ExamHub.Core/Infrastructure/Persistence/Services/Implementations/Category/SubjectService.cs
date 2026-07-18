@@ -32,8 +32,8 @@ public class SubjectService(ISubjectRepository repo, IRedisService cache)
 
     public async Task<Subject> CreateAsync(Subject entity, CancellationToken ct = default)
     {
-        entity.CreatedAt = DateTime.UtcNow;
-        entity.UpdatedAt = DateTime.UtcNow;
+        entity.Created = DateTime.UtcNow;
+        entity.Modified = DateTime.UtcNow;
         var result = await repo.AddAsync(entity, ct);
         await InvalidateCacheAsync(ct);
         return result;
@@ -41,7 +41,7 @@ public class SubjectService(ISubjectRepository repo, IRedisService cache)
 
     public async Task<Subject> UpdateAsync(Subject entity, CancellationToken ct = default)
     {
-        entity.UpdatedAt = DateTime.UtcNow;
+        entity.Modified = DateTime.UtcNow;
         await repo.UpdateAsync(entity, ct);
         await InvalidateCacheAsync(ct);
         return entity;

@@ -49,7 +49,7 @@ public sealed class UserManagementService(
         user.Description = request.Description;
         if (!string.IsNullOrEmpty(request.Email))
             user.SetEmail(request.Email);
-        user.ModifyBy = CurrentUser;
+        user.ModifiedBy = CurrentUser;
         user.Modified = DateTime.UtcNow;
         await inner.UpdateAsync(user);
         return user;
@@ -93,6 +93,6 @@ public sealed class UserManagementService(
         Guid id, Expression<Func<UserAdmin, TField>> field, TField value)
         => inner.UpdateFieldsAsync(id,
             FieldUpdate<UserAdmin>.Set(field, value),
-            FieldUpdate<UserAdmin>.Set(u => u.ModifyBy, CurrentUser),
+            FieldUpdate<UserAdmin>.Set(u => u.ModifiedBy, CurrentUser),
             FieldUpdate<UserAdmin>.Set(u => u.Modified, DateTime.UtcNow));
 }

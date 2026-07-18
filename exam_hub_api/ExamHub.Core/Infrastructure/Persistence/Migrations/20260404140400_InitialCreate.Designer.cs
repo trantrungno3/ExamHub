@@ -92,15 +92,11 @@ namespace ExamHub.Core.Persistence.Migrations
                         .HasColumnType("character varying(50)")
                         .HasColumnName("class_name");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTime>("Created")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at")
                         .HasDefaultValueSql("now()");
-
-                    b.Property<Guid>("CreatedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("created_by");
 
                     b.Property<int>("DurationMinutes")
                         .ValueGeneratedOnAdd()
@@ -167,7 +163,7 @@ namespace ExamHub.Core.Persistence.Migrations
                         .HasDefaultValue(10.0m)
                         .HasColumnName("total_score");
 
-                    b.Property<DateTime>("UpdatedAt")
+                    b.Property<DateTime>("Modified")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at")
@@ -254,7 +250,7 @@ namespace ExamHub.Core.Persistence.Migrations
                         .HasColumnName("id")
                         .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTime>("Created")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at")
@@ -316,15 +312,11 @@ namespace ExamHub.Core.Persistence.Migrations
                         .HasColumnName("id")
                         .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTime>("Created")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at")
                         .HasDefaultValueSql("now()");
-
-                    b.Property<Guid>("CreatedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("created_by");
 
                     b.Property<string>("Description")
                         .HasMaxLength(1000)
@@ -390,7 +382,7 @@ namespace ExamHub.Core.Persistence.Migrations
                         .HasDefaultValue(10.0m)
                         .HasColumnName("total_score");
 
-                    b.Property<DateTime>("UpdatedAt")
+                    b.Property<DateTime>("Modified")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at")
@@ -416,7 +408,7 @@ namespace ExamHub.Core.Persistence.Migrations
                         .HasColumnName("id")
                         .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTime>("Created")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at")
@@ -502,7 +494,7 @@ namespace ExamHub.Core.Persistence.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityAlwaysColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTime>("Created")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at")
@@ -529,7 +521,7 @@ namespace ExamHub.Core.Persistence.Migrations
                         .HasColumnType("character varying(100)")
                         .HasColumnName("name");
 
-                    b.Property<DateTime>("UpdatedAt")
+                    b.Property<DateTime>("Modified")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at")
@@ -566,15 +558,11 @@ namespace ExamHub.Core.Persistence.Migrations
                         .HasColumnType("text")
                         .HasColumnName("content_plain");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTime>("Created")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at")
                         .HasDefaultValueSql("now()");
-
-                    b.Property<Guid>("CreatedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("created_by");
 
                     b.Property<int>("DifficultyLevelId")
                         .HasColumnType("integer")
@@ -618,7 +606,7 @@ namespace ExamHub.Core.Persistence.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("topic_id");
 
-                    b.Property<DateTime>("UpdatedAt")
+                    b.Property<DateTime>("Modified")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at")
@@ -756,7 +744,7 @@ namespace ExamHub.Core.Persistence.Migrations
                         .HasColumnType("character varying(20)")
                         .HasColumnName("code");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTime>("Created")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at")
@@ -783,7 +771,7 @@ namespace ExamHub.Core.Persistence.Migrations
                         .HasColumnType("character varying(150)")
                         .HasColumnName("name");
 
-                    b.Property<DateTime>("UpdatedAt")
+                    b.Property<DateTime>("Modified")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at")
@@ -898,7 +886,7 @@ namespace ExamHub.Core.Persistence.Migrations
                         .HasColumnType("character varying(30)")
                         .HasColumnName("code");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTime>("Created")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at")
@@ -935,7 +923,7 @@ namespace ExamHub.Core.Persistence.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("subject_id");
 
-                    b.Property<DateTime>("UpdatedAt")
+                    b.Property<DateTime>("Modified")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at")

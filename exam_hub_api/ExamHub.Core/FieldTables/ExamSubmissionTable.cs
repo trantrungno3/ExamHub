@@ -31,8 +31,5 @@ public readonly struct ExamSubmissionTable
 
     /// <summary>Trạng thái bài nộp</summary>
     public const string Status = "status";
-
-    /// <summary>Ngày tạo</summary>
-    public const string CreatedAt = "created_at";
 }
 

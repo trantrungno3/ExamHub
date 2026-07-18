@@ -41,12 +41,12 @@ public record SchoolResponse(
     string? Phone,
     string? Email,
     bool IsActive,
-    long CreatedAt,
-    long UpdatedAt
+    long Created,
+    long Modified
 )
 {
     /// <summary>Chuyển từ entity sang response DTO</summary>
     public static SchoolResponse FromEntity(Domain.Entities.School e) =>
         new(e.Id, e.Name, e.Code, e.Address, e.Phone, e.Email, e.IsActive,
-            e.CreatedAt.UtcDateTime.ToTimestamp(), e.UpdatedAt.UtcDateTime.ToTimestamp());
+            e.Created.ToTimestamp(), e.Modified.ToTimestamp());
 }

@@ -1,0 +1,55 @@
+@startuml SD28_tao_mau_de_thi
+skinparam sequenceArrowThickness 2
+skinparam roundcorner 8
+skinparam maxmessagesize 160
+skinparam sequence {
+    ArrowColor #2E75B6
+    ActorBorderColor #333333
+    LifeLineBorderColor #336699
+    LifeLineBackgroundColor #EEF4FF
+    ParticipantBorderColor #336699
+    ParticipantBackgroundColor #DDEEFF
+    ParticipantFontSize 14
+    ParticipantFontName "DejaVu Sans"
+    ActorBackgroundColor White
+    ActorFontName "DejaVu Sans"
+    ActorFontSize 14
+    NoteBackgroundColor #FFFFCC
+    NoteBorderColor #CCCC00
+}
+skinparam fontname "DejaVu Sans"
+
+actor "Giáo viên" as Teacher
+participant "Giao diện" as FE
+participant "Hệ thống" as SYS
+
+Teacher -> FE : Chọn Tạo mẫu đề thi mới
+FE -> SYS : Yêu cầu danh mục môn học và loại câu hỏi
+SYS -> SYS : Truy vấn danh mục hệ thống
+SYS --> FE : Trả về danh mục hệ thống
+FE --> Teacher : Hiển thị form tạo mẫu đề
+
+Teacher -> FE : Nhập tên mẫu, môn học, thời gian, tổng số câu
+
+loop Thêm phần thi (có thể nhiều phần)
+    Teacher -> FE : Thêm phần thi mới
+    Teacher -> FE : Cấu hình phần: tên, số câu, loại câu hỏi
+    Teacher -> FE : Cài tỉ lệ độ khó (dễ / trung bình / khó %)
+    opt Cài bộ lọc Bloom
+        Teacher -> FE : Chọn cấp độ Bloom cho phần thi này
+    end
+end
+
+Teacher -> FE : Bấm Lưu mẫu đề
+FE -> FE : Kiểm tra tổng số câu khớp và tỉ lệ bằng 100%
+
+alt Kiểm tra không hợp lệ
+    FE --> Teacher : Hiển thị lỗi cấu hình
+else Hợp lệ
+    FE -> SYS : Yêu cầu lưu mẫu đề với các phần thi đã cấu hình
+    SYS -> SYS : Lưu mẫu đề và các phần thi
+    SYS --> FE : Trả về kết quả tạo mẫu đề thành công
+    FE --> Teacher : Thông báo tạo mẫu đề thành công
+end
+
+@enduml

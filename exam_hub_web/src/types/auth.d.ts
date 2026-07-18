@@ -24,6 +24,7 @@ interface UserInfo {
     userName: string
     displayName?: string
     phoneNumber?: string
+    email?: string
     roles: string[]
 }
 

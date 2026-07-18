@@ -2,6 +2,7 @@ import {useEffect} from 'react'
 import {useNavigate, useParams} from 'react-router-dom'
 import {Button, Checkbox, Form, Input, Select, Upload, message} from 'antd'
 import {DeleteOutlined, PaperClipOutlined, PlusOutlined} from '@ant-design/icons'
+import RichTextEditor from '../../components/RichTextEditor'
 import {useMutation, useQueryClient} from '@tanstack/react-query'
 import {questionService} from '../../services/questionService'
 import {statusCode} from '../../services/requestService'
@@ -122,11 +123,17 @@ export default function AddQuestionPage() {
                             <div className="form-section">
                                 <p className="form-section-title">Nội dung câu hỏi</p>
                                 <Form.Item name="content" rules={[{required: true, message: 'Nhập nội dung câu hỏi'}]}>
-                                    <Input.TextArea rows={4} placeholder="Nhập nội dung câu hỏi (hỗ trợ HTML)"/>
+                                    <RichTextEditor
+                                        placeholder="Nhập nội dung câu hỏi..."
+                                        minHeight={120}
+                                    />
                                 </Form.Item>
                                 <p className="form-section-title">Giải thích đáp án</p>
                                 <Form.Item name="explanation">
-                                    <Input.TextArea rows={2} placeholder="Giải thích (tuỳ chọn)"/>
+                                    <RichTextEditor
+                                        placeholder="Giải thích đáp án (tuỳ chọn)..."
+                                        minHeight={80}
+                                    />
                                 </Form.Item>
                             </div>
 

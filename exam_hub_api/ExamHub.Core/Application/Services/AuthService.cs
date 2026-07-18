@@ -45,7 +45,7 @@ public sealed class AuthService(IUserService userService) : IAuthService
         data.PasswordHash = dto.Password.GetPasswordHash(AppCommon.SaltPassHash!);
         var userAdmin = await userService.CreateAsync(data);
         return userAdmin != null
-            ? RequestResponse<object>.Success("Đăng kí thành công!", userAdmin)
+            ? RequestResponse<object>.Success("Đăng kí thành công!")
             : RequestResponse<object>.Error("Đăng kí thất bại!");
     }
 
@@ -86,5 +86,50 @@ public sealed class AuthService(IUserService userService) : IAuthService
         return userInfo == null
             ? RequestResponse<UserInfo>.Error("Không tìm thấy thông tin!")
             : RequestResponse<UserInfo>.Success("Lấy token thành công!", new UserInfo(userInfo), 1);
+    }
+
+    /// <summary>
+    ///     Cập nhật thông tin cá nhân của người dùng đang đăng nhập
+    /// </summary>
+    public async Task<RequestResponse<UserInfo>> UpdateProfile(string userName, UpdateProfileDto dto)
+    {
+        if (string.IsNullOrEmpty(userName))
+            return RequestResponse<UserInfo>.Error("Không xác định được người dùng!");
+        var user = await userService.FindByNameAsync(userName);
+        if (user == null)
+            return RequestResponse<UserInfo>.Error("Không tìm thấy thông tin!");
+
+        user.DisplayName = dto.DisplayName;
+        user.PhoneNumber = dto.PhoneNumber;
+        if (!string.IsNullOrEmpty(dto.Email))
+            user.SetEmail(dto.Email);
+        user.Modified = DateTime.UtcNow;
+        await userService.UpdateAsync(user);
+
+        return RequestResponse<UserInfo>.Success("Cập nhật thông tin thành công!", new UserInfo(user), 1);
+    }
+
+    /// <summary>
+    ///     Đổi mật khẩu của người dùng đang đăng nhập
+    /// </summary>
+    public async Task<RequestResponse<bool>> ChangePassword(string userName, ChangePasswordDto dto)
+    {
+        if (string.IsNullOrEmpty(userName))
+            return RequestResponse<bool>.Error("Không xác định được người dùng!");
+        if (string.IsNullOrEmpty(dto.OldPassword) || string.IsNullOrEmpty(dto.NewPassword))
+            return RequestResponse<bool>.Error("Không được để trống thông tin!");
+
+        var user = await userService.FindByNameAsync(userName);
+        if (user == null)
+            return RequestResponse<bool>.Error("Không tìm thấy thông tin!");
+
+        if (!user.PasswordHash!.Contains(dto.OldPassword.GetPasswordHash(AppCommon.SaltPassHash!)))
+            return RequestResponse<bool>.Error("Mật khẩu hiện tại không đúng!");
+
+        user.PasswordHash = dto.NewPassword.GetPasswordHash(AppCommon.SaltPassHash!);
+        user.Modified = DateTime.UtcNow;
+        await userService.UpdateAsync(user);
+
+        return RequestResponse<bool>.Success("Đổi mật khẩu thành công!", true, 1);
     }
 }

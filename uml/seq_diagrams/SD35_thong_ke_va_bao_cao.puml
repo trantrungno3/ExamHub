@@ -1,0 +1,57 @@
+@startuml SD35_thong_ke_va_bao_cao
+skinparam sequenceArrowThickness 2
+skinparam roundcorner 8
+skinparam maxmessagesize 160
+skinparam sequence {
+    ArrowColor #2E75B6
+    ActorBorderColor #333333
+    LifeLineBorderColor #336699
+    LifeLineBackgroundColor #EEF4FF
+    ParticipantBorderColor #336699
+    ParticipantBackgroundColor #DDEEFF
+    ParticipantFontSize 14
+    ParticipantFontName "DejaVu Sans"
+    ActorBackgroundColor White
+    ActorFontName "DejaVu Sans"
+    ActorFontSize 14
+    NoteBackgroundColor #FFFFCC
+    NoteBorderColor #CCCC00
+}
+skinparam fontname "DejaVu Sans"
+
+actor "Giáo viên" as Teacher
+actor "Học sinh" as Student
+participant "Giao diện" as FE
+participant "Hệ thống" as SYS
+
+group Giáo viên xem báo cáo lớp
+    Teacher -> FE : Truy cập mục Báo cáo lớp
+    FE --> Teacher : Hiển thị bộ lọc: lớp, đề thi, thời gian
+
+    Teacher -> FE : Chọn tiêu chí báo cáo
+    FE -> SYS : Yêu cầu báo cáo theo tiêu chí đã chọn
+
+    SYS -> SYS : Tổng hợp kết quả của lớp
+    SYS -> SYS : Phân tích phân bố kết quả theo cấp độ Bloom
+    SYS -> SYS : Tính điểm trung bình, phân phối điểm,\ncâu hỏi nhiều học sinh sai nhất
+
+    SYS --> FE : Trả về báo cáo lớp, thống kê Bloom, câu hỏi yếu
+    FE --> Teacher : Hiển thị biểu đồ và bảng thống kê
+
+    Teacher -> FE : Xuất báo cáo ra Excel / PDF
+    FE -> SYS : Yêu cầu xuất báo cáo
+    SYS --> FE : Trả về file báo cáo để tải về
+end
+
+group Học sinh xem kết quả cá nhân
+    Student -> FE : Truy cập mục Kết quả của tôi
+    FE -> SYS : Yêu cầu kết quả bài làm của học sinh
+
+    SYS -> SYS : Lấy kết quả bài làm chi tiết
+    SYS -> SYS : Phân tích Bloom cá nhân
+
+    SYS --> FE : Trả về báo cáo cá nhân, điểm từng câu, nhận xét Bloom
+    FE --> Student : Hiển thị điểm, đáp án đúng,\nnhận xét theo cấp độ Bloom
+end
+
+@enduml

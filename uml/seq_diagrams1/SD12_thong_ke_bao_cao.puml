@@ -1,0 +1,66 @@
+@startuml SD12_thong_ke_bao_cao
+skinparam sequenceArrowThickness 2
+skinparam roundcorner 8
+skinparam maxmessagesize 160
+skinparam sequence {
+    ArrowColor #2E75B6
+    ActorBorderColor #333333
+    LifeLineBorderColor #336699
+    LifeLineBackgroundColor #EEF4FF
+    ParticipantBorderColor #336699
+    ParticipantBackgroundColor #DDEEFF
+    ParticipantFontSize 13
+    ParticipantFontName Arial
+    ActorBackgroundColor White
+    ActorFontName Arial
+    ActorFontSize 13
+    NoteBackgroundColor #FFFFCC
+    NoteBorderColor #CCCC00
+}
+skinparam fontname Arial
+
+actor "Giáo viên" as Teacher
+actor "Học sinh" as Student
+participant "Giao diện" as FE
+participant "Dịch vụ Báo cáo" as RS
+participant "Phân tích Bloom" as BA
+database "Cơ sở dữ liệu" as DB
+
+group Giáo viên xem báo cáo lớp
+    Teacher -> FE : Truy cập mục Báo cáo lớp
+    FE --> Teacher : Hiển thị bộ lọc: lớp, đề thi, thời gian
+
+    Teacher -> FE : Chọn tiêu chí báo cáo
+    FE -> RS : GET /api/reports/class\n{classId, examId, from, to}
+
+    RS -> DB : Tổng hợp kết quả của lớp
+    DB --> RS : [{kết quả học sinh}]
+
+    RS -> BA : Phân tích phân bố theo Bloom\n{đáp án, ánh xạ Bloom}
+    BA -> BA : Tính tỉ lệ đúng/sai theo từng cấp độ Bloom
+    BA --> RS : {thống kê Bloom}
+
+    RS -> RS : Tính: điểm TB, phân phối điểm,\ncâu hỏi nhiều Học sinh sai nhất
+    RS --> FE : {báo cáo lớp, thống kê Bloom, câu hỏi yếu}
+    FE --> Teacher : Hiển thị biểu đồ + bảng thống kê
+
+    Teacher -> FE : Xuất báo cáo ra Excel / PDF
+    FE -> RS : GET /api/reports/class/export
+    RS --> FE : File tải về
+end
+
+group Học sinh xem kết quả cá nhân
+    Student -> FE : Truy cập mục Kết quả của tôi
+    FE -> RS : GET /api/reports/student\n{studentId, submissionId}
+
+    RS -> DB : Lấy kết quả bài làm chi tiết
+    DB --> RS : {bài làm, chi tiết điểm}
+
+    RS -> BA : Phân tích Bloom cá nhân
+    BA --> RS : {thống kê Bloom cá nhân}
+
+    RS --> FE : {báo cáo cá nhân, điểm từng câu, nhận xét Bloom}
+    FE --> Student : Hiển thị điểm, đáp án đúng,\nnhận xét theo cấp độ Bloom
+end
+
+@enduml

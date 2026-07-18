@@ -1,0 +1,68 @@
+@startuml AD35_thong_ke_va_bao_cao
+skinparam defaultFontName "DejaVu Sans"
+skinparam activity {
+    BackgroundColor #DDEEFF
+    BorderColor #336699
+    FontName "DejaVu Sans"
+    FontSize 16
+    DiamondBackgroundColor #FFF4CE
+    DiamondBorderColor #CC8800
+    DiamondFontName "DejaVu Sans"
+    DiamondFontSize 15
+    StartColor #1F3864
+    EndColor #1F3864
+    BarColor #336699
+}
+skinparam ArrowColor #2E75B6
+skinparam ArrowFontName "DejaVu Sans"
+skinparam ArrowFontSize 15
+skinparam noteBackgroundColor #FFFFCC
+skinparam noteBorderColor #CCCC00
+skinparam noteFontName "DejaVu Sans"
+skinparam swimlaneBorderColor #336699
+skinparam swimlaneFontName "DejaVu Sans"
+skinparam swimlaneFontStyle bold
+skinparam wrapWidth 150
+
+|Giáo viên / Học sinh|
+start
+:Truy cập chức năng Thống kê / Báo cáo;
+
+if (Vai trò là Giáo viên?) then (Có)
+    |Giáo viên|
+    :Chọn lớp học, đề thi, khoảng thời gian;
+    :Bấm Xem báo cáo;
+
+    |Hệ thống|
+    :Tổng hợp kết quả toàn lớp;
+    :Phân tích phân bố theo từng cấp độ Bloom;
+    :Tính điểm trung bình, phân phối điểm;
+    :Xác định câu hỏi nhiều học sinh sai nhất;
+    :Hiển thị biểu đồ và bảng thống kê lớp;
+
+    |Giáo viên|
+    if (Muốn xuất báo cáo?) then (Có)
+        :Chọn định dạng Excel hoặc PDF;
+        |Hệ thống|
+        :Tạo file báo cáo;
+        :Trả về link tải file;
+        |Giáo viên|
+        :Tải file báo cáo về máy;
+    else (Không)
+    endif
+    stop
+
+else (Học sinh)
+    |Học sinh|
+    :Chọn bài thi cần xem kết quả;
+
+    |Hệ thống|
+    :Lấy kết quả bài làm chi tiết;
+    :Phân tích kết quả theo Bloom cá nhân;
+    :Hiển thị tổng điểm, xếp loại, điểm từng câu, đáp án đúng, nhận xét Bloom;
+
+    |Học sinh|
+    :Xem kết quả và nhận xét;
+    stop
+endif
+@enduml

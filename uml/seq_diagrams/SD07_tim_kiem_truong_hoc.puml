@@ -1,0 +1,44 @@
+@startuml SD07_tim_kiem_truong_hoc
+skinparam sequenceArrowThickness 2
+skinparam roundcorner 8
+skinparam maxmessagesize 160
+skinparam sequence {
+    ArrowColor #2E75B6
+    ActorBorderColor #333333
+    LifeLineBorderColor #336699
+    LifeLineBackgroundColor #EEF4FF
+    ParticipantBorderColor #336699
+    ParticipantBackgroundColor #DDEEFF
+    ParticipantFontSize 14
+    ParticipantFontName "DejaVu Sans"
+    ActorBackgroundColor White
+    ActorFontName "DejaVu Sans"
+    ActorFontSize 14
+    NoteBackgroundColor #FFFFCC
+    NoteBorderColor #CCCC00
+}
+skinparam fontname "DejaVu Sans"
+
+actor "Quản trị viên" as Admin
+participant "Giao diện" as FE
+participant "Hệ thống" as SYS
+
+Admin -> FE : Truy cập mục Quản lý trường
+FE --> Admin : Hiển thị ô tìm kiếm với bộ lọc
+
+Admin -> FE : Nhập từ khoá và chọn bộ lọc
+Admin -> FE : Bấm Tìm kiếm
+
+FE -> SYS : Yêu cầu tìm kiếm trường theo tiêu chí
+SYS -> SYS : Truy vấn trường học theo tiêu chí
+
+alt Tìm thấy kết quả
+    SYS --> FE : Trả về danh sách trường học phù hợp
+    FE --> Admin : Hiển thị danh sách kết quả
+else Không tìm thấy
+    SYS --> FE : Trả về danh sách rỗng
+    FE --> Admin : Thông báo không tìm thấy trường phù hợp
+    Admin -> FE : Điều chỉnh tiêu chí và tìm lại
+end
+
+@enduml

@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using TVT.Core.Attributes;
+using TVT.Core.Models;
 using TVT.Core.Models.PostgreSql;
 using TVT.Core.Models.PostgreSql.FieldTables;
 using ExamHub.Core.FieldTables;
@@ -11,7 +12,7 @@ namespace ExamHub.Core.Domain.Entities;
 /// </summary>
 [Table(TopicTable.TableName)]
 [SqlBuilderProperty(TopicTable.TableName)]
-public class Topic : IModelBaseSql<int>
+public class Topic : ModifyModelBase, IModelBaseSql<int>
 {
     /// <summary>Khóa chính (SERIAL)</summary>
     [Column(CommonFieldTable.Id)]
@@ -53,16 +54,6 @@ public class Topic : IModelBaseSql<int>
     [SqlBuilderProperty(TopicTable.IsActive, Insert = true, Update = true)]
     public bool IsActive { get; set; } = true;
 
-    /// <summary>Thời điểm tạo</summary>
-    [Column(TopicTable.CreatedAt)]
-    [SqlBuilderProperty(TopicTable.CreatedAt, Insert = true, Update = false)]
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
-    /// <summary>Thời điểm cập nhật gần nhất</summary>
-    [Column(TopicTable.UpdatedAt)]
-    [SqlBuilderProperty(TopicTable.UpdatedAt, Insert = true, Update = true)]
-    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
-
     // ── Navigation ──────────────────────────────────────────────
     /// <summary>Môn học của chủ đề này</summary>
     public Subject? Subject { get; set; }
@@ -86,9 +77,7 @@ public class Topic : IModelBaseSql<int>
         code        = Code,
         sort_order  = SortOrder,
         description = Description,
-        is_active   = IsActive,
-        created_at  = CreatedAt,
-        updated_at  = UpdatedAt
+        is_active   = IsActive
     };
 
     /// <summary>Tạo object để UPDATE</summary>
@@ -101,7 +90,6 @@ public class Topic : IModelBaseSql<int>
         code        = Code,
         sort_order  = SortOrder,
         description = Description,
-        is_active   = IsActive,
-        updated_at  = DateTime.UtcNow
+        is_active   = IsActive
     };
 }

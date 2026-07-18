@@ -1,0 +1,51 @@
+@startuml AD46_tim_kiem_nguoi_dung
+skinparam defaultFontName "DejaVu Sans"
+skinparam activity {
+    BackgroundColor #DDEEFF
+    BorderColor #336699
+    FontName "DejaVu Sans"
+    FontSize 16
+    DiamondBackgroundColor #FFF4CE
+    DiamondBorderColor #CC8800
+    DiamondFontName "DejaVu Sans"
+    DiamondFontSize 15
+    StartColor #1F3864
+    EndColor #1F3864
+    BarColor #336699
+}
+skinparam ArrowColor #2E75B6
+skinparam ArrowFontName "DejaVu Sans"
+skinparam ArrowFontSize 15
+skinparam noteBackgroundColor #FFFFCC
+skinparam noteBorderColor #CCCC00
+skinparam noteFontName "DejaVu Sans"
+skinparam swimlaneBorderColor #336699
+skinparam swimlaneFontName "DejaVu Sans"
+skinparam swimlaneFontStyle bold
+skinparam wrapWidth 150
+
+|Quản trị viên|
+start
+:Truy cập trang Quản lý người dùng;
+
+|Hệ thống|
+:Hiển thị giao diện tìm kiếm với bộ lọc:
+họ tên, email, vai trò, trạng thái;
+
+|Quản trị viên|
+:Điền từ khoá và chọn điều kiện lọc;
+:Bấm Tìm kiếm;
+
+|Hệ thống|
+:Xử lý dữ liệu theo tiêu chí đã chọn;
+if (Tìm thấy kết quả?) then (Không)
+    :Hiển thị thông báo không tìm thấy;
+    |Quản trị viên|
+    :Điều chỉnh tiêu chí và thử lại;
+    detach
+else (Có)
+    |Hệ thống|
+    :Hiển thị danh sách người dùng phù hợp;
+endif
+stop
+@enduml

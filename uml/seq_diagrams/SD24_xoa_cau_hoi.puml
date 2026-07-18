@@ -1,0 +1,52 @@
+@startuml SD24_xoa_cau_hoi
+skinparam sequenceArrowThickness 2
+skinparam roundcorner 8
+skinparam maxmessagesize 160
+skinparam sequence {
+    ArrowColor #2E75B6
+    ActorBorderColor #333333
+    LifeLineBorderColor #336699
+    LifeLineBackgroundColor #EEF4FF
+    ParticipantBorderColor #336699
+    ParticipantBackgroundColor #DDEEFF
+    ParticipantFontSize 14
+    ParticipantFontName "DejaVu Sans"
+    ActorBackgroundColor White
+    ActorFontName "DejaVu Sans"
+    ActorFontSize 14
+    NoteBackgroundColor #FFFFCC
+    NoteBorderColor #CCCC00
+}
+skinparam fontname "DejaVu Sans"
+
+actor "Giáo viên" as Teacher
+participant "Giao diện" as FE
+participant "Hệ thống" as SYS
+
+Teacher -> FE : Chọn câu hỏi cần xoá và bấm Xoá
+FE -> SYS : Yêu cầu kiểm tra tình trạng sử dụng câu hỏi
+SYS -> SYS : Kiểm tra câu hỏi có đang dùng trong đề thi không
+
+alt Câu hỏi đang được sử dụng trong đề thi
+    SYS --> FE : Trả về cảnh báo đang sử dụng
+    FE --> Teacher : Cảnh báo câu hỏi đang được dùng trong đề thi đã giao
+
+    alt Giáo viên xác nhận xoá bắt buộc
+        Teacher -> FE : Xác nhận xoá bắt buộc
+        FE -> SYS : Yêu cầu xoá bắt buộc câu hỏi
+        SYS -> SYS : Xoá câu hỏi khỏi ngân hàng
+        SYS --> FE : Trả về kết quả xoá thành công
+        FE --> Teacher : Thông báo xoá thành công
+    else Giáo viên huỷ
+        FE --> Teacher : Huỷ thao tác, giữ nguyên câu hỏi
+    end
+else Câu hỏi chưa được sử dụng
+    FE --> Teacher : Hiển thị hộp thoại xác nhận xoá
+    Teacher -> FE : Xác nhận xoá
+    FE -> SYS : Yêu cầu xoá câu hỏi
+    SYS -> SYS : Xoá câu hỏi khỏi ngân hàng
+    SYS --> FE : Trả về kết quả xoá thành công
+    FE --> Teacher : Thông báo xoá thành công
+end
+
+@enduml

@@ -8,9 +8,8 @@ namespace ExamHub.API.Controllers.Teacher;
 
 /// <summary>Controller quản lý phân công môn học cho giáo viên</summary>
 [ApiController]
-[Authorize]
 [Route("api/teacher-subjects")]
-public class TeacherSubjectController(ITeacherSubjectService service) : ControllerBase
+public class TeacherSubjectController(ITeacherSubjectService service) : AuthorizeControllerBase
 {
     /// <summary>Lấy danh sách môn học của giáo viên</summary>
     [HttpGet("teacher/{userId:guid}")]

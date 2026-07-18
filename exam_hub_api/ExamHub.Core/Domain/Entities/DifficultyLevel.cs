@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using TVT.Core.Attributes;
+using TVT.Core.Models;
 using TVT.Core.Models.PostgreSql;
 using TVT.Core.Models.PostgreSql.FieldTables;
 using ExamHub.Core.FieldTables;
@@ -11,7 +12,7 @@ namespace ExamHub.Core.Domain.Entities;
 /// </summary>
 [Table(DifficultyLevelTable.TableName)]
 [SqlBuilderProperty(DifficultyLevelTable.TableName)]
-public class DifficultyLevel : IModelBaseSql<int>
+public class DifficultyLevel : ModifyModelBase, IModelBaseSql<int>
 {
     /// <summary>Khóa chính (SERIAL)</summary>
     [Column(CommonFieldTable.Id)]

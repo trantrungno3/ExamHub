@@ -1,0 +1,70 @@
+@startuml SD10_hoc_sinh_lam_bai
+skinparam sequenceArrowThickness 2
+skinparam roundcorner 8
+skinparam maxmessagesize 160
+skinparam sequence {
+    ArrowColor #2E75B6
+    ActorBorderColor #333333
+    LifeLineBorderColor #336699
+    LifeLineBackgroundColor #EEF4FF
+    ParticipantBorderColor #336699
+    ParticipantBackgroundColor #DDEEFF
+    ParticipantFontSize 13
+    ParticipantFontName Arial
+    ActorBackgroundColor White
+    ActorFontName Arial
+    ActorFontSize 13
+    NoteBackgroundColor #FFFFCC
+    NoteBorderColor #CCCC00
+}
+skinparam fontname Arial
+
+actor "Học sinh" as Student
+participant "Giao diện" as FE
+participant "Dịch vụ Giao đề" as AS
+participant "Dịch vụ Bài thi" as ES
+participant "Tự động lưu" as Save
+database "Cơ sở dữ liệu" as DB
+
+Student -> FE : Đăng nhập + vào mục Đề thi của tôi
+FE -> AS : GET /api/assignments?studentId={id}
+AS -> DB : Lấy danh sách đề thi được giao
+DB --> AS : [{danh sách đề}]
+AS --> FE : Danh sách đề thi + trạng thái
+FE --> Student : Hiển thị danh sách đề thi
+
+Student -> FE : Chọn đề thi + bấm Bắt đầu làm bài
+FE -> ES : POST /api/submissions/start\n{assignmentId, studentId}
+ES -> DB : Kiểm tra điều kiện:\n- Đang trong thời gian mở\n- Chưa làm hoặc được phép làm lại
+
+alt Không đủ điều kiện
+    ES --> FE : 403 Forbidden + lý do
+    FE --> Student : Thông báo không thể làm bài
+else Đủ điều kiện
+    ES -> DB : Thêm bài làm {trạng thái: ĐANG LÀM, bắt đầu lúc}
+    DB --> ES : {submissionId}
+    ES --> FE : {submissionId, nội dung đề, thời gian làm bài}
+    FE --> Student : Hiển thị giao diện làm bài + đồng hồ đếm ngược
+
+    loop Học sinh trả lời từng câu
+        Student -> FE : Chọn / nhập đáp án câu hỏi N
+        FE -> Save : Tự động lưu tạm định kỳ (30 giây)
+        Save -> DB : Cập nhật đáp án bài làm
+        DB --> Save : OK
+    end
+
+    alt Hết giờ
+        FE -> ES : POST /api/submissions/{id}/submit (tự động)
+        note right of FE : Hệ thống tự động nộp\nkhi đồng hồ về 0
+    else Nộp chủ động
+        Student -> FE : Bấm Nộp bài
+        FE -> ES : POST /api/submissions/{id}/submit
+    end
+
+    ES -> DB : Cập nhật bài làm {trạng thái: ĐÃ NỘP, nộp lúc}
+    ES -> ES : Kích hoạt chấm điểm tự động
+    ES --> FE : {submissionId, trạng thái: ĐÃ NỘP}
+    FE --> Student : Thông báo nộp bài thành công
+end
+
+@enduml

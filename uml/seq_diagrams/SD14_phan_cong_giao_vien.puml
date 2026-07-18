@@ -1,0 +1,48 @@
+@startuml SD14_phan_cong_giao_vien
+skinparam sequenceArrowThickness 2
+skinparam roundcorner 8
+skinparam maxmessagesize 160
+skinparam sequence {
+    ArrowColor #2E75B6
+    ActorBorderColor #333333
+    LifeLineBorderColor #336699
+    LifeLineBackgroundColor #EEF4FF
+    ParticipantBorderColor #336699
+    ParticipantBackgroundColor #DDEEFF
+    ParticipantFontSize 14
+    ParticipantFontName "DejaVu Sans"
+    ActorBackgroundColor White
+    ActorFontName "DejaVu Sans"
+    ActorFontSize 14
+    NoteBackgroundColor #FFFFCC
+    NoteBorderColor #CCCC00
+}
+skinparam fontname "DejaVu Sans"
+
+actor "Quản trị viên" as Admin
+participant "Giao diện" as FE
+participant "Hệ thống" as SYS
+
+Admin -> FE : Truy cập trang chi tiết lớp học
+FE -> SYS : Yêu cầu danh sách giáo viên và môn học
+SYS -> SYS : Lấy danh sách giáo viên và môn học
+SYS --> FE : Trả về danh sách giáo viên và môn học
+FE --> Admin : Hiển thị danh sách để chọn
+
+Admin -> FE : Chọn giáo viên, môn học
+Admin -> FE : Xác nhận
+
+FE -> SYS : Yêu cầu phân công giáo viên cho lớp
+SYS -> SYS : Kiểm tra tính hợp lệ\n(không trùng phân công môn học đã có)
+
+alt Hợp lệ
+    SYS -> SYS : Lưu thông tin phân công
+    SYS --> FE : Trả về kết quả thành công
+    FE --> Admin : Thông báo thành công
+else Trùng phân công môn học
+    SYS --> FE : Trả về cảnh báo trùng phân công
+    FE --> Admin : Cảnh báo môn học đã được phân công cho giáo viên khác
+    Admin -> FE : Chọn giáo viên khác hoặc huỷ
+end
+
+@enduml

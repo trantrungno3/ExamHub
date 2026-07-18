@@ -23,5 +23,5 @@ public interface IBulkImportService
 {
     /// <summary>Phân tích file Excel và lưu các câu hỏi hợp lệ.</summary>
     Task<BulkImportQuestionResponse> ImportAsync(
-        BulkImportQuestionRequest request, Guid createdBy, CancellationToken ct = default);
+        BulkImportQuestionRequest request, string createdBy, CancellationToken ct = default);
 }

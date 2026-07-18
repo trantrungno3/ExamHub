@@ -36,12 +36,12 @@ public record GradeLevelResponse(
     short GradeNumber,
     string? Description,
     bool IsActive,
-    long CreatedAt,
-    long UpdatedAt
+    long Created,
+    long Modified
 )
 {
     /// <summary>Chuyển từ entity sang response DTO</summary>
     public static GradeLevelResponse FromEntity(GradeLevel e) =>
         new(e.Id, e.Name, e.GradeNumber, e.Description, e.IsActive,
-            e.CreatedAt.ToTimestamp(), e.UpdatedAt.ToTimestamp());
+            e.Created.ToTimestamp(), e.Modified.ToTimestamp());
 }

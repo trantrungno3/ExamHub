@@ -17,9 +17,6 @@ public readonly struct ExamTable
     /// <summary>Khóa ngoại môn học</summary>
     public const string SubjectId = "subject_id";
 
-    /// <summary>Người tạo</summary>
-    public const string CreatedBy = "created_by";
-
     /// <summary>Tiêu đề đề thi</summary>
     public const string Title = "title";
 
@@ -58,11 +55,5 @@ public readonly struct ExamTable
 
     /// <summary>ID lô sinh đề</summary>
     public const string BatchId = "batch_id";
-
-    /// <summary>Ngày tạo</summary>
-    public const string CreatedAt = "created_at";
-
-    /// <summary>Ngày cập nhật</summary>
-    public const string UpdatedAt = "updated_at";
 }
 

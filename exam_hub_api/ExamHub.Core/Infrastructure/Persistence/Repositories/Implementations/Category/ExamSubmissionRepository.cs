@@ -21,7 +21,7 @@ public class ExamSubmissionRepository : BaseRepository<ExamSubmission, Guid>, IE
     public async Task<IReadOnlyList<ExamSubmission>> GetByExamAsync(Guid examId, CancellationToken ct = default)
         => await Set.AsNoTracking()
             .Where(x => x.ExamId == examId)
-            .OrderByDescending(x => x.CreatedAt)
+            .OrderByDescending(x => x.Created)
             .ToListAsync(ct);
 
     /// <inheritdoc/>
@@ -35,6 +35,6 @@ public class ExamSubmissionRepository : BaseRepository<ExamSubmission, Guid>, IE
         => await Set.AsNoTracking()
             .Where(x => x.StudentId == studentId)
             .Include(x => x.Exam)
-            .OrderByDescending(x => x.CreatedAt)
+            .OrderByDescending(x => x.Created)
             .ToListAsync(ct);
 }

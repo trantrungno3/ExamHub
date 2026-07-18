@@ -80,7 +80,7 @@ public record ExamSubmissionResponse(
     decimal? TotalScore,
     bool? IsPassed,
     string Status,
-    long CreatedAt,
+    long Created,
     IReadOnlyList<SubmissionAnswerResponse>? Answers
 )
 {
@@ -94,7 +94,7 @@ public record ExamSubmissionResponse(
             e.TotalScore,
             e.IsPassed,
             e.Status.ToString(),
-            e.CreatedAt.ToTimestamp(),
+            e.Created.ToTimestamp(),
             includeAnswers ? e.Answers.Select(SubmissionAnswerResponse.FromEntity).ToList() : null
         );
 }

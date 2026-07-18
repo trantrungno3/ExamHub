@@ -39,12 +39,12 @@ public record SubjectResponse(
     string Code,
     string? Description,
     bool IsActive,
-    long CreatedAt,
-    long UpdatedAt
+    long Created,
+    long Modified
 )
 {
     /// <summary>Chuyển từ entity sang response DTO</summary>
     public static SubjectResponse FromEntity(Subject e) =>
         new(e.Id, e.GradeLevelId, e.Name, e.Code, e.Description, e.IsActive,
-            e.CreatedAt.ToTimestamp(), e.UpdatedAt.ToTimestamp());
+            e.Created.ToTimestamp(), e.Modified.ToTimestamp());
 }

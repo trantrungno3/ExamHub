@@ -1,6 +1,6 @@
 # Hệ Thống Tạo Sinh Đề Thi (ExamHub)
 > Context file — paste vào đầu cuộc hội thoại mới để tiếp tục làm việc.
-> Phiên bản: v3 — Cập nhật Bloom's Taxonomy (cognitive_levels) + Đổi tên dự án → ExamHub + School Management Module
+> Phiên bản: v4 — v3 + Menu phân quyền (Phase 8) + Auth self-service profile (Phase 9) + Frontend: School Management UI, role-based menu, Student exam list, Profile 3 vai trò (FE-7…FE-10)
 
 ---
 
@@ -65,6 +65,8 @@ Hệ thống tạo sinh đề thi tự động cho phép giáo viên/admin cấu
 | **Export Module** | Xuất PDF, Word, Excel | QuestPDF (PDF) + DocumentFormat.OpenXml (Word) + ClosedXML (Excel) |
 | **File Storage** | Upload/download ảnh, file đề thi | MinIO SDK (S3-compatible) |
 | **School Management Module** | Quản lý trường, khoá học, lớp học, phân công giáo viên, enroll học sinh | Controller + Service + EF Core |
+| **Navigation Menu Module** | Trả menu điều hướng đã lọc theo role của người dùng (Phase 8) | `MenuController` + `MenuRegistry` (config tĩnh, không DB) |
+| **Auth Self-service** | Xem/sửa thông tin cá nhân + đổi mật khẩu của chính mình (Phase 9) | `AuthController` + `AuthService` |
 
 ### 2.3 Luồng Hoạt Động Chính
 
@@ -307,16 +309,67 @@ ExamHub.sln
 └── docker-compose.yml
 ```
 
+### 6.1 Frontend thực tế (`exam_hub_web`) — cập nhật 2026-06
+
+> Stack thực tế: React 19 + Vite + TS + **Ant Design v6** + TanStack Query + Zustand. API client là
+> `fetch` wrapper `src/services/requestService.ts` (`AuthHttp`/`Http`). Cấu trúc §6 ở trên là spec
+> gốc (drift); dưới đây là cấu trúc thực tế các màn đã có:
+
+```
+src/
+├── layouts/
+│   ├── AppLayout.tsx          # Shell admin/teacher: sidebar render từ GET /api/menu (FE-8),
+│   │                          #   footer có "Tài khoản" + "Đăng xuất"
+│   └── StudentLayout.tsx      # [FE-9] Shell học sinh: header logo + tên (→ profile) + đăng xuất
+├── pages/
+│   ├── auth/                  # LoginPage (redirect theo role), RegisterPage
+│   ├── dashboard/             # DashboardPage (aggregate thật)
+│   ├── category/              # Grade/Subject/Topic/Difficulty/QuestionType/Cognitive (tabs)
+│   ├── questions/             # QuestionBankPage, AddQuestionPage (CRUD + bulk import + attachment)
+│   ├── exams/                 # ExamTemplatePage, CreateExamTemplatePage, GeneratePage,
+│   │                          #   ExamListPage (+ Submissions/Analytics drawer, export)
+│   ├── student/              
+│   │   ├── StudentExamListPage.tsx   # [FE-9] /student/exams — danh sách đề + trạng thái + điểm + lọc
+│   │   ├── ExamCoverPage / ExamTakingPage / ExamResultPage
+│   ├── school/               # [FE-7] SchoolListPage, SchoolDetailPage (Khoá/Thành viên),
+│   │                          #   CohortDetailPage (Lớp/Học sinh)
+│   ├── profile/              # [FE-10] 3 màn tách riêng + component dùng chung
+│   │   ├── ProfileCard.tsx / EditProfileModal.tsx / ChangePasswordModal.tsx
+│   │   ├── StudentProfilePage.tsx   # info + khoá/lớp + thống kê thi
+│   │   ├── TeacherProfilePage.tsx   # info + môn phụ trách + trường
+│   │   ├── AdminProfilePage.tsx     # info + thống kê hệ thống
+│   │   └── AppProfilePage.tsx       # /app/profile → chọn Admin/Teacher theo role
+│   └── user/                 # UserPage (quản lý người dùng + roles, Admin)
+├── services/                 # requestService, authService, *Service (per entity), menuService
+├── hooks/queries/            # useExams, useQuestions, useSubmissions, useSchools, useCohorts,
+│                             #   useCohortClasses, useSchoolMembers, useCohortMembers, useMenu, useProfile
+├── routes/                   # index.tsx (router), paths.ts, ProtectedRoute (allowedRoles)
+└── stores/                   # authStore (zustand persist), uiStore
+```
+
+**Điều hướng theo vai trò:** sau đăng nhập, tài khoản **chỉ role Student** → `/student/exams`;
+Admin/Teacher → `/app/dashboard`. Sidebar admin/teacher render động từ `GET /api/menu` (lọc theo role).
+
 ---
 
 ## 7. API Endpoints (RESTful)
 
+> Lưu ý (drift): route thực tế là `/api/...` (KHÔNG có `v1`). Các block cũ dưới đây giữ tiền tố
+> `/api/v1/` theo spec gốc; các endpoint MỚI (2026-06) ghi đúng route thực tế `/api/...`.
+
 ### Auth
 ```
-POST   /api/v1/auth/login                      # Đăng nhập → JWT + Refresh Token
-POST   /api/v1/auth/refresh                    # Làm mới access token
-POST   /api/v1/auth/logout
-GET    /api/v1/auth/me
+POST   /api/auth/login                         # Đăng nhập → JWT + Refresh Token
+POST   /api/auth/register                       # Đăng ký tài khoản
+GET    /api/auth/refresh-token                   # Làm mới access token
+GET    /api/auth/info                            # [MỚI] Thông tin tài khoản đang đăng nhập (UserInfo + Email)
+PUT    /api/auth/profile                          # [MỚI-Phase 9] Tự cập nhật tên/email/SĐT
+POST   /api/auth/change-password                  # [MỚI-Phase 9] Tự đổi mật khẩu (kiểm tra mật khẩu cũ)
+```
+
+### Navigation Menu (Phase 8)
+```
+GET    /api/menu                                  # [MỚI] Danh sách menu đã lọc theo role (đọc từ JWT)
 ```
 
 ### Config
@@ -380,6 +433,39 @@ POST   /api/v1/submissions                     # Học sinh nộp bài
 GET    /api/v1/submissions/{id}                # Kết quả chi tiết
 GET    /api/v1/exams/{id}/submissions          # Danh sách nộp bài theo đề
 GET    /api/v1/exams/{id}/analytics            # Thống kê theo Bloom, độ khó
+POST   /api/exam-submissions/{id}/finalize     # Giáo viên chốt điểm (tổng hợp → Graded)
+GET    /api/exam-submissions/by-student/{id}   # Bài nộp theo học sinh (màn Đề thi của tôi)
+```
+
+### School Management (route thực tế `/api/...`)
+```
+# Trường
+GET    /api/school                              # Danh sách trường (CRUD chuẩn CategoryBase)
+GET    /api/school/{id}/with-cohorts            # Trường kèm khoá học
+GET    /api/school/{id}/with-members            # Trường kèm thành viên
+
+# Khoá học (Cohort)
+GET    /api/cohort/by-school/{schoolId}         # Khoá theo trường
+GET    /api/cohort/{id}/with-classes            # Khoá kèm lớp
+POST   /api/cohort                              # Tạo khoá (DB trigger tự sinh CohortClass)
+
+# Lớp trong khoá (CohortClass)
+GET    /api/cohortclass/by-cohort/{cohortId}    # Lớp theo khoá
+PATCH  /api/cohortclass/{id}/homeroom-teacher   # Gán giáo viên chủ nhiệm
+
+# Thành viên trường (SchoolMember — Teacher/Admin)
+GET    /api/schoolmember/by-school/{schoolId}   # Thành viên theo trường
+GET    /api/schoolmember/by-user/{userId}       # Trường của một người dùng
+POST   /api/schoolmember                        # Thêm thành viên (kèm role)
+
+# Học sinh trong khoá (CohortMember — Admin)
+GET    /api/cohortmember/by-cohort/{cohortId}   # Học sinh theo khoá
+GET    /api/cohortmember/by-student/{studentId} # Khoá của một học sinh
+POST   /api/cohortmember                        # Enroll học sinh vào khoá
+
+# Phân công môn giáo viên (TeacherSubject)
+GET    /api/teacher-subjects/teacher/{userId}   # Môn phụ trách của giáo viên
+POST   /api/teacher-subjects/assign             # Gán môn cho giáo viên
 ```
 
 ---
@@ -594,7 +680,20 @@ public async Task<IActionResult> CreateQuestion(...)
 [Authorize]
 [HttpPost("submissions")]
 public async Task<IActionResult> SubmitExam(...)
+
+// [MỚI-Phase 8] Menu lọc theo role (đọc từ JWT, config tĩnh MenuRegistry)
+[Authorize]
+[HttpGet("menu")]                       // /api/menu — chỉ trả item mà role user được phép thấy
+
+// [MỚI-Phase 9] Self-service: bất kỳ user đăng nhập sửa thông tin/đổi mật khẩu CHÍNH MÌNH
+[Authorize]
+[HttpPut("auth/profile")]
+[HttpPost("auth/change-password")]       // kiểm tra mật khẩu cũ trước khi đặt mật khẩu mới
 ```
+
+**Phân quyền menu (FE):** `MenuRegistry` gán `Roles[]` cho từng mục — Admin thấy đủ; Teacher ẩn
+`schools`/`users`/`category`; Student chỉ `dashboard`. Frontend render sidebar từ `GET /api/menu`,
+và route guard `ProtectedRoute allowedRoles` (vd màn School chỉ Admin).
 
 **JWT Config (appsettings.json):**
 ```json

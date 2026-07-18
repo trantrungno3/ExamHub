@@ -55,7 +55,7 @@ public record QuestionRequest(
 )
 {
     /// <summary>Map sang entity Question</summary>
-    public Domain.Entities.Question ToEntity(Guid createdBy) => new()
+    public Domain.Entities.Question ToEntity(string createdBy) => new()
     {
         TopicId           = TopicId,
         QuestionTypeId    = QuestionTypeId,
@@ -103,8 +103,8 @@ public record QuestionResponse(
     int UsageCount,
     bool IsActive,
     bool IsVerified,
-    long CreatedAt,
-    long UpdatedAt,
+    long Created,
+    long Modified,
     IReadOnlyList<QuestionAnswerResponse>? Answers
 )
 {
@@ -130,8 +130,8 @@ public record QuestionResponse(
             e.UsageCount,
             e.IsActive,
             e.IsVerified,
-            e.CreatedAt.ToTimestamp(),
-            e.UpdatedAt.ToTimestamp(),
+            e.Created.ToTimestamp(),
+            e.Modified.ToTimestamp(),
             includeAnswers ? e.Answers.Select(QuestionAnswerResponse.FromEntity).ToList() : null
         );
 }

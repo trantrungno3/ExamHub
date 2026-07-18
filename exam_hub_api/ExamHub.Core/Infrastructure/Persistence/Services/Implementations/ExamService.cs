@@ -36,8 +36,8 @@ public class ExamService : IExamService
     public async Task<Exam> CreateAsync(Exam entity, IEnumerable<ExamQuestion> questions, CancellationToken ct = default)
     {
         entity.Id        = Guid.NewGuid();
-        entity.CreatedAt = DateTime.UtcNow;
-        entity.UpdatedAt = DateTime.UtcNow;
+        entity.Created = DateTime.UtcNow;
+        entity.Modified = DateTime.UtcNow;
         await _examRepo.AddAsync(entity, ct);
 
         var questionList = questions.Select((q, i) =>

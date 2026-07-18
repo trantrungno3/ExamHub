@@ -62,3 +62,34 @@ public record RegisterDto : AccountDto
         };
     }
 }
+
+/// <summary>DTO cập nhật thông tin cá nhân của người dùng đang đăng nhập</summary>
+public sealed record UpdateProfileDto
+{
+    /// <summary>Tên hiển thị</summary>
+    [Display(Name = "Tên hiển thị")]
+    [Required(ErrorMessage = DataAnnotationErrorText.Required)]
+    [MaxLength(200, ErrorMessage = DataAnnotationErrorText.RangeMaxString)]
+    public required string DisplayName { get; set; }
+
+    /// <summary>Email</summary>
+    public string? Email { get; set; }
+
+    /// <summary>Số điện thoại</summary>
+    public string? PhoneNumber { get; set; }
+}
+
+/// <summary>DTO đổi mật khẩu của người dùng đang đăng nhập</summary>
+public sealed record ChangePasswordDto
+{
+    /// <summary>Mật khẩu hiện tại</summary>
+    [Display(Name = "Mật khẩu hiện tại")]
+    [Required(ErrorMessage = DataAnnotationErrorText.Required)]
+    public required string OldPassword { get; set; }
+
+    /// <summary>Mật khẩu mới</summary>
+    [Display(Name = "Mật khẩu mới")]
+    [Required(ErrorMessage = DataAnnotationErrorText.Required)]
+    [MinLength(6, ErrorMessage = DataAnnotationErrorText.RangeMinString)]
+    public required string NewPassword { get; set; }
+}

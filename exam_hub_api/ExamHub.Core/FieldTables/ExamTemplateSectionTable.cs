@@ -43,8 +43,5 @@ public readonly struct ExamTemplateSectionTable
 
     /// <summary>Tỉ lệ % câu rất khó</summary>
     public const string PctVeryHard = "pct_very_hard";
-
-    /// <summary>Ngày tạo</summary>
-    public const string CreatedAt = "created_at";
 }
 

@@ -1,6 +1,7 @@
 using ExamHub.Core.Domain.Entities;
 using ExamHub.Core.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
+using TVT.Core.IdentityUser.PostgreSql.FieldTables;
 
 namespace ExamHub.Core.Infrastructure.Persistence;
 
@@ -10,47 +11,68 @@ namespace ExamHub.Core.Infrastructure.Persistence;
 public class AppDbContext : DbContext
 {
     /// <inheritdoc />
-    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
+    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
+    {
+    }
 
     // ── DbSets ──────────────────────────────────────────────────────────────
     /// <summary>Lớp học (1–12)</summary>
     public DbSet<GradeLevel> GradeLevels { get; set; }
+
     /// <summary>Môn học</summary>
     public DbSet<Subject> Subjects { get; set; }
+
     /// <summary>Chủ đề / Chương</summary>
     public DbSet<Topic> Topics { get; set; }
+
     /// <summary>Mức độ khó</summary>
     public DbSet<DifficultyLevel> DifficultyLevels { get; set; }
+
     /// <summary>Loại câu hỏi</summary>
     public DbSet<QuestionType> QuestionTypes { get; set; }
+
     /// <summary>Cấp độ nhận thức Bloom's Taxonomy</summary>
     public DbSet<CognitiveLevel> CognitiveLevels { get; set; }
+
     /// <summary>Trường học</summary>
     public DbSet<School> Schools { get; set; }
+
     /// <summary>Khoá học tuyển sinh</summary>
     public DbSet<Cohort> Cohorts { get; set; }
+
     /// <summary>Lớp học (sinh tự động từ khoá)</summary>
     public DbSet<CohortClass> CohortClasses { get; set; }
+
     /// <summary>Học sinh thuộc khoá</summary>
     public DbSet<CohortMember> CohortMembers { get; set; }
+
     /// <summary>Giáo viên/Admin thuộc trường</summary>
     public DbSet<SchoolMember> SchoolMembers { get; set; }
+
     /// <summary>Câu hỏi trong ngân hàng</summary>
     public DbSet<Question> Questions { get; set; }
+
     /// <summary>Đáp án câu hỏi</summary>
     public DbSet<QuestionAnswer> QuestionAnswers { get; set; }
+
     /// <summary>Quan hệ giáo viên – môn học</summary>
     public DbSet<TeacherSubject> TeacherSubjects { get; set; }
+
     /// <summary>Mẫu đề thi</summary>
     public DbSet<ExamTemplate> ExamTemplates { get; set; }
+
     /// <summary>Phần trong mẫu đề thi</summary>
     public DbSet<ExamTemplateSection> ExamTemplateSections { get; set; }
+
     /// <summary>Đề thi cụ thể</summary>
     public DbSet<Exam> Exams { get; set; }
+
     /// <summary>Câu hỏi snapshot trong đề thi</summary>
     public DbSet<ExamQuestion> ExamQuestions { get; set; }
+
     /// <summary>Bài nộp của học sinh</summary>
     public DbSet<ExamSubmission> ExamSubmissions { get; set; }
+
     /// <summary>Câu trả lời trong bài nộp</summary>
     public DbSet<SubmissionAnswer> SubmissionAnswers { get; set; }
 
@@ -70,8 +92,10 @@ public class AppDbContext : DbContext
             e.Property(x => x.GradeNumber).IsRequired();
             e.Property(x => x.Description).HasMaxLength(500);
             e.Property(x => x.IsActive).HasDefaultValue(true);
-            e.Property(x => x.CreatedAt).HasDefaultValueSql("now()");
-            e.Property(x => x.UpdatedAt).HasDefaultValueSql("now()");
+            e.Property(x => x.CreatedBy).HasMaxLength(150).HasColumnName(ModifyFieldsTable.CreatedBy);
+            e.Property(x => x.Created).HasColumnName(ModifyFieldsTable.Created);
+            e.Property(x => x.ModifiedBy).HasMaxLength(150).HasColumnName(ModifyFieldsTable.ModifiedBy);
+            e.Property(x => x.Modified).HasColumnName(ModifyFieldsTable.Modified);
             e.HasIndex(x => x.GradeNumber).IsUnique();
         });
 
@@ -85,8 +109,10 @@ public class AppDbContext : DbContext
             e.Property(x => x.Code).HasMaxLength(20).IsRequired();
             e.Property(x => x.Description).HasMaxLength(500);
             e.Property(x => x.IsActive).HasDefaultValue(true);
-            e.Property(x => x.CreatedAt).HasDefaultValueSql("now()");
-            e.Property(x => x.UpdatedAt).HasDefaultValueSql("now()");
+            e.Property(x => x.CreatedBy).HasMaxLength(150).HasColumnName(ModifyFieldsTable.CreatedBy);
+            e.Property(x => x.Created).HasColumnName(ModifyFieldsTable.Created);
+            e.Property(x => x.ModifiedBy).HasMaxLength(150).HasColumnName(ModifyFieldsTable.ModifiedBy);
+            e.Property(x => x.Modified).HasColumnName(ModifyFieldsTable.Modified);
             e.HasIndex(x => new { x.GradeLevelId, x.Code }).IsUnique();
             e.HasOne(x => x.GradeLevel)
                 .WithMany(x => x.Subjects)
@@ -105,8 +131,10 @@ public class AppDbContext : DbContext
             e.Property(x => x.Description).HasMaxLength(500);
             e.Property(x => x.SortOrder).HasDefaultValue(0);
             e.Property(x => x.IsActive).HasDefaultValue(true);
-            e.Property(x => x.CreatedAt).HasDefaultValueSql("now()");
-            e.Property(x => x.UpdatedAt).HasDefaultValueSql("now()");
+            e.Property(x => x.CreatedBy).HasMaxLength(150).HasColumnName(ModifyFieldsTable.CreatedBy);
+            e.Property(x => x.Created).HasColumnName(ModifyFieldsTable.Created);
+            e.Property(x => x.ModifiedBy).HasMaxLength(150).HasColumnName(ModifyFieldsTable.ModifiedBy);
+            e.Property(x => x.Modified).HasColumnName(ModifyFieldsTable.Modified);
             e.HasOne(x => x.Subject)
                 .WithMany(x => x.Topics)
                 .HasForeignKey(x => x.SubjectId)
@@ -128,6 +156,10 @@ public class AppDbContext : DbContext
             e.Property(x => x.ScoreWeight).HasPrecision(4, 2).HasDefaultValue(1.0m);
             e.Property(x => x.SortOrder).HasDefaultValue(0);
             e.Property(x => x.IsActive).HasDefaultValue(true);
+            e.Property(x => x.CreatedBy).HasMaxLength(150).HasColumnName(ModifyFieldsTable.CreatedBy);
+            e.Property(x => x.Created).HasColumnName(ModifyFieldsTable.Created);
+            e.Property(x => x.ModifiedBy).HasMaxLength(150).HasColumnName(ModifyFieldsTable.ModifiedBy);
+            e.Property(x => x.Modified).HasColumnName(ModifyFieldsTable.Modified);
             e.HasIndex(x => x.Code).IsUnique();
         });
 
@@ -141,6 +173,10 @@ public class AppDbContext : DbContext
             e.Property(x => x.Name).HasMaxLength(100).IsRequired();
             e.Property(x => x.Description).HasMaxLength(300);
             e.Property(x => x.IsActive).HasDefaultValue(true);
+            e.Property(x => x.CreatedBy).HasMaxLength(150).HasColumnName(ModifyFieldsTable.CreatedBy);
+            e.Property(x => x.Created).HasColumnName(ModifyFieldsTable.Created);
+            e.Property(x => x.ModifiedBy).HasMaxLength(150).HasColumnName(ModifyFieldsTable.ModifiedBy);
+            e.Property(x => x.Modified).HasColumnName(ModifyFieldsTable.Modified);
             e.HasIndex(x => x.Code).IsUnique();
         });
 
@@ -155,6 +191,10 @@ public class AppDbContext : DbContext
             e.Property(x => x.NameEn).HasMaxLength(100).IsRequired();
             e.Property(x => x.ColorCode).HasMaxLength(10);
             e.Property(x => x.IsActive).HasDefaultValue(true);
+            e.Property(x => x.CreatedBy).HasMaxLength(150).HasColumnName(ModifyFieldsTable.CreatedBy);
+            e.Property(x => x.Created).HasColumnName(ModifyFieldsTable.Created);
+            e.Property(x => x.ModifiedBy).HasMaxLength(150).HasColumnName(ModifyFieldsTable.ModifiedBy);
+            e.Property(x => x.Modified).HasColumnName(ModifyFieldsTable.Modified);
             e.HasIndex(x => x.Code).IsUnique();
             e.HasIndex(x => x.LevelOrder).IsUnique();
         });
@@ -173,8 +213,8 @@ public class AppDbContext : DbContext
             e.Property(x => x.UsageCount).HasDefaultValue(0);
             e.Property(x => x.IsActive).HasDefaultValue(true);
             e.Property(x => x.IsVerified).HasDefaultValue(false);
-            e.Property(x => x.CreatedAt).HasDefaultValueSql("now()");
-            e.Property(x => x.UpdatedAt).HasDefaultValueSql("now()");
+            e.Property(x => x.Created).HasColumnName(ModifyFieldsTable.Created).HasDefaultValueSql("now()");
+            e.Property(x => x.Modified).HasColumnName(ModifyFieldsTable.Modified).HasDefaultValueSql("now()");
             e.HasOne(x => x.Topic)
                 .WithMany(x => x.Questions)
                 .HasForeignKey(x => x.TopicId)
@@ -235,8 +275,10 @@ public class AppDbContext : DbContext
             e.Property(x => x.ShuffleAnswers).HasDefaultValue(true);
             e.Property(x => x.PreventDuplicate).HasDefaultValue(true);
             e.Property(x => x.IsActive).HasDefaultValue(true);
-            e.Property(x => x.CreatedAt).HasDefaultValueSql("now()");
-            e.Property(x => x.UpdatedAt).HasDefaultValueSql("now()");
+            e.Property(x => x.CreatedBy).HasMaxLength(150).HasColumnName(ModifyFieldsTable.CreatedBy);
+            e.Property(x => x.Created).HasColumnName(ModifyFieldsTable.Created);
+            e.Property(x => x.ModifiedBy).HasMaxLength(150).HasColumnName(ModifyFieldsTable.ModifiedBy);
+            e.Property(x => x.Modified).HasColumnName(ModifyFieldsTable.Modified);
             e.HasOne(x => x.GradeLevel)
                 .WithMany()
                 .HasForeignKey(x => x.GradeLevelId)
@@ -260,7 +302,10 @@ public class AppDbContext : DbContext
             e.Property(x => x.PctMedium).HasDefaultValue(0);
             e.Property(x => x.PctHard).HasDefaultValue(0);
             e.Property(x => x.PctVeryHard).HasDefaultValue(0);
-            e.Property(x => x.CreatedAt).HasDefaultValueSql("now()");
+            e.Property(x => x.CreatedBy).HasMaxLength(150).HasColumnName(ModifyFieldsTable.CreatedBy);
+            e.Property(x => x.Created).HasColumnName(ModifyFieldsTable.Created);
+            e.Property(x => x.ModifiedBy).HasMaxLength(150).HasColumnName(ModifyFieldsTable.ModifiedBy);
+            e.Property(x => x.Modified).HasColumnName(ModifyFieldsTable.Modified);
             e.HasOne(x => x.ExamTemplate)
                 .WithMany(x => x.Sections)
                 .HasForeignKey(x => x.ExamTemplateId)
@@ -290,8 +335,10 @@ public class AppDbContext : DbContext
             e.Property(x => x.Phone).HasMaxLength(20);
             e.Property(x => x.Email).HasMaxLength(100);
             e.Property(x => x.IsActive).HasDefaultValue(true);
-            e.Property(x => x.CreatedAt).HasDefaultValueSql("now()");
-            e.Property(x => x.UpdatedAt).HasDefaultValueSql("now()");
+            e.Property(x => x.CreatedBy).HasMaxLength(150).HasColumnName(ModifyFieldsTable.CreatedBy);
+            e.Property(x => x.Created).HasColumnName(ModifyFieldsTable.Created);
+            e.Property(x => x.ModifiedBy).HasMaxLength(150).HasColumnName(ModifyFieldsTable.ModifiedBy);
+            e.Property(x => x.Modified).HasColumnName(ModifyFieldsTable.Modified);
             e.HasIndex(x => x.Code).IsUnique();
         });
 
@@ -304,7 +351,10 @@ public class AppDbContext : DbContext
             e.Property(x => x.Name).HasMaxLength(100).IsRequired();
             e.Property(x => x.ClassSuffix).HasMaxLength(10).HasDefaultValue("A");
             e.Property(x => x.IsActive).HasDefaultValue(true);
-            e.Property(x => x.CreatedAt).HasDefaultValueSql("now()");
+            e.Property(x => x.CreatedBy).HasMaxLength(150).HasColumnName(ModifyFieldsTable.CreatedBy);
+            e.Property(x => x.Created).HasColumnName(ModifyFieldsTable.Created);
+            e.Property(x => x.ModifiedBy).HasMaxLength(150).HasColumnName(ModifyFieldsTable.ModifiedBy);
+            e.Property(x => x.Modified).HasColumnName(ModifyFieldsTable.Modified);
             e.HasIndex(x => new { x.SchoolId, x.StartYear, x.GradeStart }).IsUnique();
             e.HasOne(x => x.School)
                 .WithMany(x => x.Cohorts)
@@ -320,7 +370,10 @@ public class AppDbContext : DbContext
             e.Property(x => x.Id).UseIdentityAlwaysColumn();
             e.Property(x => x.ClassName).HasMaxLength(20).IsRequired();
             e.Property(x => x.SchoolYear).HasMaxLength(20).IsRequired();
-            e.Property(x => x.CreatedAt).HasDefaultValueSql("now()");
+            e.Property(x => x.CreatedBy).HasMaxLength(150).HasColumnName(ModifyFieldsTable.CreatedBy);
+            e.Property(x => x.Created).HasColumnName(ModifyFieldsTable.Created);
+            e.Property(x => x.ModifiedBy).HasMaxLength(150).HasColumnName(ModifyFieldsTable.ModifiedBy);
+            e.Property(x => x.Modified).HasColumnName(ModifyFieldsTable.Modified);
             e.HasIndex(x => new { x.CohortId, x.YearIndex }).IsUnique();
             e.HasOne(x => x.Cohort)
                 .WithMany(x => x.Classes)
@@ -340,6 +393,10 @@ public class AppDbContext : DbContext
             e.Property(x => x.Id).HasDefaultValueSql("gen_random_uuid()");
             e.Property(x => x.JoinedAt).HasDefaultValueSql("CURRENT_DATE");
             e.Property(x => x.IsActive).HasDefaultValue(true);
+            e.Property(x => x.CreatedBy).HasMaxLength(150).HasColumnName(ModifyFieldsTable.CreatedBy);
+            e.Property(x => x.Created).HasColumnName(ModifyFieldsTable.Created);
+            e.Property(x => x.ModifiedBy).HasMaxLength(150).HasColumnName(ModifyFieldsTable.ModifiedBy);
+            e.Property(x => x.Modified).HasColumnName(ModifyFieldsTable.Modified);
             e.HasIndex(x => new { x.CohortId, x.StudentId }).IsUnique();
             e.HasOne(x => x.Cohort)
                 .WithMany(x => x.Members)
@@ -356,6 +413,10 @@ public class AppDbContext : DbContext
             e.Property(x => x.Role).HasMaxLength(20).IsRequired();
             e.Property(x => x.IsActive).HasDefaultValue(true);
             e.Property(x => x.JoinedAt).HasDefaultValueSql("now()");
+            e.Property(x => x.CreatedBy).HasMaxLength(150).HasColumnName(ModifyFieldsTable.CreatedBy);
+            e.Property(x => x.Created).HasColumnName(ModifyFieldsTable.Created);
+            e.Property(x => x.ModifiedBy).HasMaxLength(150).HasColumnName(ModifyFieldsTable.ModifiedBy);
+            e.Property(x => x.Modified).HasColumnName(ModifyFieldsTable.Modified);
             e.HasIndex(x => new { x.SchoolId, x.UserId }).IsUnique();
             e.HasOne(x => x.School)
                 .WithMany(x => x.Members)
@@ -379,8 +440,11 @@ public class AppDbContext : DbContext
                 .HasDefaultValue(ExamStatusEnum.Draft);
             e.Property(x => x.SchoolYear).HasMaxLength(20);
             e.Property(x => x.ClassName).HasMaxLength(50);
-            e.Property(x => x.CreatedAt).HasDefaultValueSql("now()");
-            e.Property(x => x.UpdatedAt).HasDefaultValueSql("now()");
+            e.Property(x => x.CreatedBy).HasMaxLength(150).HasColumnName(ModifyFieldsTable.CreatedBy);
+            e.Property(x => x.Created).HasColumnName(ModifyFieldsTable.Created);
+            e.Property(x => x.ModifiedBy).HasMaxLength(150).HasColumnName(ModifyFieldsTable.ModifiedBy);
+            e.Property(x => x.Modified).HasColumnName(ModifyFieldsTable.Modified);
+            
             e.HasOne(x => x.ExamTemplate)
                 .WithMany()
                 .HasForeignKey(x => x.ExamTemplateId)
@@ -431,7 +495,10 @@ public class AppDbContext : DbContext
                 .HasMaxLength(20)
                 .HasDefaultValue(SubmissionStatusEnum.InProgress);
             e.Property(x => x.StartedAt).HasDefaultValueSql("now()");
-            e.Property(x => x.CreatedAt).HasDefaultValueSql("now()");
+            e.Property(x => x.CreatedBy).HasMaxLength(150).HasColumnName(ModifyFieldsTable.CreatedBy);
+            e.Property(x => x.Created).HasColumnName(ModifyFieldsTable.Created);
+            e.Property(x => x.ModifiedBy).HasMaxLength(150).HasColumnName(ModifyFieldsTable.ModifiedBy);
+            e.Property(x => x.Modified).HasColumnName(ModifyFieldsTable.Modified);
             e.HasIndex(x => new { x.ExamId, x.StudentId });
             e.HasOne(x => x.Exam)
                 .WithMany()
@@ -458,4 +525,3 @@ public class AppDbContext : DbContext
         });
     }
 }
-

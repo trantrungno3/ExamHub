@@ -8,9 +8,8 @@ namespace ExamHub.API.Controllers.Exam;
 
 /// <summary>Controller quản lý bài nộp thi</summary>
 [ApiController]
-[Authorize]
 [Route("api/exam-submissions")]
-public class ExamSubmissionController(IExamSubmissionService service) : ControllerBase
+public class ExamSubmissionController(IExamSubmissionService service) : AuthorizeControllerBase
 {
     /// <summary>Lấy bài nộp theo ID (kèm câu trả lời)</summary>
     [HttpGet("{id:guid}")]
@@ -83,13 +82,7 @@ public class ExamSubmissionController(IExamSubmissionService service) : Controll
     [Authorize(Roles = "Admin,Teacher")]
     public async Task<ActionResult<RequestResponse<ExamSubmissionResponse>>> Finalize(Guid id, CancellationToken ct)
     {
-        var result = await service.FinalizeAsync(id, GetCurrentUserId(), ct);
+        var result = await service.FinalizeAsync(id, CurrentUser.UserId!.Value, ct);
         return Ok(RequestResponse<ExamSubmissionResponse>.Success("Chốt điểm thành công!", ExamSubmissionResponse.FromEntity(result), 1));
-    }
-
-    private Guid GetCurrentUserId()
-    {
-        var claim = User.FindFirst("sub") ?? User.FindFirst("userId");
-        return claim is not null && Guid.TryParse(claim.Value, out var uid) ? uid : Guid.Empty;
     }
 }

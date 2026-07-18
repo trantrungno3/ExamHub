@@ -12,8 +12,12 @@ export const ROUTES = {
     CATEGORY: '/app/category',
     GENERATE: '/app/generate',
     USERS: '/app/users',
+    SCHOOLS: '/app/schools',
+    PROFILE: '/app/profile',
     FORBIDDEN: '/forbidden',
 
+    STUDENT_EXAMS: '/student/exams',
+    STUDENT_PROFILE: '/student/profile',
     STUDENT_EXAM: '/student/exam',
     STUDENT_EXAM_TAKE: '/student/exam/take',
 } as const

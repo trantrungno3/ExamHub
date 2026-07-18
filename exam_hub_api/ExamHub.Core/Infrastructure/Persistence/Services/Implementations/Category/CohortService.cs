@@ -32,7 +32,7 @@ public class CohortService : ICohortService
 
     public async Task<Cohort> CreateAsync(Cohort entity, CancellationToken ct = default)
     {
-        entity.CreatedAt = DateTimeOffset.UtcNow;
+        entity.Created = DateTime.UtcNow;
         // DB trigger tự sinh cohort_classes sau khi INSERT
         return await _repo.AddAsync(entity, ct);
     }

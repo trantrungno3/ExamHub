@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using TVT.Core.Attributes;
+using TVT.Core.Models;
 using TVT.Core.Models.PostgreSql;
 using TVT.Core.Models.PostgreSql.FieldTables;
 using ExamHub.Core.FieldTables;
@@ -12,7 +13,7 @@ namespace ExamHub.Core.Domain.Entities;
 /// </summary>
 [Table(SchoolMemberTable.TableName)]
 [SqlBuilderProperty(SchoolMemberTable.TableName)]
-public class SchoolMember : IModelBaseSql<Guid>
+public class SchoolMember : ModifyModelBase, IModelBaseSql<Guid>
 {
     /// <summary>Khóa chính (UUID)</summary>
     [Column(CommonFieldTable.Id)]

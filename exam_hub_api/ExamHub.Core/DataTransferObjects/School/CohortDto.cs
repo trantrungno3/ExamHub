@@ -45,11 +45,11 @@ public record CohortResponse(
     short GradeStart,
     string ClassSuffix,
     bool IsActive,
-    long CreatedAt
+    long Created
 )
 {
     /// <summary>Chuyển từ entity sang response DTO</summary>
     public static CohortResponse FromEntity(Cohort e) =>
         new(e.Id, e.SchoolId, e.Name, e.StartYear, e.EndYear, e.GradeStart, e.ClassSuffix, e.IsActive,
-            e.CreatedAt.UtcDateTime.ToTimestamp());
+            e.Created.ToTimestamp());
 }

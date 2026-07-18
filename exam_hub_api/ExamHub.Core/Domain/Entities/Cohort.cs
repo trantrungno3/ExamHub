@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using TVT.Core.Attributes;
+using TVT.Core.Models;
 using TVT.Core.Models.PostgreSql;
 using TVT.Core.Models.PostgreSql.FieldTables;
 using ExamHub.Core.FieldTables;
@@ -12,7 +13,7 @@ namespace ExamHub.Core.Domain.Entities;
 /// </summary>
 [Table(CohortTable.TableName)]
 [SqlBuilderProperty(CohortTable.TableName)]
-public class Cohort : IModelBaseSql<int>
+public class Cohort : ModifyModelBase, IModelBaseSql<int>
 {
     /// <summary>Khóa chính (SERIAL)</summary>
     [Column(CommonFieldTable.Id)]
@@ -54,11 +55,6 @@ public class Cohort : IModelBaseSql<int>
     [SqlBuilderProperty(CohortTable.IsActive, Insert = true, Update = true)]
     public bool IsActive { get; set; } = true;
 
-    /// <summary>Thời điểm tạo</summary>
-    [Column(CohortTable.CreatedAt)]
-    [SqlBuilderProperty(CohortTable.CreatedAt, Insert = true, Update = false)]
-    public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
-
     // ── Navigation ──────────────────────────────────────────────
     /// <summary>Trường học</summary>
     public School? School { get; set; }
@@ -79,8 +75,7 @@ public class Cohort : IModelBaseSql<int>
         end_year     = EndYear,
         grade_start  = GradeStart,
         class_suffix = ClassSuffix,
-        is_active    = IsActive,
-        created_at   = CreatedAt
+        is_active    = IsActive
     };
 
     /// <summary>Tạo object để UPDATE</summary>

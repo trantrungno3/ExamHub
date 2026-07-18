@@ -1,0 +1,70 @@
+@startuml AD06_cau_hinh_danh_muc_he_thong
+skinparam defaultFontName "DejaVu Sans"
+skinparam activity {
+    BackgroundColor #DDEEFF
+    BorderColor #336699
+    FontName "DejaVu Sans"
+    FontSize 16
+    DiamondBackgroundColor #FFF4CE
+    DiamondBorderColor #CC8800
+    DiamondFontName "DejaVu Sans"
+    DiamondFontSize 15
+    StartColor #1F3864
+    EndColor #1F3864
+    BarColor #336699
+}
+skinparam ArrowColor #2E75B6
+skinparam ArrowFontName "DejaVu Sans"
+skinparam ArrowFontSize 15
+skinparam noteBackgroundColor #FFFFCC
+skinparam noteBorderColor #CCCC00
+skinparam noteFontName "DejaVu Sans"
+skinparam swimlaneBorderColor #336699
+skinparam swimlaneFontName "DejaVu Sans"
+skinparam swimlaneFontStyle bold
+skinparam wrapWidth 250
+
+|Quản trị viên|
+start
+:Truy cập mục Cấu hình danh mục;
+
+|Hệ thống|
+:Hiển thị các nhóm danh mục: Môn học, Chủ đề, Độ khó, Loại câu hỏi, Bloom;
+
+|Quản trị viên|
+:Chọn nhóm danh mục cần quản lý;
+
+|Hệ thống|
+:Hiển thị danh sách mục trong nhóm đó;
+
+|Quản trị viên|
+:Chọn thao tác;
+
+if (Thêm mới?) then (Có)
+    :Nhập thông tin mục mới;
+    :Bấm Lưu;
+else (Không)
+    if (Chỉnh sửa?) then (Có)
+        :Chọn mục cần sửa;
+        :Cập nhật thông tin;
+        :Bấm Lưu;
+    else (Vô hiệu hoá)
+        :Chọn mục cần vô hiệu hoá;
+        :Xác nhận;
+    endif
+endif
+
+|Hệ thống|
+:Kiểm tra hợp lệ và không trùng tên;
+if (Hợp lệ?) then (Không)
+    :Hiển thị thông báo lỗi trùng tên;
+    |Quản trị viên|
+    :Chỉnh sửa lại;
+    detach
+else (Có)
+    |Hệ thống|
+    :Lưu thay đổi;
+    :Cập nhật danh sách danh mục;
+endif
+stop
+@enduml

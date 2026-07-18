@@ -1,0 +1,52 @@
+@startuml SD08_them_khoa_hoc
+skinparam sequenceArrowThickness 2
+skinparam roundcorner 8
+skinparam maxmessagesize 160
+skinparam sequence {
+    ArrowColor #2E75B6
+    ActorBorderColor #333333
+    LifeLineBorderColor #336699
+    LifeLineBackgroundColor #EEF4FF
+    ParticipantBorderColor #336699
+    ParticipantBackgroundColor #DDEEFF
+    ParticipantFontSize 14
+    ParticipantFontName "DejaVu Sans"
+    ActorBackgroundColor White
+    ActorFontName "DejaVu Sans"
+    ActorFontSize 14
+    NoteBackgroundColor #FFFFCC
+    NoteBorderColor #CCCC00
+}
+skinparam fontname "DejaVu Sans"
+
+actor "Quản trị viên" as Admin
+participant "Giao diện" as FE
+participant "Hệ thống" as SYS
+
+Admin -> FE : Truy cập mục Quản lý khoá học
+FE -> SYS : Yêu cầu danh sách khoá học
+SYS -> SYS : Truy vấn danh sách khoá học
+SYS --> FE : Trả về danh sách khoá học
+FE --> Admin : Hiển thị danh sách khoá học
+
+Admin -> FE : Bấm Tạo khoá học mới
+FE --> Admin : Hiển thị form: tên khoá học, năm học, số lớp, ký hiệu lớp
+
+Admin -> FE : Điền đầy đủ thông tin khoá học
+Admin -> FE : Bấm Lưu
+
+FE -> SYS : Yêu cầu tạo khoá học mới
+SYS -> SYS : Kiểm tra tính hợp lệ dữ liệu
+
+alt Dữ liệu hợp lệ
+    SYS -> SYS : Lưu khoá học mới
+    SYS -> SYS : Sinh các lớp học tự động theo cấu hình khoá học
+    SYS --> FE : Trả về khoá học và danh sách lớp vừa tạo
+    FE --> Admin : Thông báo thành công kèm danh sách lớp vừa sinh
+else Dữ liệu không hợp lệ
+    SYS --> FE : Trả về lý do lỗi
+    FE --> Admin : Hiển thị thông báo lỗi
+    Admin -> FE : Chỉnh sửa lại thông tin
+end
+
+@enduml

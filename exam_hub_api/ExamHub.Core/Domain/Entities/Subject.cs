@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using TVT.Core.Attributes;
+using TVT.Core.Models;
 using TVT.Core.Models.PostgreSql;
 using TVT.Core.Models.PostgreSql.FieldTables;
 using ExamHub.Core.FieldTables;
@@ -11,7 +12,7 @@ namespace ExamHub.Core.Domain.Entities;
 /// </summary>
 [Table(SubjectTable.TableName)]
 [SqlBuilderProperty(SubjectTable.TableName)]
-public class Subject : IModelBaseSql<int>
+public class Subject : ModifyModelBase, IModelBaseSql<int>
 {
     /// <summary>Khóa chính (SERIAL)</summary>
     [Column(CommonFieldTable.Id)]
@@ -43,16 +44,6 @@ public class Subject : IModelBaseSql<int>
     [SqlBuilderProperty(SubjectTable.IsActive, Insert = true, Update = true)]
     public bool IsActive { get; set; } = true;
 
-    /// <summary>Thời điểm tạo</summary>
-    [Column(SubjectTable.CreatedAt)]
-    [SqlBuilderProperty(SubjectTable.CreatedAt, Insert = true, Update = false)]
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
-    /// <summary>Thời điểm cập nhật gần nhất</summary>
-    [Column(SubjectTable.UpdatedAt)]
-    [SqlBuilderProperty(SubjectTable.UpdatedAt, Insert = true, Update = true)]
-    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
-
     // ── Navigation ──────────────────────────────────────────────
     /// <summary>Lớp học sở hữu môn này</summary>
     public GradeLevel? GradeLevel { get; set; }
@@ -68,9 +59,7 @@ public class Subject : IModelBaseSql<int>
         name           = Name,
         code           = Code,
         description    = Description,
-        is_active      = IsActive,
-        created_at     = CreatedAt,
-        updated_at     = UpdatedAt
+        is_active      = IsActive
     };
 
     /// <summary>Tạo object để UPDATE</summary>
@@ -81,7 +70,6 @@ public class Subject : IModelBaseSql<int>
         name           = Name,
         code           = Code,
         description    = Description,
-        is_active      = IsActive,
-        updated_at     = DateTime.UtcNow
+        is_active      = IsActive
     };
 }

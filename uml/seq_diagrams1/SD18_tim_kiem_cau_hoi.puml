@@ -1,0 +1,56 @@
+@startuml SD18_tim_kiem_cau_hoi
+skinparam sequenceArrowThickness 2
+skinparam roundcorner 8
+skinparam maxmessagesize 160
+skinparam sequence {
+    ArrowColor #2E75B6
+    ActorBorderColor #333333
+    LifeLineBorderColor #336699
+    LifeLineBackgroundColor #EEF4FF
+    ParticipantBorderColor #336699
+    ParticipantBackgroundColor #DDEEFF
+    ParticipantFontSize 13
+    ParticipantFontName Arial
+    ActorBackgroundColor White
+    ActorFontName Arial
+    ActorFontSize 13
+    NoteBackgroundColor #FFFFCC
+    NoteBorderColor #CCCC00
+}
+skinparam fontname Arial
+
+actor "Giáo viên" as Teacher
+participant "Giao diện" as FE
+participant "Dịch vụ Câu hỏi" as QS
+database "Cơ sở dữ liệu" as DB
+
+Teacher -> FE : Truy cập mục Ngân hàng câu hỏi
+FE --> Teacher : Hiển thị giao diện tìm kiếm với bộ lọc:\nMôn học, Chủ đề, Bloom, Độ khó, Loại, Trạng thái
+
+Teacher -> FE : Nhập từ khoá và chọn bộ lọc
+Teacher -> FE : Bấm Tìm kiếm
+
+FE -> QS : GET /api/questions?keyword={kw}&subject={s}&bloom={b}&difficulty={d}&status={st}
+QS -> DB : Truy vấn câu hỏi theo tiêu chí
+DB --> QS : [{danh sách câu hỏi}]
+
+alt Tìm thấy kết quả
+    QS --> FE : [{câu hỏi phù hợp}]
+    FE --> Teacher : Hiển thị danh sách câu hỏi kèm thông tin tóm tắt
+
+    opt Xem chi tiết câu hỏi
+        Teacher -> FE : Chọn câu hỏi cần xem
+        FE -> QS : GET /api/questions/{id}
+        QS -> DB : Lấy chi tiết câu hỏi
+        DB --> QS : {nội dung đầy đủ}
+        QS --> FE : Chi tiết câu hỏi
+        FE --> Teacher : Hiển thị nội dung, đáp án, Bloom, độ khó
+    end
+
+else Không tìm thấy kết quả
+    QS --> FE : [] (rỗng)
+    FE --> Teacher : Thông báo không tìm thấy câu hỏi phù hợp
+    Teacher -> FE : Điều chỉnh tiêu chí và tìm kiếm lại
+end
+
+@enduml

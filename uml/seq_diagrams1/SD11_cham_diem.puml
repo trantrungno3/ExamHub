@@ -1,0 +1,66 @@
+@startuml SD11_cham_diem
+skinparam sequenceArrowThickness 2
+skinparam roundcorner 8
+skinparam maxmessagesize 160
+skinparam sequence {
+    ArrowColor #2E75B6
+    ActorBorderColor #333333
+    LifeLineBorderColor #336699
+    LifeLineBackgroundColor #EEF4FF
+    ParticipantBorderColor #336699
+    ParticipantBackgroundColor #DDEEFF
+    ParticipantFontSize 13
+    ParticipantFontName Arial
+    ActorBackgroundColor White
+    ActorFontName Arial
+    ActorFontSize 13
+    NoteBackgroundColor #FFFFCC
+    NoteBorderColor #CCCC00
+}
+skinparam fontname Arial
+
+actor "Học sinh" as Student
+actor "Giáo viên" as Teacher
+participant "Dịch vụ Chấm điểm" as GS
+participant "Chấm tự động" as AG
+participant "Dịch vụ Thông báo" as NS
+database "Cơ sở dữ liệu" as DB
+
+note over Student, GS : Sau khi Học sinh nộp bài
+
+GS -> DB : Lấy bài làm + snapshot đáp án đề thi
+DB --> GS : {bài làm, đáp án}
+
+GS -> AG : Chấm điểm tự động\n(câu trắc nghiệm)
+AG -> AG : So sánh từng đáp án\nvới đáp án đúng
+AG --> GS : {điểm tự động, chi tiết từng câu}
+
+GS -> DB : Lưu điểm tự động
+
+alt Đề thi có câu tự luận
+    GS -> DB : Cập nhật bài làm {trạng thái: CHỜ CHẤM TAY}
+    GS -> NS : Thông báo giáo viên có bài cần chấm tay
+    NS -> Teacher : Thông báo đẩy / Email
+
+    Teacher -> Teacher : Nhận thông báo, mở giao diện chấm tay
+    Teacher -> GS : GET /api/submissions/{id}/manual-grade
+    GS -> DB : Lấy nội dung câu tự luận + bài làm học sinh
+    DB --> GS : {câu tự luận, bài làm}
+    GS --> Teacher : Hiển thị bài làm tự luận
+
+    loop Mỗi câu tự luận
+        Teacher -> GS : PUT /api/submissions/{id}/grade\n{questionId, điểm, nhận xét}
+        GS -> DB : Lưu điểm tay từng câu
+        DB --> GS : OK
+    end
+
+    GS -> GS : Tính tổng điểm:\nĐiểm tự động + Điểm thủ công
+    GS -> DB : Cập nhật bài làm {tổng điểm, trạng thái: ĐÃ CHẤM}
+else Chỉ có câu trắc nghiệm
+    GS -> DB : Cập nhật bài làm {tổng điểm: điểm tự động, trạng thái: ĐÃ CHẤM}
+end
+
+GS -> NS : Thông báo điểm cho Học sinh
+NS -> Student : Thông báo đẩy / Email
+
+@enduml

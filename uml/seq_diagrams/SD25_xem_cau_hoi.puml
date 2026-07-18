@@ -1,0 +1,38 @@
+@startuml SD25_xem_cau_hoi
+skinparam sequenceArrowThickness 2
+skinparam roundcorner 8
+skinparam maxmessagesize 160
+skinparam sequence {
+    ArrowColor #2E75B6
+    ActorBorderColor #333333
+    LifeLineBorderColor #336699
+    LifeLineBackgroundColor #EEF4FF
+    ParticipantBorderColor #336699
+    ParticipantBackgroundColor #DDEEFF
+    ParticipantFontSize 14
+    ParticipantFontName "DejaVu Sans"
+    ActorBackgroundColor White
+    ActorFontName "DejaVu Sans"
+    ActorFontSize 14
+    NoteBackgroundColor #FFFFCC
+    NoteBorderColor #CCCC00
+}
+skinparam fontname "DejaVu Sans"
+
+actor "Giáo viên" as Teacher
+participant "Giao diện" as FE
+participant "Hệ thống" as SYS
+
+Teacher -> FE : Truy cập trang Ngân hàng câu hỏi
+FE -> SYS : Yêu cầu danh sách câu hỏi
+SYS -> SYS : Truy vấn danh sách câu hỏi
+SYS --> FE : Trả về danh sách câu hỏi
+FE --> Teacher : Hiển thị danh sách câu hỏi
+
+Teacher -> FE : Chọn câu hỏi cần xem chi tiết
+FE -> SYS : Yêu cầu thông tin đầy đủ của câu hỏi
+SYS -> SYS : Truy vấn thông tin đầy đủ câu hỏi
+SYS --> FE : Trả về chi tiết câu hỏi
+FE --> Teacher : Hiển thị đầy đủ:\n- Nội dung câu hỏi\n- Danh sách đáp án\n- Cấp độ Bloom và độ khó\n- Trạng thái duyệt
+
+@enduml

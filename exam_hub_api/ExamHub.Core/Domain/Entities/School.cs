@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using TVT.Core.Attributes;
+using TVT.Core.Models;
 using TVT.Core.Models.PostgreSql;
 using TVT.Core.Models.PostgreSql.FieldTables;
 using ExamHub.Core.FieldTables;
@@ -11,7 +12,7 @@ namespace ExamHub.Core.Domain.Entities;
 /// </summary>
 [Table(SchoolTable.TableName)]
 [SqlBuilderProperty(SchoolTable.TableName)]
-public class School : IModelBaseSql<int>
+public class School : ModifyModelBase, IModelBaseSql<int>
 {
     /// <summary>Khóa chính (SERIAL)</summary>
     [Column(CommonFieldTable.Id)]
@@ -48,16 +49,6 @@ public class School : IModelBaseSql<int>
     [SqlBuilderProperty(SchoolTable.IsActive, Insert = true, Update = true)]
     public bool IsActive { get; set; } = true;
 
-    /// <summary>Thời điểm tạo</summary>
-    [Column(SchoolTable.CreatedAt)]
-    [SqlBuilderProperty(SchoolTable.CreatedAt, Insert = true, Update = false)]
-    public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
-
-    /// <summary>Thời điểm cập nhật gần nhất</summary>
-    [Column(SchoolTable.UpdatedAt)]
-    [SqlBuilderProperty(SchoolTable.UpdatedAt, Insert = true, Update = true)]
-    public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.UtcNow;
-
     // ── Navigation ──────────────────────────────────────────────
     /// <summary>Danh sách khoá học</summary>
     public List<Cohort> Cohorts { get; set; } = [];
@@ -69,25 +60,22 @@ public class School : IModelBaseSql<int>
     /// <summary>Tạo object để INSERT</summary>
     public object ToInsertObject() => new
     {
-        name       = Name,
-        code       = Code,
-        address    = Address,
-        phone      = Phone,
-        email      = Email,
-        is_active  = IsActive,
-        created_at = CreatedAt,
-        updated_at = UpdatedAt
+        name      = Name,
+        code      = Code,
+        address   = Address,
+        phone     = Phone,
+        email     = Email,
+        is_active = IsActive
     };
 
     /// <summary>Tạo object để UPDATE</summary>
     public object ToUpdateObject() => new
     {
-        id         = Id,
-        name       = Name,
-        address    = Address,
-        phone      = Phone,
-        email      = Email,
-        is_active  = IsActive,
-        updated_at = DateTimeOffset.UtcNow
+        id        = Id,
+        name      = Name,
+        address   = Address,
+        phone     = Phone,
+        email     = Email,
+        is_active = IsActive
     };
 }

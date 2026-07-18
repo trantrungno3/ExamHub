@@ -3,12 +3,20 @@ import {useNavigate} from 'react-router-dom'
 import {Button, Form, Input, message, Typography} from 'antd'
 import {LockOutlined, UserOutlined} from '@ant-design/icons'
 import {useAuth} from '../../AuthProvider'
+import {useAuthStore} from '../../stores/authStore'
 
 const {Link} = Typography
 
 interface LoginFormValues {
     username: string
     password: string
+}
+
+/** Học sinh (chỉ role Student) → trang đề thi; còn lại → dashboard admin/teacher. */
+function homePathForRoles(roles?: string[]): string {
+    const r = roles ?? []
+    const isStudentOnly = r.includes('Student') && !r.includes('Admin') && !r.includes('Teacher')
+    return isStudentOnly ? '/student/exams' : '/app/dashboard'
 }
 
 const FEATURES = [
@@ -21,12 +29,12 @@ const FEATURES = [
 export default function LoginPage() {
     const [loading, setLoading] = useState(false)
     const navigate = useNavigate()
-    const {login, isAuthenticated} = useAuth();
+    const {login, isAuthenticated, user} = useAuth();
     const [messageApi, contextHolder] = message.useMessage()
 
     useEffect(() => {
-        if (isAuthenticated) navigate('/app/dashboard')
-    }, [isAuthenticated, navigate]);
+        if (isAuthenticated) navigate(homePathForRoles(user?.roles))
+    }, [isAuthenticated, user, navigate]);
 
     const onFinish = async (values: LoginFormValues) => {
         setLoading(true)
@@ -35,7 +43,7 @@ export default function LoginPage() {
             if (error) {
                 messageApi.error(error)
             } else {
-                navigate('/app/dashboard')
+                navigate(homePathForRoles(useAuthStore.getState().user?.roles))
             }
         } finally {
             setLoading(false)

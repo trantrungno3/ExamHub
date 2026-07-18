@@ -1,17 +1,16 @@
 using ExamHub.Core.Application.Services;
 using ExamHub.Core.DataTransferObjects.Exam;
 using ExamHub.Core.Domain.Interfaces;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TVT.Core;
+using TVT.Core.Extensions;
 
 namespace ExamHub.API.Controllers.Exam;
 
 /// <summary>Controller quản lý đề thi</summary>
 [ApiController]
-[Authorize]
 [Route("api/exams")]
-public class ExamController(IExamService service, IExportService exportService) : ControllerBase
+public class ExamController(IExamService service, IExportService exportService) : AuthorizeControllerBase
 {
     /// <summary>Lấy đề thi theo ID</summary>
     [HttpGet("{id:guid}")]
@@ -64,8 +63,9 @@ public class ExamController(IExamService service, IExportService exportService) 
         [FromBody] ExamRequest request,
         CancellationToken ct)
     {
-        var userId    = GetCurrentUserId();
-        var entity    = request.ToEntity(userId);
+        if(CurrentUser.UserId.IsNullOrEmpty())
+            return StatusCode(401, RequestResponse<ExamResponse>.Error("Không xác định được danh tính người dùng. Vui lòng đăng nhập lại."));
+        var entity    = request.ToEntity(CurrentUser.UserName!);
         var questions = request.ToQuestions();
         var result    = await service.CreateAsync(entity, questions, ct);
         return StatusCode(201, RequestResponse<ExamResponse>.Success("Tạo đề thi thành công!", ExamResponse.FromEntity(result), 1));
@@ -127,11 +127,5 @@ public class ExamController(IExamService service, IExportService exportService) 
         if (existing is null) return NotFound();
         await service.DeleteAsync(id, ct);
         return NoContent();
-    }
-
-    private Guid GetCurrentUserId()
-    {
-        var claim = User.FindFirst("sub") ?? User.FindFirst("userId");
-        return claim is not null && Guid.TryParse(claim.Value, out var id) ? id : Guid.Empty;
     }
 }

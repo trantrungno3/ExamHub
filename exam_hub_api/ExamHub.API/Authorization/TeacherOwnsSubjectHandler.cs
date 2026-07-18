@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using ExamHub.Core.Domain.Interfaces;
 using Microsoft.AspNetCore.Authorization;
+using TVT.Core.Claims;
 
 namespace ExamHub.API.Authorization;
 
@@ -31,7 +32,7 @@ public sealed class TeacherOwnsSubjectHandler(ITeacherSubjectRepository teacherS
 
     private static Guid GetUserId(ClaimsPrincipal user)
     {
-        var claim = user.FindFirst("sub") ?? user.FindFirst("userId");
+        var claim = user.FindFirst(ConstClaim.UserId);
         return claim is not null && Guid.TryParse(claim.Value, out var id) ? id : Guid.Empty;
     }
 }

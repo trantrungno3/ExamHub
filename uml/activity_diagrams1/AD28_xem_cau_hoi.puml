@@ -1,0 +1,37 @@
+@startuml AD28_xem_cau_hoi
+skinparam defaultFontName "DejaVu Sans"
+skinparam activity {
+    BackgroundColor #DDEEFF
+    BorderColor #336699
+    FontName "DejaVu Sans"
+    FontSize 16
+    DiamondBackgroundColor #FFF4CE
+    DiamondBorderColor #CC8800
+    DiamondFontName "DejaVu Sans"
+    DiamondFontSize 15
+    StartColor #1F3864
+    EndColor #1F3864
+    BarColor #336699
+}
+skinparam ArrowColor #2E75B6
+skinparam ArrowFontName "DejaVu Sans"
+skinparam ArrowFontSize 15
+skinparam noteBackgroundColor #FFFFCC
+skinparam noteBorderColor #CCCC00
+skinparam noteFontName "DejaVu Sans"
+skinparam swimlaneBorderColor #336699
+skinparam swimlaneFontName "DejaVu Sans"
+skinparam swimlaneFontStyle bold
+skinparam wrapWidth 250
+
+|Giáo viên|
+start
+:Truy cập trang Ngân hàng câu hỏi;
+:Chọn câu hỏi muốn xem;
+
+|Hệ thống|
+:Truy vấn thông tin chi tiết câu hỏi;
+:Hiển thị đầy đủ nội dung câu hỏi,
+đáp án, cấp độ Bloom, độ khó, trạng thái;
+stop
+@enduml

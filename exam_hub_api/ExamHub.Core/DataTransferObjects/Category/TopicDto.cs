@@ -45,12 +45,12 @@ public record TopicResponse(
     int SortOrder,
     string? Description,
     bool IsActive,
-    long CreatedAt,
-    long UpdatedAt
+    long Created,
+    long Modified
 )
 {
     /// <summary>Chuyển từ entity sang response DTO</summary>
     public static TopicResponse FromEntity(Topic e) =>
         new(e.Id, e.SubjectId, e.ParentId, e.Name, e.Code, e.SortOrder, e.Description, e.IsActive,
-            e.CreatedAt.ToTimestamp(), e.UpdatedAt.ToTimestamp());
+            e.Created.ToTimestamp(), e.Modified.ToTimestamp());
 }

@@ -1,0 +1,50 @@
+@startuml SD36_them_cau_hinh_de_thi
+skinparam sequenceArrowThickness 2
+skinparam roundcorner 8
+skinparam maxmessagesize 160
+skinparam sequence {
+    ArrowColor #2E75B6
+    ActorBorderColor #333333
+    LifeLineBorderColor #336699
+    LifeLineBackgroundColor #EEF4FF
+    ParticipantBorderColor #336699
+    ParticipantBackgroundColor #DDEEFF
+    ParticipantFontSize 14
+    ParticipantFontName "DejaVu Sans"
+    ActorBackgroundColor White
+    ActorFontName "DejaVu Sans"
+    ActorFontSize 14
+    NoteBackgroundColor #FFFFCC
+    NoteBorderColor #CCCC00
+}
+skinparam fontname "DejaVu Sans"
+
+actor "Giáo viên" as Teacher
+participant "Giao diện" as FE
+participant "Hệ thống" as SYS
+
+Teacher -> FE : Truy cập trang Cấu hình đề thi và bấm Thêm mới
+FE -> SYS : Yêu cầu danh sách môn học
+SYS -> SYS : Lấy danh sách môn học
+SYS --> FE : Trả về danh sách môn học
+FE --> Teacher : Hiển thị form nhập liệu cấu hình đề thi
+
+Teacher -> FE : Điền tên cấu hình, chọn môn học
+Teacher -> FE : Nhập tổng số câu và thời gian làm bài
+Teacher -> FE : Đặt tỉ lệ độ khó (dễ / trung bình / khó)
+Teacher -> FE : Bấm Lưu
+
+FE -> SYS : Yêu cầu thêm cấu hình đề thi mới
+SYS -> SYS : Kiểm tra tính hợp lệ (tổng tỉ lệ bằng 100%)
+
+alt Dữ liệu hợp lệ
+    SYS -> SYS : Lưu cấu hình đề thi mới
+    SYS --> FE : Trả về kết quả thêm thành công
+    FE --> Teacher : Thông báo thêm cấu hình thành công
+else Dữ liệu không hợp lệ
+    SYS --> FE : Trả về chi tiết lỗi
+    FE --> Teacher : Hiển thị thông báo lỗi
+    Teacher -> FE : Chỉnh sửa và bấm lưu lại
+end
+
+@enduml

@@ -4,6 +4,7 @@ using TVT.Core.Attributes;
 using TVT.Core.Models.PostgreSql;
 using TVT.Core.Models.PostgreSql.FieldTables;
 using ExamHub.Core.FieldTables;
+using TVT.Core.Models;
 
 namespace ExamHub.Core.Domain.Entities;
 
@@ -13,7 +14,7 @@ namespace ExamHub.Core.Domain.Entities;
 /// </summary>
 [Table(ExamTemplateSectionTable.TableName)]
 [SqlBuilderProperty(ExamTemplateSectionTable.TableName)]
-public class ExamTemplateSection : IModelBaseSql<Guid>
+public class ExamTemplateSection :ModifyModelBase, IModelBaseSql<Guid>
 {
     /// <summary>Khóa chính (UUID)</summary>
     [Column(CommonFieldTable.Id)]
@@ -80,11 +81,6 @@ public class ExamTemplateSection : IModelBaseSql<Guid>
     [SqlBuilderProperty(ExamTemplateSectionTable.PctVeryHard, Insert = true, Update = true)]
     public short PctVeryHard { get; set; } = 0;
 
-    /// <summary>Thời điểm tạo</summary>
-    [Column(ExamTemplateSectionTable.CreatedAt)]
-    [SqlBuilderProperty(ExamTemplateSectionTable.CreatedAt, Insert = true, Update = false)]
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
     // ── Navigation ──────────────────────────────────────────────
     /// <summary>Mẫu đề thi</summary>
     public ExamTemplate? ExamTemplate { get; set; }
@@ -122,7 +118,7 @@ public class ExamTemplateSection : IModelBaseSql<Guid>
         pct_medium          = PctMedium,
         pct_hard            = PctHard,
         pct_very_hard       = PctVeryHard,
-        created_at          = CreatedAt
+        created_at          = Created
     };
 
     /// <summary>Tạo object để UPDATE</summary>

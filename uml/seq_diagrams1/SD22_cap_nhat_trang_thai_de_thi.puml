@@ -1,0 +1,55 @@
+@startuml SD22_cap_nhat_trang_thai_de_thi
+skinparam sequenceArrowThickness 2
+skinparam roundcorner 8
+skinparam maxmessagesize 160
+skinparam sequence {
+    ArrowColor #2E75B6
+    ActorBorderColor #333333
+    LifeLineBorderColor #336699
+    LifeLineBackgroundColor #EEF4FF
+    ParticipantBorderColor #336699
+    ParticipantBackgroundColor #DDEEFF
+    ParticipantFontSize 13
+    ParticipantFontName Arial
+    ActorBackgroundColor White
+    ActorFontName Arial
+    ActorFontSize 13
+    NoteBackgroundColor #FFFFCC
+    NoteBorderColor #CCCC00
+}
+skinparam fontname Arial
+
+actor "Giáo viên" as Teacher
+participant "Giao diện" as FE
+participant "Dịch vụ Đề thi" as ES
+database "Cơ sở dữ liệu" as DB
+
+Teacher -> FE : Truy cập trang Quản lý đề thi
+FE -> ES : GET /api/exams
+ES -> DB : Truy vấn danh sách đề thi kèm trạng thái
+DB --> ES : [{đề thi, trạng thái hiện tại}]
+ES --> FE : Danh sách đề thi
+FE --> Teacher : Hiển thị danh sách với trạng thái hiện tại
+
+Teacher -> FE : Chọn đề thi cần cập nhật trạng thái
+FE --> Teacher : Hiển thị danh sách trạng thái có thể chuyển:\nBản nháp → Đang hoạt động → Đã kết thúc
+
+Teacher -> FE : Chọn trạng thái mới
+FE -> ES : PATCH /api/exams/{id}/status\n{status: "ACTIVE"}
+ES -> ES : Kiểm tra tính hợp lệ của thay đổi trạng thái
+note right of ES
+    Chỉ cho phép chuyển theo chiều:\nBản nháp → Đang hoạt động → Đã kết thúc
+end note
+
+alt Trạng thái hợp lệ
+    ES -> DB : UPDATE trạng thái đề thi
+    DB --> ES : OK
+    ES --> FE : 200 OK
+    FE --> Teacher : Thông báo cập nhật trạng thái thành công
+
+else Trạng thái không hợp lệ
+    ES --> FE : 400 Bad Request + lý do
+    FE --> Teacher : Thông báo lỗi chuyển trạng thái không được phép
+end
+
+@enduml

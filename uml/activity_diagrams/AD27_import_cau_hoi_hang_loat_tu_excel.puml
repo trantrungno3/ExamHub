@@ -1,0 +1,57 @@
+@startuml AD27_import_cau_hoi_hang_loat_tu_excel
+skinparam defaultFontName "DejaVu Sans"
+skinparam activity {
+    BackgroundColor #DDEEFF
+    BorderColor #336699
+    FontName "DejaVu Sans"
+    FontSize 16
+    DiamondBackgroundColor #FFF4CE
+    DiamondBorderColor #CC8800
+    DiamondFontName "DejaVu Sans"
+    DiamondFontSize 15
+    StartColor #1F3864
+    EndColor #1F3864
+    BarColor #336699
+}
+skinparam ArrowColor #2E75B6
+skinparam ArrowFontName "DejaVu Sans"
+skinparam ArrowFontSize 15
+skinparam noteBackgroundColor #FFFFCC
+skinparam noteBorderColor #CCCC00
+skinparam noteFontName "DejaVu Sans"
+skinparam swimlaneBorderColor #336699
+skinparam swimlaneFontName "DejaVu Sans"
+skinparam swimlaneFontStyle bold
+skinparam wrapWidth 150
+
+|Giáo viên|
+start
+:Chọn chức năng Import câu hỏi từ Excel;
+
+|Hệ thống|
+:Hiển thị hướng dẫn import và nút tải file mẫu;
+
+|Giáo viên|
+if (Cần tải file mẫu?) then (Có)
+    :Tải file mẫu Excel;
+    :Điền dữ liệu câu hỏi vào file;
+else (Đã có file)
+endif
+:Upload file Excel lên hệ thống;
+
+|Hệ thống|
+:Parse file Excel - đọc từng dòng và kiểm tra định dạng cột;
+if (File đúng định dạng?) then (Không)
+    :Hiển thị thông báo sai định dạng;
+    |Giáo viên|
+    :Kiểm tra và upload lại;
+    detach
+else (Có)
+    |Hệ thống|
+    :Validate từng câu hỏi (trường bắt buộc, danh mục hợp lệ);
+    :Phân loại Bloom và độ khó cho từng câu hỏi hợp lệ;
+    :Lưu câu hỏi hợp lệ vào cơ sở dữ liệu với trạng thái Chờ duyệt;
+    :Hiển thị báo cáo kết quả: số thành công, số lỗi, chi tiết lỗi;
+endif
+stop
+@enduml

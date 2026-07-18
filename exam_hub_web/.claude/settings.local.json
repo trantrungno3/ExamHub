@@ -9,7 +9,11 @@
       "Bash(Get-ChildItem *)",
       "Skill(vercel-react-best-practices)",
       "Bash(Select-Object -ExpandProperty FullName)",
-      "Bash(Sort-Object)"
+      "Bash(Sort-Object)",
+      "Bash(git reset *)",
+      "Bash(git restore *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git add *)"
     ]
   }
 }

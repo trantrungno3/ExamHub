@@ -37,7 +37,7 @@ public class QuestionRepository : BaseRepository<Question, Guid>, IQuestionRepos
         => await Set.AsNoTracking()
             .Where(x => x.TopicId == topicId && (!activeOnly || x.IsActive))
             .Include(x => x.Answers.OrderBy(a => a.SortOrder))
-            .OrderByDescending(x => x.CreatedAt)
+            .OrderByDescending(x => x.Created)
             .ToListAsync(ct);
 
     /// <inheritdoc/>
@@ -111,7 +111,7 @@ public class QuestionRepository : BaseRepository<Question, Guid>, IQuestionRepos
 
         var total = await query.CountAsync(ct);
         var items = await query
-            .OrderByDescending(x => x.CreatedAt)
+            .OrderByDescending(x => x.Created)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync(ct);
@@ -214,7 +214,7 @@ public class QuestionRepository : BaseRepository<Question, Guid>, IQuestionRepos
             .Where(x => x.Id == id)
             .ExecuteUpdateAsync(s => s
                 .SetProperty(x => x.ImageUrl, imageUrl)
-                .SetProperty(x => x.UpdatedAt, DateTime.UtcNow), ct);
+                .SetProperty(x => x.Modified, DateTime.UtcNow), ct);
 
     // ── SQL cho pool cache + nạp theo ID ──────────────────────────────────
     // Pool: chỉ SELECT id (cache được). 4 biến thể tránh truyền NULL int gây lỗi

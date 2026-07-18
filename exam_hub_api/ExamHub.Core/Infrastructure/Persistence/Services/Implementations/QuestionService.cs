@@ -39,8 +39,8 @@ public class QuestionService : IQuestionService
     public async Task<Question> CreateAsync(Question entity, IEnumerable<QuestionAnswer> answers, CancellationToken ct = default)
     {
         entity.Id        = Guid.NewGuid();
-        entity.CreatedAt = DateTime.UtcNow;
-        entity.UpdatedAt = DateTime.UtcNow;
+        entity.Created = DateTime.UtcNow;
+        entity.Modified = DateTime.UtcNow;
 
         await _questionRepo.AddAsync(entity, ct);
 
@@ -64,7 +64,7 @@ public class QuestionService : IQuestionService
         // Lấy phân loại cũ trước khi cập nhật để invalidate cả pool cũ (trường hợp đổi topic/độ khó/loại/Bloom).
         var old = await _questionRepo.GetByIdAsync(entity.Id, ct);
 
-        entity.UpdatedAt = DateTime.UtcNow;
+        entity.Modified = DateTime.UtcNow;
         await _questionRepo.UpdateAsync(entity, ct);
 
         if (answers is not null)

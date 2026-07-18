@@ -14,12 +14,12 @@ public class BulkImportService(IQuestionService questionService) : IBulkImportSe
 
     /// <inheritdoc/>
     public async Task<BulkImportQuestionResponse> ImportAsync(
-        BulkImportQuestionRequest request, Guid createdBy, CancellationToken ct = default)
+        BulkImportQuestionRequest request, string createdBy, CancellationToken ct = default)
     {
         var errors  = new List<BulkImportRowError>();
         var success = 0;
 
-        using var stream = request.File.OpenReadStream();
+        await using var stream = request.File.OpenReadStream();
         using var workbook = new XLWorkbook(stream);
         var sheet = workbook.Worksheets.First();
 
@@ -49,7 +49,7 @@ public class BulkImportService(IQuestionService questionService) : IBulkImportSe
     }
 
     private static (Question, List<QuestionAnswer>) ParseRow(
-        IXLWorksheet sheet, int row, BulkImportQuestionRequest request, Guid createdBy)
+        IXLWorksheet sheet, int row, BulkImportQuestionRequest request, string createdBy)
     {
         var content = Cell(sheet, row, 1);
         if (string.IsNullOrWhiteSpace(content))

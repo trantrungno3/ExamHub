@@ -201,6 +201,151 @@
         ]
       }
     },
+    "/api/Auth/profile": {
+      "put": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Cập nhật thông tin cá nhân của tài khoản đang đăng nhập",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProfileDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProfileDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProfileDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfUserInfo"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfUserInfo"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfUserInfo"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/Auth/change-password": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Đổi mật khẩu của tài khoản đang đăng nhập",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/Menu": {
+      "get": {
+        "tags": [
+          "Menu"
+        ],
+        "summary": "Lấy menu theo phân quyền của người dùng hiện tại",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfMenuItemResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfMenuItemResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfMenuItemResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
     "/api/users": {
       "get": {
         "tags": [
@@ -7224,6 +7369,25 @@
         },
         "description": "Kết quả import từng hàng."
       },
+      "ChangePasswordDto": {
+        "required": [
+          "oldPassword",
+          "newPassword"
+        ],
+        "type": "object",
+        "properties": {
+          "oldPassword": {
+            "type": "string",
+            "description": "Mật khẩu hiện tại"
+          },
+          "newPassword": {
+            "minLength": 6,
+            "type": "string",
+            "description": "Mật khẩu mới"
+          }
+        },
+        "description": "DTO đổi mật khẩu của người dùng đang đăng nhập"
+      },
       "CognitiveLevelRequest": {
         "required": [
           "code",
@@ -7336,7 +7500,7 @@
           "schoolYear",
           "yearIndex",
           "homeroomTeacherId",
-          "createdAt"
+          "created"
         ],
         "type": "object",
         "properties": {
@@ -7385,7 +7549,7 @@
             ],
             "format": "uuid"
           },
-          "createdAt": {
+          "created": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
               "integer",
@@ -7537,7 +7701,7 @@
           "gradeStart",
           "classSuffix",
           "isActive",
-          "createdAt"
+          "created"
         ],
         "type": "object",
         "properties": {
@@ -7590,7 +7754,7 @@
           "isActive": {
             "type": "boolean"
           },
-          "createdAt": {
+          "created": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
               "integer",
@@ -8055,8 +8219,8 @@
           "parentExamId",
           "variantIndex",
           "batchId",
-          "createdAt",
-          "updatedAt",
+          "created",
+          "modified",
           "questions"
         ],
         "type": "object",
@@ -8185,7 +8349,7 @@
             ],
             "format": "uuid"
           },
-          "createdAt": {
+          "created": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
               "integer",
@@ -8193,7 +8357,7 @@
             ],
             "format": "int64"
           },
-          "updatedAt": {
+          "modified": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
               "integer",
@@ -8252,7 +8416,7 @@
           "totalScore",
           "isPassed",
           "status",
-          "createdAt",
+          "created",
           "answers"
         ],
         "type": "object",
@@ -8313,7 +8477,7 @@
           "status": {
             "type": "string"
           },
-          "createdAt": {
+          "created": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
               "integer",
@@ -8445,8 +8609,8 @@
           "preventDuplicate",
           "instructions",
           "isActive",
-          "createdAt",
-          "updatedAt",
+          "created",
+          "modified",
           "sections"
         ],
         "type": "object",
@@ -8535,7 +8699,7 @@
           "isActive": {
             "type": "boolean"
           },
-          "createdAt": {
+          "created": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
               "integer",
@@ -8543,7 +8707,7 @@
             ],
             "format": "int64"
           },
-          "updatedAt": {
+          "modified": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
               "integer",
@@ -8941,22 +9105,42 @@
             "type": "boolean",
             "description": "Kích hoạt hay không"
           },
-          "createdAt": {
-            "type": "string",
-            "description": "Thời điểm tạo",
-            "format": "date-time"
-          },
-          "updatedAt": {
-            "type": "string",
-            "description": "Thời điểm cập nhật gần nhất",
-            "format": "date-time"
-          },
           "subjects": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/Subject"
             },
             "description": "Danh sách môn học thuộc lớp này"
+          },
+          "createdBy": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Tạo bởi"
+          },
+          "created": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Ngày tạo",
+            "format": "date-time"
+          },
+          "modifiedBy": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Sửa bởi"
+          },
+          "modified": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Ngày sửa",
+            "format": "date-time"
           }
         },
         "description": "Đại diện cho một lớp học trong hệ thống (Lớp 1 – Lớp 12)"
@@ -9000,8 +9184,8 @@
           "gradeNumber",
           "description",
           "isActive",
-          "createdAt",
-          "updatedAt"
+          "created",
+          "modified"
         ],
         "type": "object",
         "properties": {
@@ -9033,7 +9217,7 @@
           "isActive": {
             "type": "boolean"
           },
-          "createdAt": {
+          "created": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
               "integer",
@@ -9041,7 +9225,7 @@
             ],
             "format": "int64"
           },
-          "updatedAt": {
+          "modified": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
               "integer",
@@ -9077,6 +9261,39 @@
           }
         },
         "description": ""
+      },
+      "MenuItemResponse": {
+        "required": [
+          "key",
+          "label",
+          "path",
+          "icon",
+          "order"
+        ],
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "icon": {
+            "type": "string"
+          },
+          "order": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        },
+        "description": "Một mục trong menu điều hướng, đã được lọc theo quyền của người dùng hiện tại"
       },
       "QuestionAnswerRequest": {
         "required": [
@@ -9282,8 +9499,8 @@
           "usageCount",
           "isActive",
           "isVerified",
-          "createdAt",
-          "updatedAt",
+          "created",
+          "modified",
           "answers"
         ],
         "type": "object",
@@ -9402,7 +9619,7 @@
           "isVerified": {
             "type": "boolean"
           },
-          "createdAt": {
+          "created": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
               "integer",
@@ -9410,7 +9627,7 @@
             ],
             "format": "int64"
           },
-          "updatedAt": {
+          "modified": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
               "integer",
@@ -10321,6 +10538,42 @@
         },
         "description": ""
       },
+      "RequestResponseOfIReadOnlyListOfMenuItemResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "description": "Trạng thái",
+            "$ref": "#/components/schemas/RequestResponseStatus"
+          },
+          "message": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Message"
+          },
+          "data": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/MenuItemResponse"
+            },
+            "description": "Dữ liệu"
+          },
+          "totalRecord": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Tổng số bản ghi",
+            "format": "int64"
+          }
+        },
+        "description": ""
+      },
       "RequestResponseOfIReadOnlyListOfQuestionResponse": {
         "type": "object",
         "properties": {
@@ -11181,8 +11434,8 @@
           "phone",
           "email",
           "isActive",
-          "createdAt",
-          "updatedAt"
+          "created",
+          "modified"
         ],
         "type": "object",
         "properties": {
@@ -11221,7 +11474,7 @@
           "isActive": {
             "type": "boolean"
           },
-          "createdAt": {
+          "created": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
               "integer",
@@ -11229,7 +11482,7 @@
             ],
             "format": "int64"
           },
-          "updatedAt": {
+          "modified": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
               "integer",
@@ -11422,16 +11675,6 @@
             "type": "boolean",
             "description": "Kích hoạt hay không"
           },
-          "createdAt": {
-            "type": "string",
-            "description": "Thời điểm tạo",
-            "format": "date-time"
-          },
-          "updatedAt": {
-            "type": "string",
-            "description": "Thời điểm cập nhật gần nhất",
-            "format": "date-time"
-          },
           "gradeLevel": {
             "oneOf": [
               {
@@ -11449,6 +11692,36 @@
               "$ref": "#/components/schemas/Topic"
             },
             "description": "Danh sách chủ đề / chương của môn học"
+          },
+          "createdBy": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Tạo bởi"
+          },
+          "created": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Ngày tạo",
+            "format": "date-time"
+          },
+          "modifiedBy": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Sửa bởi"
+          },
+          "modified": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Ngày sửa",
+            "format": "date-time"
           }
         },
         "description": "Môn học gắn với một lớp học cụ thể"
@@ -11497,8 +11770,8 @@
           "code",
           "description",
           "isActive",
-          "createdAt",
-          "updatedAt"
+          "created",
+          "modified"
         ],
         "type": "object",
         "properties": {
@@ -11533,7 +11806,7 @@
           "isActive": {
             "type": "boolean"
           },
-          "createdAt": {
+          "created": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
               "integer",
@@ -11541,7 +11814,7 @@
             ],
             "format": "int64"
           },
-          "updatedAt": {
+          "modified": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
               "integer",
@@ -11793,16 +12066,6 @@
             "type": "boolean",
             "description": "Kích hoạt hay không"
           },
-          "createdAt": {
-            "type": "string",
-            "description": "Thời điểm tạo",
-            "format": "date-time"
-          },
-          "updatedAt": {
-            "type": "string",
-            "description": "Thời điểm cập nhật gần nhất",
-            "format": "date-time"
-          },
           "subject": {
             "oneOf": [
               {
@@ -11830,6 +12093,36 @@
           },
           "questions": {
             "description": "Danh sách câu hỏi thuộc chủ đề này"
+          },
+          "createdBy": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Tạo bởi"
+          },
+          "created": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Ngày tạo",
+            "format": "date-time"
+          },
+          "modifiedBy": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Sửa bởi"
+          },
+          "modified": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Ngày sửa",
+            "format": "date-time"
           }
         },
         "description": "Chủ đề / Chương học (hỗ trợ phân cấp cha–con)"
@@ -11901,8 +12194,8 @@
           "sortOrder",
           "description",
           "isActive",
-          "createdAt",
-          "updatedAt"
+          "created",
+          "modified"
         ],
         "type": "object",
         "properties": {
@@ -11957,7 +12250,7 @@
           "isActive": {
             "type": "boolean"
           },
-          "createdAt": {
+          "created": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
               "integer",
@@ -11965,7 +12258,7 @@
             ],
             "format": "int64"
           },
-          "updatedAt": {
+          "modified": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
               "integer",
@@ -11975,6 +12268,34 @@
           }
         },
         "description": "Response DTO cho Topic"
+      },
+      "UpdateProfileDto": {
+        "required": [
+          "displayName"
+        ],
+        "type": "object",
+        "properties": {
+          "displayName": {
+            "maxLength": 200,
+            "type": "string",
+            "description": "Tên hiển thị"
+          },
+          "email": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Email"
+          },
+          "phoneNumber": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Số điện thoại"
+          }
+        },
+        "description": "DTO cập nhật thông tin cá nhân của người dùng đang đăng nhập"
       },
       "UpdateUserRequest": {
         "required": [
@@ -12051,6 +12372,13 @@
               "string"
             ],
             "description": "Số điện thoại của người dùng."
+          },
+          "email": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Email của người dùng."
           },
           "sex": {
             "type": "boolean",
@@ -12194,6 +12522,9 @@
   "tags": [
     {
       "name": "Auth"
+    },
+    {
+      "name": "Menu"
     },
     {
       "name": "User"

@@ -10,7 +10,7 @@ namespace ExamHub.API.Controllers.School;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize(Roles = "Admin")]
-public class CohortMemberController(ICohortMemberService service) : ControllerBase
+public class CohortMemberController(ICohortMemberService service) : AuthorizeControllerBase
 {
     /// <summary>Lấy theo ID</summary>
     [HttpGet("{id:guid}")]

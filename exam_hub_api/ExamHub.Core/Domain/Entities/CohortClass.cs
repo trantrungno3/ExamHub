@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using TVT.Core.Attributes;
+using TVT.Core.Models;
 using TVT.Core.Models.PostgreSql;
 using TVT.Core.Models.PostgreSql.FieldTables;
 using ExamHub.Core.FieldTables;
@@ -12,7 +13,7 @@ namespace ExamHub.Core.Domain.Entities;
 /// </summary>
 [Table(CohortClassTable.TableName)]
 [SqlBuilderProperty(CohortClassTable.TableName)]
-public class CohortClass : IModelBaseSql<int>
+public class CohortClass : ModifyModelBase, IModelBaseSql<int>
 {
     /// <summary>Khóa chính (SERIAL)</summary>
     [Column(CommonFieldTable.Id)]
@@ -49,11 +50,6 @@ public class CohortClass : IModelBaseSql<int>
     [SqlBuilderProperty(CohortClassTable.HomeroomTeacherId, Insert = true, Update = true)]
     public Guid? HomeroomTeacherId { get; set; }
 
-    /// <summary>Thời điểm tạo</summary>
-    [Column(CohortClassTable.CreatedAt)]
-    [SqlBuilderProperty(CohortClassTable.CreatedAt, Insert = true, Update = false)]
-    public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
-
     // ── Navigation ──────────────────────────────────────────────
     /// <summary>Khoá học</summary>
     public Cohort? Cohort { get; set; }
@@ -70,8 +66,7 @@ public class CohortClass : IModelBaseSql<int>
         class_name          = ClassName,
         school_year         = SchoolYear,
         year_index          = YearIndex,
-        homeroom_teacher_id = HomeroomTeacherId,
-        created_at          = CreatedAt
+        homeroom_teacher_id = HomeroomTeacherId
     };
 
     /// <summary>Tạo object để UPDATE</summary>

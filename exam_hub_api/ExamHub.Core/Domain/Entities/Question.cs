@@ -3,6 +3,7 @@ using TVT.Core.Attributes;
 using TVT.Core.Models.PostgreSql;
 using TVT.Core.Models.PostgreSql.FieldTables;
 using ExamHub.Core.FieldTables;
+using TVT.Core.Models;
 
 namespace ExamHub.Core.Domain.Entities;
 
@@ -11,7 +12,7 @@ namespace ExamHub.Core.Domain.Entities;
 /// </summary>
 [Table(QuestionTable.TableName)]
 [SqlBuilderProperty(QuestionTable.TableName)]
-public class Question : IModelBaseSql<Guid>
+public class Question : ModifyModelBase, IModelBaseSql<Guid>
 {
     /// <summary>Khóa chính (UUID)</summary>
     [Column(CommonFieldTable.Id)]
@@ -37,11 +38,6 @@ public class Question : IModelBaseSql<Guid>
     [Column(QuestionTable.CognitiveLevelId)]
     [SqlBuilderProperty(QuestionTable.CognitiveLevelId, Insert = true, Update = true)]
     public int? CognitiveLevelId { get; set; }
-
-    /// <summary>ID người tạo câu hỏi</summary>
-    [Column(QuestionTable.CreatedBy)]
-    [SqlBuilderProperty(QuestionTable.CreatedBy, Insert = true, Update = false)]
-    public Guid CreatedBy { get; set; }
 
     /// <summary>Nội dung câu hỏi (HTML/Markdown)</summary>
     [Column(QuestionTable.Content)]
@@ -103,16 +99,6 @@ public class Question : IModelBaseSql<Guid>
     [SqlBuilderProperty(QuestionTable.VerifiedAt, Insert = true, Update = true)]
     public DateTime? VerifiedAt { get; set; }
 
-    /// <summary>Thời điểm tạo</summary>
-    [Column(QuestionTable.CreatedAt)]
-    [SqlBuilderProperty(QuestionTable.CreatedAt, Insert = true, Update = false)]
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
-    /// <summary>Thời điểm cập nhật gần nhất</summary>
-    [Column(QuestionTable.UpdatedAt)]
-    [SqlBuilderProperty(QuestionTable.UpdatedAt, Insert = true, Update = true)]
-    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
-
     // ── Navigation ──────────────────────────────────────────────
     /// <summary>Chủ đề của câu hỏi</summary>
     public Topic? Topic { get; set; }
@@ -133,48 +119,47 @@ public class Question : IModelBaseSql<Guid>
     /// <summary>Tạo object để INSERT</summary>
     public object ToInsertObject() => new
     {
-        id                   = Id,
-        topic_id             = TopicId,
-        question_type_id     = QuestionTypeId,
-        difficulty_level_id  = DifficultyLevelId,
-        cognitive_level_id   = CognitiveLevelId,
-        created_by           = CreatedBy,
-        content              = Content,
-        content_plain        = ContentPlain,
-        explanation          = Explanation,
-        image_url            = ImageUrl,
-        audio_url            = AudioUrl,
-        source               = Source,
-        tags                 = Tags,
-        usage_count          = UsageCount,
-        is_active            = IsActive,
-        is_verified          = IsVerified,
-        verified_by          = VerifiedBy,
-        verified_at          = VerifiedAt,
-        created_at           = CreatedAt,
-        updated_at           = UpdatedAt
+        id = Id,
+        topic_id = TopicId,
+        question_type_id = QuestionTypeId,
+        difficulty_level_id = DifficultyLevelId,
+        cognitive_level_id = CognitiveLevelId,
+        content = Content,
+        content_plain = ContentPlain,
+        explanation = Explanation,
+        image_url = ImageUrl,
+        audio_url = AudioUrl,
+        source = Source,
+        tags = Tags,
+        usage_count = UsageCount,
+        is_active = IsActive,
+        is_verified = IsVerified,
+        verified_by = VerifiedBy,
+        verified_at = VerifiedAt,
+        created = Created,
+        modified = Modified
     };
 
     /// <summary>Tạo object để UPDATE</summary>
     public object ToUpdateObject() => new
     {
-        id                   = Id,
-        topic_id             = TopicId,
-        question_type_id     = QuestionTypeId,
-        difficulty_level_id  = DifficultyLevelId,
-        cognitive_level_id   = CognitiveLevelId,
-        content              = Content,
-        content_plain        = ContentPlain,
-        explanation          = Explanation,
-        image_url            = ImageUrl,
-        audio_url            = AudioUrl,
-        source               = Source,
-        tags                 = Tags,
-        usage_count          = UsageCount,
-        is_active            = IsActive,
-        is_verified          = IsVerified,
-        verified_by          = VerifiedBy,
-        verified_at          = VerifiedAt,
-        updated_at           = DateTime.UtcNow
+        id = Id,
+        topic_id = TopicId,
+        question_type_id = QuestionTypeId,
+        difficulty_level_id = DifficultyLevelId,
+        cognitive_level_id = CognitiveLevelId,
+        content = Content,
+        content_plain = ContentPlain,
+        explanation = Explanation,
+        image_url = ImageUrl,
+        audio_url = AudioUrl,
+        source = Source,
+        tags = Tags,
+        usage_count = UsageCount,
+        is_active = IsActive,
+        is_verified = IsVerified,
+        verified_by = VerifiedBy,
+        verified_at = VerifiedAt,
+        updated_at = DateTime.UtcNow
     };
 }

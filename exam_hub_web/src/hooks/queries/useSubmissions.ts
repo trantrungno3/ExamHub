@@ -7,6 +7,7 @@ export const SUBMISSION_KEYS = {
     all: ['submissions'] as const,
     detail: (id: string) => ['submissions', 'detail', id] as const,
     byExam: (examId: string) => ['submissions', 'byExam', examId] as const,
+    byStudent: (studentId: string) => ['submissions', 'byStudent', studentId] as const,
 }
 
 export function useSubmissionQuery(id?: string) {
@@ -22,6 +23,14 @@ export function useSubmissionsByExamQuery(examId?: string) {
         queryKey: SUBMISSION_KEYS.byExam(examId ?? ''),
         queryFn: async () => (await submissionService.getByExam(examId!)).data ?? [],
         enabled: !!examId,
+    })
+}
+
+export function useMySubmissionsQuery(studentId?: string) {
+    return useQuery({
+        queryKey: SUBMISSION_KEYS.byStudent(studentId ?? ''),
+        queryFn: async () => (await submissionService.getByStudent(studentId!)).data ?? [],
+        enabled: !!studentId,
     })
 }
 

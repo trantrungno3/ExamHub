@@ -1,0 +1,60 @@
+@startuml AD04_quan_ly_khoa_hoc_va_lop_hoc
+skinparam defaultFontName "DejaVu Sans"
+skinparam activity {
+    BackgroundColor #DDEEFF
+    BorderColor #336699
+    FontName "DejaVu Sans"
+    FontSize 16
+    DiamondBackgroundColor #FFF4CE
+    DiamondBorderColor #CC8800
+    DiamondFontName "DejaVu Sans"
+    DiamondFontSize 15
+    StartColor #1F3864
+    EndColor #1F3864
+    BarColor #336699
+}
+skinparam ArrowColor #2E75B6
+skinparam ArrowFontName "DejaVu Sans"
+skinparam ArrowFontSize 15
+skinparam noteBackgroundColor #FFFFCC
+skinparam noteBorderColor #CCCC00
+skinparam noteFontName "DejaVu Sans"
+skinparam swimlaneBorderColor #336699
+skinparam swimlaneFontName "DejaVu Sans"
+skinparam swimlaneFontStyle bold
+skinparam wrapWidth 250
+
+|Quản trị viên|
+start
+:Truy cập mục Quản lý khoá học;
+
+|Hệ thống|
+:Hiển thị danh sách khoá học hiện có;
+
+|Quản trị viên|
+:Chọn Tạo khoá học mới;
+:Nhập tên khoá học, năm học, số lớp, ký hiệu lớp;
+:Bấm Lưu;
+
+|Hệ thống|
+:Kiểm tra tính hợp lệ dữ liệu;
+if (Dữ liệu hợp lệ?) then (Không)
+    :Hiển thị lỗi cấu hình;
+    |Quản trị viên|
+    :Chỉnh sửa lại;
+    detach
+else (Có)
+    |Hệ thống|
+    :Lưu khoá học;
+    :Sinh lớp học tự động theo cấu hình;
+    note right
+        Ví dụ: Khoá 10, 5 lớp
+        sẽ tạo 10A1 đến 10A5
+    end note
+    :Hiển thị thông báo thành công kèm danh sách lớp vừa sinh;
+endif
+
+|Quản trị viên|
+:Xem danh sách lớp theo năm học;
+stop
+@enduml

@@ -28,7 +28,4 @@ public readonly struct CohortTable
 
     /// <summary>Kích hoạt</summary>
     public const string IsActive = "is_active";
-
-    /// <summary>Ngày tạo</summary>
-    public const string CreatedAt = "created_at";
 }
