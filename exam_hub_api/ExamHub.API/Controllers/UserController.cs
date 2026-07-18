@@ -56,6 +56,8 @@ public class UserController(
     {
         if (request.File is null || request.File.Length == 0)
             return BadRequest(RequestResponse<object>.Error("File import không được để trống."));
+        if (!request.File.FileName.EndsWith(".xlsx", StringComparison.OrdinalIgnoreCase))
+            return BadRequest(RequestResponse<object>.Error("Chỉ chấp nhận file Excel (.xlsx)."));
         if (string.IsNullOrWhiteSpace(request.DefaultPassword))
             return BadRequest(RequestResponse<object>.Error("Mật khẩu mặc định không được để trống."));
 
