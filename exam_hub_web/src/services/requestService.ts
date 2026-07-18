@@ -137,6 +137,13 @@ function createHttp(auth: boolean) {
                 method: 'POST', headers: buildFormHeaders(auth), body: form,
             }).then(handleResponse<T>))
         },
+        async getBlob(path: string): Promise<Blob> {
+            const res = await fetchWithTimeout(buildUrl(path), {
+                method: 'GET', headers: buildFormHeaders(auth),
+            })
+            if (!res.ok) throw new Error('Không thể tải file từ máy chủ.')
+            return res.blob()
+        },
     }
 }
 
