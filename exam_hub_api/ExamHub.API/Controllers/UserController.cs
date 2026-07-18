@@ -11,7 +11,9 @@ namespace ExamHub.API.Controllers;
 [ApiController]
 [Authorize(Roles = "Admin")]
 [Route("api/users")]
-public class UserController(IUserManagementService userService) : AuthorizeControllerBase
+public class UserController(
+    IUserManagementService userService,
+    IUserBulkImportService bulkUserImportService) : AuthorizeControllerBase
 {
     // ── Quản lý người dùng ──────────────────────────────────────
 
@@ -45,6 +47,32 @@ public class UserController(IUserManagementService userService) : AuthorizeContr
 
         return StatusCode(201,
             RequestResponse<UserResponse>.Success("Tạo người dùng thành công!", UserResponse.FromEntity(result), 1));
+    }
+
+    /// <summary>Import người dùng hàng loạt từ file Excel (.xlsx)</summary>
+    [HttpPost("bulk-import")]
+    public async Task<ActionResult<RequestResponse<BulkUserImportResponse>>> BulkImport(
+        [FromForm] BulkUserImportRequest request, CancellationToken ct)
+    {
+        if (request.File is null || request.File.Length == 0)
+            return BadRequest(RequestResponse<object>.Error("File import không được để trống."));
+        if (string.IsNullOrWhiteSpace(request.DefaultPassword))
+            return BadRequest(RequestResponse<object>.Error("Mật khẩu mặc định không được để trống."));
+
+        var result = await bulkUserImportService.ImportAsync(request, ct);
+        return Ok(RequestResponse<BulkUserImportResponse>.Success(
+            $"Import hoàn tất: {result.SuccessCount} thành công, {result.ErrorCount} lỗi.",
+            result, result.SuccessCount));
+    }
+
+    /// <summary>Tải file Excel mẫu để import người dùng</summary>
+    [HttpGet("bulk-import/template")]
+    public IActionResult DownloadImportTemplate()
+    {
+        var bytes = bulkUserImportService.BuildTemplate();
+        return File(bytes,
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "user-import-template.xlsx");
     }
 
     /// <summary>Cập nhật thông tin người dùng</summary>
