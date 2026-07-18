@@ -37,8 +37,10 @@ export function UserBulkImportModal({open, onClose, onImported}: Props) {
             const a = document.createElement('a')
             a.href = url
             a.download = 'user-import-template.xlsx'
+            document.body.appendChild(a)
             a.click()
-            URL.revokeObjectURL(url)
+            a.remove()
+            setTimeout(() => URL.revokeObjectURL(url), 1000)
         } catch {
             message.error('Không thể tải file mẫu')
         }
