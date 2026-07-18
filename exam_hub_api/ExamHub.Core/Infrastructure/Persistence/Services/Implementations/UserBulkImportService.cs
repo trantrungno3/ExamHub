@@ -1,3 +1,4 @@
+using System.Text;
 using ClosedXML.Excel;
 using ExamHub.Core.Application.Services;
 using ExamHub.Core.DataTransferObjects.Common;
@@ -128,7 +129,7 @@ public class UserBulkImportService(IUserManagementService userService) : IUserBu
     /// <summary>"Nữ"/"1"/"true" => true (Nữ); còn lại => false (Nam).</summary>
     private static bool ParseSex(string raw)
     {
-        var v = raw.Trim().ToLowerInvariant();
+        var v = raw.Trim().Normalize(NormalizationForm.FormC).ToLowerInvariant();
         return v is "nữ" or "nu" or "1" or "true" or "female" or "f";
     }
 
