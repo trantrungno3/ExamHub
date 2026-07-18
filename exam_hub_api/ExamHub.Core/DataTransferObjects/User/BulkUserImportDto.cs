@@ -1,4 +1,4 @@
-using ExamHub.Core.DataTransferObjects.Question;
+using ExamHub.Core.DataTransferObjects.Common;
 using Microsoft.AspNetCore.Http;
 
 namespace ExamHub.Core.DataTransferObjects.User;

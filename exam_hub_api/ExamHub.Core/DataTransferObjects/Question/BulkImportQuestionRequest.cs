@@ -1,3 +1,4 @@
+using ExamHub.Core.DataTransferObjects.Common;
 using Microsoft.AspNetCore.Http;
 
 namespace ExamHub.Core.DataTransferObjects.Question;
@@ -8,9 +9,6 @@ public record BulkImportQuestionRequest(
     int DefaultTopicId,
     int DefaultDifficultyLevelId,
     int? DefaultCognitiveLevelId);
-
-/// <summary>Kết quả import từng hàng.</summary>
-public record BulkImportRowError(int RowNumber, string Message);
 
 /// <summary>Kết quả tổng hợp sau bulk import.</summary>
 public record BulkImportQuestionResponse(
