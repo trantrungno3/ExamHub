@@ -1,12 +1,13 @@
 import {useCallback, useEffect, useMemo, useState} from 'react'
 import type {TableColumnsType} from 'antd'
 import {Button, Input, Popconfirm, Switch, Table, Tag, Tooltip} from 'antd'
-import {DeleteOutlined, EditOutlined, KeyOutlined, PlusOutlined, SearchOutlined, TeamOutlined} from '@ant-design/icons'
+import {DeleteOutlined, EditOutlined, KeyOutlined, PlusOutlined, SearchOutlined, TeamOutlined, UploadOutlined} from '@ant-design/icons'
 import {message} from 'antd'
 import {userService} from '../../services/userService'
 import {UserFormModal} from './UserFormModal'
 import {ResetPasswordModal} from './ResetPasswordModal'
 import {RolesModal} from './RolesModal'
+import {UserBulkImportModal} from './UserBulkImportModal'
 
 type ModalState =
     | {type: 'none'}
@@ -20,6 +21,7 @@ export default function UserPage() {
     const [search, setSearch] = useState('')
     const [modal, setModal] = useState<ModalState>({type: 'none'})
     const [lockingId, setLockingId] = useState<string | null>(null)
+    const [importOpen, setImportOpen] = useState(false)
 
     const fetchData = useCallback(() => {
         setLoading(true)
@@ -189,9 +191,14 @@ export default function UserPage() {
                     placeholder="Tìm theo tên, tài khoản, email..."
                     style={{width: 280}}
                 />
-                <Button type="primary" icon={<PlusOutlined/>} onClick={() => setModal({type: 'form', record: null})}>
-                    Thêm người dùng
-                </Button>
+                <div className="flex items-center gap-2">
+                    <Button icon={<UploadOutlined/>} onClick={() => setImportOpen(true)}>
+                        Nhập từ Excel
+                    </Button>
+                    <Button type="primary" icon={<PlusOutlined/>} onClick={() => setModal({type: 'form', record: null})}>
+                        Thêm người dùng
+                    </Button>
+                </div>
             </div>
 
             <div className="section-card">
@@ -228,6 +235,11 @@ export default function UserPage() {
                 currentRoles={modal.type === 'roles' ? modal.record.roles : []}
                 onClose={() => setModal({type: 'none'})}
                 onSave={handleSetRoles}
+            />
+            <UserBulkImportModal
+                open={importOpen}
+                onClose={() => setImportOpen(false)}
+                onImported={fetchData}
             />
         </div>
     )
