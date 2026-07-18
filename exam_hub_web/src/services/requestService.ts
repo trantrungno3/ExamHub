@@ -64,7 +64,10 @@ async function wrapNetworkError<T>(promise: Promise<ApiResponse<T>>): Promise<Ap
 }
 
 async function handleResponse<T>(res: Response): Promise<ApiResponse<T>> {
-    return res.json().then(r => r as ApiResponse<T>) as Promise<ApiResponse<T>>
+    if (res.status === 204) return {status: statusCode.Success, message: 'Thành công'}
+    const text = await res.text()
+    if (!text) return {status: res.ok ? statusCode.Success : statusCode.Error, message: ''}
+    return JSON.parse(text) as ApiResponse<T>
 }
 
 function buildHeaders(auth: boolean): Headers {
@@ -117,10 +120,11 @@ function createHttp(auth: boolean) {
                 body: body === undefined ? undefined : JSON.stringify(body),
             }).then(handleResponse<T>))
         },
-        async delete<T>(path: string): Promise<ApiResponse<T>> {
+        async delete<T>(path: string, body?: unknown): Promise<ApiResponse<T>> {
             return wrapNetworkError(fetchWithTimeout(buildUrl(path), {
                 method: 'DELETE',
-                headers: buildHeaders(auth)
+                headers: buildHeaders(auth),
+                body: body === undefined ? undefined : JSON.stringify(body),
             }).then(async res => {
                 if (res.status === 204) return {status: statusCode.Deleted, message: 'Xoá thành công'}
                 return handleResponse<T>(res)

@@ -15,7 +15,6 @@ public class TeacherSubjectRepository : BaseRepository<TeacherSubject, int>, ITe
     public async Task<IReadOnlyList<TeacherSubject>> GetByTeacherAsync(Guid userId, CancellationToken ct = default)
         => await Set.AsNoTracking()
             .Where(x => x.UserId == userId)
-            .Include(x => x.Subject)
             .ToListAsync(ct);
 
     /// <inheritdoc/>

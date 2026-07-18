@@ -1,4 +1,4 @@
-import {useEffect} from 'react'
+import {useEffect, useMemo} from 'react'
 import {useNavigate, useParams} from 'react-router-dom'
 import {Button, Checkbox, Form, Input, Select, Upload, message} from 'antd'
 import {DeleteOutlined, PaperClipOutlined, PlusOutlined} from '@ant-design/icons'
@@ -10,12 +10,16 @@ import {QUESTION_KEYS, useQuestionQuery} from '../../hooks/queries/useQuestions'
 import {
     useCognitiveLevelsQuery,
     useDifficultyLevelsQuery,
+    useGradeLevelsListQuery,
     useQuestionTypesQuery,
+    useSubjectsQuery,
     useTopicsQuery,
 } from '../../hooks/queries/useCategoryLists'
 
 type AnswerForm = {content: string; isCorrect: boolean}
 type QuestionForm = {
+    gradeLevelId?: number
+    subjectId?: number
     topicId?: number
     questionTypeId?: number
     difficultyLevelId?: number
@@ -40,10 +44,37 @@ export default function AddQuestionPage() {
     const qc = useQueryClient()
 
     const topics = useTopicsQuery()
+    const subjects = useSubjectsQuery()
+    const grades = useGradeLevelsListQuery()
     const questionTypes = useQuestionTypesQuery()
     const difficulties = useDifficultyLevelsQuery()
     const cognitives = useCognitiveLevelsQuery()
     const {data: existing} = useQuestionQuery(id)
+
+    /** Cascading: Cấp lớp → Môn học → Chủ đề. Mỗi select chỉ render danh sách đã lọc. */
+    const gradeLevelId = Form.useWatch('gradeLevelId', form)
+    const subjectId = Form.useWatch('subjectId', form)
+
+    const gradeOptions = useMemo(
+        () => [...(grades.data ?? [])]
+            .sort((a, b) => a.gradeNumber - b.gradeNumber)
+            .map(g => ({value: g.id, label: g.name})),
+        [grades.data],
+    )
+    const subjectOptions = useMemo(
+        () => (subjects.data ?? [])
+            .filter(s => s.gradeLevelId === gradeLevelId)
+            .sort((a, b) => a.name.localeCompare(b.name))
+            .map(s => ({value: s.id, label: s.name})),
+        [subjects.data, gradeLevelId],
+    )
+    const topicOptions = useMemo(
+        () => (topics.data ?? [])
+            .filter(t => t.subjectId === subjectId)
+            .sort((a, b) => a.name.localeCompare(b.name))
+            .map(t => ({value: t.id, label: t.name})),
+        [topics.data, subjectId],
+    )
 
     useEffect(() => {
         if (isEdit && existing) {
@@ -61,6 +92,14 @@ export default function AddQuestionPage() {
             })
         }
     }, [isEdit, existing, form])
+
+    /** Khi sửa: suy ra Cấp lớp + Môn học từ topicId (cần topics/subjects đã tải). */
+    useEffect(() => {
+        if (!isEdit || !existing || !topics.data || !subjects.data) return
+        const topic = topics.data.find(t => t.id === existing.topicId)
+        const subject = topic ? subjects.data.find(s => s.id === topic.subjectId) : undefined
+        form.setFieldsValue({subjectId: topic?.subjectId, gradeLevelId: subject?.gradeLevelId})
+    }, [isEdit, existing, topics.data, subjects.data, form])
 
     const saveMutation = useMutation({
         mutationFn: (body: QuestionBody) =>
@@ -206,9 +245,30 @@ export default function AddQuestionPage() {
                         <div className="w-72 flex flex-col gap-4 shrink-0">
                             <div className="form-section">
                                 <p className="form-section-title">Phân loại câu hỏi</p>
+                                <Form.Item label="Cấp lớp" name="gradeLevelId" rules={[{required: true, message: 'Chọn cấp lớp'}]}>
+                                    <Select
+                                        placeholder="Chọn cấp lớp"
+                                        showSearch optionFilterProp="label"
+                                        options={gradeOptions}
+                                        onChange={() => form.setFieldsValue({subjectId: undefined, topicId: undefined})}
+                                    />
+                                </Form.Item>
+                                <Form.Item label="Môn học" name="subjectId" rules={[{required: true, message: 'Chọn môn học'}]}>
+                                    <Select
+                                        placeholder={gradeLevelId ? 'Chọn môn học' : 'Chọn cấp lớp trước'}
+                                        disabled={!gradeLevelId}
+                                        showSearch optionFilterProp="label"
+                                        options={subjectOptions}
+                                        onChange={() => form.setFieldsValue({topicId: undefined})}
+                                    />
+                                </Form.Item>
                                 <Form.Item label="Chủ đề" name="topicId" rules={[{required: true, message: 'Chọn chủ đề'}]}>
-                                    <Select placeholder="Chọn chủ đề" showSearch optionFilterProp="label"
-                                            options={(topics.data ?? []).map(t => ({value: t.id, label: t.name}))}/>
+                                    <Select
+                                        placeholder={subjectId ? 'Chọn chủ đề' : 'Chọn môn học trước'}
+                                        disabled={!subjectId}
+                                        showSearch optionFilterProp="label"
+                                        options={topicOptions}
+                                    />
                                 </Form.Item>
                                 <Form.Item label="Loại câu hỏi" name="questionTypeId" rules={[{required: true, message: 'Chọn loại'}]}>
                                     <Select placeholder="Chọn loại"

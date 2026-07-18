@@ -1,19 +1,22 @@
 import {useCallback, useEffect, useMemo, useState} from 'react'
 import type {TableColumnsType} from 'antd'
 import {Button, Input, Popconfirm, Switch, Table, Tag, Tooltip} from 'antd'
-import {DeleteOutlined, EditOutlined, KeyOutlined, PlusOutlined, SearchOutlined, TeamOutlined, UploadOutlined} from '@ant-design/icons'
+import {BookOutlined, DeleteOutlined, EditOutlined, KeyOutlined, PlusOutlined, SearchOutlined, TeamOutlined, UploadOutlined} from '@ant-design/icons'
 import {message} from 'antd'
 import {userService} from '../../services/userService'
 import {UserFormModal} from './UserFormModal'
 import {ResetPasswordModal} from './ResetPasswordModal'
 import {RolesModal} from './RolesModal'
+import {TeacherSubjectsModal} from './TeacherSubjectsModal'
 import {UserBulkImportModal} from './UserBulkImportModal'
+import {useGradeLevelsListQuery, useSubjectsQuery} from '../../hooks/queries/useCategoryLists'
 
 type ModalState =
     | {type: 'none'}
     | {type: 'form'; record: UserResponse | null}
     | {type: 'password'; record: UserResponse}
     | {type: 'roles'; record: UserResponse}
+    | {type: 'subjects'; record: UserResponse}
 
 export default function UserPage() {
     const [data, setData] = useState<UserResponse[]>([])
@@ -22,6 +25,10 @@ export default function UserPage() {
     const [modal, setModal] = useState<ModalState>({type: 'none'})
     const [lockingId, setLockingId] = useState<string | null>(null)
     const [importOpen, setImportOpen] = useState(false)
+
+    // Làm ấm cache môn học / cấp lớp để modal Phân công môn học mở là hiện bảng ngay.
+    useSubjectsQuery()
+    useGradeLevelsListQuery()
 
     const fetchData = useCallback(() => {
         setLoading(true)
@@ -158,6 +165,13 @@ export default function UserPage() {
                             <TeamOutlined/>
                         </button>
                     </Tooltip>
+                    {r.roles.includes('Teacher') && (
+                        <Tooltip title="Phân công môn học">
+                            <button className="btn-icon" onClick={() => setModal({type: 'subjects', record: r})}>
+                                <BookOutlined/>
+                            </button>
+                        </Tooltip>
+                    )}
                     <Tooltip title="Đặt lại mật khẩu">
                         <button className="btn-icon" onClick={() => setModal({type: 'password', record: r})}>
                             <KeyOutlined/>
@@ -235,6 +249,12 @@ export default function UserPage() {
                 currentRoles={modal.type === 'roles' ? modal.record.roles : []}
                 onClose={() => setModal({type: 'none'})}
                 onSave={handleSetRoles}
+            />
+            <TeacherSubjectsModal
+                open={modal.type === 'subjects'}
+                userId={modal.type === 'subjects' ? modal.record.id : null}
+                userName={modal.type === 'subjects' ? modal.record.userName : null}
+                onClose={() => setModal({type: 'none'})}
             />
             <UserBulkImportModal
                 open={importOpen}

@@ -4,6 +4,7 @@ import {Button, Form, Input, message, Typography} from 'antd'
 import {LockOutlined, UserOutlined} from '@ant-design/icons'
 import {useAuth} from '../../AuthProvider'
 import {useAuthStore} from '../../stores/authStore'
+import {ROUTES} from '../../routes/paths'
 
 const {Link} = Typography
 
@@ -15,8 +16,9 @@ interface LoginFormValues {
 /** Học sinh (chỉ role Student) → trang đề thi; còn lại → dashboard admin/teacher. */
 function homePathForRoles(roles?: string[]): string {
     const r = roles ?? []
+    if (r.length === 0) return ROUTES.NO_ROLE
     const isStudentOnly = r.includes('Student') && !r.includes('Admin') && !r.includes('Teacher')
-    return isStudentOnly ? '/student/exams' : '/app/dashboard'
+    return isStudentOnly ? ROUTES.STUDENT_EXAMS : ROUTES.DASHBOARD
 }
 
 const FEATURES = [

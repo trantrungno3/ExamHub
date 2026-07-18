@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using ExamHub.Core.Domain.Entities;
 using ExamHub.Core.Domain.Interfaces;
 using Microsoft.AspNetCore.Authorization;

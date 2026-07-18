@@ -32,7 +32,7 @@ export function extractUserFromToken(accessToken: string): UserInfo {
         p['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'] ??
         p['nameid'] ?? p['sub'] ?? ''
     )
-    const raw = p['role'] ??
+    const raw = p['Role'] ??
         p['http://schemas.microsoft.com/ws/2008/06/identity/claims/role']
     const roles = Array.isArray(raw) ? (raw as string[]) : raw ? [String(raw)] : []
     return {id, userName, roles}

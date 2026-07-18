@@ -32,28 +32,27 @@ public record QuestionAnswerResponse(
 // ── Question ─────────────────────────────────────────────────────────────────
 
 /// <summary>Request DTO để tạo / cập nhật câu hỏi</summary>
-public record QuestionRequest(
-    [property: Range(1, int.MaxValue, ErrorMessage = "Chủ đề không hợp lệ.")]
-    int TopicId,
-    [property: Range(1, int.MaxValue, ErrorMessage = "Loại câu hỏi không hợp lệ.")]
-    int QuestionTypeId,
-    [property: Range(1, int.MaxValue, ErrorMessage = "Mức độ khó không hợp lệ.")]
-    int DifficultyLevelId,
-    [property: Range(1, int.MaxValue, ErrorMessage = "Cấp độ nhận thức không hợp lệ.")]
-    int? CognitiveLevelId,
-    [property: Required(ErrorMessage = "Nội dung câu hỏi không được để trống.")]
-    string Content,
-    string? ContentPlain,
-    string? Explanation,
-    string? ImageUrl,
-    string? AudioUrl,
-    string? Source,
-    string[]? Tags,
-    [property: Required(ErrorMessage = "Câu hỏi phải có ít nhất một đáp án.")]
-    [property: HasCorrectAnswer]
-    IEnumerable<QuestionAnswerRequest> Answers
-)
+public record QuestionRequest()
 {
+    [ Range(1, int.MaxValue, ErrorMessage = "Chủ đề không hợp lệ.")]
+    public int TopicId { get; set; }
+    [ Range(1, int.MaxValue, ErrorMessage = "Loại câu hỏi không hợp lệ.")]
+    public int QuestionTypeId{ get; set; }
+    [ Range(1, int.MaxValue, ErrorMessage = "Mức độ khó không hợp lệ.")]
+    public int DifficultyLevelId{ get; set; }
+    [ Range(1, int.MaxValue, ErrorMessage = "Cấp độ nhận thức không hợp lệ.")]
+    public int? CognitiveLevelId{ get; set; }
+    [ Required(ErrorMessage = "Nội dung câu hỏi không được để trống.")]
+   public string Content { get; set; }
+   public string? ContentPlain { get; set; }
+   public string? Explanation { get; set; }
+   public string? ImageUrl { get; set; }
+   public string? AudioUrl { get; set; }
+   public string? Source { get; set; }
+   public string[]? Tags { get; set; }
+    [ Required(ErrorMessage = "Câu hỏi phải có ít nhất một đáp án.")]
+    [HasCorrectAnswer]
+    public IEnumerable<QuestionAnswerRequest> Answers{ get; set; }
     /// <summary>Map sang entity Question</summary>
     public Domain.Entities.Question ToEntity(string createdBy) => new()
     {

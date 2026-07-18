@@ -15,6 +15,7 @@ export const ROUTES = {
     SCHOOLS: '/app/schools',
     PROFILE: '/app/profile',
     FORBIDDEN: '/forbidden',
+    NO_ROLE: '/no-role',
 
     STUDENT_EXAMS: '/student/exams',
     STUDENT_PROFILE: '/student/profile',

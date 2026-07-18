@@ -17,6 +17,7 @@ import StudentExamListPage from '../pages/student/StudentExamListPage'
 import StudentLayout from '../layouts/StudentLayout'
 import AppProfilePage from '../pages/profile/AppProfilePage'
 import StudentProfilePage from '../pages/profile/StudentProfilePage'
+import NoRolePage from '../pages/auth/NoRolePage'
 import { Placeholder } from '../components/Placeholder'
 import UserPage from '../pages/user/UserPage'
 import SchoolListPage from '../pages/school/SchoolListPage'
@@ -47,6 +48,7 @@ export const router = createBrowserRouter([
     { path: '/student/exam/result',   element: <ExamResultPage /> },
 
     { path: ROUTES.FORBIDDEN, element: <Placeholder title="403 — Không có quyền truy cập" /> },
+    { path: ROUTES.NO_ROLE,   element: <NoRolePage /> },
 
     /* ── Protected admin / teacher app ── */
     {

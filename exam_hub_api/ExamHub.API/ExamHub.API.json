@@ -571,6 +571,77 @@
         ]
       }
     },
+    "/api/users/bulk-import": {
+      "post": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Import người dùng hàng loạt từ file Excel (.xlsx)",
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "File": {
+                    "$ref": "#/components/schemas/IFormFile"
+                  },
+                  "DefaultPassword": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfBulkUserImportResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfBulkUserImportResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfBulkUserImportResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/users/bulk-import/template": {
+      "get": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Tải file Excel mẫu để import người dùng",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
     "/api/users/{id}/lock": {
       "patch": {
         "tags": [
@@ -7367,7 +7438,40 @@
             "type": "string"
           }
         },
-        "description": "Kết quả import từng hàng."
+        "description": "Kết quả lỗi của một hàng khi import hàng loạt (dùng chung cho mọi loại import)."
+      },
+      "BulkUserImportResponse": {
+        "required": [
+          "successCount",
+          "errorCount",
+          "errors"
+        ],
+        "type": "object",
+        "properties": {
+          "successCount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "errorCount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BulkImportRowError"
+            }
+          }
+        },
+        "description": "Kết quả tổng hợp sau khi import người dùng."
       },
       "ChangePasswordDto": {
         "required": [
@@ -9371,17 +9475,7 @@
       },
       "QuestionRequest": {
         "required": [
-          "topicId",
-          "questionTypeId",
-          "difficultyLevelId",
-          "cognitiveLevelId",
           "content",
-          "contentPlain",
-          "explanation",
-          "imageUrl",
-          "audioUrl",
-          "source",
-          "tags",
           "answers"
         ],
         "type": "object",
@@ -9829,6 +9923,43 @@
               {
                 "description": "Dữ liệu",
                 "$ref": "#/components/schemas/BulkImportQuestionResponse"
+              }
+            ]
+          },
+          "totalRecord": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Tổng số bản ghi",
+            "format": "int64"
+          }
+        },
+        "description": ""
+      },
+      "RequestResponseOfBulkUserImportResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "description": "Trạng thái",
+            "$ref": "#/components/schemas/RequestResponseStatus"
+          },
+          "message": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Message"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "Dữ liệu",
+                "$ref": "#/components/schemas/BulkUserImportResponse"
               }
             ]
           },

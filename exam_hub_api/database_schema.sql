@@ -171,7 +171,7 @@ CREATE TABLE public.schools
     created_by VARCHAR(150),
     created   TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
     modified_by VARCHAR(150),
-        modified     TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    modified     TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 -- Khoá học — đơn vị tuyển sinh theo năm (VD: Khoá 2020-2025)
@@ -420,7 +420,10 @@ CREATE TABLE public.exam_template_sections
     pct_very_hard      SMALLINT  NOT NULL DEFAULT 0 CHECK (pct_very_hard BETWEEN 0 AND 100),
     -- Constraint tổng % = 100 xử lý ở application layer
 
-    created_at         TIMESTAMP NOT NULL DEFAULT NOW()
+    created            TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    created_by           VARCHAR(150),
+    modified           TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    modified_by           VARCHAR(150)
 );
 
 -- ============================================================
@@ -471,7 +474,10 @@ CREATE TABLE public.exam_questions
 
     content_snapshot TEXT NOT NULL,
     answers_snapshot JSONB, -- [{content, is_correct, sort_order}]
-
+    created            TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    created_by           VARCHAR(150),
+    modified           TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    modified_by           VARCHAR(150),
     UNIQUE (exam_id, question_id)
 );
 
@@ -494,7 +500,10 @@ CREATE TABLE public.exam_submissions
     status           VARCHAR(20) NOT NULL DEFAULT 'in_progress'
         CHECK (status IN ('in_progress', 'submitted', 'graded')),
 
-    created_at       TIMESTAMP   NOT NULL DEFAULT NOW()
+    created            TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    created_by           VARCHAR(150),
+    modified           TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    modified_by           VARCHAR(150)
 );
 
 -- Chi tiết câu trả lời
@@ -510,7 +519,10 @@ CREATE TABLE public.submission_answers
     score_earned        NUMERIC(4, 2) NOT NULL DEFAULT 0,
     feedback            TEXT,
     graded_by           UUID REFERENCES app_users (id),
-
+    created            TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    created_by           VARCHAR(150),
+    modified           TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    modified_by           VARCHAR(150),
     UNIQUE (submission_id, exam_question_id)
 );
 
