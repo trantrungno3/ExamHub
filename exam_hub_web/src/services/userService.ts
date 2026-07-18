@@ -12,4 +12,11 @@ export const userService = {
     setLock:       (id: string, isLocked: boolean)         => AuthHttp.patch<boolean>(`${BASE}/${id}/lock`, isLocked),
     resetPassword: (id: string, body: ResetPasswordRequest) => AuthHttp.patch<boolean>(`${BASE}/${id}/reset-password`, body),
     setRoles:      (id: string, body: SetRolesRequest)     => AuthHttp.put<string[]>(`${BASE}/${id}/roles`, body),
+    bulkImport:       (file: File, defaultPassword: string) => {
+        const form = new FormData()
+        form.append('file', file)
+        form.append('defaultPassword', defaultPassword)
+        return AuthHttp.postForm<BulkImportResult>(`${BASE}/bulk-import`, form)
+    },
+    downloadTemplate: ()                                    => AuthHttp.getBlob(`${BASE}/bulk-import/template`),
 }
