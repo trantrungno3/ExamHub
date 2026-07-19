@@ -15,7 +15,8 @@ import ExamSessionEditPage from '../pages/exams/ExamSessionEditPage'
 import ExamCoverPage from '../pages/student/ExamCoverPage'
 import ExamTakingPage from '../pages/student/ExamTakingPage'
 import ExamResultPage from '../pages/student/ExamResultPage'
-import StudentExamListPage from '../pages/student/StudentExamListPage'
+import StudentSessionListPage from '../pages/student/StudentSessionListPage'
+import StudentSessionPoolPage from '../pages/student/StudentSessionPoolPage'
 import StudentLayout from '../layouts/StudentLayout'
 import AppProfilePage from '../pages/profile/AppProfilePage'
 import StudentProfilePage from '../pages/profile/StudentProfilePage'
@@ -39,7 +40,8 @@ export const router = createBrowserRouter([
     {
         element: <StudentLayout />,
         children: [
-            { path: ROUTES.STUDENT_EXAMS,   element: <StudentExamListPage /> },
+            { path: ROUTES.STUDENT_EXAMS,   element: <StudentSessionListPage /> },
+            { path: ROUTES.STUDENT_SESSION_POOL, element: <StudentSessionPoolPage /> },
             { path: ROUTES.STUDENT_PROFILE, element: <StudentProfilePage /> },
         ],
     },

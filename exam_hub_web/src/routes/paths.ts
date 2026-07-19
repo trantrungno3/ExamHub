@@ -21,6 +21,7 @@ export const ROUTES = {
     NO_ROLE: '/no-role',
 
     STUDENT_EXAMS: '/student/exams',
+    STUDENT_SESSION_POOL: '/student/session/:id/pool',
     STUDENT_PROFILE: '/student/profile',
     STUDENT_EXAM: '/student/exam',
     STUDENT_EXAM_TAKE: '/student/exam/take',
