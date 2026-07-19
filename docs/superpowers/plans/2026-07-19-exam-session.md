@@ -8,6 +8,38 @@
 
 **Tech Stack:** .NET 10, EF Core (Npgsql, snake_case), Dapper; React 18 + TypeScript, Ant Design, @tanstack/react-query, react-router-dom.
 
+---
+
+## ⏳ TIẾN ĐỘ THỰC THI (cập nhật 2026-07-19)
+
+**Chế độ:** Subagent-Driven Development. **Nhánh:** `feat/exam-session` (tách từ `main` sau commit `f106cda`). **Ledger:** `.superpowers/sdd/progress.md`.
+
+**Ràng buộc môi trường đã chốt với chủ dự án (áp cho MỌI task khi resume):**
+- Subagent CHỈ build `ExamHub.Core` (`dotnet build ExamHub.Core/ExamHub.Core.csproj --no-dependencies`) và chạy `npx tsc --noEmit` cho web.
+- KHÔNG build project `ExamHub.API` (đang bị debugger khoá DLL) → Task 8–9 viết code nhưng **hoãn build API + chạy thử** cho chủ dự án.
+- KHÔNG chạy `dotnet ef migrations add` / `database update` → **Task 3 chỉ cấu hình DbContext + cập nhật `database_schema.sql`**; việc tạo & áp migration để chủ dự án tự làm sau (khi dừng app).
+- Không có test project → verify = build/tsc thành công + review diff.
+- WIP khác của chủ dự án (CurrentUserInfo.cs, Converters/, ExamSubmission*, topic/index.tsx, seed/...) đang để nguyên chưa commit — KHÔNG đụng.
+
+**Trạng thái task:**
+- [x] **Task 1** — Enums + FieldTables + Entities. DONE, commit `caa83f3`, Core build 0 errors. *(task-review chưa chạy)*
+- [ ] Task 2 — ExamSubmission +SessionId/AttemptNo *(← RESUME TẠI ĐÂY)*
+- [ ] Task 3 — DbContext config + schema.sql (KHÔNG chạy ef; hoãn migration)
+- [ ] Task 4 — DTOs
+- [ ] Task 5 — Repository
+- [ ] Task 6 — ExamSessionService (pick/lock)
+- [ ] Task 7 — Submit adaptation (đụng ExamSubmissionService/Controller — lưu ý WIP hiện có)
+- [ ] Task 8 — Controller + DI (hoãn build API)
+- [ ] Task 9 — Menu backend (hoãn build API)
+- [ ] Task 10 — Sidebar nhóm cha (web)
+- [ ] Task 11 — Types + service + hooks (web)
+- [ ] Task 12 — ExamSessionListPage
+- [ ] Task 13 — ExamSessionEditPage
+- [ ] Task 14 — Student session pages
+- [ ] Task 15 — Taking flow mang session/submission
+
+**Cách resume:** đọc `.superpowers/sdd/progress.md`, tiếp tục Subagent-Driven từ Task 2. (Cân nhắc chạy task-review cho Task 1 trước, hoặc gộp vào review tổng cuối.)
+
 ## Global Constraints
 
 - Spec nguồn: `docs/superpowers/specs/2026-07-19-exam-session-design.md`. Mọi quyết định (pick_mode, giao khoá→cohort_members, pool chỉ đề published cùng môn+cấp lớp) theo spec.
