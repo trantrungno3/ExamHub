@@ -482,6 +482,48 @@ CREATE TABLE public.exam_questions
 );
 
 -- ============================================================
+-- PHẦN 6b: KỲ THI (Exam Sessions)
+-- ============================================================
+CREATE TABLE public.exam_sessions
+(
+    id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    title          VARCHAR(300) NOT NULL,
+    description    TEXT,
+    subject_id     INT NOT NULL REFERENCES subjects (id),
+    grade_level_id INT NOT NULL REFERENCES grade_levels (id),
+    open_at        TIMESTAMPTZ NOT NULL,
+    close_at       TIMESTAMPTZ NOT NULL,
+    max_attempts   SMALLINT NOT NULL DEFAULT 1 CHECK (max_attempts >= 1),
+    pick_mode      VARCHAR(20) NOT NULL DEFAULT 'Random'
+                   CHECK (pick_mode IN ('Random', 'StudentChoice')),
+    status         VARCHAR(20) NOT NULL DEFAULT 'draft'
+                   CHECK (status IN ('draft', 'published', 'closed')),
+    created        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    created_by     VARCHAR(150),
+    modified       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    modified_by    VARCHAR(150),
+    CHECK (close_at > open_at)
+);
+
+CREATE TABLE public.exam_session_exams
+(
+    id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    session_id UUID NOT NULL REFERENCES exam_sessions (id) ON DELETE CASCADE,
+    exam_id    UUID NOT NULL REFERENCES exams (id),
+    UNIQUE (session_id, exam_id)
+);
+
+CREATE TABLE public.exam_session_assignments
+(
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    session_id      UUID NOT NULL REFERENCES exam_sessions (id) ON DELETE CASCADE,
+    cohort_id       INT REFERENCES cohorts (id) ON DELETE CASCADE,
+    cohort_class_id INT REFERENCES cohort_classes (id) ON DELETE CASCADE,
+    CHECK ((cohort_id IS NOT NULL)::int + (cohort_class_id IS NOT NULL)::int = 1),
+    UNIQUE (session_id, cohort_id, cohort_class_id)
+);
+
+-- ============================================================
 -- PHẦN 7: KẾT QUẢ THI (Exam Results)
 -- ============================================================
 
@@ -490,9 +532,11 @@ CREATE TABLE public.exam_submissions
     id               UUID PRIMARY KEY     DEFAULT gen_random_uuid(),
     exam_id          UUID        NOT NULL REFERENCES exams (id),
     student_id       UUID        NOT NULL REFERENCES app_users (id),
+    session_id       UUID REFERENCES exam_sessions (id),
+    attempt_no       SMALLINT    NOT NULL DEFAULT 1,
 
-    started_at       TIMESTAMP   NOT NULL DEFAULT NOW(),
-    submitted_at     TIMESTAMP,
+    started_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    submitted_at     TIMESTAMPTZ,
     duration_seconds INT,
 
     total_score      NUMERIC(5, 2),
@@ -568,6 +612,12 @@ CREATE INDEX idx_exams_parent ON public.exams (parent_exam_id);
 
 CREATE INDEX idx_submissions_exam ON public.exam_submissions (exam_id);
 CREATE INDEX idx_submissions_student ON public.exam_submissions (student_id);
+CREATE INDEX idx_submissions_session ON public.exam_submissions (session_id, student_id);
+
+CREATE INDEX idx_exam_sessions_filter ON public.exam_sessions (subject_id, grade_level_id, status);
+CREATE INDEX idx_session_assignments_session ON public.exam_session_assignments (session_id);
+CREATE INDEX idx_session_assignments_cohort ON public.exam_session_assignments (cohort_id);
+CREATE INDEX idx_session_assignments_class ON public.exam_session_assignments (cohort_class_id);
 
 -- ============================================================
 -- PHẦN 9: DỮ LIỆU MẪU (Seed Data)

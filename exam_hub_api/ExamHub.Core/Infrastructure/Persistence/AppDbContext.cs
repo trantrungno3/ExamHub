@@ -1,5 +1,6 @@
 using ExamHub.Core.Domain.Entities;
 using ExamHub.Core.Domain.Enums;
+using ExamHub.Core.Infrastructure.Persistence.Converters;
 using Microsoft.EntityFrameworkCore;
 using TVT.Core.IdentityUser.PostgreSql.FieldTables;
 
@@ -72,6 +73,15 @@ public class AppDbContext : DbContext
 
     /// <summary>Bài nộp của học sinh</summary>
     public DbSet<ExamSubmission> ExamSubmissions { get; set; }
+
+    /// <summary>Kỳ thi</summary>
+    public DbSet<ExamSession> ExamSessions { get; set; }
+
+    /// <summary>Đề thi thuộc pool của kỳ thi</summary>
+    public DbSet<ExamSessionExam> ExamSessionExams { get; set; }
+
+    /// <summary>Giao kỳ thi cho lớp/khoá</summary>
+    public DbSet<ExamSessionAssignment> ExamSessionAssignments { get; set; }
 
     /// <summary>Câu trả lời trong bài nộp</summary>
     public DbSet<SubmissionAnswer> SubmissionAnswers { get; set; }
@@ -435,7 +445,7 @@ public class AppDbContext : DbContext
             e.Property(x => x.DurationMinutes).HasDefaultValue(45);
             e.Property(x => x.TotalScore).HasPrecision(6, 2).HasDefaultValue(10.0m);
             e.Property(x => x.Status)
-                .HasConversion<string>()
+                .HasConversion(new SnakeCaseEnumConverter<ExamStatusEnum>())
                 .HasMaxLength(20)
                 .HasDefaultValue(ExamStatusEnum.Draft);
             e.Property(x => x.SchoolYear).HasMaxLength(20);
@@ -491,7 +501,7 @@ public class AppDbContext : DbContext
             e.Property(x => x.Id).HasDefaultValueSql("gen_random_uuid()");
             e.Property(x => x.TotalScore).HasPrecision(6, 2);
             e.Property(x => x.Status)
-                .HasConversion<string>()
+                .HasConversion(new SnakeCaseEnumConverter<SubmissionStatusEnum>())
                 .HasMaxLength(20)
                 .HasDefaultValue(SubmissionStatusEnum.InProgress);
             e.Property(x => x.StartedAt).HasDefaultValueSql("now()");
@@ -499,10 +509,16 @@ public class AppDbContext : DbContext
             e.Property(x => x.Created).HasColumnName(ModifyFieldsTable.Created);
             e.Property(x => x.ModifiedBy).HasMaxLength(150).HasColumnName(ModifyFieldsTable.ModifiedBy);
             e.Property(x => x.Modified).HasColumnName(ModifyFieldsTable.Modified);
+            e.Property(x => x.AttemptNo).HasDefaultValue((short)1);
             e.HasIndex(x => new { x.ExamId, x.StudentId });
+            e.HasIndex(x => new { x.SessionId, x.StudentId });
             e.HasOne(x => x.Exam)
                 .WithMany()
                 .HasForeignKey(x => x.ExamId)
+                .OnDelete(DeleteBehavior.Restrict);
+            e.HasOne<ExamSession>()
+                .WithMany()
+                .HasForeignKey(x => x.SessionId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
@@ -522,6 +538,69 @@ public class AppDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(x => x.ExamQuestionId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // ── ExamSession ────────────────────────────────────────────────────
+        modelBuilder.Entity<ExamSession>(e =>
+        {
+            e.ToTable("exam_sessions");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).HasDefaultValueSql("gen_random_uuid()");
+            e.Property(x => x.Title).HasMaxLength(300).IsRequired();
+            e.Property(x => x.Status)
+                .HasConversion(new SnakeCaseEnumConverter<ExamSessionStatusEnum>())
+                .HasMaxLength(20)
+                .HasDefaultValue(ExamSessionStatusEnum.Draft);
+            e.Property(x => x.PickMode)
+                .HasConversion<string>()
+                .HasMaxLength(20)
+                .HasDefaultValue(ExamSessionPickModeEnum.Random);
+            e.Property(x => x.MaxAttempts).HasDefaultValue((short)1);
+            e.Property(x => x.CreatedBy).HasMaxLength(150).HasColumnName(ModifyFieldsTable.CreatedBy);
+            e.Property(x => x.Created).HasColumnName(ModifyFieldsTable.Created);
+            e.Property(x => x.ModifiedBy).HasMaxLength(150).HasColumnName(ModifyFieldsTable.ModifiedBy);
+            e.Property(x => x.Modified).HasColumnName(ModifyFieldsTable.Modified);
+            e.HasIndex(x => new { x.SubjectId, x.GradeLevelId, x.Status });
+            e.HasOne(x => x.Subject)
+                .WithMany()
+                .HasForeignKey(x => x.SubjectId)
+                .OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(x => x.GradeLevel)
+                .WithMany()
+                .HasForeignKey(x => x.GradeLevelId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // ── ExamSessionExam ────────────────────────────────────────────────
+        modelBuilder.Entity<ExamSessionExam>(e =>
+        {
+            e.ToTable("exam_session_exams");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).HasDefaultValueSql("gen_random_uuid()");
+            e.HasIndex(x => new { x.SessionId, x.ExamId }).IsUnique();
+            e.HasOne<ExamSession>()
+                .WithMany(s => s.Exams)
+                .HasForeignKey(x => x.SessionId)
+                .OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(x => x.Exam)
+                .WithMany()
+                .HasForeignKey(x => x.ExamId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // ── ExamSessionAssignment ──────────────────────────────────────────
+        modelBuilder.Entity<ExamSessionAssignment>(e =>
+        {
+            e.ToTable("exam_session_assignments");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).HasDefaultValueSql("gen_random_uuid()");
+            e.HasIndex(x => x.SessionId);
+            e.HasIndex(x => x.CohortId);
+            e.HasIndex(x => x.CohortClassId);
+            e.HasOne<ExamSession>()
+                .WithMany(s => s.Assignments)
+                .HasForeignKey(x => x.SessionId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }
