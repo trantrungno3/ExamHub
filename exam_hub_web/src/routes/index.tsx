@@ -11,6 +11,7 @@ import CreateExamTemplatePage from '../pages/exams/CreateExamTemplatePage'
 import GeneratePage from '../pages/exams/GeneratePage'
 import ExamListPage from '../pages/exams/ExamListPage'
 import ExamSessionListPage from '../pages/exams/ExamSessionListPage'
+import ExamSessionEditPage from '../pages/exams/ExamSessionEditPage'
 import ExamCoverPage from '../pages/student/ExamCoverPage'
 import ExamTakingPage from '../pages/student/ExamTakingPage'
 import ExamResultPage from '../pages/student/ExamResultPage'
@@ -71,6 +72,8 @@ export const router = createBrowserRouter([
                     { path: 'generate',                         element: <GeneratePage /> },
                     { path: 'exam-list',                        element: <ExamListPage /> },
                     { path: 'exam-sessions',                    element: <ExamSessionListPage /> },
+                    { path: 'exam-sessions/create',             element: <ExamSessionEditPage /> },
+                    { path: 'exam-sessions/:id/edit',           element: <ExamSessionEditPage /> },
                     { path: 'users',                            element: <UserPage /> },
                     { path: 'schools',      element: <SchoolListPage /> },
                     { path: 'schools/:id',  element: <SchoolDetailPage /> },
