@@ -121,7 +121,8 @@ public class QuestionRepository : BaseRepository<Question, Guid>, IQuestionRepos
 
     /// <inheritdoc/>
     public async Task<IReadOnlyList<PickedQuestion>> PickRandomAsync(
-        int topicId,
+        int? topicId,
+        int subjectId,
         int? questionTypeId,
         int difficultyId,
         int count,
@@ -133,10 +134,13 @@ public class QuestionRepository : BaseRepository<Question, Guid>, IQuestionRepos
 
         // 1. Pool ID ứng viên — cache 2 phút, chỉ lưu ID (spec §10).
         //    excludeIds thay đổi mỗi lần sinh đề nên KHÔNG nằm trong khóa cache.
-        var poolKey = QuestionPoolCache.PoolKey(topicId, difficultyId, questionTypeId, cognitiveLevelId);
+        //    topicId null → pool toàn môn (mọi chủ đề của subjectId).
+        var poolKey = topicId.HasValue
+            ? QuestionPoolCache.PoolKey(topicId.Value, difficultyId, questionTypeId, cognitiveLevelId)
+            : QuestionPoolCache.SubjectPoolKey(subjectId, difficultyId, questionTypeId, cognitiveLevelId);
         var pool = await _cache.GetOrSetAsync(
             poolKey,
-            () => FetchPoolIdsAsync(topicId, questionTypeId, difficultyId, cognitiveLevelId, ct),
+            () => FetchPoolIdsAsync(topicId, subjectId, questionTypeId, difficultyId, cognitiveLevelId, ct),
             QuestionPoolCache.Ttl, ct);
 
         // 2. Loại trừ câu đã dùng + trộn Fisher-Yates + lấy count, tất cả trong bộ nhớ.
@@ -151,18 +155,24 @@ public class QuestionRepository : BaseRepository<Question, Guid>, IQuestionRepos
     }
 
     private async Task<List<Guid>> FetchPoolIdsAsync(
-        int topicId, int? questionTypeId, int difficultyId, int? cognitiveLevelId, CancellationToken ct)
+        int? topicId, int subjectId, int? questionTypeId, int difficultyId, int? cognitiveLevelId, CancellationToken ct)
     {
-        var sql = (questionTypeId.HasValue, cognitiveLevelId.HasValue) switch
+        // topicId null → lọc theo môn (join topics) thay vì theo chủ đề.
+        var sql = (topicId.HasValue, questionTypeId.HasValue, cognitiveLevelId.HasValue) switch
         {
-            (false, false) => PoolIdsSqlNoTypeNoCog,
-            (true,  false) => PoolIdsSqlWithTypeNoCog,
-            (false, true)  => PoolIdsSqlNoTypeWithCog,
-            (true,  true)  => PoolIdsSqlWithTypeWithCog,
+            (true,  false, false) => PoolIdsSqlTopicNoTypeNoCog,
+            (true,  true,  false) => PoolIdsSqlTopicWithTypeNoCog,
+            (true,  false, true)  => PoolIdsSqlTopicNoTypeWithCog,
+            (true,  true,  true)  => PoolIdsSqlTopicWithTypeWithCog,
+            (false, false, false) => PoolIdsSqlSubjectNoTypeNoCog,
+            (false, true,  false) => PoolIdsSqlSubjectWithTypeNoCog,
+            (false, false, true)  => PoolIdsSqlSubjectNoTypeWithCog,
+            (false, true,  true)  => PoolIdsSqlSubjectWithTypeWithCog,
         };
         var rows = await _sql.QueryAsync<Guid>(sql, new
         {
             TopicId          = topicId,
+            SubjectId        = subjectId,
             QuestionTypeId   = questionTypeId,
             DifficultyId     = difficultyId,
             CognitiveLevelId = cognitiveLevelId
@@ -220,17 +230,24 @@ public class QuestionRepository : BaseRepository<Question, Guid>, IQuestionRepos
     // Pool: chỉ SELECT id (cache được). 4 biến thể tránh truyền NULL int gây lỗi
     // type-inference trong Npgsql khi không lọc theo type/cognitive.
 
-    private static readonly string PoolIdsSqlNoTypeNoCog     = BuildPoolIdsSql(filterByType: false, filterByCog: false);
-    private static readonly string PoolIdsSqlWithTypeNoCog   = BuildPoolIdsSql(filterByType: true,  filterByCog: false);
-    private static readonly string PoolIdsSqlNoTypeWithCog   = BuildPoolIdsSql(filterByType: false, filterByCog: true);
-    private static readonly string PoolIdsSqlWithTypeWithCog = BuildPoolIdsSql(filterByType: true,  filterByCog: true);
+    private static readonly string PoolIdsSqlTopicNoTypeNoCog     = BuildPoolIdsSql(bySubject: false, filterByType: false, filterByCog: false);
+    private static readonly string PoolIdsSqlTopicWithTypeNoCog   = BuildPoolIdsSql(bySubject: false, filterByType: true,  filterByCog: false);
+    private static readonly string PoolIdsSqlTopicNoTypeWithCog   = BuildPoolIdsSql(bySubject: false, filterByType: false, filterByCog: true);
+    private static readonly string PoolIdsSqlTopicWithTypeWithCog = BuildPoolIdsSql(bySubject: false, filterByType: true,  filterByCog: true);
 
-    private static string BuildPoolIdsSql(bool filterByType, bool filterByCog) => $"""
+    // Biến thể toàn môn (topicId null): join topics để lọc theo subject_id.
+    private static readonly string PoolIdsSqlSubjectNoTypeNoCog     = BuildPoolIdsSql(bySubject: true, filterByType: false, filterByCog: false);
+    private static readonly string PoolIdsSqlSubjectWithTypeNoCog   = BuildPoolIdsSql(bySubject: true, filterByType: true,  filterByCog: false);
+    private static readonly string PoolIdsSqlSubjectNoTypeWithCog   = BuildPoolIdsSql(bySubject: true, filterByType: false, filterByCog: true);
+    private static readonly string PoolIdsSqlSubjectWithTypeWithCog = BuildPoolIdsSql(bySubject: true, filterByType: true,  filterByCog: true);
+
+    private static string BuildPoolIdsSql(bool bySubject, bool filterByType, bool filterByCog) => $"""
         SELECT q.id
         FROM public.questions q
+        {(bySubject ? "JOIN public.topics t ON t.id = q.topic_id" : "")}
         WHERE q.is_active           = true
           AND q.is_verified         = true
-          AND q.topic_id            = @TopicId
+          AND {(bySubject ? "t.subject_id = @SubjectId" : "q.topic_id = @TopicId")}
           AND q.difficulty_level_id = @DifficultyId
           {(filterByType ? "AND q.question_type_id   = @QuestionTypeId" : "")}
           {(filterByCog  ? "AND q.cognitive_level_id = @CognitiveLevelId" : "")}

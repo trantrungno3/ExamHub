@@ -10,12 +10,14 @@ public class QuestionService : IQuestionService
 {
     private readonly IQuestionRepository _questionRepo;
     private readonly IQuestionAnswerRepository _answerRepo;
+    private readonly ITopicRepository _topicRepo;
     private readonly IRedisService _cache;
 
-    public QuestionService(IQuestionRepository questionRepo, IQuestionAnswerRepository answerRepo, IRedisService cache)
+    public QuestionService(IQuestionRepository questionRepo, IQuestionAnswerRepository answerRepo, ITopicRepository topicRepo, IRedisService cache)
     {
         _questionRepo = questionRepo;
         _answerRepo   = answerRepo;
+        _topicRepo    = topicRepo;
         _cache        = cache;
     }
 
@@ -104,12 +106,15 @@ public class QuestionService : IQuestionService
     public Task SetImageUrlAsync(Guid id, string imageUrl, CancellationToken ct = default)
         => _questionRepo.SetImageUrlAsync(id, imageUrl, ct);
 
-    /// <summary>Xóa các khóa pool Redis mà câu hỏi này tham gia (≤ 4 khóa).</summary>
-    private Task InvalidatePoolAsync(Question q, CancellationToken ct)
+    /// <summary>Xóa các khóa pool Redis mà câu hỏi này tham gia (pool theo chủ đề + pool toàn môn, ≤ 8 khóa).</summary>
+    private async Task InvalidatePoolAsync(Question q, CancellationToken ct)
     {
+        // Cần subjectId để invalidate pool toàn môn (sinh đề không chọn chủ đề).
+        var topic = await _topicRepo.GetByIdAsync(q.TopicId, ct);
+        var subjectId = topic?.SubjectId ?? 0;
         var removals = QuestionPoolCache
-            .KeysForQuestion(q.TopicId, q.DifficultyLevelId, q.QuestionTypeId, q.CognitiveLevelId)
+            .KeysForQuestion(q.TopicId, subjectId, q.DifficultyLevelId, q.QuestionTypeId, q.CognitiveLevelId)
             .Select(key => _cache.RemoveAsync(key, ct));
-        return Task.WhenAll(removals);
+        await Task.WhenAll(removals);
     }
 }

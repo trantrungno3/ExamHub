@@ -73,7 +73,7 @@ interface ExamAnalytics {
 /* ── Generation ── */
 interface SectionConfig {
     sectionName?: string
-    topicId: number
+    topicId?: number
     questionTypeId?: number
     cognitiveLevelId?: number
     questionCount: number
@@ -91,6 +91,9 @@ interface GenerateExamBody {
     subjectId: number
     durationMinutes: number
     shuffleQuestions: boolean
+    shuffleAnswers: boolean
+    preventDuplicate: boolean
+    totalScore: number
     sections: SectionConfig[]
 }
 
@@ -108,6 +111,8 @@ interface BatchGenerateExamBody {
     durationMinutes: number
     shuffleQuestions: boolean
     shuffleAnswers: boolean
+    preventDuplicate: boolean
+    totalScore: number
     variantCount: number
     variantNaming: VariantNaming
     sections: SectionConfig[]

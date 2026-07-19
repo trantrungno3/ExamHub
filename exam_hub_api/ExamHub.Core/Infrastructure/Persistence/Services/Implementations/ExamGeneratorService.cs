@@ -19,14 +19,16 @@ public class ExamGeneratorService(
     {
         var sections   = await ResolveSectionsAsync(request, ct);
         var usedIds    = new HashSet<Guid>();
-        var selections = await PickQuestionsAsync(sections, usedIds, ct);
+        var selections = await PickQuestionsAsync(sections, request.SubjectId, request.PreventDuplicate, usedIds, ct);
 
         if (request.ShuffleQuestions)
             FisherYatesShuffle(selections);
 
         var examId     = Guid.NewGuid();
         var now        = DateTime.UtcNow;
-        var totalScore = sections.Sum(s => s.QuestionCount * s.ScorePerQuestion);
+        var totalScore = request.TotalScore > 0
+            ? request.TotalScore
+            : sections.Sum(s => s.QuestionCount * s.ScorePerQuestion);
 
         var exam = new Exam
         {
@@ -55,7 +57,9 @@ public class ExamGeneratorService(
                 SortOrder       = i,
                 Score           = sec.ScorePerQuestion,
                 ContentSnapshot = s.Question.Content,
-                AnswersSnapshot = s.Question.AnswersJson
+                AnswersSnapshot = request.ShuffleAnswers
+                    ? ShuffleAnswersJson(s.Question.AnswersJson)
+                    : s.Question.AnswersJson
             };
         }).ToList();
 
@@ -69,16 +73,19 @@ public class ExamGeneratorService(
         var baseRequest = new GenerateExamRequest(
             request.Title, request.ExamTemplateId, request.GradeLevelId,
             request.SubjectId, request.DurationMinutes, request.ShuffleQuestions,
+            request.ShuffleAnswers, request.PreventDuplicate, request.TotalScore,
             request.CreatedBy, request.Sections);
         var sections = await ResolveSectionsAsync(baseRequest, ct);
 
         // Pick questions ONCE — all variants share the same question set
         var usedIds  = new HashSet<Guid>();
-        var basePool = await PickQuestionsAsync(sections, usedIds, ct);
+        var basePool = await PickQuestionsAsync(sections, request.SubjectId, request.PreventDuplicate, usedIds, ct);
 
         var batchId    = Guid.NewGuid();
         var now        = DateTime.UtcNow;
-        var totalScore = sections.Sum(s => s.QuestionCount * s.ScorePerQuestion);
+        var totalScore = request.TotalScore > 0
+            ? request.TotalScore
+            : sections.Sum(s => s.QuestionCount * s.ScorePerQuestion);
         var baseCode   = batchId.ToString("N")[..6].ToUpper();
 
         Guid firstExamId = Guid.Empty;
@@ -144,9 +151,13 @@ public class ExamGeneratorService(
 
     private async Task<List<(int SectionIndex, PickedQuestion Question)>> PickQuestionsAsync(
         IReadOnlyList<SectionConfig> sections,
+        int subjectId,
+        bool preventDuplicate,
         HashSet<Guid> usedIds,
         CancellationToken ct)
     {
+        // usedIds luôn tích luỹ để tăng usage_count. Chỉ dùng nó làm bộ loại trừ khi chống trùng;
+        // nếu cho phép trùng thì mỗi phần chọn độc lập (một câu có thể xuất hiện ở nhiều phần).
         var selections = new List<(int SectionIndex, PickedQuestion Question)>();
         for (int si = 0; si < sections.Count; si++)
         {
@@ -155,8 +166,9 @@ public class ExamGeneratorService(
             foreach (var (diffId, n) in counts)
             {
                 if (n <= 0) continue;
+                var excludeIds = preventDuplicate ? usedIds : (IReadOnlySet<Guid>)EmptyGuidSet;
                 var picked = await questionRepo.PickRandomAsync(
-                    sec.TopicId, sec.QuestionTypeId, (int)diffId, n, usedIds, sec.CognitiveLevelId, ct);
+                    sec.TopicId, subjectId, sec.QuestionTypeId, (int)diffId, n, excludeIds, sec.CognitiveLevelId, ct);
                 if (picked.Count < n)
                     throw new InsufficientQuestionsException(
                         sec.TopicId, (int)diffId, sec.CognitiveLevelId, n, picked.Count);
@@ -170,6 +182,8 @@ public class ExamGeneratorService(
         return selections;
     }
 
+    private static readonly HashSet<Guid> EmptyGuidSet = [];
+
     /// <summary>
     /// Nếu request có ExamTemplateId và một số section chưa có CognitiveLevelId,
     /// load template để lấy CognitiveLevelId theo index section.
@@ -177,10 +191,7 @@ public class ExamGeneratorService(
     private async Task<IReadOnlyList<SectionConfig>> ResolveSectionsAsync(
         GenerateExamRequest request, CancellationToken ct)
     {
-        if (!request.ExamTemplateId.HasValue)
-            return request.Sections;
-
-        if (request.Sections.All(s => s.CognitiveLevelId.HasValue))
+        if (!request.ExamTemplateId.HasValue || request.Sections.All(s => s.CognitiveLevelId.HasValue))
             return request.Sections;
 
         var template = await templateRepo.GetWithSectionsAsync(request.ExamTemplateId.Value, ct);

@@ -37,9 +37,11 @@ public interface IQuestionRepository : IBaseRepository<Question, Guid>
 
     /// <summary>
     /// Pick ngẫu nhiên N câu hỏi từ pool bằng ORDER BY RANDOM() — dùng Dapper để tránh load toàn bộ pool.
+    /// <paramref name="topicId"/> null = lấy câu hỏi từ mọi chủ đề của môn <paramref name="subjectId"/>.
     /// </summary>
     Task<IReadOnlyList<PickedQuestion>> PickRandomAsync(
-        int topicId,
+        int? topicId,
+        int subjectId,
         int? questionTypeId,
         int difficultyId,
         int count,

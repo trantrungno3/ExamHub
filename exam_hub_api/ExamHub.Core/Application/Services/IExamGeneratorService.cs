@@ -34,26 +34,37 @@ public sealed record GenerateExamRequest(
     int SubjectId,
     int DurationMinutes,
     bool ShuffleQuestions,
+    bool ShuffleAnswers,
+    bool PreventDuplicate,
+    decimal TotalScore,
     string CreatedBy,
     IReadOnlyList<SectionConfig> Sections);
 
 /// <summary>Cấu hình một phần thi.</summary>
-public sealed record SectionConfig(
-    string? SectionName,
-    [property: Range(1, int.MaxValue, ErrorMessage = "Chủ đề phần thi không hợp lệ.")]
-    int TopicId,
-    int? QuestionTypeId,
-    [property: Range(1, int.MaxValue, ErrorMessage = "Cấp độ nhận thức không hợp lệ.")]
-    int? CognitiveLevelId,
-    [property: Range(1, 200, ErrorMessage = "Số câu hỏi mỗi phần phải từ 1 đến 200.")]
-    int QuestionCount,
-    decimal PctEasy,
-    decimal PctMedium,
-    decimal PctHard,
-    decimal PctVeryHard,
-    [property: Range(typeof(decimal), "0.01", "9999999", ErrorMessage = "Điểm mỗi câu phải lớn hơn 0.")]
-    decimal ScorePerQuestion) : IValidatableObject
+public sealed record SectionConfig() : IValidatableObject
 {
+    public string? SectionName { get; set; }
+
+    /// <summary>Chủ đề phần thi — tuỳ chọn; bỏ trống để lấy câu hỏi từ mọi chủ đề của môn.</summary>
+    [property: Range(1, int.MaxValue, ErrorMessage = "Chủ đề phần thi không hợp lệ.")]
+    public int? TopicId { get; set; }
+
+    public int? QuestionTypeId { get; set; }
+
+    [property: Range(1, int.MaxValue, ErrorMessage = "Cấp độ nhận thức không hợp lệ.")]
+    public int? CognitiveLevelId { get; set; }
+
+    [property: Range(1, 200, ErrorMessage = "Số câu hỏi mỗi phần phải từ 1 đến 200.")]
+    public int QuestionCount { get; set; }
+
+    public decimal PctEasy { get; set; }
+    public decimal PctMedium { get; set; }
+    public decimal PctHard { get; set; }
+    public decimal PctVeryHard { get; set; }
+
+    [property: Range(typeof(decimal), "0.01", "9999999", ErrorMessage = "Điểm mỗi câu phải lớn hơn 0.")]
+    public decimal ScorePerQuestion { get; set; }
+
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
         if (PctEasy + PctMedium + PctHard + PctVeryHard != 100)
@@ -72,6 +83,8 @@ public sealed record BatchGenerateExamRequest(
     int DurationMinutes,
     bool ShuffleQuestions,
     bool ShuffleAnswers,
+    bool PreventDuplicate,
+    decimal TotalScore,
     int VariantCount,
     string VariantNaming,
     string CreatedBy,
