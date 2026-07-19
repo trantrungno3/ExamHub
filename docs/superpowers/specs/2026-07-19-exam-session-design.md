@@ -15,6 +15,7 @@ Bốn mục quản lý đề (Mẫu đề thi, Sinh đề thi, Đề thi, Kỳ t
 | # | Quyết định |
 |---|---|
 | 1 | Bốc đề: **1 lần rồi khoá theo từng lượt làm**. Vào lại lượt đang làm = đúng đề; lượt mới = bốc lại. |
+| 1b | **Chế độ chọn đề cấu hình được** (`pick_mode`): `random` = hệ thống bốc ngẫu nhiên hoàn toàn (có thể trùng đề giữa các lượt); `student_choice` = học sinh tự chọn đề từ pool cho mỗi lượt (làm xong 1 đề → hiện danh sách để chọn đề tiếp). |
 | 2 | Giao cho **cả lớp (cohort_class) và khoá (cohort)**. |
 | 3 | **Có khung giờ mở/đóng** (open_at, close_at) — bắt buộc. |
 | 4 | Đề thêm vào kỳ thi: **chọn tay** từ đề có sẵn. |
@@ -39,6 +40,8 @@ grade_level_id  INT            NOT NULL REFERENCES grade_levels(id)
 open_at         TIMESTAMPTZ    NOT NULL
 close_at        TIMESTAMPTZ    NOT NULL
 max_attempts    SMALLINT       NOT NULL DEFAULT 1   CHECK (max_attempts >= 1)
+pick_mode       VARCHAR(20)    NOT NULL DEFAULT 'random'
+                CHECK (pick_mode IN ('random','student_choice'))
 status          VARCHAR(20)    NOT NULL DEFAULT 'draft'
                 CHECK (status IN ('draft','published','closed'))
 created/created_by/modified/modified_by  (chuẩn ModifyModelBase)
@@ -80,14 +83,17 @@ attempt_no  SMALLINT NOT NULL DEFAULT 1
 
 ## 4. Logic "bốc đề + khoá" (mấu chốt)
 
-Endpoint `POST /exam-sessions/{id}/start` (học sinh), chạy trong transaction:
+Endpoint `POST /exam-sessions/{id}/start` (học sinh), body `{ examId? }`, chạy trong transaction:
 
 1. **Validate**: kỳ thi tồn tại & `status='published'`; `now ∈ [open_at, close_at]`; học sinh nằm trong tập được giao (xem §5.3).
 2. Tìm submission `in_progress` của `(session_id, student_id)`:
-   - Có → trả lại submission đó (đúng đề đang làm) — hành vi **"Tiếp tục"**.
-3. Chưa có in_progress → đếm số submission đã có (`submitted` + `graded`) của `(session, student)` = `usedAttempts`:
+   - Có → trả lại submission đó (đúng đề đang làm) — hành vi **"Tiếp tục"**. (Bỏ qua `examId` truyền vào.)
+3. Chưa có in_progress → đếm số submission đã nộp (`submitted` + `graded`) của `(session, student)` = `usedAttempts`:
    - `usedAttempts >= max_attempts` → lỗi 409 "Đã hết lượt làm bài".
-   - Ngược lại → **bốc ngẫu nhiên 1 exam_id** từ `exam_session_exams` của kỳ thi; tạo `exam_submissions` (`session_id`, `exam_id`, `student_id`, `status='in_progress'`, `attempt_no = usedAttempts + 1`, `started_at=now`); trả về `{ submissionId, examId }`.
+   - Xác định `exam_id` cho lượt mới theo **`pick_mode`**:
+     - `random`: **bốc ngẫu nhiên 1 exam_id** từ pool (`exam_session_exams`). Có thể trùng đề đã làm ở lượt trước.
+     - `student_choice`: **bắt buộc** có `examId` trong body; validate `examId ∈ pool`. (Khuyến nghị: chặn chọn đề mà học sinh đã hoàn thành trong kỳ thi này — trả 409 nếu đã làm.)
+   - Tạo `exam_submissions` (`session_id`, `exam_id`, `student_id`, `status='in_progress'`, `attempt_no = usedAttempts + 1`, `started_at=now`); trả về `{ submissionId, examId }`.
 
 → Đề khoá theo **từng lượt**. Kết quả trả về đủ để phía web mở luồng làm bài sẵn có.
 
@@ -106,8 +112,9 @@ Endpoint `POST /exam-sessions/{id}/start` (học sinh), chạy trong transaction
 - `POST /exam-sessions/{id}/close` — chuyển `closed`.
 
 ### 5.2 Học sinh
-- `GET /exam-sessions/my` — kỳ thi được giao cho học sinh hiện tại; mỗi item kèm: trạng thái theo thời gian (sắp mở / đang mở / đã đóng), số lượt đã dùng, số lượt còn lại, và (nếu đang có lượt in_progress) submissionId+examId để "Tiếp tục".
-- `POST /exam-sessions/{id}/start` — §4.
+- `GET /exam-sessions/my` — kỳ thi được giao cho học sinh hiện tại; mỗi item kèm: `pickMode`, trạng thái theo thời gian (sắp mở / đang mở / đã đóng), số lượt đã dùng, số lượt còn lại, và (nếu đang có lượt in_progress) submissionId+examId để "Tiếp tục".
+- `GET /exam-sessions/{id}/pool` — (dùng cho `student_choice`) danh sách đề trong pool kèm trạng thái của học sinh với từng đề: `notStarted` / `inProgress` / `completed` (+ submissionId nếu có). Chỉ trả khi HS được giao và kỳ thi đang mở.
+- `POST /exam-sessions/{id}/start` — §4, body `{ examId? }`.
 
 ### 5.3 Xác định học sinh được giao
 Học sinh `S` được giao kỳ thi `E` nếu tồn tại assignment của `E` mà:
@@ -128,14 +135,17 @@ Học sinh `S` được giao kỳ thi `E` nếu tồn tại assignment của `E`
 ### 7.1 Quản lý (Admin/Teacher)
 - **`ExamSessionListPage`** (`/app/exam-sessions`): bảng danh sách (môn, cấp lớp, khung giờ, trạng thái, số đề, số lớp/khoá được giao), nút Tạo, Sửa, Xoá, Publish/Close.
 - **`ExamSessionEditPage`** (`/app/exam-sessions/create`, `/app/exam-sessions/:id/edit`):
-  - Thông tin: title, description, môn, cấp lớp, open_at, close_at, max_attempts.
+  - Thông tin: title, description, môn, cấp lớp, open_at, close_at, max_attempts, **pick_mode** (Ngẫu nhiên / Học sinh tự chọn).
   - **Chọn đề vào pool**: bảng/transfer chọn từ đề `published` cùng môn+cấp lớp.
   - **Giao lớp/khoá**: chọn cohort hoặc cohort_class (multi).
   - Nút Publish.
 
 ### 7.2 Học sinh
-- **`StudentSessionListPage`** = "Kỳ thi của tôi" (route hiện `ROUTES.STUDENT_EXAMS`): danh sách kỳ thi được giao + trạng thái + lượt còn lại. Nút "Vào thi"/"Tiếp tục" → gọi `POST /start` → nhận `{ examId, submissionId }` → điều hướng luồng làm bài.
-- **Tái dùng** `ExamCoverPage` + `ExamTakingPage`. Truyền thêm `sessionId`/`submissionId` để submit cập nhật đúng submission (§5.4). `StudentExamListPage` cũ ngừng dùng ở entry chính (giữ file cho tới khi luồng mới ổn định).
+- **`StudentSessionListPage`** = "Kỳ thi của tôi" (route hiện `ROUTES.STUDENT_EXAMS`): danh sách kỳ thi được giao + trạng thái + lượt còn lại.
+  - Nút "Tiếp tục" (khi có lượt in_progress) → `POST /start` → nhận `{ examId, submissionId }` → vào luồng làm bài.
+  - Kỳ thi `pick_mode='random'`: nút "Vào thi" → `POST /start` (không kèm examId) → bốc ngẫu nhiên → vào làm.
+  - Kỳ thi `pick_mode='student_choice'`: nút "Chọn đề" → trang **chọn đề** (`GET /{id}/pool`): hiện danh sách đề, đề đã hoàn thành được đánh dấu; chọn 1 đề chưa làm → `POST /start { examId }` → vào làm. Làm xong quay lại trang này để chọn đề tiếp (tới khi hết lượt).
+- **Tái dùng** `ExamCoverPage` + `ExamTakingPage`. Truyền thêm `sessionId`/`submissionId` để submit cập nhật đúng submission (§5.4). `StudentExamListPage` cũ **giữ lại file** (không xoá), chỉ đổi entry chính sang `StudentSessionListPage`.
 
 ## 8. Ngoài phạm vi (YAGNI)
 Chống gian lận nâng cao (đổi tab/camera), chấm lại hàng loạt, thông báo/nhắc lịch, thống kê kết quả theo kỳ thi. Có thể làm ở giai đoạn sau.
