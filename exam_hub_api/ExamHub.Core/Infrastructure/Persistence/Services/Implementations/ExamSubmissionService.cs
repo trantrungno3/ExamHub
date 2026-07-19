@@ -42,10 +42,20 @@ public class ExamSubmissionService : IExamSubmissionService
         IEnumerable<SubmissionAnswer> answers,
         CancellationToken ct = default)
     {
+        // Luồng kỳ thi: có sẵn bản in_progress (đã bốc/khoá đề) → cập nhật thay vì tạo mới.
+        if (submission.Id != Guid.Empty)
+        {
+            var existing = await _submissionRepo.GetByIdAsync(submission.Id, ct);
+            if (existing is not null && existing.Status == SubmissionStatusEnum.InProgress)
+                return await SubmitInProgressAsync(existing, answers, ct);
+        }
+
+        // Luồng đề trực tiếp (giữ nguyên): tạo bản nộp mới.
         submission.Id          = Guid.NewGuid();
         submission.SubmittedAt = DateTime.UtcNow;
         submission.Status      = SubmissionStatusEnum.Submitted;
         submission.Created   = DateTime.UtcNow;
+        submission.Modified   =  DateTime.UtcNow;
 
         await _submissionRepo.AddAsync(submission, ct);
 
@@ -62,6 +72,40 @@ public class ExamSubmissionService : IExamSubmissionService
             await _answerRepo.AddRangeAsync(answerList, ct);
 
         return submission;
+    }
+
+    /// <summary>
+    /// Nộp bài cho bản in_progress của kỳ thi: chấm trắc nghiệm tự động, tính điểm/thời gian,
+    /// chuyển trạng thái sang Submitted và UPDATE (giữ nguyên Id, session_id, attempt_no).
+    /// </summary>
+    private async Task<ExamSubmission> SubmitInProgressAsync(
+        ExamSubmission existing,
+        IEnumerable<SubmissionAnswer> answers,
+        CancellationToken ct)
+    {
+        var now = DateTime.UtcNow;
+        existing.SubmittedAt     = now;
+        existing.Status          = SubmissionStatusEnum.Submitted;
+        existing.DurationSeconds = (int)Math.Max(0, (now - existing.StartedAt).TotalSeconds);
+        existing.Modified        = now;
+
+        var answerList = answers.Select(a =>
+        {
+            a.Id           = Guid.NewGuid();
+            a.SubmissionId = existing.Id;
+            return a;
+        }).ToList();
+
+        // Chấm theo đề đã khoá của bản nộp, không theo ExamId gửi lên.
+        await AutoGradeObjectiveAsync(existing.ExamId, answerList, ct);
+        existing.TotalScore = answerList.Sum(a => a.ScoreEarned);
+
+        await _submissionRepo.UpdateAsync(existing, ct);
+
+        if (answerList.Count > 0)
+            await _answerRepo.AddRangeAsync(answerList, ct);
+
+        return existing;
     }
 
     /// <summary>
@@ -123,6 +167,7 @@ public class ExamSubmissionService : IExamSubmissionService
 
         submission.TotalScore = answers.Sum(a => a.ScoreEarned);
         submission.Status     = SubmissionStatusEnum.Graded;
+        submission.Modified = DateTime.UtcNow;
 
         await _submissionRepo.UpdateAsync(submission, ct);
         return submission;

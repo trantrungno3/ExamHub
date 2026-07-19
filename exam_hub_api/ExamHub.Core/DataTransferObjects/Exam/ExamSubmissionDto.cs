@@ -45,14 +45,18 @@ public record SubmissionAnswerResponse(
 public record ExamSubmissionRequest(
     Guid ExamId,
     Guid StudentId,
-    IEnumerable<SubmissionAnswerRequest> Answers
+    IEnumerable<SubmissionAnswerRequest> Answers,
+    Guid? SessionId = null,
+    Guid? SubmissionId = null
 )
 {
-    /// <summary>Map sang entity bài nộp</summary>
+    /// <summary>Map sang entity bài nộp. Khi có <see cref="SubmissionId"/> (luồng kỳ thi) — gán Id để service cập nhật bản in_progress thay vì tạo mới.</summary>
     public ExamSubmission ToEntity() => new()
     {
+        Id        = SubmissionId ?? Guid.Empty,
         ExamId    = ExamId,
         StudentId = StudentId,
+        SessionId = SessionId,
         StartedAt = DateTime.UtcNow
     };
 
