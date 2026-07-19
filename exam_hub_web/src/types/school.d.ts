@@ -102,7 +102,9 @@ interface CohortMemberBody {
 interface MenuItem {
     key: string
     label: string
-    path: string
+    /** Nhóm cha không có path (chỉ để thu/mở). */
+    path?: string
     icon: string
     order: number
+    children?: MenuItem[]
 }
