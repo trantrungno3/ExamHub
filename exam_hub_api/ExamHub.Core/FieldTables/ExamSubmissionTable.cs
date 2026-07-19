@@ -14,6 +14,12 @@ public readonly struct ExamSubmissionTable
     /// <summary>Khóa ngoại học sinh</summary>
     public const string StudentId = "student_id";
 
+    /// <summary>Khóa ngoại kỳ thi (null = đề trực tiếp)</summary>
+    public const string SessionId = "session_id";
+
+    /// <summary>Số thứ tự lượt làm trong kỳ thi</summary>
+    public const string AttemptNo = "attempt_no";
+
     /// <summary>Thời điểm bắt đầu làm bài</summary>
     public const string StartedAt = "started_at";
 

@@ -30,6 +30,16 @@ public class ExamSubmission : ModifyModelBase, IModelBaseSql<Guid>
     [SqlBuilderProperty(ExamSubmissionTable.StudentId, Insert = true, Update = false)]
     public Guid StudentId { get; set; }
 
+    /// <summary>Kỳ thi (null = đề trực tiếp, luồng cũ)</summary>
+    [Column(ExamSubmissionTable.SessionId)]
+    [SqlBuilderProperty(ExamSubmissionTable.SessionId, Insert = true, Update = false)]
+    public Guid? SessionId { get; set; }
+
+    /// <summary>Số thứ tự lượt làm trong kỳ thi</summary>
+    [Column(ExamSubmissionTable.AttemptNo)]
+    [SqlBuilderProperty(ExamSubmissionTable.AttemptNo, Insert = true, Update = false)]
+    public short AttemptNo { get; set; } = 1;
+
     /// <summary>Thời điểm bắt đầu làm bài</summary>
     [Column(ExamSubmissionTable.StartedAt)]
     [SqlBuilderProperty(ExamSubmissionTable.StartedAt, Insert = true, Update = false)]
@@ -74,6 +84,8 @@ public class ExamSubmission : ModifyModelBase, IModelBaseSql<Guid>
         id = Id,
         exam_id = ExamId,
         student_id = StudentId,
+        session_id = SessionId,
+        attempt_no = AttemptNo,
         started_at = StartedAt,
         submitted_at = SubmittedAt,
         duration_seconds = DurationSeconds,
