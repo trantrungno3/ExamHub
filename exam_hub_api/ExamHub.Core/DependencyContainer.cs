@@ -91,6 +91,7 @@ public static class DependencyContainer
                 .AddScoped<IExamQuestionRepository, ExamQuestionRepository>()
                 .AddScoped<IExamSubmissionRepository, ExamSubmissionRepository>()
                 .AddScoped<ISubmissionAnswerRepository, SubmissionAnswerRepository>()
+                .AddScoped<IExamSessionRepository, ExamSessionRepository>()
                 // School Management
                 .AddScoped<ISchoolRepository, SchoolRepository>()
                 .AddScoped<ICohortRepository, CohortRepository>()
@@ -121,6 +122,7 @@ public static class DependencyContainer
                 .AddScoped<IExamTemplateService, ExamTemplateService>()
                 .AddScoped<IExamService, ExamService>()
                 .AddScoped<IExamSubmissionService, ExamSubmissionService>()
+                .AddScoped<IExamSessionService, ExamSessionService>()
                 .AddScoped<IExamGeneratorService, ExamGeneratorService>()
                 .AddScoped<IExportService, ExportService>()
                 // School Management
