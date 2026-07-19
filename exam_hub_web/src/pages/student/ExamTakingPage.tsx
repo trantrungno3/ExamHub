@@ -11,16 +11,20 @@ type AnswerState = {selectedAnswerIds?: string[]; essayContent?: string}
 export default function ExamTakingPage() {
     const [params] = useSearchParams()
     const examId = params.get('examId') ?? undefined
+    const sessionId = params.get('sessionId') ?? undefined
+    const submissionId = params.get('submissionId') ?? undefined
     const {data: exam, isLoading} = useExamWithQuestionsQuery(examId)
     const {user} = useAuth()
 
     if (isLoading) return <div className="flex justify-center py-20"><Spin size="large"/></div>
     if (!exam) return <div className="flex justify-center py-20"><Empty description="Không tìm thấy đề thi"/></div>
 
-    return <ExamRunner exam={exam} studentId={user?.id}/>
+    return <ExamRunner exam={exam} studentId={user?.id} sessionId={sessionId} submissionId={submissionId}/>
 }
 
-function ExamRunner({exam, studentId}: {exam: Exam; studentId?: string}) {
+function ExamRunner({exam, studentId, sessionId, submissionId}: {
+    exam: Exam; studentId?: string; sessionId?: string; submissionId?: string
+}) {
     const navigate = useNavigate()
     const submit = useSubmitExamMutation()
 
@@ -65,6 +69,8 @@ function ExamRunner({exam, studentId}: {exam: Exam; studentId?: string}) {
                 selectedAnswerIds: answers[eq.id]?.selectedAnswerIds,
                 essayContent: answers[eq.id]?.essayContent,
             })),
+            sessionId,
+            submissionId,
         }
         const res = await submit.mutateAsync(body)
         if (res.data) {

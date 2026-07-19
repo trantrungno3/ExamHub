@@ -37,6 +37,10 @@ interface ExamSubmissionBody {
     examId: string
     studentId: string
     answers: SubmissionAnswerBody[]
+    /** Kỳ thi (nếu nộp bài trong luồng kỳ thi). */
+    sessionId?: string
+    /** Bản in_progress đã bốc/khoá đề — để BE cập nhật thay vì tạo mới. */
+    submissionId?: string
 }
 
 interface GradeAnswerBody {

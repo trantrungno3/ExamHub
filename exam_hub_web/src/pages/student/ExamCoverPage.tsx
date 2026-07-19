@@ -11,7 +11,17 @@ export default function ExamCoverPage() {
     const [params] = useSearchParams()
     const {user} = useAuth()
     const examId = params.get('examId') ?? undefined
+    const sessionId = params.get('sessionId') ?? undefined
+    const submissionId = params.get('submissionId') ?? undefined
     const {data: exam, isLoading} = useExamWithQuestionsQuery(examId)
+
+    const startTaking = () => {
+        if (!agreed || !exam) return
+        const q = new URLSearchParams({examId: exam.id})
+        if (sessionId) q.set('sessionId', sessionId)
+        if (submissionId) q.set('submissionId', submissionId)
+        navigate(`/student/exam/take?${q.toString()}`)
+    }
 
     const infoCards = exam ? [
         {icon: <ClockCircleOutlined/>, value: `${exam.durationMinutes} phút`, label: 'Thời gian'},
@@ -92,7 +102,7 @@ export default function ExamCoverPage() {
                             </div>
 
                             <button
-                                onClick={() => agreed && navigate(`/student/exam/take?examId=${exam.id}`)}
+                                onClick={startTaking}
                                 disabled={!agreed}
                                 className={`w-full py-3.5 rounded-xl text-white font-semibold text-[15px] transition-all ${
                                     agreed ? 'bg-blue-600 hover:bg-blue-700 cursor-pointer shadow-md shadow-blue-200'
