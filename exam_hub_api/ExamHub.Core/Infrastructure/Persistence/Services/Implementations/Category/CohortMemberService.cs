@@ -22,6 +22,8 @@ public class CohortMemberService : ICohortMemberService
     {
         entity.Id       = Guid.NewGuid();
         entity.JoinedAt = DateOnly.FromDateTime(DateTime.UtcNow);
+        entity.Created = DateTime.UtcNow;
+        entity.Modified = DateTime.UtcNow;
         return await _repo.AddAsync(entity, ct);
     }
 

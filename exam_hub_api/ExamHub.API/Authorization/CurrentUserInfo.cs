@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using TVT.Core.Extensions;
+using TVT.Core.Utils;
 
 namespace ExamHub.API.Authorization;
 
@@ -14,6 +15,7 @@ public sealed class CurrentUserInfo
         UserName = user.GetUserName();
         DisplayName = user.GetDisplayName();
         Roles = user.GetRoles();
+        Tag = user.GetTag();
     }
 
     /// <summary>ID người dùng</summary>
@@ -27,4 +29,6 @@ public sealed class CurrentUserInfo
 
     /// <summary>Danh sách vai trò</summary>
     public IReadOnlyList<string>? Roles { get; set; }
+
+    public string? Tag { get; set; }
 }

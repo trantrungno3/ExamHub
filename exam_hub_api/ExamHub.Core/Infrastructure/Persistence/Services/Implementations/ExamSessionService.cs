@@ -18,6 +18,8 @@ public class ExamSessionService(IExamSessionRepository _repo, IExamRepository _e
         var entity = req.ToEntity();
         entity.CreatedBy = by;
         entity.ModifiedBy = by;
+        entity.Created = DateTime.UtcNow;
+        entity.Modified = DateTime.UtcNow;
         await _repo.AddAsync(entity, ct);
         return entity.Id;
     }
@@ -41,6 +43,7 @@ public class ExamSessionService(IExamSessionRepository _repo, IExamRepository _e
         entity.MaxAttempts = req.MaxAttempts;
         entity.PickMode = Enum.Parse<ExamSessionPickModeEnum>(req.PickMode);
         entity.ModifiedBy = by;
+        entity.Modified = DateTime.UtcNow;
         await _repo.UpdateAsync(entity, ct);
     }
 

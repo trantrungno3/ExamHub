@@ -3,6 +3,7 @@ using ExamHub.Core.Domain.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TVT.Core;
+using TVT.Core.Extensions;
 
 namespace ExamHub.API.Controllers.Exam;
 
@@ -56,6 +57,7 @@ public class ExamSubmissionController(IExamSubmissionService service) : Authoriz
     {
         var submission = request.ToEntity();
         var answers    = request.ToAnswers();
+        submission.CreatedBy = User.GetTag();
         var result     = await service.SubmitAsync(submission, answers, ct);
         return StatusCode(201, RequestResponse<ExamSubmissionResponse>.Success("Nộp bài thành công!", ExamSubmissionResponse.FromEntity(result), 1));
     }
