@@ -213,7 +213,7 @@ function PoolSection({sessionId, exams, subjectId, gradeLevelId}: {
     ]
 
     return (
-        <div className="paper-panel flexflex-col gap-3">
+        <div className="paper-panel flex flex-col gap-3">
             <div className="flex items-center justify-between">
                 <h3 className="paper-panel-title">Đề trong kỳ thi ({exams.length})</h3>
                 <Button icon={<PlusOutlined/>} onClick={() => setModalOpen(true)}>Thêm đề</Button>
@@ -293,8 +293,30 @@ function AssignmentSection({sessionId, assignments}: {sessionId: string; assignm
         setCohortClassId(undefined)
     }
 
+    const columns: TableColumnsType<SessionAssignment> = [
+        {
+            title: 'Giao cho', key: 'target',
+            render: (_, a) => a.cohortClassId
+                ? (a.cohortClassName ?? `Lớp #${a.cohortClassId}`)
+                : (a.cohortName ?? `Khoá #${a.cohortId}`),
+        },
+        {
+            title: 'Phạm vi', key: 'scope', width: 110,
+            render: (_, a) => a.cohortClassId ? <Tag>Một lớp</Tag> : <Tag color="blue">Cả khoá</Tag>,
+        },
+        {
+            title: '', key: 'actions', width: 70,
+            render: (_, a) => (
+                <Popconfirm title="Gỡ giao này?" okText="Gỡ" cancelText="Hủy"
+                    onConfirm={() => removeAssignment.mutate({id: sessionId, assignmentId: a.id})}>
+                    <button className="btn-delete">Gỡ</button>
+                </Popconfirm>
+            ),
+        },
+    ]
+
     return (
-        <div className="paper-panel flexflex-col gap-3">
+        <div className="paper-panel flex flex-col gap-3">
             <h3 className="paper-panel-title">Giao cho ({assignments.length})</h3>
             <div className="flex items-end gap-2 flex-wrap">
                 <div>
@@ -325,22 +347,8 @@ function AssignmentSection({sessionId, assignments}: {sessionId: string; assignm
                 <Button type="primary" loading={addAssignment.isPending} onClick={handleAdd}>Giao</Button>
             </div>
 
-            <div className="flex flex-col gap-2">
-                {assignments.length === 0 && <p className="text-gray-500 text-sm">Chưa giao cho lớp/khoá nào.</p>}
-                {assignments.map(a => (
-                    <div key={a.id} className="flex items-center justify-between border border-gray-100 rounded px-3 py-2">
-                        <span className="text-sm text-gray-700">
-                            {a.cohortClassId
-                                ? (a.cohortClassName ?? `Lớp #${a.cohortClassId}`)
-                                : (a.cohortName ?? `Khoá #${a.cohortId}`)}
-                        </span>
-                        <Popconfirm title="Gỡ giao này?" okText="Gỡ" cancelText="Hủy"
-                                    onConfirm={() => removeAssignment.mutate({id: sessionId, assignmentId: a.id})}>
-                            <button className="btn-delete">Gỡ</button>
-                        </Popconfirm>
-                    </div>
-                ))}
-            </div>
+            <Table columns={columns} dataSource={assignments} rowKey="id" size="small" pagination={false}
+                   locale={{emptyText: 'Chưa giao cho lớp/khoá nào.'}}/>
         </div>
     )
 }
