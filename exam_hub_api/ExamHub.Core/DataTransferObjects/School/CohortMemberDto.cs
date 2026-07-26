@@ -7,6 +7,7 @@ namespace ExamHub.Core.DataTransferObjects.School;
 public record CohortMemberRequest(
     int CohortId,
     Guid StudentId,
+    string? Section = null,
     long? JoinedAt = null,
     bool IsActive = true
 )
@@ -16,6 +17,7 @@ public record CohortMemberRequest(
     {
         CohortId  = CohortId,
         StudentId = StudentId,
+        Section   = Section,
         JoinedAt  = JoinedAt.HasValue
             ? DateOnly.FromDateTime(JoinedAt.Value.ToDateTime())
             : DateOnly.FromDateTime(DateTime.UtcNow),
@@ -28,13 +30,14 @@ public record CohortMemberResponse(
     Guid Id,
     int CohortId,
     Guid StudentId,
+    string? Section,
     long JoinedAt,
     bool IsActive
 )
 {
     /// <summary>Chuyển từ entity sang response DTO</summary>
     public static CohortMemberResponse FromEntity(CohortMember e) =>
-        new(e.Id, e.CohortId, e.StudentId,
+        new(e.Id, e.CohortId, e.StudentId, e.Section,
             e.JoinedAt.ToDateTime(TimeOnly.MinValue).ToTimestamp(),
             e.IsActive);
 }

@@ -30,6 +30,11 @@ public class CohortMember : ModifyModelBase, IModelBaseSql<Guid>
     [SqlBuilderProperty(CohortMemberTable.StudentId, Insert = true, Update = false)]
     public Guid StudentId { get; set; }
 
+    /// <summary>Ban/lớp của học sinh trong khoá (A, B, ...); NULL = chưa xếp lớp</summary>
+    [Column(CohortMemberTable.Section)]
+    [SqlBuilderProperty(CohortMemberTable.Section, Insert = true, Update = true)]
+    public string? Section { get; set; }
+
     /// <summary>Ngày tham gia khoá</summary>
     [Column(CohortMemberTable.JoinedAt)]
     [SqlBuilderProperty(CohortMemberTable.JoinedAt, Insert = true, Update = false)]
@@ -51,6 +56,7 @@ public class CohortMember : ModifyModelBase, IModelBaseSql<Guid>
         id         = Id,
         cohort_id  = CohortId,
         student_id = StudentId,
+        section    = Section,
         joined_at  = JoinedAt,
         is_active  = IsActive
     };
@@ -59,6 +65,7 @@ public class CohortMember : ModifyModelBase, IModelBaseSql<Guid>
     public object ToUpdateObject() => new
     {
         id        = Id,
+        section   = Section,
         is_active = IsActive
     };
 }

@@ -16,4 +16,7 @@ public interface ICohortMemberRepository : IBaseRepository<CohortMember, Guid>
 
     /// <summary>Bật/tắt trạng thái học sinh trong khoá</summary>
     Task<bool> SetActiveAsync(Guid id, bool isActive, CancellationToken ct = default);
+
+    /// <summary>Đổi lớp (section) của học sinh trong khoá</summary>
+    Task<bool> SetSectionAsync(Guid id, string? section, CancellationToken ct = default);
 }

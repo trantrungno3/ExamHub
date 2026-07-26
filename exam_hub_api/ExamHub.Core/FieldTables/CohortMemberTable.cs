@@ -14,6 +14,9 @@ public readonly struct CohortMemberTable
     /// <summary>Khóa ngoại học sinh (app_users)</summary>
     public const string StudentId = "student_id";
 
+    /// <summary>Ban/lớp của học sinh: A, B, ...; NULL = chưa xếp lớp</summary>
+    public const string Section = "section";
+
     /// <summary>Ngày tham gia khoá</summary>
     public const string JoinedAt = "joined_at";
 

@@ -30,4 +30,9 @@ public class CohortMemberRepository : BaseRepository<CohortMember, Guid>, ICohor
         => await Set
             .Where(x => x.Id == id)
             .ExecuteUpdateAsync(s => s.SetProperty(x => x.IsActive, isActive), ct) > 0;
+
+    public async Task<bool> SetSectionAsync(Guid id, string? section, CancellationToken ct = default)
+        => await Set
+            .Where(x => x.Id == id)
+            .ExecuteUpdateAsync(s => s.SetProperty(x => x.Section, section), ct) > 0;
 }
