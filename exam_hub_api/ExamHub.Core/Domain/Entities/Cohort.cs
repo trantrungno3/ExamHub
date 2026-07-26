@@ -45,10 +45,10 @@ public class Cohort : ModifyModelBase, IModelBaseSql<int>
     [SqlBuilderProperty(CohortTable.GradeStart, Insert = true, Update = false)]
     public short GradeStart { get; set; }
 
-    /// <summary>Hậu tố tên lớp (VD: "A" → 1A, 2A, 3A)</summary>
-    [Column(CohortTable.ClassSuffix)]
-    [SqlBuilderProperty(CohortTable.ClassSuffix, Insert = true, Update = true)]
-    public string ClassSuffix { get; set; } = "A";
+    /// <summary>Số lớp song song trong khoá (1..26 → A, B, C, ...)</summary>
+    [Column(CohortTable.NumClasses)]
+    [SqlBuilderProperty(CohortTable.NumClasses, Insert = true, Update = true)]
+    public short NumClasses { get; set; } = 1;
 
     /// <summary>Kích hoạt hay không</summary>
     [Column(CohortTable.IsActive)]
@@ -74,7 +74,7 @@ public class Cohort : ModifyModelBase, IModelBaseSql<int>
         start_year   = StartYear,
         end_year     = EndYear,
         grade_start  = GradeStart,
-        class_suffix = ClassSuffix,
+        num_classes  = NumClasses,
         is_active    = IsActive
     };
 
@@ -83,7 +83,7 @@ public class Cohort : ModifyModelBase, IModelBaseSql<int>
     {
         id           = Id,
         name         = Name,
-        class_suffix = ClassSuffix,
+        num_classes  = NumClasses,
         is_active    = IsActive
     };
 }

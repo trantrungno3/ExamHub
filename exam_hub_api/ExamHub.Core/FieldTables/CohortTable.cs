@@ -23,8 +23,8 @@ public readonly struct CohortTable
     /// <summary>Lớp bắt đầu: 1, 6, 10</summary>
     public const string GradeStart = "grade_start";
 
-    /// <summary>Hậu tố lớp: A → 1A, 2A</summary>
-    public const string ClassSuffix = "class_suffix";
+    /// <summary>Số lớp song song: 1 → A, 2 → A,B, ...</summary>
+    public const string NumClasses = "num_classes";
 
     /// <summary>Kích hoạt</summary>
     public const string IsActive = "is_active";

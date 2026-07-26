@@ -359,7 +359,7 @@ public class AppDbContext : DbContext
             e.HasKey(x => x.Id);
             e.Property(x => x.Id).UseIdentityAlwaysColumn();
             e.Property(x => x.Name).HasMaxLength(100).IsRequired();
-            e.Property(x => x.ClassSuffix).HasMaxLength(10).HasDefaultValue("A");
+            e.Property(x => x.NumClasses).HasDefaultValue((short)1);
             e.Property(x => x.IsActive).HasDefaultValue(true);
             e.Property(x => x.CreatedBy).HasMaxLength(150).HasColumnName(ModifyFieldsTable.CreatedBy);
             e.Property(x => x.Created).HasColumnName(ModifyFieldsTable.Created);
@@ -379,12 +379,13 @@ public class AppDbContext : DbContext
             e.HasKey(x => x.Id);
             e.Property(x => x.Id).UseIdentityAlwaysColumn();
             e.Property(x => x.ClassName).HasMaxLength(20).IsRequired();
+            e.Property(x => x.Section).HasMaxLength(10).IsRequired();
             e.Property(x => x.SchoolYear).HasMaxLength(20).IsRequired();
             e.Property(x => x.CreatedBy).HasMaxLength(150).HasColumnName(ModifyFieldsTable.CreatedBy);
             e.Property(x => x.Created).HasColumnName(ModifyFieldsTable.Created);
             e.Property(x => x.ModifiedBy).HasMaxLength(150).HasColumnName(ModifyFieldsTable.ModifiedBy);
             e.Property(x => x.Modified).HasColumnName(ModifyFieldsTable.Modified);
-            e.HasIndex(x => new { x.CohortId, x.YearIndex }).IsUnique();
+            e.HasIndex(x => new { x.CohortId, x.YearIndex, x.Section }).IsUnique();
             e.HasOne(x => x.Cohort)
                 .WithMany(x => x.Classes)
                 .HasForeignKey(x => x.CohortId)
@@ -403,6 +404,7 @@ public class AppDbContext : DbContext
             e.Property(x => x.Id).HasDefaultValueSql("gen_random_uuid()");
             e.Property(x => x.JoinedAt).HasDefaultValueSql("CURRENT_DATE");
             e.Property(x => x.IsActive).HasDefaultValue(true);
+            e.Property(x => x.Section).HasMaxLength(10);
             e.Property(x => x.CreatedBy).HasMaxLength(150).HasColumnName(ModifyFieldsTable.CreatedBy);
             e.Property(x => x.Created).HasColumnName(ModifyFieldsTable.Created);
             e.Property(x => x.ModifiedBy).HasMaxLength(150).HasColumnName(ModifyFieldsTable.ModifiedBy);

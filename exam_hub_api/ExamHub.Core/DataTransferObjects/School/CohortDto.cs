@@ -10,7 +10,7 @@ public record CohortRequest(
     short StartYear,
     short EndYear,
     short GradeStart,
-    string ClassSuffix = "A",
+    short NumClasses = 1,
     bool IsActive = true
 )
 {
@@ -22,7 +22,7 @@ public record CohortRequest(
         StartYear   = StartYear,
         EndYear     = EndYear,
         GradeStart  = GradeStart,
-        ClassSuffix = ClassSuffix,
+        NumClasses  = NumClasses,
         IsActive    = IsActive
     };
 
@@ -43,13 +43,13 @@ public record CohortResponse(
     short StartYear,
     short EndYear,
     short GradeStart,
-    string ClassSuffix,
+    short NumClasses,
     bool IsActive,
     long Created
 )
 {
     /// <summary>Chuyển từ entity sang response DTO</summary>
     public static CohortResponse FromEntity(Cohort e) =>
-        new(e.Id, e.SchoolId, e.Name, e.StartYear, e.EndYear, e.GradeStart, e.ClassSuffix, e.IsActive,
+        new(e.Id, e.SchoolId, e.Name, e.StartYear, e.EndYear, e.GradeStart, e.NumClasses, e.IsActive,
             e.Created.ToTimestamp());
 }
