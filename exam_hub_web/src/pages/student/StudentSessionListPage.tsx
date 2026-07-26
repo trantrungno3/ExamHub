@@ -1,12 +1,13 @@
 import {useNavigate} from 'react-router-dom'
-import {Button, Empty, Spin, Tag, message} from 'antd'
+import {Button, Empty, Spin, message} from 'antd'
+import {CalendarOutlined, ReadOutlined} from '@ant-design/icons'
 import {useMySessionsQuery, useStartSessionMutation} from '../../hooks/queries/useExamSessions'
 import {statusCode} from '../../services/requestService'
 
-const AVAILABILITY: Record<ExamSessionAvailability, {label: string; color: string}> = {
-    upcoming: {label: 'Sắp mở', color: 'blue'},
-    open: {label: 'Đang mở', color: 'green'},
-    closed: {label: 'Đã đóng', color: 'default'},
+const AVAILABILITY: Record<ExamSessionAvailability, string> = {
+    upcoming: 'Sắp mở',
+    open: 'Đang mở',
+    closed: 'Đã đóng',
 }
 
 function fmt(ms: number): string {
@@ -63,43 +64,53 @@ export default function StudentSessionListPage() {
     }
 
     return (
-        <div className="p-6 flex flex-col gap-4">
-            <div>
-                <p className="text-xl font-semibold text-gray-800">Kỳ thi của tôi</p>
-                <p className="text-sm text-gray-500">Các kỳ thi được giao cho lớp/khoá của bạn</p>
-            </div>
-
-            {isLoading ? (
-                <Spin/>
-            ) : sessions.length === 0 ? (
-                <Empty description="Chưa có kỳ thi nào được giao"/>
-            ) : (
-                <div className="grid gap-4 md:grid-cols-2">
-                    {sessions.map(s => {
-                        const av = AVAILABILITY[s.availability]
-                        const remaining = s.maxAttempts - s.usedAttempts
-                        return (
-                            <div key={s.id} className="section-card flex flex-col gap-2">
-                                <div className="flex items-start justify-between gap-2">
-                                    <p className="font-semibold text-gray-800">{s.title}</p>
-                                    <Tag color={av.color}>{av.label}</Tag>
-                                </div>
-                                <p className="text-sm text-gray-500">
-                                    {s.subjectName ?? '—'} · {s.gradeLevelName ?? '—'}
-                                </p>
-                                <p className="text-sm text-gray-500">{fmt(s.openAt)} → {fmt(s.closeAt)}</p>
-                                <div className="flex items-center justify-between mt-1">
-                                    <span className="text-sm text-gray-600">
-                                        Lượt còn lại: <b>{Math.max(0, remaining)}</b>/{s.maxAttempts}
-                                        {s.pickMode === 'StudentChoice' && ' · Tự chọn đề'}
-                                    </span>
-                                    {renderAction(s)}
-                                </div>
-                            </div>
-                        )
-                    })}
+        <div className="exam-desk min-h-full p-6 sm:p-8">
+            <div className="max-w-5xl mx-auto flex flex-col gap-6">
+                <div>
+                    <div className="exam-list-eyebrow">Phòng thi</div>
+                    <h1 className="exam-list-title">Kỳ thi của tôi</h1>
+                    <p className="exam-list-sub">Các kỳ thi được giao cho lớp/khoá của bạn</p>
                 </div>
-            )}
+
+                {isLoading ? (
+                    <div className="flex justify-center py-16"><Spin size="large"/></div>
+                ) : sessions.length === 0 ? (
+                    <div className="bg-white/60 rounded-xl border border-stone-200 py-16">
+                        <Empty description="Chưa có kỳ thi nào được giao"/>
+                    </div>
+                ) : (
+                    <div className="grid gap-4 md:grid-cols-2">
+                        {sessions.map(s => {
+                            const remaining = Math.max(0, s.maxAttempts - s.usedAttempts)
+                            return (
+                                <div key={s.id} className={`exam-ticket exam-ticket--${s.availability} flex flex-col gap-2.5`}>
+                                    <div className="flex items-start justify-between gap-3">
+                                        <h3 className="exam-ticket-title">{s.title}</h3>
+                                        <span className={`exam-stamp exam-stamp--${s.availability}`}>
+                                            {AVAILABILITY[s.availability]}
+                                        </span>
+                                    </div>
+                                    <div className="exam-ticket-meta">
+                                        <ReadOutlined className="text-stone-400"/>
+                                        <span>{s.subjectName ?? '—'} · {s.gradeLevelName ?? '—'}</span>
+                                    </div>
+                                    <div className="exam-ticket-meta">
+                                        <CalendarOutlined className="text-stone-400"/>
+                                        <span>{fmt(s.openAt)} → {fmt(s.closeAt)}</span>
+                                    </div>
+                                    <div className="exam-ticket-foot">
+                                        <span className="text-[13px] text-stone-600">
+                                            Lượt còn lại: <b className="text-stone-900">{remaining}</b>/{s.maxAttempts}
+                                            {s.pickMode === 'StudentChoice' && ' · Tự chọn đề'}
+                                        </span>
+                                        {renderAction(s)}
+                                    </div>
+                                </div>
+                            )
+                        })}
+                    </div>
+                )}
+            </div>
         </div>
     )
 }

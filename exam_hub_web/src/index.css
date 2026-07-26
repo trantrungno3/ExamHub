@@ -585,6 +585,46 @@ body {
   font-family: 'Lora', 'Times New Roman', Georgia, serif;
 }
 
+/* ─── Danh sách kỳ thi của học sinh ── */
+.exam-list-eyebrow { @apply text-[11px] font-semibold uppercase tracking-[.22em] text-stone-500; }
+.exam-list-title {
+  @apply text-[26px] font-bold text-stone-900 leading-tight mt-1;
+  font-family: 'Lora', 'Times New Roman', Georgia, serif;
+}
+.exam-list-sub { @apply text-[13.5px] text-stone-500 mt-1; }
+
+.exam-ticket {
+  @apply relative bg-white rounded-lg border border-stone-200 p-5 pl-6 overflow-hidden transition-all;
+  box-shadow: 0 1px 2px rgba(0,0,0,.04), 0 10px 26px -18px rgba(30,25,20,.3);
+}
+.exam-ticket:hover {
+  @apply -translate-y-0.5;
+  box-shadow: 0 2px 4px rgba(0,0,0,.05), 0 16px 34px -18px rgba(30,25,20,.4);
+}
+.exam-ticket::before {
+  content: ''; @apply absolute left-0 top-0 bottom-0 w-1.5 bg-stone-800/80;
+}
+.exam-ticket--open::before { @apply bg-emerald-500; }
+.exam-ticket--upcoming::before { @apply bg-blue-500; }
+.exam-ticket--closed::before { @apply bg-stone-300; }
+
+.exam-ticket-title {
+  @apply text-[17px] font-bold text-stone-900 leading-snug pr-2;
+  font-family: 'Lora', 'Times New Roman', Georgia, serif;
+}
+.exam-ticket-meta { @apply flex items-center gap-2 text-[13px] text-stone-500; }
+.exam-ticket-foot {
+  @apply flex items-center justify-between gap-3 pt-3 mt-1 border-t border-dashed border-stone-200;
+}
+
+.exam-stamp {
+  @apply shrink-0 text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded
+         border-2 rotate-[-6deg] select-none;
+}
+.exam-stamp--open { @apply text-emerald-600 border-emerald-400 bg-emerald-50/60; }
+.exam-stamp--upcoming { @apply text-blue-600 border-blue-300 bg-blue-50/60; }
+.exam-stamp--closed { @apply text-stone-400 border-stone-300 bg-stone-50; }
+
 /* ─── Rich Text Editor ───────────────────────────── */
 .rich-editor {
   border: 1px solid #d9d9d9;
