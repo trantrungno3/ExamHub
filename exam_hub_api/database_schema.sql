@@ -184,7 +184,7 @@ CREATE TABLE public.cohorts
     start_year   SMALLINT     NOT NULL,             -- 2020
     end_year     SMALLINT     NOT NULL,             -- 2025
     grade_start  SMALLINT     NOT NULL,             -- Lớp bắt đầu: 1, 6, 10, ...
-    class_suffix VARCHAR(10)  NOT NULL DEFAULT 'A', -- Hậu tố: "A" → 1A, 2A, 3A, ...
+    num_classes  SMALLINT     NOT NULL DEFAULT 1,   -- Số lớp song song → A, B, C, ...
     is_active    BOOLEAN      NOT NULL DEFAULT TRUE,
     created_by    VARCHAR(150),
     created      TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
@@ -192,6 +192,7 @@ CREATE TABLE public.cohorts
     modified     TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
 
     CONSTRAINT chk_cohort_years CHECK (end_year > start_year),
+    CONSTRAINT chk_cohort_num_classes CHECK (num_classes BETWEEN 1 AND 26),
     UNIQUE (school_id, start_year, grade_start)
 );
 
@@ -204,6 +205,7 @@ CREATE TABLE public.cohort_classes
     cohort_id           INT         NOT NULL REFERENCES cohorts (id) ON DELETE CASCADE,
     grade_level_id      INT         NOT NULL REFERENCES grade_levels (id),
     class_name          VARCHAR(20) NOT NULL, -- "1A", "2A", "10A", ...
+    section             VARCHAR(10) NOT NULL DEFAULT 'A', -- Ban/lớp: A, B, C, ...
     school_year         VARCHAR(20) NOT NULL, -- "2020-2021", "2021-2022"
     year_index          SMALLINT    NOT NULL, -- 1, 2, 3, ... (năm thứ mấy của khoá)
     homeroom_teacher_id UUID        REFERENCES app_users (id) ON DELETE SET NULL,
@@ -212,7 +214,7 @@ CREATE TABLE public.cohort_classes
     modified_by           VARCHAR(150),
     modified            TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
-    UNIQUE (cohort_id, year_index)
+    UNIQUE (cohort_id, year_index, section)
 );
 
 -- Học sinh thuộc khoá học
@@ -223,6 +225,7 @@ CREATE TABLE public.cohort_members
     id         UUID PRIMARY KEY     DEFAULT gen_random_uuid(),
     cohort_id  INT         NOT NULL REFERENCES cohorts (id) ON DELETE CASCADE,
     student_id UUID        NOT NULL REFERENCES app_users (id) ON DELETE CASCADE,
+    section    VARCHAR(10),                      -- Lớp của HS (A, B, ...); NULL = chưa xếp lớp
     joined_at  DATE        NOT NULL DEFAULT CURRENT_DATE,
     is_active  BOOLEAN     NOT NULL DEFAULT TRUE,
     created_by  VARCHAR(150),
@@ -261,34 +264,30 @@ CREATE
 OR REPLACE FUNCTION public.generate_cohort_classes(p_cohort_id INT)
 RETURNS VOID AS $$
 DECLARE
-v_cohort   public.cohorts%ROWTYPE;
-    v_duration
-SMALLINT;
-    i
-SMALLINT;
+    v_cohort   public.cohorts%ROWTYPE;
+    v_duration SMALLINT;
+    i          SMALLINT;
+    j          SMALLINT;
+    v_section  VARCHAR(10);
 BEGIN
-SELECT *
-INTO v_cohort
-FROM public.cohorts
-WHERE id = p_cohort_id;
-v_duration
-:= v_cohort.end_year - v_cohort.start_year;
+    SELECT * INTO v_cohort FROM public.cohorts WHERE id = p_cohort_id;
+    v_duration := v_cohort.end_year - v_cohort.start_year;
 
-FOR i IN 1..v_duration LOOP
-        INSERT INTO public.cohort_classes (
-            cohort_id,
-            grade_level_id,
-            class_name,
-            school_year,
-            year_index
-        ) VALUES (
-            p_cohort_id,
-            v_cohort.grade_start + i - 1,
-            (v_cohort.grade_start + i - 1)::TEXT || v_cohort.class_suffix,
-            (v_cohort.start_year + i - 1)::TEXT || '-' || (v_cohort.start_year + i)::TEXT,
-            i
-        );
-END LOOP;
+    FOR i IN 1..v_duration LOOP
+        FOR j IN 1..v_cohort.num_classes LOOP
+            v_section := chr(64 + j);   -- 1→A, 2→B, 3→C, ...
+            INSERT INTO public.cohort_classes (
+                cohort_id, grade_level_id, class_name, school_year, year_index, section
+            ) VALUES (
+                p_cohort_id,
+                v_cohort.grade_start + i - 1,
+                (v_cohort.grade_start + i - 1)::TEXT || v_section,
+                (v_cohort.start_year + i - 1)::TEXT || '-' || (v_cohort.start_year + i)::TEXT,
+                i,
+                v_section
+            );
+        END LOOP;
+    END LOOP;
 END;
 $$
 LANGUAGE plpgsql;
@@ -710,18 +709,18 @@ VALUES ('Trường Tiểu học Nguyễn Du', 'TH-NGUYEN-DU', 'Hà Nội'),
 
 -- Khi INSERT cohort → trigger tự sinh cohort_classes
 -- Trường tiểu học: Khoá 2020-2025 (lớp 1→5)
-INSERT INTO public.cohorts (school_id, name, start_year, end_year, grade_start, class_suffix)
-VALUES (1, 'Khoá 2020-2025', 2020, 2025, 1, 'A');
+INSERT INTO public.cohorts (school_id, name, start_year, end_year, grade_start, num_classes)
+VALUES (1, 'Khoá 2020-2025', 2020, 2025, 1, 1);
 -- → Tự sinh: 1A/2020-2021, 2A/2021-2022, 3A/2022-2023, 4A/2023-2024, 5A/2024-2025
 
-INSERT INTO public.cohorts (school_id, name, start_year, end_year, grade_start, class_suffix)
-VALUES (1, 'Khoá 2021-2026', 2021, 2026, 1, 'A');
+INSERT INTO public.cohorts (school_id, name, start_year, end_year, grade_start, num_classes)
+VALUES (1, 'Khoá 2021-2026', 2021, 2026, 1, 1);
 -- → Tự sinh: 1A/2021-2022, 2A/2022-2023, 3A/2023-2024, 4A/2024-2025, 5A/2025-2026
 
--- Trường THPT: Khoá 2021-2024 (lớp 10→12)
-INSERT INTO public.cohorts (school_id, name, start_year, end_year, grade_start, class_suffix)
-VALUES (3, 'Khoá 2021-2024', 2021, 2024, 10, 'A');
--- → Tự sinh: 10A/2021-2022, 11A/2022-2023, 12A/2023-2024
+-- Trường THPT: Khoá 2021-2024 (lớp 10→12), 3 lớp A/B/C
+INSERT INTO public.cohorts (school_id, name, start_year, end_year, grade_start, num_classes)
+VALUES (3, 'Khoá 2021-2024', 2021, 2024, 10, 3);
+-- → Tự sinh: 10A/10B/10C, 11A/11B/11C, 12A/12B/12C
 
 insert into public.app_users (id, username, avartar, normalizedusername, displayname, description, phonenumber, sex,
                               refreshtoken, email, accessfailedcount, deleted, lockoutenabled, lockoutenddateutc,
@@ -1159,3 +1158,16 @@ VALUES (sid, 'Phần 1: Địa lý tự nhiên Việt Nam', 'P1', 1),
        (sid, 'Phần 4: Địa lý các vùng kinh tế', 'P4', 4),
        (sid, 'Phần 5: Địa lý biển đảo Việt Nam', 'P5', 5);
 END $$;
+
+-- ============================================================
+-- MIGRATION [2026-07-19]: multi-class per cohort + student section
+-- Chạy TAY trên DB dev đã tồn tại (schema gốc phía trên đã có sẵn cột mới).
+-- ============================================================
+-- ALTER TABLE public.cohorts ADD COLUMN num_classes SMALLINT NOT NULL DEFAULT 1;
+-- ALTER TABLE public.cohorts ADD CONSTRAINT chk_cohort_num_classes CHECK (num_classes BETWEEN 1 AND 26);
+-- ALTER TABLE public.cohorts DROP COLUMN class_suffix;
+-- ALTER TABLE public.cohort_classes ADD COLUMN section VARCHAR(10) NOT NULL DEFAULT 'A';
+-- ALTER TABLE public.cohort_classes DROP CONSTRAINT cohort_classes_cohort_id_year_index_key;
+-- ALTER TABLE public.cohort_classes ADD UNIQUE (cohort_id, year_index, section);
+-- ALTER TABLE public.cohort_members ADD COLUMN section VARCHAR(10);
+-- (sau đó CREATE OR REPLACE FUNCTION generate_cohort_classes bản mới ở trên)
