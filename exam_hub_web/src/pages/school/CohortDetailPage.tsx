@@ -4,7 +4,7 @@ import {Breadcrumb, Button, Form, Modal, Popconfirm, Select, Table, Tabs, Tag} f
 import type {TableColumnsType} from 'antd'
 import {PlusOutlined} from '@ant-design/icons'
 import {useCohortClassesQuery, useSetHomeroomTeacherMutation} from '../../hooks/queries/useCohortClasses'
-import {useCohortMembersQuery, useAddCohortMemberMutation, useRemoveCohortMemberMutation, useSetCohortMemberActiveMutation} from '../../hooks/queries/useCohortMembers'
+import {useCohortMembersQuery, useAddCohortMemberMutation, useRemoveCohortMemberMutation, useSetCohortMemberActiveMutation, useSetCohortMemberSectionMutation} from '../../hooks/queries/useCohortMembers'
 import {statusCode} from '../../services/requestService'
 import {userService} from '../../services/userService'
 import {useQuery} from '@tanstack/react-query'
@@ -20,11 +20,14 @@ export default function CohortDetailPage() {
     const addMemberMutation = useAddCohortMemberMutation(cohortId)
     const removeMemberMutation = useRemoveCohortMemberMutation(cohortId)
     const setActiveMutation = useSetCohortMemberActiveMutation(cohortId)
+    const setSectionMutation = useSetCohortMemberSectionMutation(cohortId)
 
     const {data: allUsers = []} = useQuery({
         queryKey: ['users'],
         queryFn: async () => (await userService.getAll()).data ?? [],
     })
+
+    const sections = [...new Set(classes.map(c => c.section))].sort()
 
     const [memberModal, setMemberModal] = useState(false)
     const [memberForm] = Form.useForm<CohortMemberBody>()
@@ -37,6 +40,7 @@ export default function CohortDetailPage() {
 
     const classColumns: TableColumnsType<CohortClass> = [
         {title: 'Lớp', dataIndex: 'className', key: 'className', render: v => <span className="font-medium">{v}</span>},
+        {title: 'Lớp', dataIndex: 'section', key: 'section', width: 80},
         {title: 'Năm học', dataIndex: 'schoolYear', key: 'schoolYear'},
         {title: 'Năm học (index)', dataIndex: 'yearIndex', key: 'yearIndex'},
         {
@@ -69,6 +73,17 @@ export default function CohortDetailPage() {
                 const user = allUsers.find(u => u.id === v)
                 return user ? user.displayName ?? user.userName : <span className="font-mono text-xs">{v}</span>
             },
+        },
+        {
+            title: 'Lớp', dataIndex: 'section', key: 'section', width: 130,
+            render: (v, record) => (
+                <Select
+                    style={{width: 110}} allowClear placeholder="Chưa xếp"
+                    value={v ?? undefined}
+                    options={sections.map(s => ({value: s, label: s}))}
+                    onChange={(val) => setSectionMutation.mutate({id: record.id, section: val ?? null})}
+                />
+            ),
         },
         {title: 'Trạng thái', dataIndex: 'isActive', key: 'isActive', render: v => <Tag color={v ? 'green' : 'default'}>{v ? 'Hoạt động' : 'Tắt'}</Tag>},
         {
@@ -133,6 +148,10 @@ export default function CohortDetailPage() {
                     <Form.Item name="studentId" label="Học sinh" rules={[{required: true}]}>
                         <Select showSearch optionFilterProp="label"
                             options={allUsers.filter(u => u.roles.includes('Student')).map(u => ({value: u.id, label: u.displayName ?? u.userName}))}/>
+                    </Form.Item>
+                    <Form.Item name="section" label="Lớp">
+                        <Select allowClear placeholder="Chưa xếp lớp"
+                            options={sections.map(s => ({value: s, label: s}))}/>
                     </Form.Item>
                 </Form>
             </Modal>
