@@ -24,6 +24,10 @@ class CohortMemberService {
     setActive(id: string, isActive: boolean) {
         return AuthHttp.patch<boolean>(`/cohortmember/${id}/active`, isActive)
     }
+
+    setSection(id: string, section: string | null) {
+        return AuthHttp.patch<boolean>(`/cohortmember/${id}/section`, section)
+    }
 }
 
 export const cohortMemberService = new CohortMemberService()

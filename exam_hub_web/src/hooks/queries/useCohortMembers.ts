@@ -54,3 +54,17 @@ export function useSetCohortMemberActiveMutation(cohortId: number) {
         onError: () => message.error('Có lỗi xảy ra'),
     })
 }
+
+export function useSetCohortMemberSectionMutation(cohortId: number) {
+    const qc = useQueryClient()
+    return useMutation({
+        mutationFn: ({id, section}: {id: string; section: string | null}) =>
+            cohortMemberService.setSection(id, section),
+        onSuccess: (res) => {
+            if (res.status === statusCode.Error) { message.error(res.message || 'Có lỗi xảy ra'); return }
+            message.success('Cập nhật lớp thành công')
+            void qc.invalidateQueries({queryKey: COHORT_MEMBER_KEYS.byCohort(cohortId)})
+        },
+        onError: () => message.error('Có lỗi xảy ra'),
+    })
+}
