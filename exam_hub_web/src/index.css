@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap');
 @import "tailwindcss";
 
 /* ─── Reset ─────────────────────────────────────── */
@@ -399,54 +400,152 @@ body {
   @apply text-gray-800 font-medium text-[13px];
 }
 
-/* ─── Exam taking top bar ────────────────────────── */
-.taking-topbar {
-  @apply flex items-center gap-4 px-6 py-3 bg-gray-900 text-white shrink-0;
+/* ═══════════════════════════════════════════════════
+   EXAM PAPER — giao diện làm bài giống đề thi in
+   ═══════════════════════════════════════════════════ */
+
+/* Mặt bàn (nền) để tờ đề nổi lên */
+.exam-desk {
+  @apply min-h-screen w-full;
+  background:
+    radial-gradient(1100px 520px at 50% -8%, #f6f4ee 0%, transparent 60%),
+    linear-gradient(180deg, #eae7df 0%, #e3dfd6 100%);
 }
 
-.taking-timer {
-  @apply px-4 py-1.5 bg-red-500 text-white font-bold text-lg rounded-lg
-         font-mono tracking-widest tabular-nums;
+/* Thanh trên cùng */
+.exam-topbar {
+  @apply sticky top-0 z-30 flex items-center justify-between gap-4
+         px-4 sm:px-8 h-14 border-b border-stone-300/70 shrink-0
+         bg-[#faf8f3]/95 backdrop-blur;
+}
+.exam-topbar-brand { @apply flex items-center gap-2.5 min-w-0; }
+.exam-topbar-icon {
+  @apply w-8 h-8 rounded-md bg-stone-800 text-[#faf8f3] flex items-center
+         justify-center text-[11px] font-bold shrink-0;
+}
+.exam-timer {
+  @apply flex items-center gap-2 px-3.5 py-1.5 rounded-md bg-white
+         border border-stone-300 text-stone-700 shadow-sm
+         font-mono font-bold text-[15px] tabular-nums tracking-wider;
+}
+.exam-timer--danger { @apply bg-red-50 border-red-300 text-red-600 animate-pulse; }
+
+/* Bố cục: tờ đề + phiếu trả lời */
+.exam-layout {
+  @apply mx-auto max-w-[1180px] w-full flex gap-7 items-start
+         px-3 sm:px-6 py-8;
 }
 
-/* ─── Answer options (exam taking) ──────────────── */
-.exam-answer-opt {
-  @apply flex items-start gap-4 p-4 rounded-xl border-2 border-gray-100
-         bg-white cursor-pointer hover:border-blue-300 hover:bg-blue-50/40
-         transition-all;
+/* Tờ giấy đề thi */
+.exam-paper {
+  @apply relative flex-1 max-w-[820px] mx-auto bg-white text-stone-900
+         px-7 sm:px-14 py-11 sm:py-14 rounded-[3px] border border-stone-200;
+  box-shadow: 0 1px 2px rgba(0,0,0,.05), 0 18px 50px -20px rgba(30,25,20,.35);
+  font-family: 'Lora', 'Times New Roman', Georgia, serif;
+  animation: paper-rise .5s cubic-bezier(.22,.61,.36,1) both;
+}
+@keyframes paper-rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: none; }
 }
 
-.exam-answer-opt--selected {
-  @apply border-blue-600 bg-blue-600 hover:border-blue-600 hover:bg-blue-600;
+/* Đầu đề */
+.paper-eyebrow {
+  @apply text-center text-[11px] font-semibold uppercase tracking-[.24em] text-stone-500;
+}
+.paper-title {
+  @apply text-center text-[24px] sm:text-[29px] font-bold leading-tight mt-1.5;
+}
+.paper-subtitle { @apply text-center text-[14px] italic text-stone-500 mt-1.5; }
+.paper-rule { @apply mx-auto mt-4 mb-6 h-px w-20 bg-stone-400; }
+.paper-meta {
+  @apply grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-2 text-[13.5px] text-stone-700;
+}
+.paper-meta-row { @apply flex items-baseline gap-2 min-w-0; }
+.paper-meta-key { @apply text-stone-500 shrink-0; }
+.paper-fill {
+  @apply flex-1 border-b border-dotted border-stone-400 font-semibold
+         text-stone-800 truncate min-w-[40px];
+}
+.paper-divider { @apply border-t-2 border-double border-stone-300 mt-6 mb-8; }
+
+/* Câu hỏi */
+.exam-q { @apply mb-7 scroll-mt-20; }
+.exam-q-head { @apply text-[15.5px] leading-relaxed text-stone-900 mb-2.5; }
+.exam-q-num { @apply font-bold; }
+.exam-q-score {
+  @apply ml-2 align-middle text-[11px] font-sans font-semibold text-red-600
+         border border-red-200 bg-red-50 rounded px-1.5 py-0.5;
+}
+.paper-end {
+  @apply text-center text-[13px] tracking-[.35em] text-stone-400 font-semibold uppercase mt-10;
 }
 
-.answer-circle {
-  @apply w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center
-         justify-center text-sm font-bold shrink-0 mt-0.5;
+/* Radio đáp án AntD được style lại theo phong cách đề in */
+.paper-radio-group { @apply flex flex-col gap-1.5 w-full; }
+.paper-radio-group .ant-radio-wrapper {
+  @apply items-start m-0 py-1.5 px-2 -mx-2 rounded-md transition-colors text-stone-800;
+  font-family: 'Lora', 'Times New Roman', Georgia, serif;
+}
+.paper-radio-group .ant-radio-wrapper:hover { @apply bg-stone-50; }
+.paper-radio-group .ant-radio-wrapper-checked { @apply bg-amber-50/70; }
+.paper-radio-group .ant-radio { @apply mt-0.5; }
+.paper-radio-group .ant-radio-inner {
+  @apply border-stone-400 w-[18px] h-[18px];
+}
+.paper-radio-group .ant-radio-checked .ant-radio-inner {
+  @apply bg-stone-800 border-stone-800;
+}
+.paper-radio-group .ant-radio-wrapper span.ant-radio + * {
+  @apply text-[15px] leading-relaxed pr-1;
+}
+.paper-opt-letter { @apply font-semibold mr-1.5; }
+
+/* Ô tự luận dạng giấy kẻ dòng */
+.paper-essay.ant-input {
+  @apply border-stone-300 text-stone-800 text-[15px] rounded-sm px-3 leading-[32px];
+  font-family: 'Lora', 'Times New Roman', Georgia, serif;
+  background-image: linear-gradient(transparent 31px, #e7e5e4 31px);
+  background-size: 100% 32px;
+  background-attachment: local;
+}
+.paper-essay.ant-input:focus, .paper-essay.ant-input-focused {
+  @apply border-stone-500 shadow-none;
 }
 
-.answer-circle--selected {
-  @apply bg-white/25 text-white;
+/* ─── Phiếu trả lời (answer sheet) ────────────────── */
+.answer-sheet {
+  @apply hidden lg:flex flex-col w-[272px] shrink-0 sticky top-[86px]
+         bg-white rounded-lg border border-stone-200 overflow-hidden
+         max-h-[calc(100vh-116px)];
+  box-shadow: 0 10px 30px -18px rgba(30,25,20,.3);
 }
-
-/* ─── Question number grid ───────────────────────── */
-.q-grid-btn {
-  @apply w-9 h-9 rounded-lg text-[12px] font-semibold flex items-center
-         justify-center cursor-pointer border border-gray-200 text-gray-500
-         hover:border-blue-400 hover:text-blue-600 transition-colors;
+.sheet-head { @apply px-4 py-3 border-b border-stone-100 bg-[#faf8f3]; }
+.sheet-title { @apply text-[12px] font-bold uppercase tracking-[.18em] text-red-700 text-center; }
+.sheet-stats { @apply flex items-center justify-center gap-1.5 mt-1 text-[12px] text-stone-500; }
+.sheet-rows { @apply flex-1 overflow-auto px-3 py-3 flex flex-col gap-0.5; }
+.sheet-row { @apply flex items-center gap-2 rounded-md px-2 py-1 transition-colors; }
+.sheet-row--active { @apply bg-amber-50 ring-1 ring-amber-200; }
+.sheet-num {
+  @apply w-6 text-right text-[12px] font-mono text-stone-500 cursor-pointer
+         hover:text-stone-900 shrink-0;
 }
-
-.q-grid-btn--answered {
-  @apply bg-orange-400 border-orange-400 text-white hover:border-orange-500;
+.sheet-row--active .sheet-num { @apply text-stone-900 font-bold; }
+.sheet-bubbles { @apply flex items-center gap-1; }
+.sheet-bubble {
+  @apply w-5 h-5 rounded-full border border-stone-300 text-[9px] font-semibold
+         text-stone-400 flex items-center justify-center cursor-pointer
+         transition-all hover:border-stone-500;
 }
+.sheet-bubble--filled { @apply bg-stone-800 border-stone-800 text-white; }
+.sheet-essay-dot { @apply w-2.5 h-2.5 rounded-full border border-stone-300; }
+.sheet-essay-dot--filled { @apply bg-emerald-500 border-emerald-500; }
+.sheet-foot { @apply p-3 border-t border-stone-100; }
 
-.q-grid-btn--current {
-  @apply bg-blue-600 border-blue-600 text-white ring-2 ring-blue-300
-         hover:border-blue-700;
-}
-
-.q-grid-btn--flagged {
-  @apply bg-yellow-50 border-yellow-400 text-yellow-700 hover:border-yellow-500;
+/* Thanh nộp bài cố định (màn nhỏ) */
+.exam-mobilebar {
+  @apply lg:hidden fixed bottom-0 inset-x-0 z-30 flex items-center gap-3
+         px-4 py-2.5 bg-[#faf8f3]/95 backdrop-blur border-t border-stone-300;
 }
 
 /* ─── Rich Text Editor ───────────────────────────── */
