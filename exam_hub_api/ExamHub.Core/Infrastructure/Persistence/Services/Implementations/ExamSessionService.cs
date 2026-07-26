@@ -60,7 +60,13 @@ public class ExamSessionService(IExamSessionRepository _repo, IExamRepository _e
             .Select(e => new SessionExamResponse(e.ExamId, e.Exam!.Title, e.Exam.ExamCode, e.Exam.TotalScore))
             .ToList();
         var assignments = s.Assignments
-            .Select(a => new AssignmentResponse(a.Id, a.CohortId, null, a.CohortClassId, null))
+            .Select(a => new AssignmentResponse(
+                a.Id,
+                a.CohortId,
+                a.CohortClass?.Cohort?.Name ?? a.Cohort?.Name,
+                a.CohortClassId,
+                a.CohortClass?.ClassName,
+                a.CohortClass?.Cohort?.School?.Name ?? a.Cohort?.School?.Name))
             .ToList();
         return new ExamSessionDetailResponse(
             s.Id, s.Title, s.Description, s.SubjectId, s.Subject?.Name,

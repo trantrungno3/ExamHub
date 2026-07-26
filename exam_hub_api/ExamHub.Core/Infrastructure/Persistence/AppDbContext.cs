@@ -603,6 +603,14 @@ public class AppDbContext : DbContext
                 .WithMany(s => s.Assignments)
                 .HasForeignKey(x => x.SessionId)
                 .OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(x => x.Cohort)
+                .WithMany()
+                .HasForeignKey(x => x.CohortId)
+                .OnDelete(DeleteBehavior.NoAction);
+            e.HasOne(x => x.CohortClass)
+                .WithMany()
+                .HasForeignKey(x => x.CohortClassId)
+                .OnDelete(DeleteBehavior.NoAction);
         });
     }
 }

@@ -21,4 +21,11 @@ public class ExamSessionAssignment
 
     [Column(ExamSessionAssignmentTable.CohortClassId)]
     public int? CohortClassId { get; set; }
+
+    // ── Navigation ──────────────────────────────────────────────
+    /// <summary>Khoá được giao (khi giao cả khoá)</summary>
+    public Cohort? Cohort { get; set; }
+
+    /// <summary>Lớp được giao (khi giao một lớp cụ thể)</summary>
+    public CohortClass? CohortClass { get; set; }
 }

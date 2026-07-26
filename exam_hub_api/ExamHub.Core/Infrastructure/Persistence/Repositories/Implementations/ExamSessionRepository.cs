@@ -15,7 +15,8 @@ public class ExamSessionRepository(AppDbContext _db) : IExamSessionRepository
             .Include(s => s.Subject)
             .Include(s => s.GradeLevel)
             .Include(s => s.Exams).ThenInclude(e => e.Exam)
-            .Include(s => s.Assignments)
+            .Include(s => s.Assignments).ThenInclude(a => a.Cohort!).ThenInclude(c => c.School)
+            .Include(s => s.Assignments).ThenInclude(a => a.CohortClass!).ThenInclude(cc => cc.Cohort!).ThenInclude(c => c.School)
             .FirstOrDefaultAsync(s => s.Id == id, ct);
 
     /// <inheritdoc/>
