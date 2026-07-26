@@ -146,13 +146,20 @@ public class ExamSessionRepository(AppDbContext _db) : IExamSessionRepository
             .Select(m => m.CohortId)
             .ToListAsync(ct);
 
+        // Lớp cụ thể HS thuộc về: cùng cohort và section khớp
+        var classIds = await _db.Set<CohortClass>()
+            .Where(cc => _db.Set<CohortMember>().Any(m =>
+                m.StudentId == studentId && m.IsActive &&
+                m.CohortId == cc.CohortId && m.Section != null && m.Section == cc.Section))
+            .Select(cc => cc.Id)
+            .ToListAsync(ct);
+
         return await _db.Set<ExamSession>()
             .Include(s => s.Subject).Include(s => s.GradeLevel).Include(s => s.Assignments)
             .Where(s => s.Status == ExamSessionStatusEnum.Published)
             .Where(s => s.Assignments.Any(a =>
                 (a.CohortId != null && cohortIds.Contains(a.CohortId.Value)) ||
-                (a.CohortClassId != null && _db.Set<CohortClass>()
-                    .Any(cc => cc.Id == a.CohortClassId && cohortIds.Contains(cc.CohortId)))))
+                (a.CohortClassId != null && classIds.Contains(a.CohortClassId.Value))))
             .OrderByDescending(s => s.OpenAt)
             .ToListAsync(ct);
     }
@@ -165,12 +172,18 @@ public class ExamSessionRepository(AppDbContext _db) : IExamSessionRepository
             .Select(m => m.CohortId)
             .ToListAsync(ct);
 
+        var classIds = await _db.Set<CohortClass>()
+            .Where(cc => _db.Set<CohortMember>().Any(m =>
+                m.StudentId == studentId && m.IsActive &&
+                m.CohortId == cc.CohortId && m.Section != null && m.Section == cc.Section))
+            .Select(cc => cc.Id)
+            .ToListAsync(ct);
+
         return await _db.Set<ExamSession>()
             .Where(s => s.Id == sessionId)
             .AnyAsync(s => s.Assignments.Any(a =>
                 (a.CohortId != null && cohortIds.Contains(a.CohortId.Value)) ||
-                (a.CohortClassId != null && _db.Set<CohortClass>()
-                    .Any(cc => cc.Id == a.CohortClassId && cohortIds.Contains(cc.CohortId)))), ct);
+                (a.CohortClassId != null && classIds.Contains(a.CohortClassId.Value))), ct);
     }
 
     /// <inheritdoc/>
