@@ -8,11 +8,12 @@
 
 **Tech Stack:** .NET (EF Core, PostgreSQL, controller/service/repository), React 19 + Ant Design 6 + TanStack Query + TypeScript.
 
-## 🔖 Trạng thái tiến độ (cập nhật 2026-07-19)
+## 🔖 Trạng thái tiến độ (cập nhật 2026-07-26)
 
 - ✅ Brainstorming xong, spec đã duyệt: `docs/superpowers/specs/2026-07-19-cohort-multi-class-student-assignment-design.md`
-- ✅ Plan này đã viết xong & commit. **Chưa bắt đầu code — tất cả Task 1–11 còn `[ ]`.**
-- ⏭️ **Ngày mai tiếp tục:** bắt đầu từ **Task 1** theo thứ tự. Đọc lại spec + plan này trước.
+- ✅ Plan này đã viết xong & commit.
+- ✅ **Task 1–10 ĐÃ CODE + COMMIT** trên nhánh `feat/exam-session`. Backend `dotnet build` (ExamHub.Core) 0 lỗi; frontend `tsc`/`lint` sạch trên các file thuộc feature (các lỗi build/lint còn lại là PRE-EXISTING ở file không liên quan: RichTextEditor.tsx, UserPage.tsx, routes/index.tsx…).
+- ⏭️ **Còn lại: Task 11 — kiểm thử thủ công E2E** (dựng lại DB dev bằng `database_schema.sql` mới, chạy API+web, đăng nhập Admin). Chưa chạy vì cần hệ thống thật + đăng nhập.
 - Cách thực thi đề xuất: subagent-driven-development (mỗi task 1 subagent + review giữa các task), hoặc executing-plans (inline theo lô).
 - Nhánh git hiện tại: `feat/exam-session`. Repo root: `D:/My-Project/ExamHub`.
 - Lưu ý: repo KHÔNG có test tự động → verify bằng `dotnet build exam_hub_api/ExamHub.API.slnx` và `pnpm -C exam_hub_web build` + `pnpm -C exam_hub_web lint`.
