@@ -63,4 +63,12 @@ public class CohortMemberController(ICohortMemberService service) : AuthorizeCon
         var result = await service.SetActiveAsync(id, isActive, ct);
         return Ok(RequestResponse<bool>.Success("Cập nhật trạng thái thành công!", result, 1));
     }
+
+    /// <summary>Đổi lớp (section) của học sinh trong khoá</summary>
+    [HttpPatch("{id:guid}/section")]
+    public async Task<ActionResult<RequestResponse<bool>>> SetSection(Guid id, [FromBody] string? section, CancellationToken ct = default)
+    {
+        var result = await service.SetSectionAsync(id, section, ct);
+        return Ok(RequestResponse<bool>.Success("Cập nhật lớp thành công!", result, 1));
+    }
 }
