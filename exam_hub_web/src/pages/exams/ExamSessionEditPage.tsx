@@ -1,6 +1,6 @@
 import {useEffect, useMemo, useState} from 'react'
 import {useNavigate, useParams} from 'react-router-dom'
-import {Button, Checkbox, Input, InputNumber, Modal, Popconfirm, Select, Spin, Table, Tag, message} from 'antd'
+import {Button, Checkbox, Form, Input, InputNumber, Modal, Popconfirm, Select, Spin, Table, Tag, message} from 'antd'
 import type {TableColumnsType} from 'antd'
 import {ArrowLeftOutlined, PlusOutlined} from '@ant-design/icons'
 import {
@@ -33,6 +33,17 @@ function msToLocalInput(ms: number): string {
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
 }
 
+type ExamSessionFormValues = {
+    title: string
+    description?: string
+    subjectId: number
+    gradeLevelId: number
+    openLocal: string
+    closeLocal: string
+    maxAttempts: number
+    pickMode: ExamSessionPickMode
+}
+
 export default function ExamSessionEditPage() {
     const {id} = useParams<{id: string}>()
     const navigate = useNavigate()
@@ -46,44 +57,38 @@ export default function ExamSessionEditPage() {
     const update = useUpdateExamSessionMutation()
     const publish = usePublishSessionMutation()
 
-    // ── Form state ──────────────────────────────────────────────────────
-    const [title, setTitle] = useState('')
-    const [description, setDescription] = useState('')
-    const [subjectId, setSubjectId] = useState<number>()
-    const [gradeLevelId, setGradeLevelId] = useState<number>()
-    const [openLocal, setOpenLocal] = useState('')
-    const [closeLocal, setCloseLocal] = useState('')
-    const [maxAttempts, setMaxAttempts] = useState(1)
-    const [pickMode, setPickMode] = useState<ExamSessionPickMode>('Random')
+    const [form] = Form.useForm<ExamSessionFormValues>()
 
     useEffect(() => {
         if (!detail) return
-        setTitle(detail.title)
-        setDescription(detail.description ?? '')
-        setSubjectId(detail.subjectId)
-        setGradeLevelId(detail.gradeLevelId)
-        setOpenLocal(msToLocalInput(detail.openAt))
-        setCloseLocal(msToLocalInput(detail.closeAt))
-        setMaxAttempts(detail.maxAttempts)
-        setPickMode(detail.pickMode)
-    }, [detail])
-
-    const canSave = title.trim() && subjectId && gradeLevelId && openLocal && closeLocal
+        form.setFieldsValue({
+            title: detail.title,
+            description: detail.description ?? '',
+            subjectId: detail.subjectId,
+            gradeLevelId: detail.gradeLevelId,
+            openLocal: msToLocalInput(detail.openAt),
+            closeLocal: msToLocalInput(detail.closeAt),
+            maxAttempts: detail.maxAttempts,
+            pickMode: detail.pickMode,
+        })
+    }, [detail, form])
 
     const handleSave = async () => {
-        if (!canSave) {
-            message.warning('Vui lòng nhập đủ tiêu đề, môn, cấp lớp và khung giờ.')
-            return
+        let v: ExamSessionFormValues
+        try {
+            v = await form.validateFields()
+        } catch {
+            return // AntD tự hiển thị lỗi trên từng field
         }
         const body: ExamSessionBody = {
-            title: title.trim(),
-            description: description.trim() || undefined,
-            subjectId: subjectId!,
-            gradeLevelId: gradeLevelId!,
-            openAt: new Date(openLocal).toISOString(),
-            closeAt: new Date(closeLocal).toISOString(),
-            maxAttempts,
-            pickMode,
+            title: v.title.trim(),
+            description: v.description?.trim() || undefined,
+            subjectId: v.subjectId,
+            gradeLevelId: v.gradeLevelId,
+            openAt: new Date(v.openLocal).toISOString(),
+            closeAt: new Date(v.closeLocal).toISOString(),
+            maxAttempts: v.maxAttempts ?? 1,
+            pickMode: v.pickMode,
         }
         if (new Date(body.closeAt) <= new Date(body.openAt)) {
             message.warning('Thời điểm đóng phải sau thời điểm mở.')
@@ -120,63 +125,48 @@ export default function ExamSessionEditPage() {
                 )}
             </div>
 
-            <div className="flex-1 overflow-auto p-6 flex flex-col gap-4 max-w-4xl">
+            <div className="exam-admin-bg flex-1 overflow-auto p-6">
+                <div className="flex flex-col gap-4 max-w-4xl mx-auto">
                 {isLoading && isEdit ? (
                     <Spin/>
                 ) : (
                     <>
                         {/* ── Cấu hình ── */}
-                        <div className="section-card flex flex-col gap-4">
-                            <h3 className="font-semibold text-gray-800">Thông tin kỳ thi</h3>
-                            <div>
-                                <label className="block text-sm text-gray-600 mb-1">Tiêu đề *</label>
-                                <Input value={title} onChange={e => setTitle(e.target.value)} placeholder="VD: Kiểm tra giữa kỳ 1"/>
+                        <Form form={form} layout="vertical" requiredMark="optional"
+                            initialValues={{maxAttempts: 1, pickMode: 'Random'}} className="paper-panel">
+                            <h3 className="paper-panel-title mb-4">Thông tin kỳ thi</h3>
+                            <Form.Item label="Tiêu đề" name="title" rules={[{required: true, message: 'Nhập tiêu đề kỳ thi'}]}>
+                                <Input placeholder="VD: Kiểm tra giữa kỳ 1"/>
+                            </Form.Item>
+                            <Form.Item label="Mô tả" name="description">
+                                <Input.TextArea rows={2}/>
+                            </Form.Item>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
+                                <Form.Item label="Môn" name="subjectId" rules={[{required: true, message: 'Chọn môn'}]}>
+                                    <Select showSearch optionFilterProp="label" disabled={isPublished}
+                                        options={(subjects.data ?? []).map(s => ({value: s.id, label: s.name}))}/>
+                                </Form.Item>
+                                <Form.Item label="Cấp lớp" name="gradeLevelId" rules={[{required: true, message: 'Chọn cấp lớp'}]}>
+                                    <Select disabled={isPublished}
+                                        options={(grades.data ?? []).map(g => ({value: g.id, label: g.name}))}/>
+                                </Form.Item>
+                                <Form.Item label="Mở lúc" name="openLocal" rules={[{required: true, message: 'Chọn thời điểm mở'}]}>
+                                    <input type="datetime-local" className="paper-datetime"/>
+                                </Form.Item>
+                                <Form.Item label="Đóng lúc" name="closeLocal" rules={[{required: true, message: 'Chọn thời điểm đóng'}]}>
+                                    <input type="datetime-local" className="paper-datetime"/>
+                                </Form.Item>
+                                <Form.Item label="Số lượt tối đa" name="maxAttempts">
+                                    <InputNumber className="w-full" min={1} max={100}/>
+                                </Form.Item>
+                                <Form.Item label="Cách chọn đề" name="pickMode">
+                                    <Select options={PICK_MODE_OPTIONS}/>
+                                </Form.Item>
                             </div>
-                            <div>
-                                <label className="block text-sm text-gray-600 mb-1">Mô tả</label>
-                                <Input.TextArea value={description} onChange={e => setDescription(e.target.value)} rows={2}/>
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm text-gray-600 mb-1">Môn *</label>
-                                    <Select className="w-full" showSearch optionFilterProp="label" value={subjectId}
-                                            disabled={isPublished}
-                                            onChange={setSubjectId}
-                                            options={(subjects.data ?? []).map(s => ({value: s.id, label: s.name}))}/>
-                                </div>
-                                <div>
-                                    <label className="block text-sm text-gray-600 mb-1">Cấp lớp *</label>
-                                    <Select className="w-full" value={gradeLevelId} disabled={isPublished}
-                                            onChange={setGradeLevelId}
-                                            options={(grades.data ?? []).map(g => ({value: g.id, label: g.name}))}/>
-                                </div>
-                                <div>
-                                    <label className="block text-sm text-gray-600 mb-1">Mở lúc *</label>
-                                    <input type="datetime-local" className="ant-input w-full border border-gray-300 rounded px-2 py-1"
-                                           value={openLocal} onChange={e => setOpenLocal(e.target.value)}/>
-                                </div>
-                                <div>
-                                    <label className="block text-sm text-gray-600 mb-1">Đóng lúc *</label>
-                                    <input type="datetime-local" className="ant-input w-full border border-gray-300 rounded px-2 py-1"
-                                           value={closeLocal} onChange={e => setCloseLocal(e.target.value)}/>
-                                </div>
-                                <div>
-                                    <label className="block text-sm text-gray-600 mb-1">Số lượt tối đa</label>
-                                    <InputNumber className="w-full" min={1} max={100} value={maxAttempts}
-                                                 onChange={v => setMaxAttempts(v ?? 1)}/>
-                                </div>
-                                <div>
-                                    <label className="block text-sm text-gray-600 mb-1">Cách chọn đề</label>
-                                    <Select className="w-full" value={pickMode} options={PICK_MODE_OPTIONS}
-                                            onChange={v => setPickMode(v as ExamSessionPickMode)}/>
-                                </div>
-                            </div>
-                            <div>
-                                <Button type="primary" loading={create.isPending || update.isPending} onClick={handleSave}>
-                                    {isEdit ? 'Lưu thay đổi' : 'Tạo & tiếp tục'}
-                                </Button>
-                            </div>
-                        </div>
+                            <Button type="primary" loading={create.isPending || update.isPending} onClick={handleSave}>
+                                {isEdit ? 'Lưu thay đổi' : 'Tạo & tiếp tục'}
+                            </Button>
+                        </Form>
 
                         {isEdit && detail && (
                             <>
@@ -184,9 +174,9 @@ export default function ExamSessionEditPage() {
                                              subjectId={detail.subjectId} gradeLevelId={detail.gradeLevelId}/>
                                 <AssignmentSection sessionId={detail.id} assignments={detail.assignments}/>
 
-                                <div className="section-card flex items-center justify-between">
+                                <div className="paper-panel flexitems-center justify-between">
                                     <div>
-                                        <h3 className="font-semibold text-gray-800">Phát hành</h3>
+                                        <h3 className="paper-panel-title">Phát hành</h3>
                                         <p className="text-sm text-gray-500">Cần ≥1 đề và ≥1 lớp/khoá, thời điểm đóng ở tương lai.</p>
                                     </div>
                                     <Button type="primary" disabled={isPublished} loading={publish.isPending}
@@ -198,6 +188,7 @@ export default function ExamSessionEditPage() {
                         )}
                     </>
                 )}
+                </div>
             </div>
         </>
     )
@@ -226,9 +217,9 @@ function PoolSection({sessionId, exams, subjectId, gradeLevelId}: {
     ]
 
     return (
-        <div className="section-card flex flex-col gap-3">
+        <div className="paper-panel flexflex-col gap-3">
             <div className="flex items-center justify-between">
-                <h3 className="font-semibold text-gray-800">Đề trong kỳ thi ({exams.length})</h3>
+                <h3 className="paper-panel-title">Đề trong kỳ thi ({exams.length})</h3>
                 <Button icon={<PlusOutlined/>} onClick={() => setModalOpen(true)}>Thêm đề</Button>
             </div>
             <Table columns={columns} dataSource={exams} rowKey="examId" size="small" pagination={false}
@@ -307,8 +298,8 @@ function AssignmentSection({sessionId, assignments}: {sessionId: string; assignm
     }
 
     return (
-        <div className="section-card flex flex-col gap-3">
-            <h3 className="font-semibold text-gray-800">Giao cho ({assignments.length})</h3>
+        <div className="paper-panel flexflex-col gap-3">
+            <h3 className="paper-panel-title">Giao cho ({assignments.length})</h3>
             <div className="flex items-end gap-2 flex-wrap">
                 <div>
                     <label className="block text-xs text-gray-500 mb-1">Trường</label>

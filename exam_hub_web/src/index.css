@@ -548,6 +548,47 @@ body {
          px-4 py-2.5 bg-[#faf8f3]/95 backdrop-blur border-t border-stone-300;
 }
 
+/* ─── Trang bìa & kết quả (dùng chung .exam-desk / .exam-paper) ── */
+.exam-paper--sheet { @apply max-w-[560px] flex-none w-full; }
+
+.paper-note {
+  @apply flex gap-3 items-start rounded-md border border-amber-200 bg-amber-50/70
+         px-4 py-3 text-[13.5px] leading-6 text-amber-800 mt-2;
+  font-family: 'Lora', 'Times New Roman', Georgia, serif;
+}
+.paper-info-row {
+  @apply flex items-center justify-between py-2.5 border-b border-dotted
+         border-stone-200 last:border-0 text-[14px];
+  font-family: 'Lora', 'Times New Roman', Georgia, serif;
+}
+.paper-info-key { @apply text-stone-500; }
+.paper-info-val { @apply font-semibold text-stone-800; }
+
+.result-score {
+  @apply relative flex items-center justify-center w-28 h-28 rounded-full mx-auto
+         text-[42px] font-bold my-1;
+  font-family: 'Lora', 'Times New Roman', Georgia, serif;
+}
+.result-score--graded { @apply text-red-600; border: 3px solid #dc2626; box-shadow: 0 0 0 4px #fee2e2; }
+.result-score--pending { @apply text-stone-400; border: 3px dashed #d6d3d1; }
+.result-line {
+  @apply flex items-center justify-between py-2 border-b border-dashed
+         border-stone-200 last:border-0 text-[14px] text-stone-700;
+  font-family: 'Lora', 'Times New Roman', Georgia, serif;
+}
+
+/* ─── Form tạo/sửa kỳ thi (tông giấy, trong app) ── */
+.exam-admin-bg { @apply bg-[#f6f4ee]; }
+.paper-panel { @apply bg-white rounded-xl border border-stone-200 shadow-sm p-5; }
+.paper-panel-title {
+  @apply text-[15px] font-bold text-stone-800;
+  font-family: 'Lora', 'Times New Roman', Georgia, serif;
+}
+.paper-datetime {
+  @apply w-full border border-stone-300 rounded-md px-3 py-1.5 text-[14px]
+         text-stone-800 bg-white focus:outline-none focus:border-stone-500;
+}
+
 /* ─── Rich Text Editor ───────────────────────────── */
 .rich-editor {
   border: 1px solid #d9d9d9;
