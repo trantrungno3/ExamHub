@@ -584,10 +584,6 @@ body {
   @apply text-[15px] font-bold text-stone-800;
   font-family: 'Lora', 'Times New Roman', Georgia, serif;
 }
-.paper-datetime {
-  @apply w-full border border-stone-300 rounded-md px-3 py-1.5 text-[14px]
-         text-stone-800 bg-white focus:outline-none focus:border-stone-500;
-}
 
 /* ─── Rich Text Editor ───────────────────────────── */
 .rich-editor {

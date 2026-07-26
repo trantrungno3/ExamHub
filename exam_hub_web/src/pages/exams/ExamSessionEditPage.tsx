@@ -1,7 +1,8 @@
 import {useEffect, useMemo, useState} from 'react'
 import {useNavigate, useParams} from 'react-router-dom'
-import {Button, Checkbox, Form, Input, InputNumber, Modal, Popconfirm, Select, Spin, Table, Tag, message} from 'antd'
+import {Button, Checkbox, DatePicker, Form, Input, InputNumber, Modal, Popconfirm, Select, Spin, Table, Tag, message} from 'antd'
 import type {TableColumnsType} from 'antd'
+import dayjs, {type Dayjs} from 'dayjs'
 import {ArrowLeftOutlined, PlusOutlined} from '@ant-design/icons'
 import {
     useAddAssignmentMutation,
@@ -26,20 +27,13 @@ const PICK_MODE_OPTIONS = [
     {value: 'StudentChoice', label: 'Học sinh tự chọn đề'},
 ]
 
-/** epoch ms → giá trị cho input datetime-local (giờ địa phương). */
-function msToLocalInput(ms: number): string {
-    const d = new Date(ms)
-    const pad = (n: number) => String(n).padStart(2, '0')
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
-}
-
 type ExamSessionFormValues = {
     title: string
     description?: string
     subjectId: number
     gradeLevelId: number
-    openLocal: string
-    closeLocal: string
+    openLocal: Dayjs
+    closeLocal: Dayjs
     maxAttempts: number
     pickMode: ExamSessionPickMode
 }
@@ -66,8 +60,8 @@ export default function ExamSessionEditPage() {
             description: detail.description ?? '',
             subjectId: detail.subjectId,
             gradeLevelId: detail.gradeLevelId,
-            openLocal: msToLocalInput(detail.openAt),
-            closeLocal: msToLocalInput(detail.closeAt),
+            openLocal: dayjs(detail.openAt),
+            closeLocal: dayjs(detail.closeAt),
             maxAttempts: detail.maxAttempts,
             pickMode: detail.pickMode,
         })
@@ -85,8 +79,8 @@ export default function ExamSessionEditPage() {
             description: v.description?.trim() || undefined,
             subjectId: v.subjectId,
             gradeLevelId: v.gradeLevelId,
-            openAt: new Date(v.openLocal).toISOString(),
-            closeAt: new Date(v.closeLocal).toISOString(),
+            openAt: v.openLocal.toISOString(),
+            closeAt: v.closeLocal.toISOString(),
             maxAttempts: v.maxAttempts ?? 1,
             pickMode: v.pickMode,
         }
@@ -151,10 +145,12 @@ export default function ExamSessionEditPage() {
                                         options={(grades.data ?? []).map(g => ({value: g.id, label: g.name}))}/>
                                 </Form.Item>
                                 <Form.Item label="Mở lúc" name="openLocal" rules={[{required: true, message: 'Chọn thời điểm mở'}]}>
-                                    <input type="datetime-local" className="paper-datetime"/>
+                                    <DatePicker className="w-full" showTime format="DD/MM/YYYY HH:mm"
+                                        placeholder="Chọn ngày giờ mở"/>
                                 </Form.Item>
                                 <Form.Item label="Đóng lúc" name="closeLocal" rules={[{required: true, message: 'Chọn thời điểm đóng'}]}>
-                                    <input type="datetime-local" className="paper-datetime"/>
+                                    <DatePicker className="w-full" showTime format="DD/MM/YYYY HH:mm"
+                                        placeholder="Chọn ngày giờ đóng"/>
                                 </Form.Item>
                                 <Form.Item label="Số lượt tối đa" name="maxAttempts">
                                     <InputNumber className="w-full" min={1} max={100}/>
