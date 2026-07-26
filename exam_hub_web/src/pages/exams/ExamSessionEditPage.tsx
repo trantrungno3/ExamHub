@@ -294,11 +294,15 @@ function AssignmentSection({sessionId, assignments}: {sessionId: string; assignm
     }
 
     const columns: TableColumnsType<SessionAssignment> = [
+        {title: 'Trường', key: 'school', render: (_, a) => a.schoolName ?? '—'},
         {
-            title: 'Giao cho', key: 'target',
-            render: (_, a) => a.cohortClassId
-                ? (a.cohortClassName ?? `Lớp #${a.cohortClassId}`)
-                : (a.cohortName ?? `Khoá #${a.cohortId}`),
+            title: 'Khoá', key: 'cohort',
+            render: (_, a) => a.cohortName ?? (a.cohortId ? `Khoá #${a.cohortId}` : '—'),
+        },
+        {
+            title: 'Lớp', key: 'class',
+            render: (_, a) => a.cohortClassName
+                ?? (a.cohortClassId ? `Lớp #${a.cohortClassId}` : <span className="text-gray-400">Cả khoá</span>),
         },
         {
             title: 'Phạm vi', key: 'scope', width: 110,

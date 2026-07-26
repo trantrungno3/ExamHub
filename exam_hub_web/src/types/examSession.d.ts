@@ -41,6 +41,7 @@ interface SessionAssignment {
     cohortName?: string
     cohortClassId?: number
     cohortClassName?: string
+    schoolName?: string
 }
 
 /** Chi tiết kỳ thi (ExamSessionDetailResponse). */
