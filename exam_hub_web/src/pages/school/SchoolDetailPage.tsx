@@ -153,8 +153,9 @@ export default function SchoolDetailPage() {
                         <Form.Item name="gradeStart" label="Lớp bắt đầu" rules={[{required: true}]} className="flex-1">
                             <Input type="number" placeholder="10"/>
                         </Form.Item>
-                        <Form.Item name="classSuffix" label="Hậu tố lớp" className="flex-1" initialValue="A">
-                            <Input placeholder="A"/>
+                        <Form.Item name="numClasses" label="Số lớp" className="flex-1" initialValue={1}
+                            rules={[{required: true}]}>
+                            <Input type="number" min={1} max={26} placeholder="1"/>
                         </Form.Item>
                     </div>
                 </Form>
