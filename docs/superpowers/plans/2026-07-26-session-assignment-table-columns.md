@@ -21,26 +21,26 @@
 
 ## Task 3: Backend — `Include` trong `GetDetailAsync`
 **File:** `.../Repositories/Implementations/ExamSessionRepository.cs` (~dòng 13-19)
-- [ ] Thêm:
+- [x] Thêm:
   `.Include(s => s.Assignments).ThenInclude(a => a.Cohort!).ThenInclude(c => c.School)`
   `.Include(s => s.Assignments).ThenInclude(a => a.CohortClass!).ThenInclude(cc => cc.Cohort!).ThenInclude(c => c.School)`
 
 ## Task 4: Backend — thêm `SchoolName` vào `AssignmentResponse`
 **File:** `.../DataTransferObjects/ExamSession/ExamSessionDtos.cs` (~dòng 69)
-- [ ] `AssignmentResponse(Guid Id, int? CohortId, string? CohortName, int? CohortClassId, string? CohortClassName, string? SchoolName)`.
+- [x] `AssignmentResponse(Guid Id, int? CohortId, string? CohortName, int? CohortClassId, string? CohortClassName, string? SchoolName)`.
 
 ## Task 5: Backend — map tên trong `GetDetailAsync` (service)
 **File:** `.../Services/Implementations/ExamSessionService.cs` (~dòng 62-64)
-- [ ] Map: `CohortName = a.CohortClass?.Cohort?.Name ?? a.Cohort?.Name`, `CohortClassName = a.CohortClass?.ClassName`, `SchoolName = a.CohortClass?.Cohort?.School?.Name ?? a.Cohort?.School?.Name`.
+- [x] Map: `CohortName = a.CohortClass?.Cohort?.Name ?? a.Cohort?.Name`, `CohortClassName = a.CohortClass?.ClassName`, `SchoolName = a.CohortClass?.Cohort?.School?.Name ?? a.Cohort?.School?.Name`.
 
 ## Task 6: Frontend — type `SessionAssignment`
 **File:** `exam_hub_web/src/types/examSession.d.ts`
-- [ ] Thêm `schoolName?: string`.
+- [x] Thêm `schoolName?: string`.
 
 ## Task 7: Frontend — cột bảng Trường/Khoá/Lớp/Phạm vi
 **File:** `exam_hub_web/src/pages/exams/ExamSessionEditPage.tsx` (`AssignmentSection`)
-- [ ] Cột: **Trường** (`schoolName`), **Khoá** (`cohortName`), **Lớp** (`cohortClassName` / "Cả khoá"), **Phạm vi** (Tag Một lớp / Cả khoá), + cột **Gỡ**.
+- [x] Cột: **Trường** (`schoolName`), **Khoá** (`cohortName`), **Lớp** (`cohortClassName` / "Cả khoá"), **Phạm vi** (Tag Một lớp / Cả khoá), + cột **Gỡ**.
 
 ## Task 8: Verify + commit
-- [ ] Build Core + tsc + eslint + vite build sạch (trừ lỗi pre-existing).
-- [ ] Commit backend và frontend riêng.
+- [x] Build Core + tsc + eslint + vite build sạch (trừ lỗi pre-existing).
+- [x] Commit backend và frontend riêng.
