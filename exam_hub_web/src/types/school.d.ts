@@ -30,7 +30,7 @@ interface Cohort {
     startYear: number
     endYear: number
     gradeStart: number
-    classSuffix: string
+    numClasses: number
     isActive: boolean
     created: number
 }
@@ -41,7 +41,7 @@ interface CohortBody {
     startYear: number
     endYear: number
     gradeStart: number
-    classSuffix?: string
+    numClasses: number
     isActive?: boolean
 }
 
@@ -52,6 +52,7 @@ interface CohortClass {
     cohortId: number
     gradeLevelId: number
     className: string
+    section: string
     schoolYear: string
     yearIndex: number
     homeroomTeacherId?: string
@@ -86,6 +87,7 @@ interface CohortMember {
     id: string
     cohortId: number
     studentId: string
+    section?: string | null
     joinedAt: number
     isActive: boolean
 }
@@ -93,6 +95,7 @@ interface CohortMember {
 interface CohortMemberBody {
     cohortId: number
     studentId: string
+    section?: string | null
     joinedAt?: number
     isActive?: boolean
 }
