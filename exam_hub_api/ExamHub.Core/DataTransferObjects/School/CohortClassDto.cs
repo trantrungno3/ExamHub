@@ -12,6 +12,7 @@ public record CohortClassResponse(
     int CohortId,
     int GradeLevelId,
     string ClassName,
+    string Section,
     string SchoolYear,
     short YearIndex,
     Guid? HomeroomTeacherId,
@@ -20,7 +21,7 @@ public record CohortClassResponse(
 {
     /// <summary>Chuyển từ entity sang response DTO</summary>
     public static CohortClassResponse FromEntity(CohortClass e) =>
-        new(e.Id, e.CohortId, e.GradeLevelId, e.ClassName, e.SchoolYear, e.YearIndex, e.HomeroomTeacherId,
+        new(e.Id, e.CohortId, e.GradeLevelId, e.ClassName, e.Section, e.SchoolYear, e.YearIndex, e.HomeroomTeacherId,
             e.Created.ToTimestamp());
 }
 

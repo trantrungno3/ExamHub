@@ -35,6 +35,11 @@ public class CohortClass : ModifyModelBase, IModelBaseSql<int>
     [SqlBuilderProperty(CohortClassTable.ClassName, Insert = true, Update = false)]
     public required string ClassName { get; set; }
 
+    /// <summary>Ban/lớp song song: A, B, C, ...</summary>
+    [Column(CohortClassTable.Section)]
+    [SqlBuilderProperty(CohortClassTable.Section, Insert = true, Update = false)]
+    public string Section { get; set; } = "A";
+
     /// <summary>Năm học: 2020-2021, 2021-2022, ...</summary>
     [Column(CohortClassTable.SchoolYear)]
     [SqlBuilderProperty(CohortClassTable.SchoolYear, Insert = true, Update = false)]
@@ -64,6 +69,7 @@ public class CohortClass : ModifyModelBase, IModelBaseSql<int>
         cohort_id           = CohortId,
         grade_level_id      = GradeLevelId,
         class_name          = ClassName,
+        section             = Section,
         school_year         = SchoolYear,
         year_index          = YearIndex,
         homeroom_teacher_id = HomeroomTeacherId

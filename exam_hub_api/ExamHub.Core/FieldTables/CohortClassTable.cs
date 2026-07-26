@@ -17,6 +17,9 @@ public readonly struct CohortClassTable
     /// <summary>Tên lớp: 1A, 10A, ...</summary>
     public const string ClassName = "class_name";
 
+    /// <summary>Ban/lớp: A, B, C, ...</summary>
+    public const string Section = "section";
+
     /// <summary>Năm học: 2020-2021, ...</summary>
     public const string SchoolYear = "school_year";
 
