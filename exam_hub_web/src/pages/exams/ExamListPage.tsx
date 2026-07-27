@@ -1,8 +1,7 @@
 import {useMemo, useState} from 'react'
 import {Drawer, Dropdown, Input, Popconfirm, Select, Spin, Table, Tag, message} from 'antd'
 import type {TableColumnsType} from 'antd'
-import {BarChartOutlined, DownloadOutlined, EyeOutlined, SearchOutlined, SolutionOutlined} from '@ant-design/icons'
-import {SubmissionsDrawer} from './SubmissionsDrawer'
+import {BarChartOutlined, DownloadOutlined, EyeOutlined, SearchOutlined} from '@ant-design/icons'
 import {AnalyticsDrawer} from './AnalyticsDrawer'
 import {
     useDeleteExamMutation,
@@ -28,7 +27,6 @@ export default function ExamListPage() {
     const [status, setStatus] = useState<ExamStatus>()
     const [keyword, setKeyword] = useState('')
     const [previewId, setPreviewId] = useState<string>()
-    const [submissionsExamId, setSubmissionsExamId] = useState<string>()
     const [analyticsExamId, setAnalyticsExamId] = useState<string>()
     const [exporting, setExporting] = useState<string>()
 
@@ -70,10 +68,6 @@ export default function ExamListPage() {
                     <button className="text-blue-600 text-sm hover:underline flex items-center gap-1"
                             onClick={() => setPreviewId(e.id)}>
                         <EyeOutlined/> Xem
-                    </button>
-                    <button className="text-gray-600 text-sm hover:underline flex items-center gap-1"
-                            onClick={() => setSubmissionsExamId(e.id)}>
-                        <SolutionOutlined/> Bài nộp
                     </button>
                     <button className="text-gray-600 text-sm hover:underline flex items-center gap-1"
                             onClick={() => setAnalyticsExamId(e.id)}>
@@ -158,7 +152,6 @@ export default function ExamListPage() {
             </div>
 
             <ExamPreviewDrawer examId={previewId} onClose={() => setPreviewId(undefined)}/>
-            <SubmissionsDrawer examId={submissionsExamId} onClose={() => setSubmissionsExamId(undefined)}/>
             <AnalyticsDrawer examId={analyticsExamId} onClose={() => setAnalyticsExamId(undefined)}/>
         </>
     )

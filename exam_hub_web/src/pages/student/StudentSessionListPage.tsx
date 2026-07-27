@@ -1,8 +1,11 @@
+import {useState} from 'react'
 import {useNavigate} from 'react-router-dom'
 import {Button, Empty, Spin, message} from 'antd'
 import {CalendarOutlined, ReadOutlined} from '@ant-design/icons'
 import {useMySessionsQuery, useStartSessionMutation} from '../../hooks/queries/useExamSessions'
 import {statusCode} from '../../services/requestService'
+import {useAuth} from '../../AuthProvider'
+import {SessionResultsModal} from './SessionResultsModal'
 
 const AVAILABILITY: Record<ExamSessionAvailability, string> = {
     upcoming: 'Sắp mở',
@@ -21,8 +24,10 @@ function takeUrl(examId: string, sessionId: string, submissionId: string): strin
 
 export default function StudentSessionListPage() {
     const navigate = useNavigate()
+    const {user} = useAuth()
     const {data: sessions = [], isLoading} = useMySessionsQuery()
     const start = useStartSessionMutation()
+    const [results, setResults] = useState<{id: string; title: string}>()
 
     const startAndGo = async (s: MySession) => {
         const res = await start.mutateAsync({id: s.id})
@@ -103,7 +108,14 @@ export default function StudentSessionListPage() {
                                             Lượt còn lại: <b className="text-stone-900">{remaining}</b>/{s.maxAttempts}
                                             {s.pickMode === 'StudentChoice' && ' · Tự chọn đề'}
                                         </span>
-                                        {renderAction(s)}
+                                        <div className="flex items-center gap-2">
+                                            {s.usedAttempts > 0 && (
+                                                <Button onClick={() => setResults({id: s.id, title: s.title})}>
+                                                    Xem kết quả
+                                                </Button>
+                                            )}
+                                            {renderAction(s)}
+                                        </div>
                                     </div>
                                 </div>
                             )
@@ -111,6 +123,9 @@ export default function StudentSessionListPage() {
                     </div>
                 )}
             </div>
+
+            <SessionResultsModal sessionId={results?.id} studentId={user?.id} title={results?.title}
+                                 onClose={() => setResults(undefined)}/>
         </div>
     )
 }

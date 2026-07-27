@@ -10,6 +10,7 @@ import {
     usePublishSessionMutation,
 } from '../../hooks/queries/useExamSessions'
 import {useGradeLevelsListQuery, useSubjectsQuery} from '../../hooks/queries/useCategoryLists'
+import {SubmissionsDrawer} from './SubmissionsDrawer'
 import {ROUTES} from '../../routes/paths'
 
 const STATUS_COLOR: Record<ExamSessionStatus, string> = {draft: 'gold', published: 'green', closed: 'default'}
@@ -31,6 +32,7 @@ export default function ExamSessionListPage() {
     const [subjectId, setSubjectId] = useState<number>()
     const [status, setStatus] = useState<ExamSessionStatus>()
     const [keyword, setKeyword] = useState('')
+    const [submissionsSessionId, setSubmissionsSessionId] = useState<string>()
 
     const query: ExamSessionPagedQuery = useMemo(
         () => ({page, pageSize, gradeLevelId, subjectId, status, keyword}),
@@ -62,6 +64,8 @@ export default function ExamSessionListPage() {
                 <div className="flex gap-2 items-center flex-wrap">
                     <button className="text-blue-600 text-sm hover:underline"
                             onClick={() => navigate(`${ROUTES.EXAM_SESSIONS}/${s.id}/edit`)}>Sửa</button>
+                    <button className="text-gray-600 text-sm hover:underline"
+                            onClick={() => setSubmissionsSessionId(s.id)}>Bài nộp</button>
                     {s.status === 'draft' && (
                         <button className="text-green-600 text-sm hover:underline"
                                 onClick={() => publish.mutate(s.id)}>Phát hành</button>
@@ -134,6 +138,8 @@ export default function ExamSessionListPage() {
                            }}/>
                 </div>
             </div>
+
+            <SubmissionsDrawer sessionId={submissionsSessionId} onClose={() => setSubmissionsSessionId(undefined)}/>
         </>
     )
 }

@@ -19,6 +19,14 @@ class SubmissionService {
         return AuthHttp.get<ExamSubmission>(`/${this.basePath}/by-exam/${examId}/student/${studentId}`)
     }
 
+    getBySession(sessionId: string) {
+        return AuthHttp.get<ExamSubmission[]>(`/${this.basePath}/by-session/${sessionId}`)
+    }
+
+    getBySessionAndStudent(sessionId: string, studentId: string) {
+        return AuthHttp.get<ExamSubmission[]>(`/${this.basePath}/by-session/${sessionId}/student/${studentId}`)
+    }
+
     /** Học sinh nộp bài kèm câu trả lời (chấm trắc nghiệm tự động ngay lúc nộp). */
     submit(body: ExamSubmissionBody) {
         return AuthHttp.post<ExamSubmission>(`/${this.basePath}`, body)

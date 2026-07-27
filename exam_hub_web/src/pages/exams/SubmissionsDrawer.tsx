@@ -6,45 +6,42 @@ import {
     useFinalizeSubmissionMutation,
     useGradeAnswerMutation,
     useSubmissionQuery,
-    useSubmissionsByExamQuery,
+    useSubmissionsBySessionQuery,
 } from '../../hooks/queries/useSubmissions'
 import {stripHtml} from '../../utils/snapshot'
 
-type Props = {examId?: string; onClose: () => void}
+type Props = {sessionId?: string; onClose: () => void}
 
 const STATUS_COLOR: Record<SubmissionStatus, string> = {InProgress: 'default', Submitted: 'gold', Graded: 'green'}
 
-export function SubmissionsDrawer({examId, onClose}: Props) {
-    const {data: submissions, isLoading} = useSubmissionsByExamQuery(examId)
-    const exam = useExamWithQuestionsQuery(examId)
-
-    const questionContent = (examQuestionId: string) =>
-        stripHtml(exam.data?.questions?.find(q => q.id === examQuestionId)?.contentSnapshot)
+export function SubmissionsDrawer({sessionId, onClose}: Props) {
+    const {data: submissions, isLoading} = useSubmissionsBySessionQuery(sessionId)
 
     return (
-        <Drawer title="Bài nộp & chấm điểm" open={!!examId} onClose={onClose} width={680}>
+        <Drawer title="Bài nộp kỳ thi" open={!!sessionId} onClose={onClose} width={680}>
             {isLoading && <Spin/>}
             {!isLoading && (submissions?.length ?? 0) === 0 && <Empty description="Chưa có bài nộp"/>}
             <div className="flex flex-col gap-3">
                 {(submissions ?? []).map(s => (
-                    <SubmissionCard key={s.id} submissionId={s.id} questionContent={questionContent}/>
+                    <SubmissionCard key={s.id} submissionId={s.id}/>
                 ))}
             </div>
         </Drawer>
     )
 }
 
-function SubmissionCard({submissionId, questionContent}: {
-    submissionId: string
-    questionContent: (examQuestionId: string) => string
-}) {
+function SubmissionCard({submissionId}: {submissionId: string}) {
     const {user} = useAuth()
     const {data: sub, isLoading} = useSubmissionQuery(submissionId)
+    const exam = useExamWithQuestionsQuery(sub?.examId)
     const grade = useGradeAnswerMutation()
     const finalize = useFinalizeSubmissionMutation()
     const [scores, setScores] = useState<Record<string, number>>({})
 
     if (isLoading || !sub) return <div className="section-card p-4"><Spin/></div>
+
+    const questionContent = (examQuestionId: string) =>
+        stripHtml(exam.data?.questions?.find(q => q.id === examQuestionId)?.contentSnapshot)
 
     const essays = (sub.answers ?? []).filter(a => !a.selectedAnswerIds || a.selectedAnswerIds.length === 0)
 

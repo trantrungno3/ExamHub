@@ -8,6 +8,9 @@ export const SUBMISSION_KEYS = {
     detail: (id: string) => ['submissions', 'detail', id] as const,
     byExam: (examId: string) => ['submissions', 'byExam', examId] as const,
     byStudent: (studentId: string) => ['submissions', 'byStudent', studentId] as const,
+    bySession: (sessionId: string) => ['submissions', 'bySession', sessionId] as const,
+    bySessionStudent: (sessionId: string, studentId: string) =>
+        ['submissions', 'bySession', sessionId, 'student', studentId] as const,
 }
 
 export function useSubmissionQuery(id?: string) {
@@ -23,6 +26,23 @@ export function useSubmissionsByExamQuery(examId?: string) {
         queryKey: SUBMISSION_KEYS.byExam(examId ?? ''),
         queryFn: async () => (await submissionService.getByExam(examId!)).data ?? [],
         enabled: !!examId,
+    })
+}
+
+export function useSubmissionsBySessionQuery(sessionId?: string) {
+    return useQuery({
+        queryKey: SUBMISSION_KEYS.bySession(sessionId ?? ''),
+        queryFn: async () => (await submissionService.getBySession(sessionId!)).data ?? [],
+        enabled: !!sessionId,
+    })
+}
+
+export function useMySessionSubmissionsQuery(sessionId?: string, studentId?: string) {
+    return useQuery({
+        queryKey: SUBMISSION_KEYS.bySessionStudent(sessionId ?? '', studentId ?? ''),
+        queryFn: async () =>
+            (await submissionService.getBySessionAndStudent(sessionId!, studentId!)).data ?? [],
+        enabled: !!sessionId && !!studentId,
     })
 }
 
