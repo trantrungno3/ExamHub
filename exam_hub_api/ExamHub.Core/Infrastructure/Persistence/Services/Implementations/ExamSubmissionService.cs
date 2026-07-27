@@ -37,6 +37,12 @@ public class ExamSubmissionService : IExamSubmissionService
     public Task<ExamSubmission?> GetByExamAndStudentAsync(Guid examId, Guid studentId, CancellationToken ct = default)
         => _submissionRepo.GetByExamAndStudentAsync(examId, studentId, ct);
 
+    public Task<IReadOnlyList<ExamSubmission>> GetBySessionAsync(Guid sessionId, CancellationToken ct = default)
+        => _submissionRepo.GetBySessionAsync(sessionId, ct);
+
+    public Task<IReadOnlyList<ExamSubmission>> GetBySessionAndStudentAsync(Guid sessionId, Guid studentId, CancellationToken ct = default)
+        => _submissionRepo.GetBySessionAndStudentAsync(sessionId, studentId, ct);
+
     public async Task<ExamSubmission> SubmitAsync(
         ExamSubmission submission,
         IEnumerable<SubmissionAnswer> answers,

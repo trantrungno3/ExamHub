@@ -49,6 +49,26 @@ public class ExamSubmissionController(IExamSubmissionService service) : Authoriz
         return Ok(RequestResponse<ExamSubmissionResponse>.Success("Lấy dữ liệu thành công!", ExamSubmissionResponse.FromEntity(result), 1));
     }
 
+    /// <summary>Lấy danh sách bài nộp theo kỳ thi (giáo viên chấm bài)</summary>
+    [HttpGet("by-session/{sessionId:guid}")]
+    [Authorize(Roles = "Admin,Teacher")]
+    public async Task<ActionResult<RequestResponse<IReadOnlyList<ExamSubmissionResponse>>>> GetBySession(Guid sessionId, CancellationToken ct)
+    {
+        var result = await service.GetBySessionAsync(sessionId, ct);
+        var list = result.Select(s => ExamSubmissionResponse.FromEntity(s)).ToList();
+        return Ok(RequestResponse<IReadOnlyList<ExamSubmissionResponse>>.Success("Lấy danh sách thành công!", list, list.Count));
+    }
+
+    /// <summary>Lấy các lần nộp của một học sinh trong một kỳ thi (học sinh xem lại kết quả)</summary>
+    [HttpGet("by-session/{sessionId:guid}/student/{studentId:guid}")]
+    public async Task<ActionResult<RequestResponse<IReadOnlyList<ExamSubmissionResponse>>>> GetBySessionAndStudent(
+        Guid sessionId, Guid studentId, CancellationToken ct)
+    {
+        var result = await service.GetBySessionAndStudentAsync(sessionId, studentId, ct);
+        var list = result.Select(s => ExamSubmissionResponse.FromEntity(s)).ToList();
+        return Ok(RequestResponse<IReadOnlyList<ExamSubmissionResponse>>.Success("Lấy danh sách thành công!", list, list.Count));
+    }
+
     /// <summary>Nộp bài thi kèm câu trả lời</summary>
     [HttpPost]
     public async Task<ActionResult<RequestResponse<ExamSubmissionResponse>>> Submit(

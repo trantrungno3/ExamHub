@@ -86,6 +86,12 @@ public interface IExamSubmissionRepository : IBaseRepository<ExamSubmission, Gui
 
     /// <summary>Lấy tất cả bài nộp của một học sinh</summary>
     Task<IReadOnlyList<ExamSubmission>> GetByStudentAsync(Guid studentId, CancellationToken ct = default);
+
+    /// <summary>Lấy danh sách bài nộp theo kỳ thi</summary>
+    Task<IReadOnlyList<ExamSubmission>> GetBySessionAsync(Guid sessionId, CancellationToken ct = default);
+
+    /// <summary>Lấy các lần nộp của một học sinh trong một kỳ thi</summary>
+    Task<IReadOnlyList<ExamSubmission>> GetBySessionAndStudentAsync(Guid sessionId, Guid studentId, CancellationToken ct = default);
 }
 
 /// <summary>Interface repository cho SubmissionAnswer</summary>

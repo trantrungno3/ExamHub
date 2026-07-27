@@ -37,4 +37,19 @@ public class ExamSubmissionRepository : BaseRepository<ExamSubmission, Guid>, IE
             .Include(x => x.Exam)
             .OrderByDescending(x => x.Created)
             .ToListAsync(ct);
+
+    /// <inheritdoc/>
+    public async Task<IReadOnlyList<ExamSubmission>> GetBySessionAsync(Guid sessionId, CancellationToken ct = default)
+        => await Set.AsNoTracking()
+            .Where(x => x.SessionId == sessionId)
+            .OrderByDescending(x => x.Created)
+            .ToListAsync(ct);
+
+    /// <inheritdoc/>
+    public async Task<IReadOnlyList<ExamSubmission>> GetBySessionAndStudentAsync(
+        Guid sessionId, Guid studentId, CancellationToken ct = default)
+        => await Set.AsNoTracking()
+            .Where(x => x.SessionId == sessionId && x.StudentId == studentId)
+            .OrderByDescending(x => x.Created)
+            .ToListAsync(ct);
 }
