@@ -370,3 +370,6 @@ Pkgs
 exam_hub_api/storage
 **/_work/
 .claude/
+.superpowers
+docs/
+image/
