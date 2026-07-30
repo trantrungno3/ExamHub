@@ -1,0 +1,50 @@
+@startuml
+skinparam activity {
+    BackgroundColor #DDEEFF
+    BorderColor #336699
+    FontSize 15
+    FontName DejaVu Sans
+    DiamondBackgroundColor #FFF3CD
+    DiamondBorderColor #997404
+    DiamondFontSize 14
+    StartColor #000000
+    EndColor #000000
+    ArrowColor #336699
+    ArrowFontSize 13
+    ArrowFontName DejaVu Sans
+    BarColor #336699
+}
+skinparam swimlane {
+    BorderColor #336699
+    TitleBackgroundColor #EEF4FF
+    TitleFontStyle bold
+    TitleFontSize 16
+    TitleFontName DejaVu Sans
+    Width 220
+}
+skinparam ActivityFontName DejaVu Sans
+skinparam defaultFontName DejaVu Sans
+skinparam maxMessageSize 160
+
+|Quản trị viên|
+start
+:Chọn mục danh mục cần xoá;
+|Hệ thống|
+:Hiển thị hộp thoại xác nhận xoá;
+|Quản trị viên|
+if (Xác nhận xoá?) then (đồng ý)
+  |Hệ thống|
+  :Kiểm tra mục danh mục có đang được sử dụng;
+  if (Đang được sử dụng?) then (có)
+    :Hiển thị cảnh báo mục đang được sử dụng, không thể xoá;
+    stop
+  else (không)
+    :Xoá mục danh mục khỏi cơ sở dữ liệu;
+    :Hiển thị thông báo xoá thành công và cập nhật danh sách;
+    stop
+  endif
+else (huỷ)
+  |Quản trị viên|
+  stop
+endif
+@enduml

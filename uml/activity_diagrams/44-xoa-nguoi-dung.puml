@@ -1,0 +1,61 @@
+@startuml
+skinparam activity {
+    BackgroundColor #DDEEFF
+    BorderColor #336699
+    FontSize 15
+    FontName DejaVu Sans
+    DiamondBackgroundColor #FFF3CD
+    DiamondBorderColor #997404
+    DiamondFontSize 14
+    StartColor #000000
+    EndColor #000000
+    ArrowColor #336699
+    ArrowFontSize 13
+    ArrowFontName DejaVu Sans
+    BarColor #336699
+}
+skinparam swimlane {
+    BorderColor #336699
+    TitleBackgroundColor #EEF4FF
+    TitleFontStyle bold
+    TitleFontSize 16
+    TitleFontName DejaVu Sans
+    Width 220
+}
+skinparam ActivityFontName DejaVu Sans
+skinparam defaultFontName DejaVu Sans
+skinparam maxMessageSize 160
+
+|Quản trị viên|
+start
+:Truy cập trang quản lý người dùng;
+|Hệ thống|
+:Hiển thị danh sách người dùng trong hệ thống;
+|Quản trị viên|
+:Chọn người dùng cần xoá và bấm Xoá;
+|Hệ thống|
+:Hiển thị hộp thoại xác nhận xoá;
+|Quản trị viên|
+if (Xác nhận xoá?) then (đồng ý)
+  |Hệ thống|
+  :Kiểm tra người dùng có dữ liệu liên quan (bài làm, đề thi);
+  if (Có dữ liệu liên quan?) then (có)
+    :Hiển thị cảnh báo người dùng đang có dữ liệu liên quan;
+    |Quản trị viên|
+    if (Xoá bắt buộc?) then (có)
+      |Hệ thống|
+      :Xoá tài khoản người dùng khỏi cơ sở dữ liệu;
+      :Hiển thị thông báo xoá thành công và cập nhật danh sách;
+      stop
+    else (huỷ)
+      stop
+    endif
+  else (không)
+    :Xoá tài khoản người dùng khỏi cơ sở dữ liệu;
+    :Hiển thị thông báo xoá thành công và cập nhật danh sách;
+    stop
+  endif
+else (huỷ)
+  stop
+endif
+@enduml

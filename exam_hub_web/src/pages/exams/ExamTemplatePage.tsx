@@ -1,7 +1,7 @@
 import {useMemo, useState} from 'react'
 import {useNavigate} from 'react-router-dom'
-import {Button, Empty, Input, Popconfirm, Select, Table, Tag} from 'antd'
 import type {TableColumnsType} from 'antd'
+import {Button, Empty, Input, Popconfirm, Select, Table, Tag} from 'antd'
 import {PlusOutlined, SearchOutlined, ThunderboltOutlined} from '@ant-design/icons'
 import {useDeleteExamTemplateMutation, useExamTemplatesByGradeQuery} from '../../hooks/queries/useExamTemplates'
 import {useGradeLevelsListQuery, useSubjectsQuery} from '../../hooks/queries/useCategoryLists'
@@ -31,12 +31,24 @@ export default function ExamTemplatePage() {
     )
 
     const columns: TableColumnsType<ExamTemplate> = [
-        {title: 'Tên mẫu đề thi', dataIndex: 'title', key: 'title', render: v => <span className="font-medium text-gray-800">{v}</span>},
+        {
+            title: 'Tên mẫu đề thi',
+            dataIndex: 'title',
+            key: 'title',
+            render: v => <span className="font-medium text-gray-800">{v}</span>
+        },
         {title: 'Lớp', dataIndex: 'gradeLevelName', key: 'gradeLevelName', width: 100, render: v => v ?? '—'},
         {title: 'Môn', dataIndex: 'subjectName', key: 'subjectName', width: 130, render: v => v ?? '—'},
+        {title: 'Người tạo', dataIndex: 'createdBy', key: 'createdBy', width: 140, render: v => v ?? '—'},
         {title: 'Số câu', dataIndex: 'totalQuestions', key: 'totalQuestions', width: 90, render: v => v ?? '—'},
         {title: 'Điểm', dataIndex: 'totalScore', key: 'totalScore', width: 80},
-        {title: 'Thời gian', dataIndex: 'durationMinutes', key: 'durationMinutes', width: 110, render: v => `${v} phút`},
+        {
+            title: 'Thời gian',
+            dataIndex: 'durationMinutes',
+            key: 'durationMinutes',
+            width: 110,
+            render: v => `${v} phút`
+        },
         {
             title: 'Trạng thái', dataIndex: 'isActive', key: 'isActive', width: 110,
             render: v => <Tag color={v ? 'green' : 'default'}>{v ? 'Hoạt động' : 'Tắt'}</Tag>,
@@ -77,7 +89,9 @@ export default function ExamTemplatePage() {
                         options={(grades.data ?? []).map(g => ({value: g.id, label: g.name}))}
                     />
                     <Select
-                        placeholder="Tất cả môn" allowClear showSearch optionFilterProp="label" style={{width: 180}}
+                        placeholder="Tất cả môn" allowClear showSearch={{
+                        optionFilterProp: "label"
+                    }} style={{width: 180}}
                         value={subjectId} onChange={setSubjectId}
                         options={(subjects.data ?? []).map(s => ({value: s.id, label: s.name}))}
                     />

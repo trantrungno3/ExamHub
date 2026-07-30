@@ -1,0 +1,48 @@
+@startuml
+skinparam activity {
+    BackgroundColor #DDEEFF
+    BorderColor #336699
+    FontSize 15
+    FontName DejaVu Sans
+    DiamondBackgroundColor #FFF3CD
+    DiamondBorderColor #997404
+    DiamondFontSize 14
+    StartColor #000000
+    EndColor #000000
+    ArrowColor #336699
+    ArrowFontSize 13
+    ArrowFontName DejaVu Sans
+    BarColor #336699
+}
+skinparam swimlane {
+    BorderColor #336699
+    TitleBackgroundColor #EEF4FF
+    TitleFontStyle bold
+    TitleFontSize 16
+    TitleFontName DejaVu Sans
+    Width 220
+}
+skinparam ActivityFontName DejaVu Sans
+skinparam defaultFontName DejaVu Sans
+skinparam maxMessageSize 160
+
+|Giáo viên|
+start
+:Truy cập trang quản lý cấu hình đề thi;
+|Hệ thống|
+:Hiển thị danh sách cấu hình đề thi hiện có;
+|Giáo viên|
+:Chọn cấu hình cần chỉnh sửa và bấm Chỉnh sửa;
+|Hệ thống|
+:Hiển thị mẫu điền thông tin với dữ liệu hiện tại;
+repeat
+  |Giáo viên|
+  :Chỉnh sửa thông tin cần thay đổi và bấm Lưu;
+  |Hệ thống|
+  :Kiểm tra tính hợp lệ dữ liệu;
+  backward:Hiển thị thông báo lỗi và yêu cầu chỉnh sửa lại;
+repeat while (Dữ liệu hợp lệ?) is (không hợp lệ) not (hợp lệ)
+:Cập nhật thông tin cấu hình vào cơ sở dữ liệu;
+:Hiển thị thông báo cập nhật thành công;
+stop
+@enduml

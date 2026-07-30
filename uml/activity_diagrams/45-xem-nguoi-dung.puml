@@ -1,0 +1,40 @@
+@startuml
+skinparam activity {
+    BackgroundColor #DDEEFF
+    BorderColor #336699
+    FontSize 15
+    FontName DejaVu Sans
+    DiamondBackgroundColor #FFF3CD
+    DiamondBorderColor #997404
+    DiamondFontSize 14
+    StartColor #000000
+    EndColor #000000
+    ArrowColor #336699
+    ArrowFontSize 13
+    ArrowFontName DejaVu Sans
+    BarColor #336699
+}
+skinparam swimlane {
+    BorderColor #336699
+    TitleBackgroundColor #EEF4FF
+    TitleFontStyle bold
+    TitleFontSize 16
+    TitleFontName DejaVu Sans
+    Width 220
+}
+skinparam ActivityFontName DejaVu Sans
+skinparam defaultFontName DejaVu Sans
+skinparam maxMessageSize 160
+
+|Quản trị viên|
+start
+:Truy cập trang quản lý người dùng;
+|Hệ thống|
+:Hiển thị danh sách người dùng;
+|Quản trị viên|
+:Chọn người dùng cần xem;
+|Hệ thống|
+:Truy vấn thông tin chi tiết người dùng từ cơ sở dữ liệu;
+:Hiển thị đầy đủ thông tin\n(họ tên, email, tên đăng nhập, vai trò, trạng thái, lớp học liên quan);
+stop
+@enduml

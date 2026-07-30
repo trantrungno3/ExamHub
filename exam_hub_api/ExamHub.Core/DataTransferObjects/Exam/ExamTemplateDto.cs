@@ -124,6 +124,7 @@ public record ExamTemplateResponse(
     bool PreventDuplicate,
     string? Instructions,
     bool IsActive,
+    string? CreatedBy,
     long Created,
     long Modified,
     IReadOnlyList<ExamTemplateSectionResponse>? Sections
@@ -140,6 +141,7 @@ public record ExamTemplateResponse(
             e.TotalScore, e.ShuffleQuestions, e.ShuffleAnswers,
             e.PreventDuplicate, e.Instructions,
             e.IsActive,
+            e.CreatedBy,
             e.Created.ToTimestamp(),
             e.Modified.ToTimestamp(),
             includeSections ? e.Sections.Select(ExamTemplateSectionResponse.FromEntity).ToList() : null

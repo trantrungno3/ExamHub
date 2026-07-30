@@ -1,0 +1,52 @@
+@startuml
+skinparam activity {
+    BackgroundColor #DDEEFF
+    BorderColor #336699
+    FontSize 15
+    FontName DejaVu Sans
+    DiamondBackgroundColor #FFF3CD
+    DiamondBorderColor #997404
+    DiamondFontSize 14
+    StartColor #000000
+    EndColor #000000
+    ArrowColor #336699
+    ArrowFontSize 13
+    ArrowFontName DejaVu Sans
+    BarColor #336699
+}
+skinparam swimlane {
+    BorderColor #336699
+    TitleBackgroundColor #EEF4FF
+    TitleFontStyle bold
+    TitleFontSize 16
+    TitleFontName DejaVu Sans
+    Width 220
+}
+skinparam ActivityFontName DejaVu Sans
+skinparam defaultFontName DejaVu Sans
+skinparam maxMessageSize 160
+
+|Giáo viên|
+start
+:Chọn Tạo câu hỏi mới trong ngân hàng câu hỏi;
+|Hệ thống|
+:Hiển thị form nhập liệu câu hỏi;
+repeat
+  |Giáo viên|
+  :Chọn loại câu hỏi\n(trắc nghiệm một đáp án / nhiều đáp án / tự luận);
+  :Nhập nội dung câu hỏi và các đáp án;
+  :Chọn môn học, chủ đề, chương liên quan;
+  :Chọn cấp độ Bloom và mức độ khó;
+  if (Cần đính kèm hình ảnh?) then (có)
+    :Tải lên ảnh minh hoạ cho câu hỏi;
+  else (không)
+  endif
+  :Bấm nút Lưu câu hỏi;
+  |Hệ thống|
+  :Kiểm tra tính hợp lệ dữ liệu câu hỏi;
+  backward:Hiển thị thông báo lỗi\n(thiếu nội dung, đáp án đúng hoặc phân loại);
+repeat while (Dữ liệu hợp lệ?) is (không hợp lệ) not (hợp lệ)
+:Lưu câu hỏi ở trạng thái Chờ duyệt;
+:Hiển thị thông báo tạo thành công;
+stop
+@enduml

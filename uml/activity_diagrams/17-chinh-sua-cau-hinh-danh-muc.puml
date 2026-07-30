@@ -1,0 +1,48 @@
+@startuml
+skinparam activity {
+    BackgroundColor #DDEEFF
+    BorderColor #336699
+    FontSize 15
+    FontName DejaVu Sans
+    DiamondBackgroundColor #FFF3CD
+    DiamondBorderColor #997404
+    DiamondFontSize 14
+    StartColor #000000
+    EndColor #000000
+    ArrowColor #336699
+    ArrowFontSize 13
+    ArrowFontName DejaVu Sans
+    BarColor #336699
+}
+skinparam swimlane {
+    BorderColor #336699
+    TitleBackgroundColor #EEF4FF
+    TitleFontStyle bold
+    TitleFontSize 16
+    TitleFontName DejaVu Sans
+    Width 220
+}
+skinparam ActivityFontName DejaVu Sans
+skinparam defaultFontName DejaVu Sans
+skinparam maxMessageSize 160
+
+|Quản trị viên|
+start
+:Truy cập mục Cấu hình danh mục;
+|Hệ thống|
+:Hiển thị danh sách mục trong nhóm danh mục đã chọn;
+|Quản trị viên|
+:Chọn mục cần sửa và bấm Chỉnh sửa;
+|Hệ thống|
+:Hiển thị form với dữ liệu hiện tại;
+repeat
+  |Quản trị viên|
+  :Cập nhật thông tin và bấm Lưu;
+  |Hệ thống|
+  :Kiểm tra tính hợp lệ và không trùng tên;
+  backward:Hiển thị thông báo lỗi và yêu cầu nhập lại;
+repeat while (Hợp lệ và không trùng tên?) is (không) not (có)
+:Cập nhật mục danh mục vào cơ sở dữ liệu;
+:Hiển thị thông báo cập nhật thành công;
+stop
+@enduml

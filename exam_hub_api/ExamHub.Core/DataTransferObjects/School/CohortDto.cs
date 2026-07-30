@@ -23,7 +23,8 @@ public record CohortRequest(
         EndYear     = EndYear,
         GradeStart  = GradeStart,
         NumClasses  = NumClasses,
-        IsActive    = IsActive
+        IsActive    = IsActive,
+        Modified = DateTime.UtcNow
     };
 
     /// <summary>Chuyển sang entity để cập nhật (gán thêm Id)</summary>

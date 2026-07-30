@@ -1,0 +1,40 @@
+@startuml
+skinparam activity {
+    BackgroundColor #DDEEFF
+    BorderColor #336699
+    FontSize 15
+    FontName DejaVu Sans
+    DiamondBackgroundColor #FFF3CD
+    DiamondBorderColor #997404
+    DiamondFontSize 14
+    StartColor #000000
+    EndColor #000000
+    ArrowColor #336699
+    ArrowFontSize 13
+    ArrowFontName DejaVu Sans
+    BarColor #336699
+}
+skinparam swimlane {
+    BorderColor #336699
+    TitleBackgroundColor #EEF4FF
+    TitleFontStyle bold
+    TitleFontSize 16
+    TitleFontName DejaVu Sans
+    Width 220
+}
+skinparam ActivityFontName DejaVu Sans
+skinparam defaultFontName DejaVu Sans
+skinparam maxMessageSize 160
+
+|Giáo viên|
+start
+:Truy cập trang quản lý cấu hình đề thi;
+|Hệ thống|
+:Hiển thị danh sách cấu hình đề thi;
+|Giáo viên|
+:Chọn cấu hình cần xem;
+|Hệ thống|
+:Truy vấn thông tin chi tiết cấu hình từ cơ sở dữ liệu;
+:Hiển thị đầy đủ thông tin\n(tên, môn học, số câu, thời gian, tỉ lệ độ khó, cấu trúc phần thi);
+stop
+@enduml

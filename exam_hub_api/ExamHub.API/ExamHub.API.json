@@ -2139,6 +2139,92 @@
         ]
       }
     },
+    "/api/CohortMember/{id}/section": {
+      "patch": {
+        "tags": [
+          "CohortMember"
+        ],
+        "summary": "Đổi lớp (section) của học sinh trong khoá",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              }
+            },
+            "text/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
     "/api/School/code/{code}": {
       "get": {
         "tags": [
@@ -4151,6 +4237,795 @@
               "text/json": {
                 "schema": {
                   "$ref": "#/components/schemas/RequestResponseOfBatchGenerateExamResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/exam-sessions": {
+      "get": {
+        "tags": [
+          "ExamSession"
+        ],
+        "summary": "Danh sách kỳ thi phân trang.",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32",
+              "default": 20
+            }
+          },
+          {
+            "name": "subjectId",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "gradeLevelId",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/ExamSessionStatusEnum"
+            }
+          },
+          {
+            "name": "keyword",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfObject"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfObject"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfObject"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "ExamSession"
+        ],
+        "summary": "Tạo kỳ thi.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateExamSessionRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateExamSessionRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateExamSessionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfGuid"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfGuid"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfGuid"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/exam-sessions/{id}": {
+      "get": {
+        "tags": [
+          "ExamSession"
+        ],
+        "summary": "Chi tiết kỳ thi kèm pool đề + assignments.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfExamSessionDetailResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfExamSessionDetailResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfExamSessionDetailResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "ExamSession"
+        ],
+        "summary": "Cập nhật kỳ thi.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateExamSessionRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateExamSessionRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateExamSessionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "ExamSession"
+        ],
+        "summary": "Xoá kỳ thi.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/exam-sessions/{id}/exams": {
+      "post": {
+        "tags": [
+          "ExamSession"
+        ],
+        "summary": "Đặt/thêm đề vào pool của kỳ thi.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetSessionExamsRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetSessionExamsRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetSessionExamsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/exam-sessions/{id}/exams/{examId}": {
+      "delete": {
+        "tags": [
+          "ExamSession"
+        ],
+        "summary": "Gỡ một đề khỏi pool.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "examId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/exam-sessions/{id}/assignments": {
+      "post": {
+        "tags": [
+          "ExamSession"
+        ],
+        "summary": "Giao kỳ thi cho một lớp/khoá.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAssignmentRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAssignmentRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAssignmentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfGuid"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfGuid"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfGuid"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/exam-sessions/{id}/assignments/{assignmentId}": {
+      "delete": {
+        "tags": [
+          "ExamSession"
+        ],
+        "summary": "Gỡ giao lớp/khoá.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "assignmentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/exam-sessions/{id}/publish": {
+      "post": {
+        "tags": [
+          "ExamSession"
+        ],
+        "summary": "Phát hành kỳ thi (Draft → Published).",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/exam-sessions/{id}/close": {
+      "post": {
+        "tags": [
+          "ExamSession"
+        ],
+        "summary": "Đóng kỳ thi.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/exam-sessions/my": {
+      "get": {
+        "tags": [
+          "ExamSession"
+        ],
+        "summary": "Danh sách kỳ thi được giao cho học sinh hiện tại.",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfMySessionResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfMySessionResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfMySessionResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/exam-sessions/{id}/pool": {
+      "get": {
+        "tags": [
+          "ExamSession"
+        ],
+        "summary": "Pool đề của kỳ thi kèm trạng thái làm bài của học sinh hiện tại.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfSessionPoolItemResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfSessionPoolItemResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfSessionPoolItemResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/exam-sessions/{id}/start": {
+      "post": {
+        "tags": [
+          "ExamSession"
+        ],
+        "summary": "Vào thi: bốc/khoá đề (Random) hoặc chọn đề (StudentChoice), trả submission + đề.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StartSessionRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StartSessionRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StartSessionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfStartSessionResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfStartSessionResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfStartSessionResponse"
                 }
               }
             }
@@ -7280,16 +8155,62 @@
   },
   "components": {
     "schemas": {
+      "AssignmentResponse": {
+        "required": [
+          "id",
+          "cohortId",
+          "cohortName",
+          "cohortClassId",
+          "cohortClassName",
+          "schoolName"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "cohortId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "cohortName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "cohortClassId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "cohortClassName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "schoolName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "BatchGenerateExamApiRequest": {
         "required": [
           "title",
-          "examTemplateId",
-          "gradeLevelId",
-          "subjectId",
-          "durationMinutes",
-          "shuffleQuestions",
-          "shuffleAnswers",
-          "variantCount",
           "variantNaming",
           "sections"
         ],
@@ -7341,6 +8262,20 @@
           },
           "shuffleAnswers": {
             "type": "boolean"
+          },
+          "preventDuplicate": {
+            "type": "boolean"
+          },
+          "totalScore": {
+            "maximum": 9999999,
+            "minimum": 0,
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "description": "Tổng điểm của đề (tuỳ chọn) — bỏ trống/0 để tự tính từ các phần.",
+            "format": "double"
           },
           "variantCount": {
             "maximum": 20,
@@ -7601,6 +8536,7 @@
           "cohortId",
           "gradeLevelId",
           "className",
+          "section",
           "schoolYear",
           "yearIndex",
           "homeroomTeacherId",
@@ -7633,6 +8569,9 @@
             "format": "int32"
           },
           "className": {
+            "type": "string"
+          },
+          "section": {
             "type": "string"
           },
           "schoolYear": {
@@ -7683,6 +8622,12 @@
             "type": "string",
             "format": "uuid"
           },
+          "section": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
           "joinedAt": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
@@ -7704,6 +8649,7 @@
           "id",
           "cohortId",
           "studentId",
+          "section",
           "joinedAt",
           "isActive"
         ],
@@ -7724,6 +8670,12 @@
           "studentId": {
             "type": "string",
             "format": "uuid"
+          },
+          "section": {
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "joinedAt": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
@@ -7784,9 +8736,14 @@
             ],
             "format": "int16"
           },
-          "classSuffix": {
-            "type": "string",
-            "default": "A"
+          "numClasses": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int16",
+            "default": 1
           },
           "isActive": {
             "type": "boolean",
@@ -7803,7 +8760,7 @@
           "startYear",
           "endYear",
           "gradeStart",
-          "classSuffix",
+          "numClasses",
           "isActive",
           "created"
         ],
@@ -7852,8 +8809,13 @@
             ],
             "format": "int16"
           },
-          "classSuffix": {
-            "type": "string"
+          "numClasses": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int16"
           },
           "isActive": {
             "type": "boolean"
@@ -7868,6 +8830,96 @@
           }
         },
         "description": "Response DTO cho Cohort"
+      },
+      "CreateAssignmentRequest": {
+        "required": [
+          "cohortId",
+          "cohortClassId"
+        ],
+        "type": "object",
+        "properties": {
+          "cohortId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "cohortClassId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "CreateExamSessionRequest": {
+        "required": [
+          "title",
+          "openAt",
+          "closeAt"
+        ],
+        "type": "object",
+        "properties": {
+          "title": {
+            "maxLength": 300,
+            "type": "string"
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "subjectId": {
+            "maximum": 2147483647,
+            "minimum": 1,
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "gradeLevelId": {
+            "maximum": 2147483647,
+            "minimum": 1,
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "openAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "closeAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "maxAttempts": {
+            "maximum": 100,
+            "minimum": 1,
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int16"
+          },
+          "pickMode": {
+            "pattern": "^(Random|StudentChoice)$",
+            "type": "string"
+          }
+        },
+        "description": "Request tạo kỳ thi."
       },
       "CreateUserRequest": {
         "required": [
@@ -8481,6 +9533,114 @@
         },
         "description": "Response DTO cho đề thi"
       },
+      "ExamSessionDetailResponse": {
+        "required": [
+          "id",
+          "title",
+          "description",
+          "subjectId",
+          "subjectName",
+          "gradeLevelId",
+          "gradeLevelName",
+          "openAt",
+          "closeAt",
+          "maxAttempts",
+          "pickMode",
+          "status",
+          "exams",
+          "assignments"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "subjectId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "subjectName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "gradeLevelId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "gradeLevelName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "openAt": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "closeAt": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "maxAttempts": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int16"
+          },
+          "pickMode": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "exams": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SessionExamResponse"
+            }
+          },
+          "assignments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AssignmentResponse"
+            }
+          }
+        },
+        "description": "Chi tiết kỳ thi kèm pool đề + assignments."
+      },
+      "ExamSessionStatusEnum": {
+        "type": "integer"
+      },
       "ExamStatusEnum": {
         "type": "integer"
       },
@@ -8505,6 +9665,20 @@
             "items": {
               "$ref": "#/components/schemas/SubmissionAnswerRequest"
             }
+          },
+          "sessionId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "submissionId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         },
         "description": "Request DTO nộp bài thi"
@@ -8713,6 +9887,7 @@
           "preventDuplicate",
           "instructions",
           "isActive",
+          "createdBy",
           "created",
           "modified",
           "sections"
@@ -8802,6 +9977,12 @@
           },
           "isActive": {
             "type": "boolean"
+          },
+          "createdBy": {
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "created": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
@@ -9074,11 +10255,6 @@
       "GenerateExamApiRequest": {
         "required": [
           "title",
-          "examTemplateId",
-          "gradeLevelId",
-          "subjectId",
-          "durationMinutes",
-          "shuffleQuestions",
           "sections"
         ],
         "type": "object",
@@ -9126,6 +10302,23 @@
           },
           "shuffleQuestions": {
             "type": "boolean"
+          },
+          "shuffleAnswers": {
+            "type": "boolean"
+          },
+          "preventDuplicate": {
+            "type": "boolean"
+          },
+          "totalScore": {
+            "maximum": 9999999,
+            "minimum": 0,
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "description": "Tổng điểm của đề (tuỳ chọn) — bỏ trống/0 để tự tính từ các phần.",
+            "format": "double"
           },
           "sections": {
             "minItems": 1,
@@ -9383,7 +10576,10 @@
             "type": "string"
           },
           "path": {
-            "type": "string"
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "icon": {
             "type": "string"
@@ -9395,9 +10591,109 @@
               "string"
             ],
             "format": "int32"
+          },
+          "children": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/MenuItemResponse"
+            }
           }
         },
-        "description": "Một mục trong menu điều hướng, đã được lọc theo quyền của người dùng hiện tại"
+        "description": "Một mục trong menu điều hướng, đã được lọc theo quyền của người dùng hiện tại.\r\n    Nhóm cha có string? MenuItemResponse.Path null và IReadOnlyList&lt;MenuItemResponse&gt;? MenuItemResponse.Children chứa các mục con."
+      },
+      "MySessionResponse": {
+        "required": [
+          "id",
+          "title",
+          "subjectName",
+          "gradeLevelName",
+          "openAt",
+          "closeAt",
+          "pickMode",
+          "availability",
+          "maxAttempts",
+          "usedAttempts",
+          "inProgressSubmissionId",
+          "inProgressExamId"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string"
+          },
+          "subjectName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "gradeLevelName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "openAt": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "closeAt": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "pickMode": {
+            "type": "string"
+          },
+          "availability": {
+            "type": "string"
+          },
+          "maxAttempts": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int16"
+          },
+          "usedAttempts": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "inProgressSubmissionId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "inProgressExamId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        },
+        "description": "Kỳ thi được giao — hiển thị phía học sinh."
       },
       "QuestionAnswerRequest": {
         "required": [
@@ -10234,6 +11530,43 @@
         },
         "description": ""
       },
+      "RequestResponseOfExamSessionDetailResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "description": "Trạng thái",
+            "$ref": "#/components/schemas/RequestResponseStatus"
+          },
+          "message": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Message"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "Dữ liệu",
+                "$ref": "#/components/schemas/ExamSessionDetailResponse"
+              }
+            ]
+          },
+          "totalRecord": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Tổng số bản ghi",
+            "format": "int64"
+          }
+        },
+        "description": ""
+      },
       "RequestResponseOfExamSubmissionResponse": {
         "type": "object",
         "properties": {
@@ -10332,6 +11665,37 @@
                 "$ref": "#/components/schemas/GradeLevelResponse"
               }
             ]
+          },
+          "totalRecord": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Tổng số bản ghi",
+            "format": "int64"
+          }
+        },
+        "description": ""
+      },
+      "RequestResponseOfGuid": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "description": "Trạng thái",
+            "$ref": "#/components/schemas/RequestResponseStatus"
+          },
+          "message": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Message"
+          },
+          "data": {
+            "type": "string",
+            "description": "Dữ liệu",
+            "format": "uuid"
           },
           "totalRecord": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
@@ -10705,6 +12069,42 @@
         },
         "description": ""
       },
+      "RequestResponseOfIReadOnlyListOfMySessionResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "description": "Trạng thái",
+            "$ref": "#/components/schemas/RequestResponseStatus"
+          },
+          "message": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Message"
+          },
+          "data": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/MySessionResponse"
+            },
+            "description": "Dữ liệu"
+          },
+          "totalRecord": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Tổng số bản ghi",
+            "format": "int64"
+          }
+        },
+        "description": ""
+      },
       "RequestResponseOfIReadOnlyListOfQuestionResponse": {
         "type": "object",
         "properties": {
@@ -10834,6 +12234,42 @@
             ],
             "items": {
               "$ref": "#/components/schemas/SchoolResponse"
+            },
+            "description": "Dữ liệu"
+          },
+          "totalRecord": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Tổng số bản ghi",
+            "format": "int64"
+          }
+        },
+        "description": ""
+      },
+      "RequestResponseOfIReadOnlyListOfSessionPoolItemResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "description": "Trạng thái",
+            "$ref": "#/components/schemas/RequestResponseStatus"
+          },
+          "message": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Message"
+          },
+          "data": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/SessionPoolItemResponse"
             },
             "description": "Dữ liệu"
           },
@@ -11191,6 +12627,43 @@
               {
                 "description": "Dữ liệu",
                 "$ref": "#/components/schemas/SchoolResponse"
+              }
+            ]
+          },
+          "totalRecord": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Tổng số bản ghi",
+            "format": "int64"
+          }
+        },
+        "description": ""
+      },
+      "RequestResponseOfStartSessionResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "description": "Trạng thái",
+            "$ref": "#/components/schemas/RequestResponseStatus"
+          },
+          "message": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Message"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "Dữ liệu",
+                "$ref": "#/components/schemas/StartSessionResponse"
               }
             ]
           },
@@ -11625,18 +13098,6 @@
         "description": "Response DTO cho School"
       },
       "SectionConfig": {
-        "required": [
-          "sectionName",
-          "topicId",
-          "questionTypeId",
-          "cognitiveLevelId",
-          "questionCount",
-          "pctEasy",
-          "pctMedium",
-          "pctHard",
-          "pctVeryHard",
-          "scorePerQuestion"
-        ],
         "type": "object",
         "properties": {
           "sectionName": {
@@ -11650,9 +13111,11 @@
             "minimum": 1,
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
+              "null",
               "integer",
               "string"
             ],
+            "description": "Chủ đề phần thi — tuỳ chọn; bỏ trống để lấy câu hỏi từ mọi chủ đề của môn.",
             "format": "int32"
           },
           "questionTypeId": {
@@ -11730,6 +13193,83 @@
         },
         "description": "Cấu hình một phần thi."
       },
+      "SessionExamResponse": {
+        "required": [
+          "examId",
+          "title",
+          "examCode",
+          "totalScore"
+        ],
+        "type": "object",
+        "properties": {
+          "examId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string"
+          },
+          "examCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "totalScore": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          }
+        }
+      },
+      "SessionPoolItemResponse": {
+        "required": [
+          "examId",
+          "title",
+          "examCode",
+          "totalScore",
+          "studentState",
+          "submissionId"
+        ],
+        "type": "object",
+        "properties": {
+          "examId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string"
+          },
+          "examCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "totalScore": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "studentState": {
+            "type": "string"
+          },
+          "submissionId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        },
+        "description": "Một đề trong pool + trạng thái của học sinh (dùng cho student_choice)."
+      },
       "SetHomeroomTeacherRequest": {
         "required": [
           "teacherId"
@@ -11761,6 +13301,53 @@
           }
         },
         "description": "Request đặt lại toàn bộ roles"
+      },
+      "SetSessionExamsRequest": {
+        "required": [
+          "examIds"
+        ],
+        "type": "object",
+        "properties": {
+          "examIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        }
+      },
+      "StartSessionRequest": {
+        "required": [
+          "examId"
+        ],
+        "type": "object",
+        "properties": {
+          "examId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        }
+      },
+      "StartSessionResponse": {
+        "required": [
+          "submissionId",
+          "examId"
+        ],
+        "type": "object",
+        "properties": {
+          "submissionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "examId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
       },
       "Subject": {
         "required": [
@@ -12400,6 +13987,69 @@
         },
         "description": "Response DTO cho Topic"
       },
+      "UpdateExamSessionRequest": {
+        "required": [
+          "title",
+          "openAt",
+          "closeAt"
+        ],
+        "type": "object",
+        "properties": {
+          "title": {
+            "maxLength": 300,
+            "type": "string"
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "subjectId": {
+            "maximum": 2147483647,
+            "minimum": 1,
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "gradeLevelId": {
+            "maximum": 2147483647,
+            "minimum": 1,
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "openAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "closeAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "maxAttempts": {
+            "maximum": 100,
+            "minimum": 1,
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int16"
+          },
+          "pickMode": {
+            "pattern": "^(Random|StudentChoice)$",
+            "type": "string"
+          }
+        },
+        "description": "Request cập nhật kỳ thi (không đổi trạng thái ở đây)."
+      },
       "UpdateProfileDto": {
         "required": [
           "displayName"
@@ -12686,6 +14336,9 @@
     },
     {
       "name": "ExamGenerator"
+    },
+    {
+      "name": "ExamSession"
     },
     {
       "name": "ExamSubmission"

@@ -237,7 +237,8 @@ public class ExamSessionService(IExamSessionRepository _repo, IExamRepository _e
             AttemptNo = (short)(used + 1),
             StartedAt = now,
             CreatedBy = by,
-            ModifiedBy = by
+            ModifiedBy = by,
+            Modified = DateTime.UtcNow
         };
         await _repo.CreateSubmissionAsync(submission, ct);
         return new StartSessionResponse(submission.Id, examId);

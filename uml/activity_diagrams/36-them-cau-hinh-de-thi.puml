@@ -1,0 +1,45 @@
+@startuml
+skinparam activity {
+    BackgroundColor #DDEEFF
+    BorderColor #336699
+    FontSize 15
+    FontName DejaVu Sans
+    DiamondBackgroundColor #FFF3CD
+    DiamondBorderColor #997404
+    DiamondFontSize 14
+    StartColor #000000
+    EndColor #000000
+    ArrowColor #336699
+    ArrowFontSize 13
+    ArrowFontName DejaVu Sans
+    BarColor #336699
+}
+skinparam swimlane {
+    BorderColor #336699
+    TitleBackgroundColor #EEF4FF
+    TitleFontStyle bold
+    TitleFontSize 16
+    TitleFontName DejaVu Sans
+    Width 220
+}
+skinparam ActivityFontName DejaVu Sans
+skinparam defaultFontName DejaVu Sans
+skinparam maxMessageSize 160
+
+|Giáo viên|
+start
+:Truy cập trang cấu hình đề thi và chọn Thêm mới;
+|Hệ thống|
+:Hiển thị mẫu điền thông tin cấu hình đề thi;
+repeat
+  |Giáo viên|
+  :Điền thông tin cấu hình\n(tên, môn học, tổng số câu, thời gian, tỉ lệ độ khó);
+  :Bấm nút Lưu;
+  |Hệ thống|
+  :Kiểm tra tính hợp lệ dữ liệu;
+  backward:Hiển thị thông báo lỗi và yêu cầu nhập lại;
+repeat while (Dữ liệu hợp lệ?) is (không hợp lệ) not (hợp lệ)
+:Lưu cấu hình đề thi vào cơ sở dữ liệu;
+:Hiển thị thông báo thêm cấu hình thành công;
+stop
+@enduml

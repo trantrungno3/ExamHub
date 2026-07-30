@@ -1,0 +1,53 @@
+@startuml
+skinparam activity {
+    BackgroundColor #DDEEFF
+    BorderColor #336699
+    FontSize 15
+    FontName DejaVu Sans
+    DiamondBackgroundColor #FFF3CD
+    DiamondBorderColor #997404
+    DiamondFontSize 14
+    StartColor #000000
+    EndColor #000000
+    ArrowColor #336699
+    ArrowFontSize 13
+    ArrowFontName DejaVu Sans
+    BarColor #336699
+}
+skinparam swimlane {
+    BorderColor #336699
+    TitleBackgroundColor #EEF4FF
+    TitleFontStyle bold
+    TitleFontSize 16
+    TitleFontName DejaVu Sans
+    Width 220
+}
+skinparam ActivityFontName DejaVu Sans
+skinparam defaultFontName DejaVu Sans
+skinparam maxMessageSize 160
+
+|Giáo viên|
+start
+:Tìm kiếm và chọn câu hỏi cần sửa;
+|Hệ thống|
+:Hiển thị nội dung chi tiết câu hỏi;
+|Giáo viên|
+:Bấm Sửa;
+|Hệ thống|
+:Hiển thị form chỉnh sửa với dữ liệu hiện tại;
+repeat
+  |Giáo viên|
+  :Cập nhật nội dung, đáp án, phân loại;
+  if (Cần thay ảnh minh hoạ?) then (có)
+    :Tải lên ảnh minh hoạ mới;
+  else (không)
+  endif
+  :Bấm Lưu;
+  |Hệ thống|
+  :Kiểm tra tính hợp lệ dữ liệu;
+  backward:Hiển thị thông báo lỗi và yêu cầu chỉnh sửa lại;
+repeat while (Dữ liệu hợp lệ?) is (không hợp lệ) not (hợp lệ)
+:Cập nhật câu hỏi vào cơ sở dữ liệu;
+:Hiển thị thông báo cập nhật thành công;
+stop
+@enduml

@@ -1,0 +1,56 @@
+@startuml
+skinparam activity {
+    BackgroundColor #DDEEFF
+    BorderColor #336699
+    FontSize 15
+    FontName DejaVu Sans
+    DiamondBackgroundColor #FFF3CD
+    DiamondBorderColor #997404
+    DiamondFontSize 14
+    StartColor #000000
+    EndColor #000000
+    ArrowColor #336699
+    ArrowFontSize 13
+    ArrowFontName DejaVu Sans
+    BarColor #336699
+}
+skinparam swimlane {
+    BorderColor #336699
+    TitleBackgroundColor #EEF4FF
+    TitleFontStyle bold
+    TitleFontSize 16
+    TitleFontName DejaVu Sans
+    Width 220
+}
+skinparam ActivityFontName DejaVu Sans
+skinparam defaultFontName DejaVu Sans
+skinparam maxMessageSize 160
+
+|Quản trị viên / Giáo viên / Học sinh|
+start
+:Truy cập trang đăng nhập;
+|Hệ thống|
+:Hiển thị form đăng nhập;
+repeat
+  |Quản trị viên / Giáo viên / Học sinh|
+  :Nhập tên đăng nhập và mật khẩu;
+  :Bấm nút Đăng nhập;
+  |Hệ thống|
+  :Kiểm tra tính hợp lệ dữ liệu nhập;
+  if (Dữ liệu hợp lệ?) then (hợp lệ)
+    :Xác thực thông tin đăng nhập;
+    if (Xác thực thành công?) then (thành công)
+      :Kiểm tra phân quyền tài khoản;
+      :Ghi nhận thời gian đăng nhập;
+      :Chuyển hướng đến trang tương ứng với quyền;
+      stop
+    else (sai thông tin)
+      :Hiển thị thông báo\ntên đăng nhập hoặc mật khẩu không đúng;
+    endif
+  else (không hợp lệ)
+    :Hiển thị thông báo lỗi dưới ô nhập liệu;
+  endif
+  backward:Đóng thông báo;
+repeat while (Thử lại?) is (có) not (không)
+stop
+@enduml

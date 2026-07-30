@@ -1,0 +1,47 @@
+@startuml
+skinparam activity {
+    BackgroundColor #DDEEFF
+    BorderColor #336699
+    FontSize 15
+    FontName DejaVu Sans
+    DiamondBackgroundColor #FFF3CD
+    DiamondBorderColor #997404
+    DiamondFontSize 14
+    StartColor #000000
+    EndColor #000000
+    ArrowColor #336699
+    ArrowFontSize 13
+    ArrowFontName DejaVu Sans
+    BarColor #336699
+}
+skinparam swimlane {
+    BorderColor #336699
+    TitleBackgroundColor #EEF4FF
+    TitleFontStyle bold
+    TitleFontSize 16
+    TitleFontName DejaVu Sans
+    Width 220
+}
+skinparam ActivityFontName DejaVu Sans
+skinparam defaultFontName DejaVu Sans
+skinparam maxMessageSize 160
+
+|Giáo viên|
+start
+:Chọn chức năng Import câu hỏi từ Excel;
+|Hệ thống|
+:Hiển thị hướng dẫn import và nút tải file mẫu;
+repeat
+  |Giáo viên|
+  :Tải file mẫu (nếu cần) và điền dữ liệu câu hỏi;
+  :Tải lên file Excel đã điền;
+  |Hệ thống|
+  :Đọc và phân tích nội dung file Excel;
+  backward:Hiển thị thông báo lỗi (không phải Excel hoặc sai mẫu);
+repeat while (File đúng định dạng?) is (sai) not (đúng)
+:Phân loại Bloom và độ khó cho từng câu hỏi;
+:Kiểm tra từng câu hỏi\n(định dạng, trường bắt buộc, danh mục hợp lệ);
+:Lưu các câu hỏi hợp lệ vào ngân hàng ở trạng thái Chờ duyệt;
+:Hiển thị báo cáo kết quả\n(số câu thành công, số câu lỗi, danh sách lỗi chi tiết);
+stop
+@enduml

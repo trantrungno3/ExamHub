@@ -1,0 +1,45 @@
+@startuml
+skinparam activity {
+    BackgroundColor #DDEEFF
+    BorderColor #336699
+    FontSize 15
+    FontName DejaVu Sans
+    DiamondBackgroundColor #FFF3CD
+    DiamondBorderColor #997404
+    DiamondFontSize 14
+    StartColor #000000
+    EndColor #000000
+    ArrowColor #336699
+    ArrowFontSize 13
+    ArrowFontName DejaVu Sans
+    BarColor #336699
+}
+skinparam swimlane {
+    BorderColor #336699
+    TitleBackgroundColor #EEF4FF
+    TitleFontStyle bold
+    TitleFontSize 16
+    TitleFontName DejaVu Sans
+    Width 220
+}
+skinparam ActivityFontName DejaVu Sans
+skinparam defaultFontName DejaVu Sans
+skinparam maxMessageSize 160
+
+|Quản trị viên|
+start
+:Truy cập mục Quản lý khoá học và bấm Tạo khoá học mới;
+|Hệ thống|
+:Hiển thị form nhập liệu\n(tên khoá học, năm học, số lớp, ký hiệu lớp);
+repeat
+  |Quản trị viên|
+  :Điền đầy đủ thông tin khoá học và bấm Lưu;
+  |Hệ thống|
+  :Kiểm tra tính hợp lệ dữ liệu;
+  backward:Hiển thị thông báo lỗi và yêu cầu nhập lại;
+repeat while (Dữ liệu hợp lệ?) is (không hợp lệ) not (hợp lệ)
+:Lưu khoá học vào cơ sở dữ liệu;
+:Tự động sinh các lớp học theo cấu hình khoá học;
+:Hiển thị thông báo tạo thành công kèm danh sách lớp vừa sinh;
+stop
+@enduml

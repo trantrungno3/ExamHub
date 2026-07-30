@@ -1,0 +1,53 @@
+@startuml
+skinparam activity {
+    BackgroundColor #DDEEFF
+    BorderColor #336699
+    FontSize 15
+    FontName DejaVu Sans
+    DiamondBackgroundColor #FFF3CD
+    DiamondBorderColor #997404
+    DiamondFontSize 14
+    StartColor #000000
+    EndColor #000000
+    ArrowColor #336699
+    ArrowFontSize 13
+    ArrowFontName DejaVu Sans
+    BarColor #336699
+}
+skinparam swimlane {
+    BorderColor #336699
+    TitleBackgroundColor #EEF4FF
+    TitleFontStyle bold
+    TitleFontSize 16
+    TitleFontName DejaVu Sans
+    Width 220
+}
+skinparam ActivityFontName DejaVu Sans
+skinparam defaultFontName DejaVu Sans
+skinparam maxMessageSize 160
+
+|Quản trị viên|
+start
+:Truy cập trang chi tiết lớp học và chọn Phân công giáo viên;
+|Hệ thống|
+:Hiển thị danh sách giáo viên và môn học;
+repeat
+  |Quản trị viên|
+  :Chọn giáo viên, môn học và xác nhận;
+  |Hệ thống|
+  :Kiểm tra trùng phân công môn học trong lớp;
+  if (Trùng phân công?) then (có)
+    :Hiển thị cảnh báo môn học đã được\nphân công cho giáo viên khác trong lớp;
+    |Quản trị viên|
+    if (Huỷ thao tác?) then (huỷ)
+      stop
+    else (chọn giáo viên khác)
+    endif
+  else (không)
+  endif
+repeat while (Còn trùng phân công?) is (có) not (không)
+|Hệ thống|
+:Lưu thông tin phân công vào cơ sở dữ liệu;
+:Hiển thị thông báo thành công và cập nhật danh sách;
+stop
+@enduml

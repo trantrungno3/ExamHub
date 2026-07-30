@@ -1,0 +1,47 @@
+@startuml
+skinparam activity {
+    BackgroundColor #DDEEFF
+    BorderColor #336699
+    FontSize 15
+    FontName DejaVu Sans
+    DiamondBackgroundColor #FFF3CD
+    DiamondBorderColor #997404
+    DiamondFontSize 14
+    StartColor #000000
+    EndColor #000000
+    ArrowColor #336699
+    ArrowFontSize 13
+    ArrowFontName DejaVu Sans
+    BarColor #336699
+}
+skinparam swimlane {
+    BorderColor #336699
+    TitleBackgroundColor #EEF4FF
+    TitleFontStyle bold
+    TitleFontSize 16
+    TitleFontName DejaVu Sans
+    Width 220
+}
+skinparam ActivityFontName DejaVu Sans
+skinparam defaultFontName DejaVu Sans
+skinparam maxMessageSize 160
+
+|Giáo viên|
+start
+:Chọn mẫu đề thi và bấm Sinh đề;
+|Hệ thống|
+:Lấy pool câu hỏi từ ngân hàng\ntheo môn học, chủ đề, độ khó và Bloom;
+if (Pool câu hỏi đủ điều kiện?) then (đủ)
+  :Chọn số câu theo từng tầng độ khó và Bloom (lấy mẫu phân tầng);
+  :Xáo trộn thứ tự câu hỏi và đáp án ngẫu nhiên;
+  :Lưu snapshot nội dung câu hỏi tại thời điểm sinh đề;
+  :Tạo bản ghi đề thi với mã đề duy nhất;
+  :Hiển thị đề thi vừa sinh và cho phép xem trước;
+  stop
+else (không đủ)
+  :Hiển thị cảnh báo pool câu hỏi\nkhông đủ thoả mãn cấu hình mẫu;
+  |Giáo viên|
+  :Điều chỉnh cấu hình mẫu hoặc bổ sung câu hỏi vào ngân hàng;
+  stop
+endif
+@enduml

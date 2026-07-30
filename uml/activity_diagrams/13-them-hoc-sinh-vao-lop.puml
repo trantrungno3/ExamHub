@@ -1,0 +1,53 @@
+@startuml
+skinparam activity {
+    BackgroundColor #DDEEFF
+    BorderColor #336699
+    FontSize 15
+    FontName DejaVu Sans
+    DiamondBackgroundColor #FFF3CD
+    DiamondBorderColor #997404
+    DiamondFontSize 14
+    StartColor #000000
+    EndColor #000000
+    ArrowColor #336699
+    ArrowFontSize 13
+    ArrowFontName DejaVu Sans
+    BarColor #336699
+}
+skinparam swimlane {
+    BorderColor #336699
+    TitleBackgroundColor #EEF4FF
+    TitleFontStyle bold
+    TitleFontSize 16
+    TitleFontName DejaVu Sans
+    Width 220
+}
+skinparam ActivityFontName DejaVu Sans
+skinparam defaultFontName DejaVu Sans
+skinparam maxMessageSize 160
+
+|Quản trị viên|
+start
+:Truy cập trang chi tiết lớp học và chọn Thêm học sinh;
+|Hệ thống|
+:Hiển thị danh sách học sinh chưa thuộc lớp;
+repeat
+  |Quản trị viên|
+  :Chọn một hoặc nhiều học sinh và xác nhận;
+  |Hệ thống|
+  :Kiểm tra học sinh chưa thuộc lớp khác cùng khối;
+  if (Học sinh đã thuộc lớp khác?) then (có)
+    :Hiển thị cảnh báo học sinh đã thuộc lớp khác cùng khối;
+    |Quản trị viên|
+    if (Huỷ thao tác?) then (huỷ)
+      stop
+    else (bỏ qua học sinh đó)
+    endif
+  else (không)
+  endif
+repeat while (Còn học sinh không hợp lệ?) is (có) not (không)
+|Hệ thống|
+:Lưu bản ghi vào cơ sở dữ liệu;
+:Hiển thị thông báo thành công và cập nhật danh sách thành viên lớp;
+stop
+@enduml

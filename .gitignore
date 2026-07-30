@@ -368,3 +368,5 @@ ConfigAICore.json
 Pkgs
 *.onnx
 exam_hub_api/storage
+**/_work/
+.claude/

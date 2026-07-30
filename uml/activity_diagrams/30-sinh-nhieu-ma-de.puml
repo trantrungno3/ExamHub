@@ -1,0 +1,43 @@
+@startuml
+skinparam activity {
+    BackgroundColor #DDEEFF
+    BorderColor #336699
+    FontSize 15
+    FontName DejaVu Sans
+    DiamondBackgroundColor #FFF3CD
+    DiamondBorderColor #997404
+    DiamondFontSize 14
+    StartColor #000000
+    EndColor #000000
+    ArrowColor #336699
+    ArrowFontSize 13
+    ArrowFontName DejaVu Sans
+    BarColor #336699
+}
+skinparam swimlane {
+    BorderColor #336699
+    TitleBackgroundColor #EEF4FF
+    TitleFontStyle bold
+    TitleFontSize 16
+    TitleFontName DejaVu Sans
+    Width 220
+}
+skinparam ActivityFontName DejaVu Sans
+skinparam defaultFontName DejaVu Sans
+skinparam maxMessageSize 160
+
+|Giáo viên|
+start
+:Chọn mẫu đề và bấm Sinh nhiều mã đề;
+|Hệ thống|
+:Hiển thị form yêu cầu nhập số lượng mã đề cần sinh;
+|Giáo viên|
+:Nhập số lượng mã đề và xác nhận;
+|Hệ thống|
+repeat
+  :Sinh một đề từ mẫu (xáo trộn thứ tự độc lập);
+  :Gán mã đề (mã số, màu sắc hoặc ký hiệu);
+repeat while (Còn mã đề cần sinh?) is (còn) not (hết)
+:Hiển thị danh sách tất cả mã đề vừa sinh và cho phép xuất hàng loạt;
+stop
+@enduml

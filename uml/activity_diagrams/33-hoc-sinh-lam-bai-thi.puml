@@ -1,0 +1,59 @@
+@startuml
+skinparam activity {
+    BackgroundColor #DDEEFF
+    BorderColor #336699
+    FontSize 15
+    FontName DejaVu Sans
+    DiamondBackgroundColor #FFF3CD
+    DiamondBorderColor #997404
+    DiamondFontSize 14
+    StartColor #000000
+    EndColor #000000
+    ArrowColor #336699
+    ArrowFontSize 13
+    ArrowFontName DejaVu Sans
+    BarColor #336699
+}
+skinparam swimlane {
+    BorderColor #336699
+    TitleBackgroundColor #EEF4FF
+    TitleFontStyle bold
+    TitleFontSize 16
+    TitleFontName DejaVu Sans
+    Width 220
+}
+skinparam ActivityFontName DejaVu Sans
+skinparam defaultFontName DejaVu Sans
+skinparam maxMessageSize 160
+
+|Học sinh|
+start
+:Đăng nhập và truy cập mục Đề thi của tôi;
+|Hệ thống|
+:Hiển thị danh sách đề thi được giao\nkèm trạng thái và thời gian còn lại;
+|Học sinh|
+:Chọn đề thi cần làm và bấm Bắt đầu làm bài;
+|Hệ thống|
+:Kiểm tra điều kiện\n(đang trong thời gian mở, chưa làm hoặc được làm lại);
+if (Đủ điều kiện làm bài?) then (đủ)
+  :Hiển thị giao diện làm bài với đồng hồ đếm ngược;
+  repeat
+    |Học sinh|
+    :Đọc đề và trả lời từng câu hỏi;
+    |Hệ thống|
+    :Tự động lưu tạm bài làm định kỳ;
+  repeat while (Còn thời gian và chưa nộp?) is (còn) not (kết thúc)
+  if (Lý do kết thúc?) then (hết giờ)
+    :Tự động nộp bài làm hiện tại;
+    :Hiển thị thông báo Hết thời gian - bài đã được nộp tự động;
+  else (học sinh nộp bài)
+    :Lưu bài làm đã nộp;
+  endif
+  :Chấm điểm tự động cho bài làm;
+  :Hiển thị thông báo nộp bài thành công;
+  stop
+else (không đủ)
+  :Hiển thị thông báo không thể làm bài;
+  stop
+endif
+@enduml

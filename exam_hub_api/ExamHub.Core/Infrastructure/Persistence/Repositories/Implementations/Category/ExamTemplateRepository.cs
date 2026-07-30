@@ -22,6 +22,8 @@ public class ExamTemplateRepository : BaseRepository<ExamTemplate, Guid>, IExamT
     /// <inheritdoc/>
     public async Task<IReadOnlyList<ExamTemplate>> GetBySubjectAsync(int subjectId, CancellationToken ct = default)
         => await Set.AsNoTracking()
+            .Include(x => x.GradeLevel)
+            .Include(x => x.Subject)
             .Where(x => x.SubjectId == subjectId && x.IsActive)
             .OrderByDescending(x => x.Created)
             .ToListAsync(ct);
@@ -29,6 +31,8 @@ public class ExamTemplateRepository : BaseRepository<ExamTemplate, Guid>, IExamT
     /// <inheritdoc/>
     public async Task<IReadOnlyList<ExamTemplate>> GetByGradeLevelAsync(int gradeLevelId, CancellationToken ct = default)
         => await Set.AsNoTracking()
+            .Include(x => x.GradeLevel)
+            .Include(x => x.Subject)
             .Where(x => x.GradeLevelId == gradeLevelId && x.IsActive)
             .OrderByDescending(x => x.Created)
             .ToListAsync(ct);

@@ -48,6 +48,7 @@ interface ExamTemplate {
     preventDuplicate: boolean
     instructions?: string
     isActive: boolean
+    createdBy?: string
     createdAt: number
     updatedAt: number
     sections?: ExamTemplateSection[]

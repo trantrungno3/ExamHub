@@ -1,0 +1,61 @@
+@startuml
+skinparam activity {
+    BackgroundColor #DDEEFF
+    BorderColor #336699
+    FontSize 15
+    FontName DejaVu Sans
+    DiamondBackgroundColor #FFF3CD
+    DiamondBorderColor #997404
+    DiamondFontSize 14
+    StartColor #000000
+    EndColor #000000
+    ArrowColor #336699
+    ArrowFontSize 13
+    ArrowFontName DejaVu Sans
+    BarColor #336699
+}
+skinparam swimlane {
+    BorderColor #336699
+    TitleBackgroundColor #EEF4FF
+    TitleFontStyle bold
+    TitleFontSize 16
+    TitleFontName DejaVu Sans
+    Width 220
+}
+skinparam ActivityFontName DejaVu Sans
+skinparam defaultFontName DejaVu Sans
+skinparam maxMessageSize 160
+
+|Quản trị viên|
+start
+:Truy cập mục Quản lý khoá học;
+|Hệ thống|
+:Hiển thị danh sách khoá học;
+|Quản trị viên|
+:Chọn khoá học cần xoá và bấm Xoá;
+|Hệ thống|
+:Hiển thị hộp thoại xác nhận xoá;
+|Quản trị viên|
+if (Xác nhận xoá?) then (đồng ý)
+  |Hệ thống|
+  :Kiểm tra khoá học có lớp học đang hoạt động;
+  if (Còn lớp đang hoạt động?) then (có)
+    :Hiển thị cảnh báo khoá học còn lớp học đang hoạt động;
+    |Quản trị viên|
+    if (Xoá bắt buộc?) then (có)
+      |Hệ thống|
+      :Xoá khoá học khỏi cơ sở dữ liệu;
+      :Hiển thị thông báo xoá thành công và cập nhật danh sách;
+      stop
+    else (huỷ)
+      stop
+    endif
+  else (không)
+    :Xoá khoá học khỏi cơ sở dữ liệu;
+    :Hiển thị thông báo xoá thành công và cập nhật danh sách;
+    stop
+  endif
+else (huỷ)
+  stop
+endif
+@enduml

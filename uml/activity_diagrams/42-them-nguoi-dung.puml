@@ -1,0 +1,45 @@
+@startuml
+skinparam activity {
+    BackgroundColor #DDEEFF
+    BorderColor #336699
+    FontSize 15
+    FontName DejaVu Sans
+    DiamondBackgroundColor #FFF3CD
+    DiamondBorderColor #997404
+    DiamondFontSize 14
+    StartColor #000000
+    EndColor #000000
+    ArrowColor #336699
+    ArrowFontSize 13
+    ArrowFontName DejaVu Sans
+    BarColor #336699
+}
+skinparam swimlane {
+    BorderColor #336699
+    TitleBackgroundColor #EEF4FF
+    TitleFontStyle bold
+    TitleFontSize 16
+    TitleFontName DejaVu Sans
+    Width 220
+}
+skinparam ActivityFontName DejaVu Sans
+skinparam defaultFontName DejaVu Sans
+skinparam maxMessageSize 160
+
+|Quản trị viên|
+start
+:Truy cập trang quản lý người dùng và chọn Thêm người dùng;
+|Hệ thống|
+:Hiển thị mẫu điền thông tin người dùng mới;
+repeat
+  |Quản trị viên|
+  :Điền thông tin\n(họ tên, email, tên đăng nhập, mật khẩu tạm, vai trò);
+  :Bấm nút Lưu;
+  |Hệ thống|
+  :Kiểm tra tính hợp lệ\n(email hợp lệ, tên đăng nhập chưa tồn tại);
+  backward:Hiển thị thông báo lỗi trùng lặp và yêu cầu nhập lại;
+repeat while (Hợp lệ và không trùng?) is (không) not (có)
+:Tạo tài khoản mới và lưu vào cơ sở dữ liệu;
+:Hiển thị thông báo thêm người dùng thành công;
+stop
+@enduml

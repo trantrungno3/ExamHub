@@ -1,0 +1,49 @@
+@startuml
+skinparam activity {
+    BackgroundColor #DDEEFF
+    BorderColor #336699
+    FontSize 15
+    FontName DejaVu Sans
+    DiamondBackgroundColor #FFF3CD
+    DiamondBorderColor #997404
+    DiamondFontSize 14
+    StartColor #000000
+    EndColor #000000
+    ArrowColor #336699
+    ArrowFontSize 13
+    ArrowFontName DejaVu Sans
+    BarColor #336699
+}
+skinparam swimlane {
+    BorderColor #336699
+    TitleBackgroundColor #EEF4FF
+    TitleFontStyle bold
+    TitleFontSize 16
+    TitleFontName DejaVu Sans
+    Width 220
+}
+skinparam ActivityFontName DejaVu Sans
+skinparam defaultFontName DejaVu Sans
+skinparam maxMessageSize 160
+
+|Giáo viên|
+start
+:Chọn đề thi và bấm Giao đề cho lớp;
+|Hệ thống|
+:Hiển thị form giao đề\n(chọn lớp, ngày mở, ngày đóng, thời gian làm bài);
+|Giáo viên|
+if (Cần kiểm tra lại nội dung?) then (có)
+  :Xem trước đề thi;
+else (không)
+endif
+repeat
+  :Chọn lớp học đích và thiết lập thời gian;
+  :Bấm xác nhận giao đề;
+  |Hệ thống|
+  :Kiểm tra tính hợp lệ của thời gian và lớp học;
+  backward:Hiển thị thông báo lỗi và yêu cầu điều chỉnh;
+repeat while (Thời gian và lớp hợp lệ?) is (không hợp lệ) not (hợp lệ)
+:Lưu thông tin giao đề và gửi thông báo đến học sinh trong lớp;
+:Hiển thị xác nhận giao đề thành công;
+stop
+@enduml

@@ -1,0 +1,48 @@
+@startuml
+skinparam activity {
+    BackgroundColor #DDEEFF
+    BorderColor #336699
+    FontSize 15
+    FontName DejaVu Sans
+    DiamondBackgroundColor #FFF3CD
+    DiamondBorderColor #997404
+    DiamondFontSize 14
+    StartColor #000000
+    EndColor #000000
+    ArrowColor #336699
+    ArrowFontSize 13
+    ArrowFontName DejaVu Sans
+    BarColor #336699
+}
+skinparam swimlane {
+    BorderColor #336699
+    TitleBackgroundColor #EEF4FF
+    TitleFontStyle bold
+    TitleFontSize 16
+    TitleFontName DejaVu Sans
+    Width 220
+}
+skinparam ActivityFontName DejaVu Sans
+skinparam defaultFontName DejaVu Sans
+skinparam maxMessageSize 160
+
+|Giáo viên|
+start
+:Truy cập trang quản lý đề thi;
+|Hệ thống|
+:Hiển thị danh sách đề thi kèm trạng thái hiện tại;
+|Giáo viên|
+:Chọn đề thi cần cập nhật trạng thái;
+|Hệ thống|
+:Hiển thị danh sách trạng thái có thể chọn\n(Bản nháp, Đang hoạt động, Đã kết thúc);
+repeat
+  |Giáo viên|
+  :Chọn trạng thái mới cho đề thi;
+  |Hệ thống|
+  :Kiểm tra tính hợp lệ của thay đổi trạng thái;
+  backward:Hiển thị thông báo lỗi (chuyển đổi trạng thái không được phép);
+repeat while (Chuyển đổi hợp lệ?) is (không hợp lệ) not (hợp lệ)
+:Lưu trạng thái mới vào cơ sở dữ liệu;
+:Hiển thị thông báo cập nhật trạng thái thành công;
+stop
+@enduml

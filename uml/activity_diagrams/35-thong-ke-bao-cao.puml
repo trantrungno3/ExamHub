@@ -1,0 +1,46 @@
+@startuml
+skinparam activity {
+    BackgroundColor #DDEEFF
+    BorderColor #336699
+    FontSize 15
+    FontName DejaVu Sans
+    DiamondBackgroundColor #FFF3CD
+    DiamondBorderColor #997404
+    DiamondFontSize 14
+    StartColor #000000
+    EndColor #000000
+    ArrowColor #336699
+    ArrowFontSize 13
+    ArrowFontName DejaVu Sans
+    BarColor #336699
+}
+skinparam swimlane {
+    BorderColor #336699
+    TitleBackgroundColor #EEF4FF
+    TitleFontStyle bold
+    TitleFontSize 16
+    TitleFontName DejaVu Sans
+    Width 220
+}
+skinparam ActivityFontName DejaVu Sans
+skinparam defaultFontName DejaVu Sans
+skinparam maxMessageSize 160
+
+|Giáo viên / Học sinh|
+start
+:Truy cập chức năng Thống kê hoặc Báo cáo lớp;
+|Hệ thống|
+:Hiển thị bộ lọc (lớp học, đề thi, khoảng thời gian);
+|Giáo viên / Học sinh|
+:Chọn tiêu chí thống kê;
+|Hệ thống|
+:Tổng hợp điểm và phân bố kết quả theo từng cấp độ Bloom;
+if (Vai trò?) then (Giáo viên)
+  :Tổng hợp báo cáo lớp\n(điểm trung bình, phân phối điểm, câu nhiều HS trả lời sai);
+else (Học sinh)
+  :Hiển thị kết quả cá nhân, điểm từng câu và nhận xét theo Bloom;
+endif
+|Giáo viên / Học sinh|
+:Xuất báo cáo ra file Excel hoặc PDF (nếu cần);
+stop
+@enduml

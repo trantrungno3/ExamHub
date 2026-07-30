@@ -1,0 +1,400 @@
+@startuml
+skinparam defaultFontName DejaVu Sans
+skinparam defaultFontSize 13
+skinparam Nodesep 28
+skinparam Ranksep 45
+skinparam roundcorner 4
+skinparam shadowing false
+skinparam linetype ortho
+skinparam classAttributeIconSize 0
+hide circle
+skinparam class {
+    BackgroundColor #EEF4FF
+    BorderColor #336699
+    ArrowColor #336699
+    AttributeFontColor #1B1B1B
+}
+
+left to right direction
+
+' ── Người dùng ──────────────────────────────────────────────
+class AppUser {
+    Id : Guid
+    Username : string
+    Email : string
+    FullName : string
+    Roles : string[]
+    Login()
+    Logout()
+    GetUser()
+    UpdateUser()
+}
+
+' ── Trường / Khoá / Lớp ─────────────────────────────────────
+class School {
+    Id : int
+    Name : string
+    Code : string
+    Address : string
+    Phone : string
+    Email : string
+    IsActive : bool
+    GetSchool()
+    AddSchool()
+    UpdateSchool()
+    DeleteSchool()
+    SearchSchool()
+}
+
+class SchoolMember {
+    Id : Guid
+    SchoolId : int
+    UserId : Guid
+    Role : string
+    IsActive : bool
+    JoinedAt : DateTime
+    GetMembers()
+    AddMember()
+    RemoveMember()
+}
+
+class Cohort {
+    Id : int
+    SchoolId : int
+    Name : string
+    StartYear : short
+    EndYear : short
+    GradeStart : short
+    ClassSuffix : string
+    IsActive : bool
+    GetCohort()
+    AddCohort()
+    UpdateCohort()
+    DeleteCohort()
+}
+
+class CohortClass {
+    Id : int
+    CohortId : int
+    GradeLevelId : int
+    ClassName : string
+    SchoolYear : string
+    YearIndex : short
+    HomeroomTeacherId : Guid
+    GetClasses()
+    AssignHomeroomTeacher()
+}
+
+class CohortMember {
+    Id : Guid
+    CohortId : int
+    StudentId : Guid
+    JoinedAt : DateTime
+    IsActive : bool
+    GetStudents()
+    AddStudent()
+    RemoveStudent()
+}
+
+' ── Danh mục học thuật ──────────────────────────────────────
+class GradeLevel {
+    Id : int
+    Name : string
+    GradeNumber : short
+    Description : string
+    IsActive : bool
+    GetGradeLevel()
+}
+
+class Subject {
+    Id : int
+    GradeLevelId : int
+    Name : string
+    Code : string
+    Description : string
+    IsActive : bool
+    GetSubject()
+    AddSubject()
+    UpdateSubject()
+    DeleteSubject()
+}
+
+class Topic {
+    Id : int
+    SubjectId : int
+    ParentId : int
+    Name : string
+    Code : string
+    SortOrder : short
+    IsActive : bool
+    GetTopic()
+    AddTopic()
+    UpdateTopic()
+    DeleteTopic()
+}
+
+class TeacherSubject {
+    Id : int
+    UserId : Guid
+    SubjectId : int
+    GetTeacherSubjects()
+    Assign()
+    Unassign()
+}
+
+' ── Phân loại câu hỏi ───────────────────────────────────────
+class QuestionType {
+    Id : int
+    Code : string
+    Name : string
+    Description : string
+    IsActive : bool
+    GetQuestionType()
+}
+
+class DifficultyLevel {
+    Id : int
+    Code : string
+    Name : string
+    ScoreWeight : decimal
+    SortOrder : short
+    IsActive : bool
+    GetDifficultyLevel()
+}
+
+class CognitiveLevel {
+    Id : int
+    Code : string
+    Name : string
+    NameEn : string
+    LevelOrder : short
+    ColorCode : string
+    IsActive : bool
+    GetCognitiveLevel()
+}
+
+' ── Ngân hàng câu hỏi ───────────────────────────────────────
+class Question {
+    Id : Guid
+    TopicId : int
+    QuestionTypeId : int
+    DifficultyLevelId : int
+    CognitiveLevelId : int
+    Content : string
+    Explanation : string
+    ImageUrl : string
+    Tags : string[]
+    UsageCount : int
+    IsVerified : bool
+    VerifiedBy : Guid
+    GetQuestion()
+    AddQuestion()
+    UpdateQuestion()
+    DeleteQuestion()
+    SearchQuestion()
+    VerifyQuestion()
+    ImportExcel()
+}
+
+class QuestionAnswer {
+    Id : Guid
+    QuestionId : Guid
+    Content : string
+    IsCorrect : bool
+    SortOrder : short
+    Explanation : string
+    GetAnswers()
+    AddAnswer()
+    UpdateAnswer()
+}
+
+' ── Mẫu đề thi & Đề thi ─────────────────────────────────────
+class ExamTemplate {
+    Id : Guid
+    GradeLevelId : int
+    SubjectId : int
+    Title : string
+    DurationMinutes : int
+    TotalQuestions : int
+    TotalScore : decimal
+    ShuffleQuestions : bool
+    ShuffleAnswers : bool
+    PreventDuplicate : bool
+    IsActive : bool
+    GetTemplate()
+    AddTemplate()
+    UpdateTemplate()
+    DeleteTemplate()
+}
+
+class ExamTemplateSection {
+    Id : Guid
+    ExamTemplateId : Guid
+    TopicId : int
+    QuestionTypeId : int
+    CognitiveLevelId : int
+    SectionName : string
+    QuestionCount : int
+    PctEasy : short
+    PctMedium : short
+    PctHard : short
+    PctVeryHard : short
+    GetSections()
+    AddSection()
+    UpdateSection()
+}
+
+class Exam {
+    Id : Guid
+    ExamTemplateId : Guid
+    GradeLevelId : int
+    SubjectId : int
+    Title : string
+    ExamCode : string
+    DurationMinutes : int
+    TotalScore : decimal
+    Status : string
+    ParentExamId : Guid
+    VariantIndex : short
+    BatchId : Guid
+    GenerateFromTemplate()
+    GenerateVariants()
+    Export()
+    UpdateStatus()
+    DeleteExam()
+}
+
+class ExamQuestion {
+    Id : Guid
+    ExamId : Guid
+    QuestionId : Guid
+    SectionName : string
+    SortOrder : int
+    Score : decimal
+    ContentSnapshot : string
+    AnswersSnapshot : string
+    GetExamQuestions()
+}
+
+' ── Kỳ thi & Bài nộp ────────────────────────────────────────
+class ExamSession {
+    Id : Guid
+    SubjectId : int
+    GradeLevelId : int
+    Title : string
+    OpenAt : DateTime
+    CloseAt : DateTime
+    MaxAttempts : short
+    PickMode : string
+    Status : string
+    GetSession()
+    AddSession()
+    UpdateSession()
+    AssignToClass()
+}
+
+class ExamSessionExam {
+    Id : Guid
+    SessionId : Guid
+    ExamId : Guid
+    GetSessionExams()
+}
+
+class ExamSessionAssignment {
+    Id : Guid
+    SessionId : Guid
+    CohortId : int
+    CohortClassId : int
+    GetAssignments()
+}
+
+class ExamSubmission {
+    Id : Guid
+    ExamId : Guid
+    StudentId : Guid
+    SessionId : Guid
+    AttemptNo : short
+    StartedAt : DateTime
+    SubmittedAt : DateTime
+    TotalScore : decimal
+    IsPassed : bool
+    Status : string
+    StartExam()
+    Submit()
+    Grade()
+    GetSubmission()
+}
+
+class SubmissionAnswer {
+    Id : Guid
+    SubmissionId : Guid
+    ExamQuestionId : Guid
+    SelectedAnswerIds : Guid[]
+    EssayContent : string
+    IsCorrect : bool
+    ScoreEarned : decimal
+    GradedBy : Guid
+    SaveAnswer()
+    GradeAnswer()
+}
+
+' ═══════════════════════════════════════════════════════════
+' QUAN HỆ HỢP THÀNH (composition, ◆) — lớp chủ sở hữu các phần con,
+' phần con không tồn tại độc lập nếu lớp chủ bị xoá
+' ═══════════════════════════════════════════════════════════
+School *-- SchoolMember       /' 1 trường sở hữu nhiều thành viên (giáo viên / quản trị) '/
+School *-- Cohort             /' 1 trường sở hữu nhiều khoá học '/
+Cohort *-- CohortClass        /' 1 khoá sinh ra & sở hữu nhiều lớp học '/
+Cohort *-- CohortMember       /' 1 khoá quản lý danh sách học sinh của khoá '/
+GradeLevel *-- Subject        /' 1 khối lớp gồm nhiều môn học '/
+Subject *-- Topic             /' 1 môn học gồm nhiều chủ đề / chương '/
+Question *-- QuestionAnswer   /' 1 câu hỏi sở hữu nhiều đáp án '/
+ExamTemplate *-- ExamTemplateSection /' 1 mẫu đề gồm nhiều phần cấu hình (matrix đề) '/
+Exam *-- ExamQuestion         /' 1 đề thi chứa nhiều câu hỏi snapshot '/
+ExamSession *-- ExamSessionExam       /' 1 kỳ thi sở hữu pool đề thi '/
+ExamSession *-- ExamSessionAssignment /' 1 kỳ thi có nhiều bản ghi giao cho lớp / khoá '/
+ExamSubmission *-- SubmissionAnswer   /' 1 bài nộp gồm nhiều câu trả lời chi tiết '/
+
+' ═══════════════════════════════════════════════════════════
+' QUAN HỆ LIÊN KẾT (association, →) — tham chiếu khóa ngoại
+' ═══════════════════════════════════════════════════════════
+SchoolMember --> AppUser       /' Thành viên trường ứng với 1 tài khoản người dùng '/
+CohortClass --> GradeLevel     /' Lớp học thuộc 1 khối lớp (Lớp 1..12) '/
+CohortClass --> AppUser        /' Lớp học có 1 giáo viên chủ nhiệm (GVCN) '/
+CohortMember --> AppUser       /' Học sinh trong khoá ứng với 1 tài khoản người dùng '/
+Topic --> Topic                /' Chủ đề tự phân cấp cha – con '/
+
+Question --> Topic             /' Câu hỏi thuộc 1 chủ đề '/
+Question --> QuestionType      /' Câu hỏi có 1 loại (trắc nghiệm / tự luận…) '/
+Question --> DifficultyLevel   /' Câu hỏi có 1 mức độ khó '/
+Question --> CognitiveLevel    /' Câu hỏi gắn 1 cấp độ tư duy Bloom (tuỳ chọn) '/
+Question --> AppUser           /' Câu hỏi được 1 người kiểm duyệt (tuỳ chọn) '/
+
+TeacherSubject --> AppUser     /' Bản ghi phân công ứng với 1 giáo viên '/
+TeacherSubject --> Subject     /' Giáo viên được phân công dạy 1 môn '/
+
+ExamTemplate --> GradeLevel    /' Mẫu đề dành cho 1 khối lớp '/
+ExamTemplate --> Subject       /' Mẫu đề thuộc 1 môn học '/
+ExamTemplateSection --> Topic  /' Phần đề lọc câu theo chủ đề (tuỳ chọn) '/
+ExamTemplateSection --> QuestionType   /' Phần đề lọc câu theo loại câu hỏi (tuỳ chọn) '/
+ExamTemplateSection --> CognitiveLevel /' Phần đề lọc câu theo cấp độ Bloom (tuỳ chọn) '/
+
+Exam --> ExamTemplate          /' Đề thi được sinh từ 1 mẫu đề (tuỳ chọn, có thể tạo tay) '/
+Exam --> GradeLevel            /' Đề thi dành cho 1 khối lớp '/
+Exam --> Subject               /' Đề thi thuộc 1 môn học '/
+Exam --> Exam                  /' Đề gốc ↔ các mã đề biến thể (sinh nhiều mã) '/
+ExamQuestion --> Question      /' Câu hỏi trong đề tham chiếu câu hỏi gốc ngân hàng '/
+
+ExamSession --> Subject        /' Kỳ thi tổ chức cho 1 môn học '/
+ExamSession --> GradeLevel     /' Kỳ thi tổ chức cho 1 khối lớp '/
+ExamSessionExam --> Exam       /' Mỗi mục pool trỏ tới 1 đề thi '/
+ExamSessionAssignment --> Cohort      /' Giao kỳ thi cho 1 khoá (tuỳ chọn) '/
+ExamSessionAssignment --> CohortClass /' Giao kỳ thi cho 1 lớp (tuỳ chọn) '/
+
+ExamSubmission --> Exam         /' Bài nộp ứng với 1 đề thi '/
+ExamSubmission --> ExamSession  /' Bài nộp thuộc 1 kỳ thi (tuỳ chọn, luồng cũ) '/
+ExamSubmission --> AppUser      /' Bài nộp của 1 học sinh '/
+SubmissionAnswer --> ExamQuestion /' Câu trả lời ứng với 1 câu hỏi trong đề '/
+SubmissionAnswer --> AppUser      /' Câu tự luận được 1 giáo viên chấm (tuỳ chọn) '/
+
+@enduml

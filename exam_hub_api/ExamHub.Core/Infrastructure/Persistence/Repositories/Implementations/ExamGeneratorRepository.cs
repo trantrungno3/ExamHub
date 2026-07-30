@@ -17,23 +17,29 @@ public class ExamGeneratorRepository(AppDbContext db, IQuestionRepository questi
         IReadOnlySet<Guid> usedQuestionIds,
         CancellationToken ct = default)
     {
-        await using var tx = await db.Database.BeginTransactionAsync(ct);
-        try
+        var strategy = db.Database.CreateExecutionStrategy();
+        await strategy.ExecuteAsync(async () =>
         {
-            db.Set<Exam>().Add(exam);
-            db.Set<ExamQuestion>().AddRange(questions);
-            await db.SaveChangesAsync(ct);
+            await using var tx = await db.Database.BeginTransactionAsync(ct);
+            try
+            {
+                db.Set<Exam>().Add(exam);
+                db.Set<ExamQuestion>().AddRange(questions);
+                await db.SaveChangesAsync(ct);
 
-            if (usedQuestionIds.Count > 0)
-                await questionRepo.IncrementUsageCountAsync(usedQuestionIds, ct);
+                if (usedQuestionIds.Count > 0)
+                    await questionRepo.IncrementUsageCountAsync(usedQuestionIds, ct);
 
-            await tx.CommitAsync(ct);
-        }
-        catch
-        {
-            await tx.RollbackAsync(ct);
-            throw;
-        }
+                await tx.CommitAsync(ct);
+            }
+            catch
+            {
+                await tx.RollbackAsync(ct);
+                throw;
+            }
+        });
+        
+       
 
         return exam.Id;
     }
@@ -46,23 +52,29 @@ public class ExamGeneratorRepository(AppDbContext db, IQuestionRepository questi
         CancellationToken ct = default)
     {
         var batchId = exams[0].BatchId ?? Guid.NewGuid();
-        await using var tx = await db.Database.BeginTransactionAsync(ct);
-        try
+        var strategy = db.Database.CreateExecutionStrategy();
+        await strategy.ExecuteAsync(async () =>
         {
-            db.Set<Exam>().AddRange(exams);
-            db.Set<ExamQuestion>().AddRange(questions);
-            await db.SaveChangesAsync(ct);
+            await using var tx = await db.Database.BeginTransactionAsync(ct);
+            try
+            {
+                db.Set<Exam>().AddRange(exams);
+                db.Set<ExamQuestion>().AddRange(questions);
+                await db.SaveChangesAsync(ct);
 
-            if (usedQuestionIds.Count > 0)
-                await questionRepo.IncrementUsageCountAsync(usedQuestionIds, ct);
+                if (usedQuestionIds.Count > 0)
+                    await questionRepo.IncrementUsageCountAsync(usedQuestionIds, ct);
 
-            await tx.CommitAsync(ct);
-        }
-        catch
-        {
-            await tx.RollbackAsync(ct);
-            throw;
-        }
+                await tx.CommitAsync(ct);
+            }
+            catch
+            {
+                await tx.RollbackAsync(ct);
+                throw;
+            }
+        });
+
+       
 
         return batchId;
     }

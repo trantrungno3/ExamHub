@@ -21,7 +21,8 @@ public record CohortMemberRequest(
         JoinedAt  = JoinedAt.HasValue
             ? DateOnly.FromDateTime(JoinedAt.Value.ToDateTime())
             : DateOnly.FromDateTime(DateTime.UtcNow),
-        IsActive  = IsActive
+        IsActive  = IsActive,
+        Modified = DateTime.UtcNow
     };
 }
 

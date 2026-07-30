@@ -1,0 +1,48 @@
+@startuml
+skinparam activity {
+    BackgroundColor #DDEEFF
+    BorderColor #336699
+    FontSize 15
+    FontName DejaVu Sans
+    DiamondBackgroundColor #FFF3CD
+    DiamondBorderColor #997404
+    DiamondFontSize 14
+    StartColor #000000
+    EndColor #000000
+    ArrowColor #336699
+    ArrowFontSize 13
+    ArrowFontName DejaVu Sans
+    BarColor #336699
+}
+skinparam swimlane {
+    BorderColor #336699
+    TitleBackgroundColor #EEF4FF
+    TitleFontStyle bold
+    TitleFontSize 16
+    TitleFontName DejaVu Sans
+    Width 220
+}
+skinparam ActivityFontName DejaVu Sans
+skinparam defaultFontName DejaVu Sans
+skinparam maxMessageSize 160
+
+|Học sinh|
+start
+:Nộp bài thi;
+|Hệ thống|
+:Chấm tự động - so sánh đáp án học sinh với đáp án đúng\ncho toàn bộ câu trắc nghiệm;
+:Tính tổng điểm phần tự động và lưu vào kết quả bài thi;
+if (Đề thi có câu tự luận?) then (có)
+  :Chuyển bài thi sang trạng thái Chờ chấm tay;
+  :Gửi thông báo có bài thi cần chấm tay;
+  |Giáo viên|
+  :Nhập điểm cho từng câu tự luận;
+  |Hệ thống|
+  :Cộng điểm thủ công vào điểm tự động và tính điểm tổng kết;
+else (không)
+endif
+:Cập nhật trạng thái bài thi thành Đã chấm và lưu kết quả;
+|Học sinh|
+:Xem điểm sau khi chấm xong;
+stop
+@enduml

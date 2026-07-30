@@ -1,0 +1,51 @@
+@startuml
+skinparam activity {
+    BackgroundColor #DDEEFF
+    BorderColor #336699
+    FontSize 15
+    FontName DejaVu Sans
+    DiamondBackgroundColor #FFF3CD
+    DiamondBorderColor #997404
+    DiamondFontSize 14
+    StartColor #000000
+    EndColor #000000
+    ArrowColor #336699
+    ArrowFontSize 13
+    ArrowFontName DejaVu Sans
+    BarColor #336699
+}
+skinparam swimlane {
+    BorderColor #336699
+    TitleBackgroundColor #EEF4FF
+    TitleFontStyle bold
+    TitleFontSize 16
+    TitleFontName DejaVu Sans
+    Width 220
+}
+skinparam ActivityFontName DejaVu Sans
+skinparam defaultFontName DejaVu Sans
+skinparam maxMessageSize 160
+
+|Giáo viên|
+start
+:Chọn Tạo mẫu đề thi mới;
+|Hệ thống|
+:Hiển thị form thiết lập mẫu đề\n(tên mẫu, môn học, thời gian làm bài, tổng số câu);
+repeat
+  |Giáo viên|
+  :Điền thông tin chung của mẫu đề;
+  :Thêm và cấu hình từng phần thi\n(tên phần, số câu, loại câu hỏi);
+  :Phân bổ tỉ lệ phần trăm câu theo mức dễ/trung bình/khó;
+  if (Cần giới hạn cấp độ Bloom?) then (có)
+    :Cài bộ lọc Bloom cho từng phần;
+  else (không)
+  endif
+  :Bấm lưu mẫu đề;
+  |Hệ thống|
+  :Kiểm tra tính hợp lệ (tổng số câu, tỉ lệ = 100%);
+  backward:Hiển thị thông báo lỗi\n(tổng số câu không khớp hoặc tỉ lệ khác 100%);
+repeat while (Cấu hình hợp lệ?) is (không hợp lệ) not (hợp lệ)
+:Lưu mẫu đề vào cơ sở dữ liệu;
+:Hiển thị thông báo tạo mẫu đề thành công;
+stop
+@enduml

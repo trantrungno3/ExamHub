@@ -1,0 +1,411 @@
+@startuml
+skinparam defaultFontName DejaVu Sans
+skinparam defaultFontSize 13
+skinparam Nodesep 40
+skinparam Ranksep 50
+skinparam roundcorner 6
+skinparam shadowing false
+skinparam linetype ortho
+skinparam class {
+    BackgroundColor #EEF4FF
+    BorderColor #336699
+}
+
+hide circle
+hide empty methods
+
+
+' ═══════════════════════════════════════════════════════════
+' NHÓM 1 — Người dùng (Auth ngoài)
+' ═══════════════════════════════════════════════════════════
+entity "app_users" as app_users {
+    * id : uuid <<PK>>
+    --
+    username : varchar
+    email : varchar
+    full_name : varchar
+    roles : text[]
+    created_at : timestamp
+}
+
+' ═══════════════════════════════════════════════════════════
+' NHÓM 2 — Trường / Khoá / Lớp
+' ═══════════════════════════════════════════════════════════
+entity "schools" as schools {
+    * id : serial <<PK>>
+    --
+    name : varchar
+    code : varchar
+    address : text
+    phone : varchar
+    email : varchar
+    is_active : bool
+}
+
+entity "school_members" as school_members {
+    * id : uuid <<PK>>
+    --
+    school_id : int <<FK>>
+    user_id : uuid <<FK>>
+    role : varchar
+    is_active : bool
+    joined_at : timestamp
+}
+
+entity "cohorts" as cohorts {
+    * id : serial <<PK>>
+    --
+    school_id : int <<FK>>
+    name : varchar
+    start_year : smallint
+    end_year : smallint
+    grade_start : smallint
+    class_suffix : varchar
+    is_active : bool
+}
+
+entity "cohort_classes" as cohort_classes {
+    * id : serial <<PK>>
+    --
+    cohort_id : int <<FK>>
+    grade_level_id : int <<FK>>
+    homeroom_teacher_id : uuid <<FK>>
+    class_name : varchar
+    school_year : varchar
+    year_index : smallint
+}
+
+entity "cohort_members" as cohort_members {
+    * id : uuid <<PK>>
+    --
+    cohort_id : int <<FK>>
+    student_id : uuid <<FK>>
+    joined_at : timestamp
+    is_active : bool
+}
+
+' ═══════════════════════════════════════════════════════════
+' NHÓM 3 — Danh mục học thuật
+' ═══════════════════════════════════════════════════════════
+entity "grade_levels" as grade_levels {
+    * id : serial <<PK>>
+    --
+    name : varchar
+    grade_number : smallint
+    description : text
+    is_active : bool
+}
+
+entity "subjects" as subjects {
+    * id : serial <<PK>>
+    --
+    grade_level_id : int <<FK>>
+    name : varchar
+    code : varchar
+    description : text
+    is_active : bool
+}
+
+entity "topics" as topics {
+    * id : serial <<PK>>
+    --
+    subject_id : int <<FK>>
+    parent_id : int <<FK>>
+    name : varchar
+    code : varchar
+    sort_order : smallint
+    description : text
+    is_active : bool
+}
+
+entity "teacher_subjects" as teacher_subjects {
+    * id : serial <<PK>>
+    --
+    user_id : uuid <<FK>>
+    subject_id : int <<FK>>
+}
+
+' ═══════════════════════════════════════════════════════════
+' NHÓM 4 — Phân loại câu hỏi
+' ═══════════════════════════════════════════════════════════
+entity "question_types" as question_types {
+    * id : serial <<PK>>
+    --
+    code : varchar
+    name : varchar
+    description : text
+    is_active : bool
+}
+
+entity "difficulty_levels" as difficulty_levels {
+    * id : serial <<PK>>
+    --
+    code : varchar
+    name : varchar
+    score_weight : decimal
+    sort_order : smallint
+    is_active : bool
+}
+
+entity "cognitive_levels" as cognitive_levels {
+    * id : serial <<PK>>
+    --
+    code : varchar
+    name : varchar
+    name_en : varchar
+    level_order : smallint
+    description : text
+    color_code : varchar
+    is_active : bool
+}
+
+' ═══════════════════════════════════════════════════════════
+' NHÓM 5 — Ngân hàng câu hỏi
+' ═══════════════════════════════════════════════════════════
+entity "questions" as questions {
+    * id : uuid <<PK>>
+    --
+    topic_id : int <<FK>>
+    question_type_id : int <<FK>>
+    difficulty_level_id : int <<FK>>
+    cognitive_level_id : int <<FK>>
+    content : text
+    content_plain : text
+    explanation : text
+    image_url : varchar
+    audio_url : varchar
+    source : varchar
+    tags : text[]
+    usage_count : int
+    is_active : bool
+    is_verified : bool
+    verified_by : uuid <<FK>>
+    verified_at : timestamp
+    created : timestamp
+    modified : timestamp
+}
+
+entity "question_answers" as question_answers {
+    * id : uuid <<PK>>
+    --
+    question_id : uuid <<FK>>
+    content : text
+    content_plain : text
+    is_correct : bool
+    sort_order : smallint
+    explanation : text
+}
+
+' ═══════════════════════════════════════════════════════════
+' NHÓM 6 — Mẫu đề thi & Đề thi
+' ═══════════════════════════════════════════════════════════
+entity "exam_templates" as exam_templates {
+    * id : uuid <<PK>>
+    --
+    grade_level_id : int <<FK>>
+    subject_id : int <<FK>>
+    title : varchar
+    description : text
+    duration_minutes : int
+    total_questions : int
+    total_score : decimal
+    shuffle_questions : bool
+    shuffle_answers : bool
+    prevent_duplicate : bool
+    instructions : text
+    is_active : bool
+    created : timestamp
+    modified : timestamp
+}
+
+entity "exam_template_sections" as exam_template_sections {
+    * id : uuid <<PK>>
+    --
+    exam_template_id : uuid <<FK>>
+    topic_id : int <<FK>>
+    question_type_id : int <<FK>>
+    cognitive_level_id : int <<FK>>
+    section_name : varchar
+    question_count : int
+    score_per_question : decimal
+    sort_order : smallint
+    pct_easy : smallint
+    pct_medium : smallint
+    pct_hard : smallint
+    pct_very_hard : smallint
+}
+
+entity "exams" as exams {
+    * id : uuid <<PK>>
+    --
+    exam_template_id : uuid <<FK>>
+    grade_level_id : int <<FK>>
+    subject_id : int <<FK>>
+    parent_exam_id : uuid <<FK>>
+    title : varchar
+    exam_code : varchar
+    duration_minutes : int
+    total_score : decimal
+    instructions : text
+    status : varchar
+    school_year : varchar
+    semester : smallint
+    exam_date : date
+    class_name : varchar
+    variant_index : smallint
+    batch_id : uuid
+    created : timestamp
+    modified : timestamp
+}
+
+entity "exam_questions" as exam_questions {
+    * id : uuid <<PK>>
+    --
+    exam_id : uuid <<FK>>
+    question_id : uuid <<FK>>
+    section_name : varchar
+    sort_order : int
+    score : decimal
+    content_snapshot : text
+    answers_snapshot : jsonb
+}
+
+' ═══════════════════════════════════════════════════════════
+' NHÓM 7 — Kỳ thi & Bài nộp
+' ═══════════════════════════════════════════════════════════
+entity "exam_sessions" as exam_sessions {
+    * id : uuid <<PK>>
+    --
+    subject_id : int <<FK>>
+    grade_level_id : int <<FK>>
+    title : varchar
+    description : text
+    open_at : timestamp
+    close_at : timestamp
+    max_attempts : smallint
+    pick_mode : varchar
+    status : varchar
+    created : timestamp
+    modified : timestamp
+}
+
+entity "exam_session_exams" as exam_session_exams {
+    * id : uuid <<PK>>
+    --
+    session_id : uuid <<FK>>
+    exam_id : uuid <<FK>>
+}
+
+entity "exam_session_assignments" as exam_session_assignments {
+    * id : uuid <<PK>>
+    --
+    session_id : uuid <<FK>>
+    cohort_id : int <<FK>>
+    cohort_class_id : int <<FK>>
+}
+
+entity "exam_submissions" as exam_submissions {
+    * id : uuid <<PK>>
+    --
+    exam_id : uuid <<FK>>
+    student_id : uuid <<FK>>
+    session_id : uuid <<FK>>
+    attempt_no : smallint
+    started_at : timestamp
+    submitted_at : timestamp
+    duration_seconds : int
+    total_score : decimal
+    is_passed : bool
+    status : varchar
+    created : timestamp
+    modified : timestamp
+}
+
+entity "submission_answers" as submission_answers {
+    * id : uuid <<PK>>
+    --
+    submission_id : uuid <<FK>>
+    exam_question_id : uuid <<FK>>
+    selected_answer_ids : uuid[]
+    essay_content : text
+    is_correct : bool
+    score_earned : decimal
+    feedback : text
+    graded_by : uuid <<FK>>
+}
+
+' ═══════════════════════════════════════════════════════════
+' QUAN HỆ — Trường / Khoá / Lớp
+' Ký hiệu: ||--o{ = 1 tới nhiều (bắt buộc);  |o--o{ = 1 tới nhiều (khóa ngoại nullable)
+' ═══════════════════════════════════════════════════════════
+schools ||--o{ school_members       /' 1 trường có nhiều thành viên (giáo viên / quản trị) '/
+schools ||--o{ cohorts              /' 1 trường mở nhiều khoá học '/
+
+cohorts ||--o{ cohort_classes       /' 1 khoá gồm nhiều lớp học (sinh tự động qua DB trigger) '/
+cohorts ||--o{ cohort_members       /' 1 khoá có nhiều học sinh '/
+
+grade_levels ||--o{ cohort_classes  /' 1 khối lớp (Lớp 1..12) ứng với nhiều lớp học cụ thể '/
+
+app_users ||--o{ school_members     /' 1 người dùng là thành viên của nhiều trường '/
+app_users |o--o{ cohort_classes     /' 1 giáo viên làm chủ nhiệm (GVCN) nhiều lớp — có thể rỗng '/
+app_users ||--o{ cohort_members     /' 1 người dùng (học sinh) tham gia nhiều khoá '/
+
+' ═══════════════════════════════════════════════════════════
+' QUAN HỆ — Danh mục học thuật
+' ═══════════════════════════════════════════════════════════
+grade_levels ||--o{ subjects        /' 1 khối lớp có nhiều môn học '/
+subjects ||--o{ topics              /' 1 môn học có nhiều chủ đề / chương '/
+topics |o--o{ topics                /' Chủ đề tự phân cấp cha–con (parent_id, có thể rỗng) '/
+app_users ||--o{ teacher_subjects   /' 1 giáo viên phụ trách nhiều môn '/
+subjects ||--o{ teacher_subjects    /' 1 môn được nhiều giáo viên dạy (bảng nối N–N) '/
+
+' ═══════════════════════════════════════════════════════════
+' QUAN HỆ — Ngân hàng câu hỏi
+' ═══════════════════════════════════════════════════════════
+topics ||--o{ questions             /' 1 chủ đề chứa nhiều câu hỏi '/
+question_types ||--o{ questions     /' 1 loại câu hỏi (trắc nghiệm / tự luận…) gắn nhiều câu hỏi '/
+difficulty_levels ||--o{ questions  /' 1 mức độ khó gắn nhiều câu hỏi '/
+cognitive_levels |o--o{ questions   /' Cấp độ nhận thức Bloom của câu hỏi — có thể rỗng '/
+app_users |o--o{ questions          /' Người kiểm duyệt câu hỏi (verified_by) — có thể rỗng '/
+
+questions ||--o{ question_answers   /' 1 câu hỏi có nhiều đáp án '/
+
+' ═══════════════════════════════════════════════════════════
+' QUAN HỆ — Mẫu đề thi & Đề thi
+' ═══════════════════════════════════════════════════════════
+grade_levels ||--o{ exam_templates          /' Mẫu đề dành cho 1 khối lớp '/
+subjects ||--o{ exam_templates              /' Mẫu đề thuộc 1 môn học '/
+exam_templates ||--o{ exam_template_sections /' 1 mẫu đề gồm nhiều phần cấu hình (matrix đề) '/
+
+topics |o--o{ exam_template_sections         /' Phần đề lọc câu theo chủ đề — có thể rỗng '/
+question_types |o--o{ exam_template_sections /' Phần đề lọc câu theo loại câu hỏi — có thể rỗng '/
+cognitive_levels |o--o{ exam_template_sections /' Phần đề lọc câu theo cấp độ Bloom — có thể rỗng '/
+
+exam_templates |o--o{ exams         /' Đề thi được sinh từ mẫu — có thể rỗng (tạo thủ công) '/
+grade_levels ||--o{ exams           /' Đề thi cho 1 khối lớp '/
+subjects ||--o{ exams               /' Đề thi thuộc 1 môn học '/
+exams |o--o{ exams                  /' Đề gốc ↔ các mã đề biến thể (parent_exam_id, khi sinh nhiều mã) '/
+exams ||--o{ exam_questions         /' 1 đề chứa nhiều câu hỏi (snapshot tại thời điểm sinh đề) '/
+questions ||--o{ exam_questions     /' Câu hỏi gốc trong ngân hàng được trích vào đề '/
+
+' ═══════════════════════════════════════════════════════════
+' QUAN HỆ — Kỳ thi & Bài nộp
+' ═══════════════════════════════════════════════════════════
+subjects ||--o{ exam_sessions       /' Kỳ thi tổ chức cho 1 môn học '/
+grade_levels ||--o{ exam_sessions   /' Kỳ thi tổ chức cho 1 khối lớp '/
+
+exam_sessions ||--o{ exam_session_exams /' Pool đề thi của kỳ thi (học sinh được rút đề từ pool) '/
+exams ||--o{ exam_session_exams     /' 1 đề có thể nằm trong pool của nhiều kỳ thi '/
+
+exam_sessions ||--o{ exam_session_assignments /' 1 kỳ thi giao cho nhiều lớp / khoá '/
+cohorts |o--o{ exam_session_assignments       /' Giao kỳ thi cho cả 1 khoá — có thể rỗng '/
+cohort_classes |o--o{ exam_session_assignments /' Giao kỳ thi cho 1 lớp cụ thể — có thể rỗng '/
+
+exams ||--o{ exam_submissions       /' 1 đề thi có nhiều bài nộp '/
+app_users ||--o{ exam_submissions   /' Học sinh nộp bài (student_id) '/
+exam_sessions |o--o{ exam_submissions /' Bài nộp thuộc 1 kỳ thi — có thể rỗng (luồng đề trực tiếp cũ) '/
+exam_submissions ||--o{ submission_answers /' 1 bài nộp gồm nhiều câu trả lời '/
+exam_questions ||--o{ submission_answers    /' Mỗi câu trả lời ứng với 1 câu hỏi trong đề '/
+app_users |o--o{ submission_answers /' Giáo viên chấm câu tự luận (graded_by) — có thể rỗng '/
+
+@enduml

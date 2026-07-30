@@ -1,0 +1,41 @@
+@startuml
+skinparam activity {
+    BackgroundColor #DDEEFF
+    BorderColor #336699
+    FontSize 15
+    FontName DejaVu Sans
+    DiamondBackgroundColor #FFF3CD
+    DiamondBorderColor #997404
+    DiamondFontSize 14
+    StartColor #000000
+    EndColor #000000
+    ArrowColor #336699
+    ArrowFontSize 13
+    ArrowFontName DejaVu Sans
+    BarColor #336699
+}
+skinparam swimlane {
+    BorderColor #336699
+    TitleBackgroundColor #EEF4FF
+    TitleFontStyle bold
+    TitleFontSize 16
+    TitleFontName DejaVu Sans
+    Width 220
+}
+skinparam ActivityFontName DejaVu Sans
+skinparam defaultFontName DejaVu Sans
+skinparam maxMessageSize 160
+
+|Quản trị viên|
+start
+:Truy cập trang chi tiết lớp học và chọn Cập nhật GVCN;
+|Hệ thống|
+:Hiển thị danh sách giáo viên có thể chọn làm chủ nhiệm;
+|Quản trị viên|
+:Chọn giáo viên chủ nhiệm mới và xác nhận;
+|Hệ thống|
+:Kiểm tra tính hợp lệ;
+:Cập nhật giáo viên chủ nhiệm cho lớp;
+:Hiển thị thông báo cập nhật thành công;
+stop
+@enduml
