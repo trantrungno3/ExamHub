@@ -107,7 +107,7 @@ export default function CohortDetailPage() {
             key: 'classes', label: 'Lớp học',
             children: (
                 <div className="p-4">
-                    <Table columns={classColumns} dataSource={classes} rowKey="id" loading={fetchingClasses} pagination={false}/>
+                    <Table columns={classColumns} dataSource={classes} rowKey="id" loading={fetchingClasses} pagination={false} scroll={{x: 700}}/>
                 </div>
             ),
         },
@@ -120,7 +120,7 @@ export default function CohortDetailPage() {
                             Thêm học sinh
                         </Button>
                     </div>
-                    <Table columns={memberColumns} dataSource={members} rowKey="id" loading={fetchingMembers} pagination={false}/>
+                    <Table columns={memberColumns} dataSource={members} rowKey="id" loading={fetchingMembers} pagination={false} scroll={{x: 700}}/>
                 </div>
             ),
         },

@@ -83,7 +83,7 @@ export default function DashboardPage() {
                                     onClick={() => navigate('/app/exam-list')}>Xem tất cả →</button>
                         </div>
                         <Table columns={columns} dataSource={recentExams.data?.items ?? []} rowKey="id"
-                               loading={recentExams.isLoading} pagination={false} size="small"/>
+                               loading={recentExams.isLoading} pagination={false} size="small" scroll={{x: 600}}/>
                     </div>
 
                     <div className="flex flex-col gap-4 flex-[1.4] min-w-0">

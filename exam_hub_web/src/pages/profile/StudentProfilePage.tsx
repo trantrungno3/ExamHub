@@ -55,8 +55,9 @@ export default function StudentProfilePage() {
 
             <div>
                 <p className="font-medium text-gray-700 mb-2">Khoá học đang tham gia</p>
-                <div className="section-card">
+                <div className="section-card shrink-0">
                     <Table columns={cohortColumns} dataSource={cohortMembers} rowKey="id" pagination={false}
+                           scroll={{x: 600}}
                            locale={{emptyText: 'Chưa tham gia khoá học nào'}}/>
                 </div>
             </div>

@@ -106,7 +106,7 @@ export default function ExamTemplatePage() {
                     </Button>
                 </div>
 
-                <div className="section-card">
+                <div className="section-card shrink-0">
                     <Table
                         columns={columns}
                         dataSource={filtered}

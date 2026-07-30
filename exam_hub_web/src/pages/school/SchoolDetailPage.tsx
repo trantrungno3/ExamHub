@@ -101,7 +101,7 @@ export default function SchoolDetailPage() {
                             Thêm khoá học
                         </Button>
                     </div>
-                    <Table columns={cohortColumns} dataSource={cohorts} rowKey="id" loading={fetchingCohorts} pagination={false}/>
+                    <Table columns={cohortColumns} dataSource={cohorts} rowKey="id" loading={fetchingCohorts} pagination={false} scroll={{x: 700}}/>
                 </div>
             ),
         },
@@ -114,7 +114,7 @@ export default function SchoolDetailPage() {
                             Thêm thành viên
                         </Button>
                     </div>
-                    <Table columns={memberColumns} dataSource={members} rowKey="id" loading={fetchingMembers} pagination={false}/>
+                    <Table columns={memberColumns} dataSource={members} rowKey="id" loading={fetchingMembers} pagination={false} scroll={{x: 700}}/>
                 </div>
             ),
         },

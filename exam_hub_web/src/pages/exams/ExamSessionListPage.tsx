@@ -125,7 +125,7 @@ export default function ExamSessionListPage() {
                             onClick={() => navigate(ROUTES.EXAM_SESSIONS_CREATE)}>Tạo kỳ thi</Button>
                 </div>
 
-                <div className="section-card">
+                <div className="section-card shrink-0">
                     <Table columns={columns} dataSource={data?.items ?? []} rowKey="id" loading={isLoading}
                            scroll={{x: 1300}}
                            pagination={{

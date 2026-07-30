@@ -80,12 +80,13 @@ export default function SchoolListPage() {
                     </Button>
                 </div>
 
-                <div className="section-card">
+                <div className="section-card shrink-0">
                     <Table
                         columns={columns}
                         dataSource={schools}
                         rowKey="id"
                         loading={isFetching}
+                        scroll={{x: 800}}
                         pagination={false}
                         footer={() => (
                             <span className="text-[12px] text-gray-400">

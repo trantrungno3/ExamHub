@@ -137,7 +137,7 @@ export default function ExamListPage() {
                             options={(['Draft', 'Published', 'Archived'] as ExamStatus[]).map(s => ({value: s, label: STATUS_LABEL[s]}))}/>
                 </div>
 
-                <div className="section-card">
+                <div className="section-card shrink-0">
                     <Table columns={columns} dataSource={data?.items ?? []} rowKey="id" loading={isLoading}
                            scroll={{x: 1200}}
                            pagination={{

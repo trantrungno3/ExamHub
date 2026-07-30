@@ -215,12 +215,13 @@ export default function UserPage() {
                 </div>
             </div>
 
-            <div className="section-card">
+            <div className="section-card shrink-0">
                 <Table
                     columns={columns}
                     dataSource={filtered}
                     rowKey="id"
                     loading={loading}
+                    scroll={{x: 900}}
                     pagination={{pageSize: 15, showSizeChanger: false}}
                     footer={() => (
                         <span className="text-[12px] text-gray-400">

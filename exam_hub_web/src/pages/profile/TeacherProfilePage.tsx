@@ -48,16 +48,18 @@ export default function TeacherProfilePage() {
 
             <div>
                 <p className="font-medium text-gray-700 mb-2">Môn học phụ trách</p>
-                <div className="section-card">
+                <div className="section-card shrink-0">
                     <Table columns={subjectColumns} dataSource={teacherSubjects} rowKey="id" pagination={false}
+                           scroll={{x: 600}}
                            locale={{emptyText: 'Chưa được phân công môn học'}}/>
                 </div>
             </div>
 
             <div>
                 <p className="font-medium text-gray-700 mb-2">Trường giảng dạy</p>
-                <div className="section-card">
+                <div className="section-card shrink-0">
                     <Table columns={schoolColumns} dataSource={memberships} rowKey="id" pagination={false}
+                           scroll={{x: 600}}
                            locale={{emptyText: 'Chưa thuộc trường nào'}}/>
                 </div>
             </div>

@@ -219,6 +219,7 @@ function PoolSection({sessionId, exams, subjectId, gradeLevelId}: {
                 <Button icon={<PlusOutlined/>} onClick={() => setModalOpen(true)}>Thêm đề</Button>
             </div>
             <Table columns={columns} dataSource={exams} rowKey="examId" size="small" pagination={false}
+                   scroll={{x: 700}}
                    locale={{emptyText: 'Chưa có đề nào'}}/>
             <AddExamsModal open={modalOpen} onClose={() => setModalOpen(false)} sessionId={sessionId}
                            subjectId={subjectId} gradeLevelId={gradeLevelId}
@@ -352,6 +353,7 @@ function AssignmentSection({sessionId, assignments}: {sessionId: string; assignm
             </div>
 
             <Table columns={columns} dataSource={assignments} rowKey="id" size="small" pagination={false}
+                   scroll={{x: 700}}
                    locale={{emptyText: 'Chưa giao cho lớp/khoá nào.'}}/>
         </div>
     )

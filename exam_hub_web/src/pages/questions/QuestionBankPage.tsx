@@ -1,7 +1,7 @@
 import {useMemo, useState} from 'react'
 import {useNavigate} from 'react-router-dom'
-import {Button, Input, Popconfirm, Select, Table, Tag} from 'antd'
 import type {TableColumnsType} from 'antd'
+import {Button, Input, Popconfirm, Select, Table, Tag} from 'antd'
 import {CheckOutlined, PlusOutlined, SearchOutlined, UploadOutlined} from '@ant-design/icons'
 import {useDeleteQuestionMutation, useQuestionsQuery, useVerifyQuestionMutation} from '../../hooks/queries/useQuestions'
 import {
@@ -44,7 +44,8 @@ export default function QuestionBankPage() {
     const columns: TableColumnsType<Question> = [
         {
             title: 'Nội dung câu hỏi', dataIndex: 'content', key: 'content', ellipsis: true,
-            render: (_, q) => <span className="font-medium text-gray-800">{q.contentPlain || stripHtml(q.content)}</span>,
+            render: (_, q) => <span
+                className="font-medium text-gray-800">{q.contentPlain || stripHtml(q.content)}</span>,
         },
         {
             title: 'Chủ đề', dataIndex: 'topicName', key: 'topicName', width: 140,
@@ -57,7 +58,8 @@ export default function QuestionBankPage() {
         {
             title: 'Độ khó', dataIndex: 'difficultyLevelName', key: 'difficultyLevelName', width: 110,
             render: (_, q) => q.difficultyLevelName
-                ? <Tag color={DIFF_COLOR[difficultyCode(difficulties.data, q.difficultyLevelId)] ?? 'default'}>{q.difficultyLevelName}</Tag>
+                ? <Tag
+                    color={DIFF_COLOR[difficultyCode(difficulties.data, q.difficultyLevelId)] ?? 'default'}>{q.difficultyLevelName}</Tag>
                 : '—',
         },
         {
@@ -121,41 +123,41 @@ export default function QuestionBankPage() {
                     <Select
                         placeholder="Chủ đề" allowClear showSearch optionFilterProp="label" style={{width: 160}}
                         value={topicId} onChange={v => {
-                            setTopicId(v)
-                            setPage(1)
-                        }}
+                        setTopicId(v)
+                        setPage(1)
+                    }}
                         options={(topics.data ?? []).map(t => ({value: t.id, label: t.name}))}
                     />
                     <Select
                         placeholder="Loại" allowClear style={{width: 150}}
                         value={questionTypeId} onChange={v => {
-                            setQuestionTypeId(v)
-                            setPage(1)
-                        }}
+                        setQuestionTypeId(v)
+                        setPage(1)
+                    }}
                         options={(questionTypes.data ?? []).map(t => ({value: t.id, label: t.name}))}
                     />
                     <Select
                         placeholder="Độ khó" allowClear style={{width: 130}}
                         value={difficultyLevelId} onChange={v => {
-                            setDifficultyLevelId(v)
-                            setPage(1)
-                        }}
+                        setDifficultyLevelId(v)
+                        setPage(1)
+                    }}
                         options={(difficulties.data ?? []).map(d => ({value: d.id, label: d.name}))}
                     />
                     <Select
                         placeholder="Bloom" allowClear style={{width: 140}}
                         value={cognitiveLevelId} onChange={v => {
-                            setCognitiveLevelId(v)
-                            setPage(1)
-                        }}
+                        setCognitiveLevelId(v)
+                        setPage(1)
+                    }}
                         options={(cognitives.data ?? []).map(c => ({value: c.id, label: c.name}))}
                     />
                     <Select
                         placeholder="Trạng thái" allowClear style={{width: 130}}
                         value={isVerified} onChange={v => {
-                            setIsVerified(v)
-                            setPage(1)
-                        }}
+                        setIsVerified(v)
+                        setPage(1)
+                    }}
                         options={[{value: true, label: 'Đã duyệt'}, {value: false, label: 'Chờ duyệt'}]}
                     />
                     <div className="flex gap-2 ml-auto">
@@ -166,13 +168,13 @@ export default function QuestionBankPage() {
                     </div>
                 </div>
 
-                <div className="section-card">
+                <div className="section-card shrink-0">
                     <Table
                         columns={columns}
                         dataSource={data?.items ?? []}
                         rowKey="id"
                         loading={isLoading}
-                        scroll={{x: 1000}}
+                        scroll={{x: 700}}
                         pagination={{
                             current: page,
                             pageSize,

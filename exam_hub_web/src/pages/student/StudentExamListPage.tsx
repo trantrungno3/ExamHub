@@ -138,7 +138,7 @@ export default function StudentExamListPage() {
                         options={(Object.keys(STUDENT_STATUS_LABEL) as StudentStatus[]).map(s => ({value: s, label: STUDENT_STATUS_LABEL[s]}))}/>
             </div>
 
-            <div className="section-card">
+            <div className="section-card shrink-0">
                 <Table columns={columns} dataSource={filteredRows} rowKey="id"
                        loading={examsLoading || subsLoading}
                        scroll={{x: 1000}}

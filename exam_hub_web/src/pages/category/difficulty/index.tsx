@@ -65,13 +65,14 @@ export function DifficultyTab() {
                 </Button>
             </div>
 
-            <div className="section-card">
+            <div className="section-card shrink-0">
                 <Table
                     columns={columns}
                     dataSource={data}
                     rowKey="id"
                     pagination={false}
                     loading={loading}
+                    scroll={{x: 600}}
                     footer={() => (
                         <span className="text-[12px] text-gray-400">
                             {data.length} mức độ khó — Seed data mặc định hệ thống

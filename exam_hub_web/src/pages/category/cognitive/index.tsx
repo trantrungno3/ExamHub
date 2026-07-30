@@ -119,6 +119,7 @@ export function CognitiveTab() {
                         pagination={false}
                         size="small"
                         loading={loading}
+                        scroll={{x: 600}}
                     />
                 </div>
             </div>

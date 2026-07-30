@@ -113,13 +113,14 @@ export function SubjectTab() {
                 </Button>
             </div>
 
-            <div className="section-card">
+            <div className="section-card shrink-0">
                 <Table
                     columns={columns}
                     dataSource={filtered}
                     rowKey="id"
                     pagination={false}
                     loading={loading}
+                    scroll={{x: 700}}
                     footer={() => (
                         <span className="text-[12px] text-gray-400">
                             Hiển thị {filtered.length} trong tổng số {data.length} môn học
