@@ -213,6 +213,18 @@ public class QuestionController(
         return NoContent();
     }
 
+    /// <summary>Từ chối câu hỏi kèm lý do</summary>
+    [HttpPost("{id:guid}/reject")]
+    public async Task<ActionResult<RequestResponse<object>>> Reject(Guid id, [FromBody] RejectQuestionRequest req, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(req.Reason))
+            return BadRequest(RequestResponse<object>.Error("Vui lòng nhập lý do từ chối."));
+        var existing = await service.GetByIdAsync(id, ct);
+        if (existing is null) return NotFound();
+        await service.RejectAsync(id, CurrentUser.UserId!.Value, req.Reason.Trim(), ct);
+        return NoContent();
+    }
+
     /// <summary>Thống kê số câu hỏi theo trạng thái</summary>
     [HttpGet("stats")]
     public async Task<ActionResult<RequestResponse<QuestionStatsResponse>>> GetStats(CancellationToken ct)
