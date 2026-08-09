@@ -4,8 +4,18 @@ import {examTemplateService} from '../../services/examTemplateService'
 
 export const EXAM_TEMPLATE_KEYS = {
     all: ['examTemplates'] as const,
+    stats: ['examTemplateStats'] as const,
     byGrade: (gradeLevelId?: number) => ['examTemplates', 'byGrade', gradeLevelId] as const,
     detail: (id: string) => ['examTemplates', 'detail', id] as const,
+}
+
+export function useExamTemplateStatsQuery() {
+    return useQuery({
+        queryKey: EXAM_TEMPLATE_KEYS.stats,
+        queryFn: async () =>
+            (await examTemplateService.getStats()).data ??
+            {totalTemplates: 0, activeTemplates: 0, totalExamsGenerated: 0, avgQuestions: 0},
+    })
 }
 
 export function useExamTemplatesByGradeQuery(gradeLevelId?: number) {

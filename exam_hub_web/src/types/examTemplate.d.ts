@@ -69,3 +69,11 @@ interface ExamTemplateBody {
     isActive: boolean
     sections: ExamTemplateSectionBody[]
 }
+
+/* Thống kê mẫu đề thi (mirrors ExamTemplateStatsResponse.cs) */
+interface ExamTemplateStats {
+    totalTemplates: number
+    activeTemplates: number
+    totalExamsGenerated: number
+    avgQuestions: number
+}

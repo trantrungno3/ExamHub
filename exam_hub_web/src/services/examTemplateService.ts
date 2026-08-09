@@ -3,6 +3,10 @@ import {AuthHttp} from './requestService'
 class ExamTemplateService {
     private readonly basePath = 'exam-templates'
 
+    getStats() {
+        return AuthHttp.get<ExamTemplateStats>(`/${this.basePath}/stats`)
+    }
+
     getById(id: string) {
         return AuthHttp.get<ExamTemplate>(`/${this.basePath}/${id}`)
     }
