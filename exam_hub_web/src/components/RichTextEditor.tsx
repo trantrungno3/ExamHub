@@ -45,7 +45,7 @@ export default function RichTextEditor({
         const next = value || ''
         if (current === next || (current === '<p></p>' && next === '')) return
         skipSync.current = true
-        editor.commands.setContent(next, false)
+        editor.commands.setContent(next, { emitUpdate: false })
         skipSync.current = false
     }, [value, editor])
 
