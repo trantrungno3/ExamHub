@@ -55,7 +55,13 @@ public class ExamSubmissionController(IExamSubmissionService service) : Authoriz
     public async Task<ActionResult<RequestResponse<IReadOnlyList<ExamSubmissionResponse>>>> GetBySession(Guid sessionId, CancellationToken ct)
     {
         var result = await service.GetBySessionAsync(sessionId, ct);
-        var list = result.Select(s => ExamSubmissionResponse.FromEntity(s)).ToList();
+        var directory = await service.GetStudentDirectoryAsync(
+            result.Select(s => s.StudentId).Distinct().ToList(), ct);
+        var list = result.Select(s =>
+        {
+            directory.TryGetValue(s.StudentId, out var info);
+            return ExamSubmissionResponse.FromEntity(s, info?.Name, info?.ClassName);
+        }).ToList();
         return Ok(RequestResponse<IReadOnlyList<ExamSubmissionResponse>>.Success("Lấy danh sách thành công!", list, list.Count));
     }
 

@@ -31,6 +31,10 @@ interface ExamSubmission {
     status: SubmissionStatus
     createdAt: number
     answers?: SubmissionAnswer[]
+    /** Tên hiển thị của học sinh — chỉ enrich ở danh sách theo kỳ thi (by-session). */
+    studentName?: string
+    /** Tên lớp của học sinh — chỉ enrich ở danh sách theo kỳ thi (by-session). */
+    studentClassName?: string
 }
 
 interface ExamSubmissionBody {

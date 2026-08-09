@@ -52,4 +52,38 @@ public class ExamSubmissionRepository : BaseRepository<ExamSubmission, Guid>, IE
             .Where(x => x.SessionId == sessionId && x.StudentId == studentId)
             .OrderByDescending(x => x.Created)
             .ToListAsync(ct);
+
+    /// <inheritdoc/>
+    public async Task<IReadOnlyDictionary<Guid, string>> GetStudentClassNamesAsync(
+        IReadOnlyCollection<Guid> studentIds, CancellationToken ct = default)
+    {
+        var result = new Dictionary<Guid, string>();
+        if (studentIds.Count == 0) return result;
+
+        // Membership đang hoạt động của các HS: studentId → (cohortId, section).
+        var members = await Db.Set<CohortMember>().AsNoTracking()
+            .Where(m => m.IsActive && m.Section != null && studentIds.Contains(m.StudentId))
+            .Select(m => new { m.StudentId, m.CohortId, m.Section })
+            .ToListAsync(ct);
+        if (members.Count == 0) return result;
+
+        // Các lớp thuộc những cohort liên quan; khớp theo (cohortId, section).
+        var cohortIds = members.Select(m => m.CohortId).Distinct().ToList();
+        var classes = await Db.Set<CohortClass>().AsNoTracking()
+            .Where(cc => cohortIds.Contains(cc.CohortId))
+            .Select(cc => new { cc.CohortId, cc.Section, cc.ClassName, cc.SchoolYear })
+            .ToListAsync(ct);
+
+        foreach (var m in members)
+        {
+            if (result.ContainsKey(m.StudentId)) continue;
+            // HS có thể thuộc nhiều năm học → lấy lớp có năm học mới nhất.
+            var cc = classes
+                .Where(c => c.CohortId == m.CohortId && c.Section == m.Section)
+                .OrderByDescending(c => c.SchoolYear)
+                .FirstOrDefault();
+            if (cc != null) result[m.StudentId] = cc.ClassName;
+        }
+        return result;
+    }
 }
