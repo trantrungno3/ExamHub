@@ -1,7 +1,11 @@
+import type {ReactNode} from 'react'
 import {useState} from 'react'
 import {useNavigate, useSearchParams} from 'react-router-dom'
 import {Button, Checkbox, Empty, Spin} from 'antd'
-import {ClockCircleOutlined, WarningOutlined} from '@ant-design/icons'
+import {
+    BarChartOutlined, ClockCircleOutlined, FileTextOutlined,
+    QuestionCircleOutlined, WarningOutlined,
+} from '@ant-design/icons'
 import {useExamWithQuestionsQuery} from '../../hooks/queries/useExams'
 import {useAuth} from '../../AuthProvider'
 
@@ -31,12 +35,13 @@ export default function ExamCoverPage() {
     )
 
     const qCount = exam.questions?.length ?? 0
-    const stats: [string, string][] = [
-        ['Thời gian', `${exam.durationMinutes} phút`],
-        ['Số câu hỏi', `${qCount} câu`],
-        ['Tổng điểm', `${exam.totalScore} điểm`],
-        ['Mã đề', exam.examCode ?? '—'],
+    const stats: {icon: ReactNode; value: string; label: string}[] = [
+        {icon: <ClockCircleOutlined/>, value: `${exam.durationMinutes} phút`, label: 'Thời gian'},
+        {icon: <QuestionCircleOutlined/>, value: `${qCount} câu`, label: 'Số câu hỏi'},
+        {icon: <BarChartOutlined/>, value: `${exam.totalScore} điểm`, label: 'Tổng điểm'},
+        {icon: <FileTextOutlined/>, value: exam.examCode ?? '—', label: 'Mã đề'},
     ]
+    // Chỉ giữ field có dữ liệu thật (ẩn Giáo viên ra đề / Hình thức / Điểm đạt).
     const info: [string, string][] = [
         ['Môn học', exam.subjectName ?? '—'],
         ['Thí sinh', user?.displayName ?? user?.userName ?? '—'],
@@ -54,11 +59,12 @@ export default function ExamCoverPage() {
                     {exam.className ? `Lớp ${exam.className}` : 'ExamHub'}
                 </p>
                 <div className="max-w-4xl mx-auto mt-7 grid grid-cols-2 sm:grid-cols-4 gap-4">
-                    {stats.map(([k, v]) => (
-                        <div key={k} className="rounded-xl px-4 py-4"
+                    {stats.map(s => (
+                        <div key={s.label} className="rounded-xl px-4 py-4 text-center"
                              style={{background: 'rgba(255,255,255,0.14)', border: '1px solid rgba(255,255,255,0.22)'}}>
-                            <div className="text-[20px] font-bold text-white leading-tight">{v}</div>
-                            <div className="text-[12px] mt-1" style={{color: '#cdd9fb'}}>{k}</div>
+                            <div className="text-[18px] text-white/90 leading-none">{s.icon}</div>
+                            <div className="text-[20px] font-bold text-white leading-tight mt-1.5">{s.value}</div>
+                            <div className="text-[12px] mt-1" style={{color: '#cdd9fb'}}>{s.label}</div>
                         </div>
                     ))}
                 </div>
@@ -67,12 +73,13 @@ export default function ExamCoverPage() {
             {/* Card trắng đè lên hero */}
             <div className="max-w-2xl mx-auto px-4 -mt-14 pb-12">
                 <div className="bg-white rounded-2xl border p-6 sm:p-7" style={{borderColor: '#eceef2'}}>
-                    <h2 className="text-[16px] font-semibold" style={{color: '#191d27'}}>Thông tin bài thi</h2>
-                    <div className="mt-3">
+                    <h2 className="text-[16px] font-semibold pb-3 mb-1 border-b"
+                        style={{color: '#191d27', borderColor: '#eceef2'}}>Thông tin bài thi</h2>
+                    <div className="flex flex-col gap-2">
                         {info.map(([k, v]) => (
-                            <div key={k} className="flex items-center justify-between py-2.5 text-[14px]"
-                                 style={{borderBottom: '1px dotted #e7e5e4'}}>
-                                <span style={{color: '#6f7788'}}>{k}</span>
+                            <div key={k} className="flex items-center gap-4 text-[14px]">
+                                <span className="w-32 shrink-0 rounded-md px-3 py-1.5 text-center"
+                                      style={{background: '#f3f4f6', color: '#6f7788'}}>{k}</span>
                                 <span className="font-semibold" style={{color: '#1d2129'}}>{v}</span>
                             </div>
                         ))}

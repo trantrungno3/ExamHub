@@ -645,6 +645,81 @@ body {
 .exam-stamp--upcoming { @apply text-blue-600 border-blue-300 bg-blue-50/60; }
 .exam-stamp--closed { @apply text-stone-400 border-stone-300 bg-stone-50; }
 
+/* ─── 07B Làm bài (theme tối, 1 câu/màn) ───────────── */
+.take-shell { @apply min-h-screen flex flex-col; background: #0f1729; }
+.take-top {
+  @apply h-14 px-4 flex items-center justify-between bg-white border-b border-[#eceef2] shrink-0 gap-3;
+}
+.take-top-icon {
+  @apply w-8 h-8 rounded-md flex items-center justify-center text-[12px] font-bold text-white shrink-0;
+  background: #3a74f5;
+}
+.take-timer {
+  @apply inline-flex items-center gap-2 h-9 px-3.5 rounded-full text-[15px] font-bold text-white tabular-nums shrink-0;
+  background: #ef4444;
+}
+.take-timer--danger { @apply animate-pulse; background: #dc2626; }
+.take-timer-dot { @apply w-2 h-2 rounded-full bg-white; }
+
+.take-body { @apply flex-1 flex gap-4 p-4 overflow-hidden; }
+.take-main { @apply flex-1 flex flex-col rounded-2xl p-6 overflow-auto min-w-0; background: #1a2438; }
+.take-side {
+  @apply w-[340px] shrink-0 hidden lg:flex flex-col rounded-2xl bg-white overflow-hidden;
+}
+
+.take-qnum {
+  @apply w-9 h-9 rounded-lg flex items-center justify-center text-[15px] font-bold text-white shrink-0;
+  background: #3a74f5;
+}
+.take-qbox {
+  @apply rounded-xl p-4 text-[15px] leading-7 text-slate-100 mt-4;
+  background: #131c2e; border: 1px solid #26314a;
+}
+.take-radio { @apply flex flex-col gap-2.5 mt-4; }
+.take-radio .ant-radio-wrapper {
+  @apply items-center m-0 px-4 py-3.5 rounded-xl transition-colors w-full;
+  background: #131c2e; border: 1px solid #26314a; color: #cbd5e1;
+}
+.take-radio .ant-radio-wrapper:hover { border-color: #3a74f5; }
+.take-radio .ant-radio-wrapper-checked { background: #1e3a6b; border-color: #3a74f5; color: #fff; }
+.take-radio .ant-radio { @apply hidden; }
+.take-radio .ant-radio-wrapper span.ant-radio + * { @apply w-full flex items-center pr-0; }
+.take-opt-letter {
+  @apply inline-flex w-6 h-6 rounded-md items-center justify-center text-[13px] font-bold mr-3 shrink-0;
+  background: #26314a; color: #93c5fd;
+}
+.take-essay.ant-input {
+  background: #131c2e; border-color: #26314a; color: #e2e8f0;
+}
+.take-essay.ant-input::placeholder { color: #64748b; }
+
+.take-navbar { @apply mt-auto pt-5 flex items-center justify-between gap-3; }
+.take-flag {
+  @apply inline-flex items-center justify-center h-9 w-10 rounded-lg cursor-pointer transition-colors;
+  border: 1px solid #26314a; color: #94a3b8; background: #131c2e;
+}
+.take-flag--on { color: #f59e0b; border-color: #f59e0b; background: #3a2f14; }
+
+.take-side-head { @apply p-4 flex items-center gap-3 border-b border-[#eceef2]; }
+.take-side-avatar {
+  @apply w-10 h-10 rounded-full flex items-center justify-center text-[15px] font-semibold shrink-0;
+  background: #eaf0ff; color: #3a74f5;
+}
+.take-stat { @apply flex-1 text-center; }
+.take-stat-num { @apply text-[20px] font-bold leading-none; }
+.take-stat-label { @apply text-[11px] text-stone-500 mt-1; }
+.take-progress { @apply h-2 rounded-full overflow-hidden; background: #e2e8f0; }
+.take-progress-fill { @apply h-full rounded-full transition-all; background: #22c55e; }
+
+.take-grid { @apply grid grid-cols-8 gap-1.5; }
+.take-cell {
+  @apply h-8 rounded-md text-[12px] font-semibold flex items-center justify-center cursor-pointer border transition-colors;
+  background: #f1f5f9; border-color: #e2e8f0; color: #475569;
+}
+.take-cell--answered { background: #dcfce7; border-color: #86efac; color: #15803d; }
+.take-cell--flagged { background: #fef3c7; border-color: #fcd34d; color: #b45309; }
+.take-cell--current { background: #3a74f5; border-color: #3a74f5; color: #fff; }
+
 /* ─── Rich Text Editor ───────────────────────────── */
 .rich-editor {
   border: 1px solid #d9d9d9;
