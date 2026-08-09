@@ -1,3 +1,4 @@
+using ExamHub.Core.DataTransferObjects.Question;
 using ExamHub.Core.Domain.Entities;
 using ExamHub.Core.Domain.Interfaces;
 using ExamHub.Core.Infrastructure.Caching;
@@ -217,6 +218,24 @@ public class QuestionRepository : BaseRepository<Question, Guid>, IQuestionRepos
                 .SetProperty(x => x.IsVerified, true)
                 .SetProperty(x => x.VerifiedBy, verifiedBy)
                 .SetProperty(x => x.VerifiedAt, DateTime.UtcNow), ct);
+
+    /// <inheritdoc/>
+    public async Task UnverifyAsync(Guid id, CancellationToken ct = default)
+        => await Set
+            .Where(x => x.Id == id)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(x => x.IsVerified, false)
+                .SetProperty(x => x.VerifiedBy, (Guid?)null)
+                .SetProperty(x => x.VerifiedAt, (DateTime?)null), ct);
+
+    /// <inheritdoc/>
+    public async Task<QuestionStatsResponse> GetStatsAsync(CancellationToken ct = default)
+    {
+        var total    = await Set.CountAsync(ct);
+        var verified = await Set.CountAsync(x => x.IsVerified, ct);
+        var inactive = await Set.CountAsync(x => !x.IsActive, ct);
+        return new QuestionStatsResponse(total, verified, total - verified, inactive);
+    }
 
     /// <inheritdoc/>
     public async Task SetImageUrlAsync(Guid id, string imageUrl, CancellationToken ct = default)

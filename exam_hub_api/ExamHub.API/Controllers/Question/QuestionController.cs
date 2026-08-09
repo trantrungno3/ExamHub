@@ -168,4 +168,22 @@ public class QuestionController(
         await service.VerifyAsync(id, CurrentUser.UserId!.Value, ct);
         return NoContent();
     }
+
+    /// <summary>Bỏ duyệt câu hỏi</summary>
+    [HttpPost("{id:guid}/unverify")]
+    public async Task<IActionResult> Unverify(Guid id, CancellationToken ct)
+    {
+        var existing = await service.GetByIdAsync(id, ct);
+        if (existing is null) return NotFound();
+        await service.UnverifyAsync(id, ct);
+        return NoContent();
+    }
+
+    /// <summary>Thống kê số câu hỏi theo trạng thái</summary>
+    [HttpGet("stats")]
+    public async Task<ActionResult<RequestResponse<QuestionStatsResponse>>> GetStats(CancellationToken ct)
+    {
+        var stats = await service.GetStatsAsync(ct);
+        return Ok(RequestResponse<QuestionStatsResponse>.Success("Lấy thống kê thành công!", stats, 1));
+    }
 }

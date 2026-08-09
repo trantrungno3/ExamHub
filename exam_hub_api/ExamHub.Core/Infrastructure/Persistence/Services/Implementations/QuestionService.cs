@@ -1,3 +1,4 @@
+using ExamHub.Core.DataTransferObjects.Question;
 using ExamHub.Core.Domain.Entities;
 using ExamHub.Core.Domain.Interfaces;
 using ExamHub.Core.Infrastructure.Caching;
@@ -102,6 +103,17 @@ public class QuestionService : IQuestionService
         var verified = await _questionRepo.GetByIdAsync(id, ct);
         if (verified is not null) await InvalidatePoolAsync(verified, ct);
     }
+
+    public async Task UnverifyAsync(Guid id, CancellationToken ct = default)
+    {
+        // Bỏ duyệt loại câu hỏi khỏi pool (pool chỉ gồm is_verified=true) → invalidate trước khi đổi.
+        var question = await _questionRepo.GetByIdAsync(id, ct);
+        if (question is not null) await InvalidatePoolAsync(question, ct);
+        await _questionRepo.UnverifyAsync(id, ct);
+    }
+
+    public Task<QuestionStatsResponse> GetStatsAsync(CancellationToken ct = default)
+        => _questionRepo.GetStatsAsync(ct);
 
     public Task SetImageUrlAsync(Guid id, string imageUrl, CancellationToken ct = default)
         => _questionRepo.SetImageUrlAsync(id, imageUrl, ct);

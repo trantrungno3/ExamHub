@@ -1,3 +1,4 @@
+using ExamHub.Core.DataTransferObjects.Question;
 using ExamHub.Core.Domain.Entities;
 using ExamHub.Core.Domain.Enums;
 
@@ -29,6 +30,12 @@ public interface IQuestionService
 
     /// <summary>Kiểm duyệt câu hỏi</summary>
     Task VerifyAsync(Guid id, Guid verifiedBy, CancellationToken ct = default);
+
+    /// <summary>Bỏ duyệt câu hỏi</summary>
+    Task UnverifyAsync(Guid id, CancellationToken ct = default);
+
+    /// <summary>Thống kê số câu hỏi theo trạng thái</summary>
+    Task<QuestionStatsResponse> GetStatsAsync(CancellationToken ct = default);
 
     /// <summary>Gán URL tệp đính kèm (ảnh/PDF) cho câu hỏi.</summary>
     Task SetImageUrlAsync(Guid id, string imageUrl, CancellationToken ct = default);
