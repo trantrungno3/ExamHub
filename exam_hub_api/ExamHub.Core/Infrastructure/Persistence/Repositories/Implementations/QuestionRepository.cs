@@ -81,6 +81,7 @@ public class QuestionRepository : BaseRepository<Question, Guid>, IQuestionRepos
         int? cognitiveLevelId = null,
         string? keyword = null,
         bool? isVerified = null,
+        string? reviewStatus = null,
         CancellationToken ct = default)
     {
         var query = Set.AsNoTracking()
@@ -109,6 +110,14 @@ public class QuestionRepository : BaseRepository<Question, Guid>, IQuestionRepos
 
         if (isVerified.HasValue)
             query = query.Where(x => x.IsVerified == isVerified.Value);
+
+        query = reviewStatus switch
+        {
+            "approved" => query.Where(x => x.IsVerified),
+            "pending"  => query.Where(x => !x.IsVerified && x.RejectionReason == null),
+            "rejected" => query.Where(x => !x.IsVerified && x.RejectionReason != null),
+            _          => query,
+        };
 
         var total = await query.CountAsync(ct);
         var items = await query

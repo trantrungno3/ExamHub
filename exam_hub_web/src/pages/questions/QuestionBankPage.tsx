@@ -102,13 +102,13 @@ export default function QuestionBankPage() {
     const [questionTypeId, setQuestionTypeId] = useState<number>()
     const [difficultyLevelId, setDifficultyLevelId] = useState<number>()
     const [cognitiveLevelId, setCognitiveLevelId] = useState<number>()
-    const [isVerified, setIsVerified] = useState<boolean>()
+    const [reviewStatus, setReviewStatus] = useState<string>()
     const [importOpen, setImportOpen] = useState(false)
     const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([])
 
     const query: QuestionPagedQuery = useMemo(
-        () => ({page, pageSize, keyword, topicId, questionTypeId, difficultyLevelId, cognitiveLevelId, isVerified}),
-        [page, pageSize, keyword, topicId, questionTypeId, difficultyLevelId, cognitiveLevelId, isVerified],
+        () => ({page, pageSize, keyword, topicId, questionTypeId, difficultyLevelId, cognitiveLevelId, reviewStatus}),
+        [page, pageSize, keyword, topicId, questionTypeId, difficultyLevelId, cognitiveLevelId, reviewStatus],
     )
 
     const {data, isLoading} = useQuestionsQuery(query)
@@ -271,9 +271,13 @@ export default function QuestionBankPage() {
                     <Select placeholder="Bloom" allowClear style={{width: 140}}
                             value={cognitiveLevelId} onChange={v => { setCognitiveLevelId(v); setPage(1) }}
                             options={(cognitives.data ?? []).map(c => ({value: c.id, label: c.name}))}/>
-                    <Select placeholder="Trạng thái" allowClear style={{width: 130}}
-                            value={isVerified} onChange={v => { setIsVerified(v); setPage(1) }}
-                            options={[{value: true, label: 'Đã duyệt'}, {value: false, label: 'Chờ duyệt'}]}/>
+                    <Select placeholder="Trạng thái" allowClear style={{width: 140}}
+                            value={reviewStatus} onChange={v => { setReviewStatus(v); setPage(1) }}
+                            options={[
+                                {value: 'approved', label: 'Đã duyệt'},
+                                {value: 'pending', label: 'Chờ duyệt'},
+                                {value: 'rejected', label: 'Bị từ chối'},
+                            ]}/>
                     <div className="flex gap-2 ml-auto">
                         <Button icon={<UploadOutlined/>} onClick={() => setImportOpen(true)}>Nhập Excel</Button>
                         <Button type="primary" icon={<PlusOutlined/>} onClick={() => navigate('/app/questions/add')}>

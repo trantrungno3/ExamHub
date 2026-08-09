@@ -68,6 +68,7 @@ interface QuestionPagedQuery {
     cognitiveLevelId?: number
     keyword?: string
     isVerified?: boolean
+    reviewStatus?: string
 }
 
 /* Thống kê ngân hàng câu hỏi (mirrors QuestionStatsResponse.cs) */

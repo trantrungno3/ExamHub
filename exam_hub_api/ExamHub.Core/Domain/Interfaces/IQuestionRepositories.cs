@@ -34,6 +34,7 @@ public interface IQuestionRepository : IBaseRepository<Question, Guid>
         int? cognitiveLevelId = null,
         string? keyword = null,
         bool? isVerified = null,
+        string? reviewStatus = null,
         CancellationToken ct = default);
 
     /// <summary>
