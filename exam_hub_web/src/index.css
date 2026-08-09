@@ -120,7 +120,7 @@ body {
 
 /* ─── Sidebar ────────────────────────────────────── */
 .sidebar {
-  @apply w-44 bg-[#1c2131] flex flex-col shrink-0;
+  @apply w-60 bg-[#191d27] flex flex-col shrink-0;
 }
 
 .sidebar-logo {
@@ -128,8 +128,8 @@ body {
 }
 
 .sidebar-logo-icon {
-  @apply w-[30px] h-[30px] rounded-lg bg-blue-600 flex items-center justify-center
-         text-xs font-bold text-white shrink-0;
+  @apply w-[34px] h-[34px] rounded-lg bg-[#3a74f5] flex items-center justify-center
+         text-[13px] font-bold text-white shrink-0;
 }
 
 .sidebar-logo-name {
@@ -141,17 +141,18 @@ body {
 }
 
 .sidebar-nav-item {
-  @apply flex items-center gap-2 px-3 py-2.5 rounded-lg text-[13px]
-         text-gray-400 hover:text-white hover:bg-white/10 cursor-pointer
+  @apply flex items-center gap-3 px-3 py-2.5 rounded-lg text-[14px] font-medium
+         text-[#acb4c0] hover:text-[#e6e9ef] hover:bg-white/[0.06] cursor-pointer
          transition-colors select-none border-0 bg-transparent w-full text-left;
 }
 
-.sidebar-nav-item--active {
-  @apply bg-blue-600 text-white hover:bg-blue-600;
+.sidebar-nav-item--active,
+.sidebar-nav-item--active:hover {
+  @apply bg-[#e9ecfe] text-[#3a74f5];
 }
 
 .sidebar-footer {
-  @apply px-2 pb-4;
+  @apply px-2 pb-4 pt-2 border-t border-[#2a3040];
 }
 
 /* ─── Page canvas (right of sidebar) ────────────── */
@@ -161,21 +162,21 @@ body {
 
 /* ─── Top bar ────────────────────────────────────── */
 .top-bar {
-  @apply flex items-center justify-between px-8 py-4 bg-white
-         border-b border-gray-100 shrink-0;
+  @apply flex items-center justify-between px-7 h-[60px] bg-white
+         border-b border-[#eceef2] shrink-0;
 }
 
 .top-bar-title {
-  @apply text-[19px] font-bold text-gray-900 leading-tight;
+  @apply text-[18px] font-semibold text-[#191d27] leading-tight;
 }
 
 .top-bar-subtitle {
-  @apply text-xs text-gray-400 mt-0.5;
+  @apply text-[13px] text-[#6f7788] mt-0.5;
 }
 
 .top-bar-avatar {
-  @apply w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center
-         text-sm font-bold text-white shrink-0;
+  @apply w-9 h-9 rounded-full bg-[#e9ecfe] flex items-center justify-center
+         text-[12px] font-semibold text-[#3a74f5] shrink-0;
 }
 
 /* ─── Stat cards ─────────────────────────────────── */
