@@ -47,6 +47,13 @@ class QuestionService {
         return AuthHttp.postForm<{url: string}>(`/${this.basePath}/${id}/attachment`, form)
     }
 
+    /** Upload audio (≤ 10 MB) cho câu hỏi → trả về URL MinIO. */
+    uploadAudio(id: string, file: File) {
+        const form = new FormData()
+        form.append('file', file)
+        return AuthHttp.postForm<{url: string}>(`/${this.basePath}/${id}/audio`, form)
+    }
+
     /** Import hàng loạt từ file .xlsx. */
     bulkImport(args: BulkImportArgs) {
         const form = new FormData()

@@ -53,6 +53,8 @@ interface QuestionBody {
     audioUrl?: string
     source?: string
     tags?: string[]
+    isActive?: boolean
+    isVerified?: boolean
     answers: QuestionAnswerBody[]
 }
 

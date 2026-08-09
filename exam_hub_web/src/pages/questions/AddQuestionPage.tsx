@@ -1,7 +1,7 @@
 import {useEffect, useMemo} from 'react'
 import {useNavigate, useParams} from 'react-router-dom'
-import {Button, Checkbox, Form, Input, Select, Upload, message} from 'antd'
-import {DeleteOutlined, PaperClipOutlined, PlusOutlined} from '@ant-design/icons'
+import {Button, Checkbox, Form, Input, Select, Switch, Upload, message} from 'antd'
+import {CloseOutlined, PictureOutlined, PlusOutlined, SoundOutlined} from '@ant-design/icons'
 import RichTextEditor from '../../components/RichTextEditor'
 import {useMutation, useQueryClient} from '@tanstack/react-query'
 import {questionService} from '../../services/questionService'
@@ -16,6 +16,16 @@ import {
     useTopicsQuery,
 } from '../../hooks/queries/useCategoryLists'
 
+const BLOOM_COLOR: Record<string, {bg: string; fg: string}> = {
+    remember:   {bg: '#e7f7ef', fg: '#1ea375'},
+    understand: {bg: '#eef1ff', fg: '#3a74f5'},
+    apply:      {bg: '#fff4e5', fg: '#d98a00'},
+    analyze:    {bg: '#f3ecfe', fg: '#8b5cf6'},
+    evaluate:   {bg: '#fee5e5', fg: '#e74242'},
+    create:     {bg: '#e6f6f6', fg: '#0ea5a5'},
+}
+const NEUTRAL = {bg: '#eef0f3', fg: '#6f7788'}
+
 type AnswerForm = {content: string; isCorrect: boolean}
 type QuestionForm = {
     gradeLevelId?: number
@@ -28,11 +38,15 @@ type QuestionForm = {
     explanation?: string
     source?: string
     tags?: string[]
+    isActive: boolean
+    isVerified: boolean
     answers: AnswerForm[]
 }
 
 const EMPTY: QuestionForm = {
     content: '',
+    isActive: true,
+    isVerified: false,
     answers: [{content: '', isCorrect: true}, {content: '', isCorrect: false}],
 }
 
@@ -51,30 +65,21 @@ export default function AddQuestionPage() {
     const cognitives = useCognitiveLevelsQuery()
     const {data: existing} = useQuestionQuery(id)
 
-    /** Cascading: Cấp lớp → Môn học → Chủ đề. Mỗi select chỉ render danh sách đã lọc. */
     const gradeLevelId = Form.useWatch('gradeLevelId', form)
     const subjectId = Form.useWatch('subjectId', form)
+    const answersWatch = Form.useWatch('answers', form)
 
     const gradeOptions = useMemo(
-        () => [...(grades.data ?? [])]
-            .sort((a, b) => a.gradeNumber - b.gradeNumber)
-            .map(g => ({value: g.id, label: g.name})),
-        [grades.data],
-    )
+        () => [...(grades.data ?? [])].sort((a, b) => a.gradeNumber - b.gradeNumber).map(g => ({value: g.id, label: g.name})),
+        [grades.data])
     const subjectOptions = useMemo(
-        () => (subjects.data ?? [])
-            .filter(s => s.gradeLevelId === gradeLevelId)
-            .sort((a, b) => a.name.localeCompare(b.name))
-            .map(s => ({value: s.id, label: s.name})),
-        [subjects.data, gradeLevelId],
-    )
+        () => (subjects.data ?? []).filter(s => s.gradeLevelId === gradeLevelId)
+            .sort((a, b) => a.name.localeCompare(b.name)).map(s => ({value: s.id, label: s.name})),
+        [subjects.data, gradeLevelId])
     const topicOptions = useMemo(
-        () => (topics.data ?? [])
-            .filter(t => t.subjectId === subjectId)
-            .sort((a, b) => a.name.localeCompare(b.name))
-            .map(t => ({value: t.id, label: t.name})),
-        [topics.data, subjectId],
-    )
+        () => (topics.data ?? []).filter(t => t.subjectId === subjectId)
+            .sort((a, b) => a.name.localeCompare(b.name)).map(t => ({value: t.id, label: t.name})),
+        [topics.data, subjectId])
 
     useEffect(() => {
         if (isEdit && existing) {
@@ -87,13 +92,13 @@ export default function AddQuestionPage() {
                 explanation: existing.explanation,
                 source: existing.source,
                 tags: existing.tags,
-                answers: existing.answers?.map(a => ({content: a.content, isCorrect: a.isCorrect}))
-                    ?? EMPTY.answers,
+                isActive: existing.isActive,
+                isVerified: existing.isVerified,
+                answers: existing.answers?.map(a => ({content: a.content, isCorrect: a.isCorrect})) ?? EMPTY.answers,
             })
         }
     }, [isEdit, existing, form])
 
-    /** Khi sửa: suy ra Cấp lớp + Môn học từ topicId (cần topics/subjects đã tải). */
     useEffect(() => {
         if (!isEdit || !existing || !topics.data || !subjects.data) return
         const topic = topics.data.find(t => t.id === existing.topicId)
@@ -102,8 +107,7 @@ export default function AddQuestionPage() {
     }, [isEdit, existing, topics.data, subjects.data, form])
 
     const saveMutation = useMutation({
-        mutationFn: (body: QuestionBody) =>
-            isEdit ? questionService.update(id!, body) : questionService.create(body),
+        mutationFn: (body: QuestionBody) => isEdit ? questionService.update(id!, body) : questionService.create(body),
         onSuccess: (res) => {
             if (res.status === statusCode.Error || !res.data) {
                 message.error(res.message || 'Lưu câu hỏi thất bại')
@@ -111,6 +115,7 @@ export default function AddQuestionPage() {
             }
             message.success(isEdit ? 'Cập nhật câu hỏi thành công' : 'Tạo câu hỏi thành công')
             void qc.invalidateQueries({queryKey: QUESTION_KEYS.all})
+            void qc.invalidateQueries({queryKey: QUESTION_KEYS.stats})
             navigate('/app/questions')
         },
         onError: () => message.error('Lưu câu hỏi thất bại'),
@@ -128,16 +133,22 @@ export default function AddQuestionPage() {
             explanation: v.explanation,
             source: v.source,
             tags: v.tags,
+            isActive: v.isActive,
+            isVerified: v.isVerified,
             answers: v.answers.map(a => ({content: a.content, isCorrect: a.isCorrect})),
         }
         saveMutation.mutate(body)
     }
 
-    const uploadAttachment = async (file: File) => {
-        if (!id) return
+    const uploadImage = async (file: File) => {
+        if (!id) { message.warning('Hãy lưu câu hỏi trước khi đính kèm tệp'); return }
         const res = await questionService.uploadAttachment(id, file)
-        if (res.data?.url) message.success('Đã tải tệp đính kèm lên')
-        else message.error(res.message || 'Tải tệp thất bại')
+        if (res.data?.url) message.success('Đã tải ảnh lên'); else message.error(res.message || 'Tải ảnh thất bại')
+    }
+    const uploadAudioFile = async (file: File) => {
+        if (!id) { message.warning('Hãy lưu câu hỏi trước khi đính kèm tệp'); return }
+        const res = await questionService.uploadAudio(id, file)
+        if (res.data?.url) message.success('Đã tải audio lên'); else message.error(res.message || 'Tải audio thất bại')
     }
 
     return (
@@ -146,7 +157,7 @@ export default function AddQuestionPage() {
                 <div>
                     <p className="top-bar-title">{isEdit ? 'Sửa câu hỏi' : 'Thêm câu hỏi mới'}</p>
                     <p className="top-bar-subtitle">
-                        <span className="text-blue-500 cursor-pointer hover:underline"
+                        <span className="cursor-pointer hover:underline" style={{color: '#3a74f5'}}
                               onClick={() => navigate('/app/questions')}>Câu hỏi</span>
                         {' / '}{isEdit ? 'Chỉnh sửa' : 'Thêm mới'}
                     </p>
@@ -157,62 +168,88 @@ export default function AddQuestionPage() {
             <div className="flex-1 overflow-auto p-6">
                 <Form form={form} layout="vertical" initialValues={EMPTY}>
                     <div className="flex gap-5 items-start">
-                        {/* Left: content + answers */}
+                        {/* Left */}
                         <div className="flex-1 flex flex-col gap-4 min-w-0">
                             <div className="form-section">
                                 <p className="form-section-title">Nội dung câu hỏi</p>
                                 <Form.Item name="content" rules={[{required: true, message: 'Nhập nội dung câu hỏi'}]}>
-                                    <RichTextEditor
-                                        placeholder="Nhập nội dung câu hỏi..."
-                                        minHeight={120}
-                                    />
+                                    <RichTextEditor placeholder="Nhập nội dung câu hỏi..." minHeight={120}/>
                                 </Form.Item>
                                 <p className="form-section-title">Giải thích đáp án</p>
-                                <Form.Item name="explanation">
-                                    <RichTextEditor
-                                        placeholder="Giải thích đáp án (tuỳ chọn)..."
-                                        minHeight={80}
-                                    />
+                                <Form.Item name="explanation" className="!mb-0">
+                                    <RichTextEditor placeholder="Giải thích đáp án (tuỳ chọn)..." minHeight={80}/>
+                                </Form.Item>
+                            </div>
+
+                            <div className="form-section">
+                                <p className="form-section-title">Tệp đính kèm (ảnh · audio)</p>
+                                <div className="flex gap-3">
+                                    <Upload accept="image/*,application/pdf" showUploadList={false}
+                                            beforeUpload={(f) => { void uploadImage(f as unknown as File); return false }}
+                                            className="flex-1">
+                                        <div className="flex flex-col items-center justify-center gap-1 rounded-lg py-6 border border-dashed cursor-pointer w-full"
+                                             style={{borderColor: '#c4cad3', background: '#f9fafb', color: '#9aa2b1'}}>
+                                            <PictureOutlined className="text-[18px]"/>
+                                            <span className="text-[13px]">Tải ảnh lên</span>
+                                        </div>
+                                    </Upload>
+                                    <Upload accept="audio/*" showUploadList={false}
+                                            beforeUpload={(f) => { void uploadAudioFile(f as unknown as File); return false }}
+                                            className="flex-1">
+                                        <div className="flex flex-col items-center justify-center gap-1 rounded-lg py-6 border border-dashed cursor-pointer w-full"
+                                             style={{borderColor: '#c4cad3', background: '#f9fafb', color: '#9aa2b1'}}>
+                                            <SoundOutlined className="text-[18px]"/>
+                                            <span className="text-[13px]">Tải audio lên</span>
+                                        </div>
+                                    </Upload>
+                                </div>
+                                {!isEdit && <p className="text-[12px] mt-2" style={{color: '#9aa2b1'}}>Lưu câu hỏi trước để đính kèm tệp.</p>}
+                            </div>
+
+                            <div className="form-section">
+                                <Form.Item label="Tags" name="tags" className="!mb-3">
+                                    <Select mode="tags" placeholder="Thêm từ khoá..." tokenSeparators={[',']}/>
+                                </Form.Item>
+                                <Form.Item label="Nguồn" name="source" className="!mb-0">
+                                    <Input placeholder="VD: SGK Toán 10, trang 45"/>
                                 </Form.Item>
                             </div>
 
                             <div className="form-section">
                                 <p className="form-section-title">Đáp án</p>
-                                <Form.List
-                                    name="answers"
-                                    rules={[{
-                                        validator: async (_, answers: AnswerForm[]) => {
-                                            if (!answers || answers.length < 2)
-                                                return Promise.reject(new Error('Cần ít nhất 2 đáp án'))
-                                            if (!answers.some(a => a?.isCorrect))
-                                                return Promise.reject(new Error('Cần ít nhất 1 đáp án đúng'))
-                                        },
-                                    }]}
-                                >
+                                <Form.List name="answers" rules={[{
+                                    validator: async (_, answers: AnswerForm[]) => {
+                                        if (!answers || answers.length < 2) return Promise.reject(new Error('Cần ít nhất 2 đáp án'))
+                                        if (!answers.some(a => a?.isCorrect)) return Promise.reject(new Error('Cần ít nhất 1 đáp án đúng'))
+                                    },
+                                }]}>
                                     {(fields, {add, remove}, {errors}) => (
                                         <div className="flex flex-col gap-2">
-                                            {fields.map(field => (
-                                                <div key={field.key} className="flex items-center gap-2">
-                                                    <Form.Item
-                                                        name={[field.name, 'isCorrect']}
-                                                        valuePropName="checked"
-                                                        noStyle
-                                                    >
-                                                        <Checkbox/>
-                                                    </Form.Item>
-                                                    <Form.Item
-                                                        name={[field.name, 'content']}
-                                                        className="flex-1 !mb-0"
-                                                        rules={[{required: true, message: 'Nhập nội dung đáp án'}]}
-                                                    >
-                                                        <Input placeholder="Nội dung đáp án"/>
-                                                    </Form.Item>
-                                                    {fields.length > 2 && (
-                                                        <Button type="text" danger icon={<DeleteOutlined/>}
-                                                                onClick={() => remove(field.name)}/>
-                                                    )}
-                                                </div>
-                                            ))}
+                                            {fields.map((field, idx) => {
+                                                const isCorrect = answersWatch?.[idx]?.isCorrect
+                                                const letter = String.fromCharCode(65 + idx)
+                                                return (
+                                                    <div key={field.key}
+                                                         className="flex items-center gap-2 rounded-lg px-2.5 py-1.5"
+                                                         style={isCorrect
+                                                             ? {background: '#e7f7ef', border: '1px solid #b8e6cf'}
+                                                             : {background: '#fff', border: '1px solid #eceef2'}}>
+                                                        <Form.Item name={[field.name, 'isCorrect']} valuePropName="checked" noStyle>
+                                                            <Checkbox/>
+                                                        </Form.Item>
+                                                        <span className="font-semibold text-[13px] w-5 text-center"
+                                                              style={{color: isCorrect ? '#1ea375' : '#6f7788'}}>{letter}.</span>
+                                                        <Form.Item name={[field.name, 'content']} className="flex-1 !mb-0"
+                                                                   rules={[{required: true, message: 'Nhập nội dung đáp án'}]}>
+                                                            <Input variant="borderless" placeholder="Nội dung đáp án"/>
+                                                        </Form.Item>
+                                                        {fields.length > 2 && (
+                                                            <Button type="text" size="small" danger icon={<CloseOutlined/>}
+                                                                    onClick={() => remove(field.name)}/>
+                                                        )}
+                                                    </div>
+                                                )
+                                            })}
                                             <Button type="dashed" icon={<PlusOutlined/>}
                                                     onClick={() => add({content: '', isCorrect: false})}>
                                                 Thêm đáp án
@@ -222,53 +259,24 @@ export default function AddQuestionPage() {
                                     )}
                                 </Form.List>
                             </div>
-
-                            {isEdit && (
-                                <div className="form-section">
-                                    <p className="form-section-title">Tệp đính kèm (ảnh / PDF, ≤ 10 MB)</p>
-                                    <Upload
-                                        accept="image/*,application/pdf"
-                                        maxCount={1}
-                                        showUploadList={false}
-                                        beforeUpload={(file) => {
-                                            void uploadAttachment(file as unknown as File)
-                                            return false
-                                        }}
-                                    >
-                                        <Button icon={<PaperClipOutlined/>}>Đính kèm tệp</Button>
-                                    </Upload>
-                                </div>
-                            )}
                         </div>
 
-                        {/* Right: classification */}
+                        {/* Right */}
                         <div className="w-72 flex flex-col gap-4 shrink-0">
                             <div className="form-section">
                                 <p className="form-section-title">Phân loại câu hỏi</p>
                                 <Form.Item label="Cấp lớp" name="gradeLevelId" rules={[{required: true, message: 'Chọn cấp lớp'}]}>
-                                    <Select
-                                        placeholder="Chọn cấp lớp"
-                                        showSearch optionFilterProp="label"
-                                        options={gradeOptions}
-                                        onChange={() => form.setFieldsValue({subjectId: undefined, topicId: undefined})}
-                                    />
+                                    <Select placeholder="Chọn cấp lớp" showSearch optionFilterProp="label" options={gradeOptions}
+                                            onChange={() => form.setFieldsValue({subjectId: undefined, topicId: undefined})}/>
                                 </Form.Item>
                                 <Form.Item label="Môn học" name="subjectId" rules={[{required: true, message: 'Chọn môn học'}]}>
-                                    <Select
-                                        placeholder={gradeLevelId ? 'Chọn môn học' : 'Chọn cấp lớp trước'}
-                                        disabled={!gradeLevelId}
-                                        showSearch optionFilterProp="label"
-                                        options={subjectOptions}
-                                        onChange={() => form.setFieldsValue({topicId: undefined})}
-                                    />
+                                    <Select placeholder={gradeLevelId ? 'Chọn môn học' : 'Chọn cấp lớp trước'} disabled={!gradeLevelId}
+                                            showSearch optionFilterProp="label" options={subjectOptions}
+                                            onChange={() => form.setFieldsValue({topicId: undefined})}/>
                                 </Form.Item>
                                 <Form.Item label="Chủ đề" name="topicId" rules={[{required: true, message: 'Chọn chủ đề'}]}>
-                                    <Select
-                                        placeholder={subjectId ? 'Chọn chủ đề' : 'Chọn môn học trước'}
-                                        disabled={!subjectId}
-                                        showSearch optionFilterProp="label"
-                                        options={topicOptions}
-                                    />
+                                    <Select placeholder={subjectId ? 'Chọn chủ đề' : 'Chọn môn học trước'} disabled={!subjectId}
+                                            showSearch optionFilterProp="label" options={topicOptions}/>
                                 </Form.Item>
                                 <Form.Item label="Loại câu hỏi" name="questionTypeId" rules={[{required: true, message: 'Chọn loại'}]}>
                                     <Select placeholder="Chọn loại"
@@ -278,20 +286,45 @@ export default function AddQuestionPage() {
                                     <Select placeholder="Chọn độ khó"
                                             options={(difficulties.data ?? []).map(d => ({value: d.id, label: d.name}))}/>
                                 </Form.Item>
-                                <Form.Item label="Cấp độ nhận thức (Bloom)" name="cognitiveLevelId">
+                                <Form.Item label="Cấp độ nhận thức (Bloom)" name="cognitiveLevelId" className="!mb-1">
                                     <Select placeholder="Chưa phân loại" allowClear
                                             options={(cognitives.data ?? []).map(c => ({value: c.id, label: c.name}))}/>
                                 </Form.Item>
+                                <div className="flex items-center gap-1.5 flex-wrap rounded-lg px-2.5 py-2"
+                                     style={{background: '#f7f8fa'}}>
+                                    <span className="text-[11px]" style={{color: '#9aa2b1'}}>Gợi ý:</span>
+                                    {[...(cognitives.data ?? [])].sort((a, b) => a.levelOrder - b.levelOrder).map(c => {
+                                        const col = BLOOM_COLOR[c.code] ?? NEUTRAL
+                                        return (
+                                            <span key={c.id} style={{background: col.bg, color: col.fg}}
+                                                  className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium">
+                                                {c.levelOrder}.{c.name}
+                                            </span>
+                                        )
+                                    })}
+                                </div>
                             </div>
 
                             <div className="form-section">
-                                <p className="form-section-title">Khác</p>
-                                <Form.Item label="Nguồn" name="source">
-                                    <Input placeholder="VD: SGK Toán 10, trang 45"/>
-                                </Form.Item>
-                                <Form.Item label="Tags" name="tags">
-                                    <Select mode="tags" placeholder="Thêm từ khoá..." tokenSeparators={[',']}/>
-                                </Form.Item>
+                                <p className="form-section-title">Cài đặt</p>
+                                <div className="flex items-center justify-between py-1">
+                                    <div>
+                                        <div className="text-[13px] font-medium" style={{color: '#1d2129'}}>Hiển thị</div>
+                                        <div className="text-[11px]" style={{color: '#9aa2b1'}}>is_active — cho phép dùng câu hỏi</div>
+                                    </div>
+                                    <Form.Item name="isActive" valuePropName="checked" noStyle>
+                                        <Switch/>
+                                    </Form.Item>
+                                </div>
+                                <div className="flex items-center justify-between py-1">
+                                    <div>
+                                        <div className="text-[13px] font-medium" style={{color: '#1d2129'}}>Đã xác minh</div>
+                                        <div className="text-[11px]" style={{color: '#9aa2b1'}}>is_verified — đã kiểm duyệt</div>
+                                    </div>
+                                    <Form.Item name="isVerified" valuePropName="checked" noStyle>
+                                        <Switch/>
+                                    </Form.Item>
+                                </div>
                             </div>
                         </div>
                     </div>
