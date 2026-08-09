@@ -21,6 +21,8 @@ public class QuestionController(
     private const long MaxAttachmentBytes = 10 * 1024 * 1024; // 10 MB
     private static readonly string[] AllowedContentTypes =
         ["image/jpeg", "image/png", "image/gif", "image/webp", "application/pdf"];
+    private static readonly string[] AllowedAudioTypes =
+        ["audio/mpeg", "audio/mp3", "audio/wav", "audio/x-wav", "audio/ogg", "audio/webm", "audio/mp4"];
 
     /// <summary>Lấy câu hỏi theo ID (kèm đáp án)</summary>
     [HttpGet("{id:guid}")]
@@ -157,6 +159,38 @@ public class QuestionController(
 
         await service.SetImageUrlAsync(id, url, ct);
         return Ok(RequestResponse<object>.Success("Tải tệp đính kèm thành công!", new { Url = url }, 1));
+    }
+
+    /// <summary>Tải lên tệp audio (tối đa 10 MB) cho câu hỏi → MinIO</summary>
+    [HttpPost("{id:guid}/audio")]
+    public async Task<ActionResult<RequestResponse<object>>> UploadAudio(Guid id, IFormFile file, CancellationToken ct)
+    {
+        if (file is null || file.Length == 0)
+            return BadRequest(RequestResponse<object>.Error("Tệp audio không được để trống."));
+        if (file.Length > MaxAttachmentBytes)
+            return BadRequest(RequestResponse<object>.Error("Tệp vượt quá giới hạn 10 MB."));
+        if (!AllowedAudioTypes.Contains(file.ContentType))
+            return BadRequest(RequestResponse<object>.Error("Chỉ chấp nhận tệp audio (mp3/wav/ogg/webm/mp4)."));
+
+        var existing = await service.GetByIdAsync(id, ct);
+        if (existing is null) return NotFound();
+
+        var topic = await topicRepo.GetByIdAsync(existing.TopicId, ct);
+        if (topic is null)
+            return NotFound(RequestResponse<object>.Error($"Chủ đề {existing.TopicId} không tồn tại."));
+
+        var authResult = await authorizationService.AuthorizeAsync(User, topic.SubjectId, "TeacherOwnsSubject");
+        if (!authResult.Succeeded)
+            return StatusCode(403, RequestResponse<object>.Error("Bạn không phụ trách môn học này."));
+
+        var objectName = $"questions/{id}/audio/{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
+        await using var stream = file.OpenReadStream();
+        var (ok, url) = await storage.UploadStreamAsync(stream, objectName, file.ContentType);
+        if (!ok || url is null)
+            return StatusCode(500, RequestResponse<object>.Error("Tải audio lên MinIO thất bại."));
+
+        await service.SetAudioUrlAsync(id, url, ct);
+        return Ok(RequestResponse<object>.Success("Tải audio thành công!", new { Url = url }, 1));
     }
 
     /// <summary>Kiểm duyệt câu hỏi</summary>

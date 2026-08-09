@@ -50,6 +50,8 @@ public record QuestionRequest()
    public string? AudioUrl { get; set; }
    public string? Source { get; set; }
    public string[]? Tags { get; set; }
+   public bool IsActive { get; set; } = true;
+   public bool IsVerified { get; set; }
     [ Required(ErrorMessage = "Câu hỏi phải có ít nhất một đáp án.")]
     [HasCorrectAnswer]
     public IEnumerable<QuestionAnswerRequest> Answers{ get; set; }
@@ -67,7 +69,9 @@ public record QuestionRequest()
         ImageUrl          = ImageUrl,
         AudioUrl          = AudioUrl,
         Source            = Source,
-        Tags              = Tags ?? []
+        Tags              = Tags ?? [],
+        IsActive          = IsActive,
+        IsVerified        = IsVerified
     };
 
     /// <summary>Map sang danh sách QuestionAnswer</summary>

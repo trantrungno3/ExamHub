@@ -64,6 +64,9 @@ public interface IQuestionRepository : IBaseRepository<Question, Guid>
 
     /// <summary>Gán URL tệp đính kèm (ảnh/PDF) cho câu hỏi.</summary>
     Task SetImageUrlAsync(Guid id, string imageUrl, CancellationToken ct = default);
+
+    /// <summary>Cập nhật URL tệp audio đính kèm</summary>
+    Task SetAudioUrlAsync(Guid id, string audioUrl, CancellationToken ct = default);
 }
 
 /// <summary>Interface repository cho QuestionAnswer</summary>

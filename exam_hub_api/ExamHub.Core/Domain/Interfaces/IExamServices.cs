@@ -37,6 +37,9 @@ public interface IQuestionService
     /// <summary>Thống kê số câu hỏi theo trạng thái</summary>
     Task<QuestionStatsResponse> GetStatsAsync(CancellationToken ct = default);
 
+    /// <summary>Cập nhật URL tệp audio đính kèm</summary>
+    Task SetAudioUrlAsync(Guid id, string audioUrl, CancellationToken ct = default);
+
     /// <summary>Gán URL tệp đính kèm (ảnh/PDF) cho câu hỏi.</summary>
     Task SetImageUrlAsync(Guid id, string imageUrl, CancellationToken ct = default);
 }

@@ -245,6 +245,14 @@ public class QuestionRepository : BaseRepository<Question, Guid>, IQuestionRepos
                 .SetProperty(x => x.ImageUrl, imageUrl)
                 .SetProperty(x => x.Modified, DateTime.UtcNow), ct);
 
+    /// <inheritdoc/>
+    public async Task SetAudioUrlAsync(Guid id, string audioUrl, CancellationToken ct = default)
+        => await Set
+            .Where(x => x.Id == id)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(x => x.AudioUrl, audioUrl)
+                .SetProperty(x => x.Modified, DateTime.UtcNow), ct);
+
     // ── SQL cho pool cache + nạp theo ID ──────────────────────────────────
     // Pool: chỉ SELECT id (cache được). 4 biến thể tránh truyền NULL int gây lỗi
     // type-inference trong Npgsql khi không lọc theo type/cognitive.

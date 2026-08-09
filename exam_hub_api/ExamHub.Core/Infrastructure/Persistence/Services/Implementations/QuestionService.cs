@@ -118,6 +118,9 @@ public class QuestionService : IQuestionService
     public Task SetImageUrlAsync(Guid id, string imageUrl, CancellationToken ct = default)
         => _questionRepo.SetImageUrlAsync(id, imageUrl, ct);
 
+    public Task SetAudioUrlAsync(Guid id, string audioUrl, CancellationToken ct = default)
+        => _questionRepo.SetAudioUrlAsync(id, audioUrl, ct);
+
     /// <summary>Xóa các khóa pool Redis mà câu hỏi này tham gia (pool theo chủ đề + pool toàn môn, ≤ 8 khóa).</summary>
     private async Task InvalidatePoolAsync(Question q, CancellationToken ct)
     {
