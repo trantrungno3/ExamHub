@@ -13,6 +13,13 @@ const AVAILABILITY: Record<ExamSessionAvailability, string> = {
     closed: 'Đã đóng',
 }
 
+/** Badge pill phẳng theo trạng thái khả dụng (khớp Figma 07A). */
+const BADGE: Record<ExamSessionAvailability, {bg: string; color: string}> = {
+    open: {bg: '#e3f4ec', color: '#1ea375'},
+    upcoming: {bg: '#e8ebfb', color: '#5b6ee0'},
+    closed: {bg: '#eef0f3', color: '#8a93a5'},
+}
+
 /** Cùng ngày → "dd/MM/yyyy · HH:mm–HH:mm"; khác ngày → "dd/MM HH:mm → dd/MM HH:mm". */
 function fmtRange(openAt: number, closeAt: number): string {
     const o = new Date(openAt)
@@ -91,7 +98,7 @@ export default function StudentSessionListPage() {
         <div className="exam-desk min-h-full p-6 sm:p-8">
             <div className="max-w-5xl mx-auto flex flex-col gap-6">
                 <div>
-                    <div className="exam-list-eyebrow">Phòng thi</div>
+                    <div className="exam-list-eyebrow" style={{color: '#c98a2b'}}>Phòng thi</div>
                     <h1 className="exam-list-title">Kỳ thi của tôi</h1>
                     <p className="exam-list-sub">Các kỳ thi được giao cho lớp/khoá của bạn</p>
                 </div>
@@ -105,22 +112,23 @@ export default function StudentSessionListPage() {
                 ) : (
                     <div className="grid gap-4 md:grid-cols-2">
                         {sessions.map(s => (
-                            <div key={s.id} className={`exam-ticket exam-ticket--${s.availability} flex flex-col gap-2.5`}>
+                            <div key={s.id} className="bg-white rounded-xl border border-[#eceef2] p-5 flex flex-col gap-2.5">
                                 <div className="flex items-start justify-between gap-3">
-                                    <h3 className="exam-ticket-title">{s.title}</h3>
-                                    <span className={`exam-stamp exam-stamp--${s.availability}`}>
+                                    <h3 className="text-[17px] font-semibold leading-snug" style={{color: '#191d27'}}>{s.title}</h3>
+                                    <span className="shrink-0 text-[12px] font-medium px-2.5 py-0.5 rounded-full"
+                                          style={{background: BADGE[s.availability].bg, color: BADGE[s.availability].color}}>
                                         {AVAILABILITY[s.availability]}
                                     </span>
                                 </div>
-                                <div className="exam-ticket-meta">
-                                    <ReadOutlined className="text-stone-400"/>
+                                <div className="flex items-center gap-2 text-[13px]" style={{color: '#6f7788'}}>
+                                    <ReadOutlined style={{color: '#9aa2b1'}}/>
                                     <span>{s.subjectName ?? '—'} · {s.gradeLevelName ?? '—'}</span>
                                 </div>
-                                <div className="exam-ticket-meta">
-                                    <CalendarOutlined className="text-stone-400"/>
+                                <div className="flex items-center gap-2 text-[13px]" style={{color: '#6f7788'}}>
+                                    <CalendarOutlined style={{color: '#9aa2b1'}}/>
                                     <span>{fmtRange(s.openAt, s.closeAt)}</span>
                                 </div>
-                                <div className="mt-1.5">{renderAction(s)}</div>
+                                <div className="pt-3 mt-1 border-t border-[#eceef2]">{renderAction(s)}</div>
                             </div>
                         ))}
                     </div>
