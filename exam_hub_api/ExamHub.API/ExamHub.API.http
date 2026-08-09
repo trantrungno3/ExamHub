@@ -4,3 +4,43 @@ GET {{ExamHub.API_HostAddress}}/weatherforecast/
 Accept: application/json
 
 ###
+
+# ─── Phân công GV giảng dạy cho lớp (cohort-class-teachers) ───
+# Đặt token sau khi đăng nhập:
+@token = PASTE_JWT_HERE
+@classId = 1
+@subjectId = 1
+@teacherId = 00000000-0000-0000-0000-000000000000
+
+# GV hợp lệ (thành viên trường + dạy đúng môn)
+GET {{ExamHub.API_HostAddress}}/api/cohort-class-teachers/eligible-teachers?cohortClassId={{classId}}&subjectId={{subjectId}}
+Authorization: Bearer {{token}}
+Accept: application/json
+
+###
+
+# Phân công (kỳ vọng: OK). Gọi lại lần 2 cùng (lớp, môn) → kỳ vọng lỗi "đã được phân công".
+POST {{ExamHub.API_HostAddress}}/api/cohort-class-teachers/assign
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "cohortClassId": {{classId}},
+  "subjectId": {{subjectId}},
+  "teacherId": "{{teacherId}}"
+}
+
+###
+
+# Danh sách phân công của lớp
+GET {{ExamHub.API_HostAddress}}/api/cohort-class-teachers/by-class/{{classId}}
+Authorization: Bearer {{token}}
+Accept: application/json
+
+###
+
+# Xoá phân công theo id
+DELETE {{ExamHub.API_HostAddress}}/api/cohort-class-teachers/remove/1
+Authorization: Bearer {{token}}
+
+###
