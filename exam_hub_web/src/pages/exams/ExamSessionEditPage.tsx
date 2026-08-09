@@ -127,9 +127,10 @@ export default function ExamSessionEditPage() {
                 ) : (
                     <>
                         {/* ── Cấu hình ── */}
+                        <div className="bg-white rounded-xl border border-[#eceef2] p-5">
                         <Form form={form} layout="vertical" requiredMark="optional"
                             initialValues={{maxAttempts: 1, pickMode: 'Random'}}
-                            className="session-info-form bg-white rounded-xl border border-[#eceef2] p-5">
+                            className="session-info-form">
                             <h3 className="text-[15px] font-semibold text-[#191d27] mb-4">Thông tin kỳ thi</h3>
                             <Form.Item label="Tiêu đề" name="title" rules={[{required: true, message: 'Nhập tiêu đề kỳ thi'}]}>
                                 <Input placeholder="VD: Kiểm tra giữa kỳ 1"/>
@@ -174,6 +175,7 @@ export default function ExamSessionEditPage() {
                                 )}
                             </div>
                         </Form>
+                        </div>
 
                         {isEdit && detail && (
                             <div className="flex flex-col gap-4">
