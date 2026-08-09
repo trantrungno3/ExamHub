@@ -25,14 +25,17 @@ export function SubmissionsDrawer({sessionId, onClose}: Props) {
             {!isLoading && (submissions?.length ?? 0) === 0 && <Empty description="Chưa có bài nộp"/>}
             <div className="flex flex-col gap-3">
                 {(submissions ?? []).map(s => (
-                    <SubmissionCard key={s.id} submissionId={s.id}/>
+                    <SubmissionCard key={s.id} submissionId={s.id}
+                                    studentName={s.studentName} studentClassName={s.studentClassName}/>
                 ))}
             </div>
         </Drawer>
     )
 }
 
-function SubmissionCard({submissionId}: {submissionId: string}) {
+function SubmissionCard({submissionId, studentName, studentClassName}: {
+    submissionId: string; studentName?: string; studentClassName?: string
+}) {
     const {user} = useAuth()
     const {data: sub, isLoading} = useSubmissionQuery(submissionId)
     const exam = useExamWithQuestionsQuery(sub?.examId)
@@ -68,7 +71,10 @@ function SubmissionCard({submissionId}: {submissionId: string}) {
     return (
         <div className="section-card p-4">
             <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-gray-700">Học sinh: {sub.studentId.slice(0, 8)}…</span>
+                <span className="text-sm font-medium text-gray-700">
+                    {studentName || `HS ${sub.studentId.slice(0, 8)}…`}
+                    {studentClassName && <span className="text-gray-400 font-normal"> · Lớp {studentClassName}</span>}
+                </span>
                 <div className="flex items-center gap-2">
                     <Tag color={STATUS_COLOR[sub.status]}>{sub.status}</Tag>
                     {sub.totalScore != null && <span className="text-sm font-semibold">{sub.totalScore} đ</span>}

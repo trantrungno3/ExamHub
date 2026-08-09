@@ -150,6 +150,13 @@ public interface IExamSubmissionService
     /// <summary>Lấy các lần nộp của một học sinh trong một kỳ thi</summary>
     Task<IReadOnlyList<ExamSubmission>> GetBySessionAndStudentAsync(Guid sessionId, Guid studentId, CancellationToken ct = default);
 
+    /// <summary>
+    /// Tra thông tin danh bạ (tên hiển thị + lớp) cho tập học sinh — dùng enrich màn chấm bài.
+    /// Trả về map studentId → <see cref="DataTransferObjects.Exam.StudentDirectoryEntry"/>.
+    /// </summary>
+    Task<IReadOnlyDictionary<Guid, DataTransferObjects.Exam.StudentDirectoryEntry>> GetStudentDirectoryAsync(
+        IReadOnlyCollection<Guid> studentIds, CancellationToken ct = default);
+
     /// <summary>Nộp bài kèm câu trả lời</summary>
     Task<ExamSubmission> SubmitAsync(ExamSubmission submission, IEnumerable<SubmissionAnswer> answers, CancellationToken ct = default);
 

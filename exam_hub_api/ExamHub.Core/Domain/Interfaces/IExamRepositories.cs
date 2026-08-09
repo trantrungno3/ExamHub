@@ -92,6 +92,14 @@ public interface IExamSubmissionRepository : IBaseRepository<ExamSubmission, Gui
 
     /// <summary>Lấy các lần nộp của một học sinh trong một kỳ thi</summary>
     Task<IReadOnlyList<ExamSubmission>> GetBySessionAndStudentAsync(Guid sessionId, Guid studentId, CancellationToken ct = default);
+
+    /// <summary>
+    /// Tra tên lớp hiện tại của từng học sinh (theo cohort membership đang hoạt động,
+    /// khớp section với cohort_class). Trả về map studentId → className; học sinh không
+    /// tra được lớp sẽ không có trong map.
+    /// </summary>
+    Task<IReadOnlyDictionary<Guid, string>> GetStudentClassNamesAsync(
+        IReadOnlyCollection<Guid> studentIds, CancellationToken ct = default);
 }
 
 /// <summary>Interface repository cho SubmissionAnswer</summary>

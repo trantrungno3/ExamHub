@@ -85,11 +85,20 @@ public record ExamSubmissionResponse(
     bool? IsPassed,
     string Status,
     long Created,
-    IReadOnlyList<SubmissionAnswerResponse>? Answers
+    IReadOnlyList<SubmissionAnswerResponse>? Answers,
+    /// <summary>Tên hiển thị của học sinh (enrich cho màn chấm bài). Null nếu không tra được.</summary>
+    string? StudentName = null,
+    /// <summary>Tên lớp của học sinh (enrich cho màn chấm bài). Null nếu không tra được.</summary>
+    string? StudentClassName = null
 )
 {
     /// <summary>Map từ entity</summary>
     public static ExamSubmissionResponse FromEntity(ExamSubmission e, bool includeAnswers = false) =>
+        FromEntity(e, null, null, includeAnswers);
+
+    /// <summary>Map từ entity kèm thông tin học sinh (tên + lớp).</summary>
+    public static ExamSubmissionResponse FromEntity(
+        ExamSubmission e, string? studentName, string? studentClassName, bool includeAnswers = false) =>
         new(
             e.Id, e.ExamId, e.StudentId,
             e.StartedAt.ToTimestamp(),
@@ -99,6 +108,11 @@ public record ExamSubmissionResponse(
             e.IsPassed,
             e.Status.ToString(),
             e.Created.ToTimestamp(),
-            includeAnswers ? e.Answers.Select(SubmissionAnswerResponse.FromEntity).ToList() : null
+            includeAnswers ? e.Answers.Select(SubmissionAnswerResponse.FromEntity).ToList() : null,
+            studentName,
+            studentClassName
         );
 }
+
+/// <summary>Thông tin danh bạ học sinh dùng để enrich bài nộp (tên + lớp).</summary>
+public record StudentDirectoryEntry(Guid StudentId, string? Name, string? ClassName);

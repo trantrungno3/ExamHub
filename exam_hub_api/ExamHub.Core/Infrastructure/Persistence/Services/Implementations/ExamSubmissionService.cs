@@ -1,4 +1,6 @@
 using System.Text.Json;
+using ExamHub.Core.Application.Services;
+using ExamHub.Core.DataTransferObjects.Exam;
 using ExamHub.Core.Domain.Entities;
 using ExamHub.Core.Domain.Enums;
 using ExamHub.Core.Domain.Interfaces;
@@ -11,15 +13,39 @@ public class ExamSubmissionService : IExamSubmissionService
     private readonly IExamSubmissionRepository _submissionRepo;
     private readonly ISubmissionAnswerRepository _answerRepo;
     private readonly IExamQuestionRepository _examQuestionRepo;
+    private readonly IUserManagementService _userService;
 
     public ExamSubmissionService(
         IExamSubmissionRepository submissionRepo,
         ISubmissionAnswerRepository answerRepo,
-        IExamQuestionRepository examQuestionRepo)
+        IExamQuestionRepository examQuestionRepo,
+        IUserManagementService userService)
     {
         _submissionRepo   = submissionRepo;
         _answerRepo       = answerRepo;
         _examQuestionRepo = examQuestionRepo;
+        _userService      = userService;
+    }
+
+    /// <inheritdoc/>
+    public async Task<IReadOnlyDictionary<Guid, StudentDirectoryEntry>> GetStudentDirectoryAsync(
+        IReadOnlyCollection<Guid> studentIds, CancellationToken ct = default)
+    {
+        var ids = studentIds.Distinct().ToList();
+        if (ids.Count == 0) return new Dictionary<Guid, StudentDirectoryEntry>();
+
+        var classNames = await _submissionRepo.GetStudentClassNamesAsync(ids, ct);
+
+        var idSet = ids.ToHashSet();
+        var names = _userService.GetList()
+            .Where(u => idSet.Contains(u.Id))
+            .GroupBy(u => u.Id)
+            .ToDictionary(g => g.Key, g => g.First().DisplayName);
+
+        return ids.ToDictionary(id => id, id => new StudentDirectoryEntry(
+            id,
+            names.TryGetValue(id, out var n) ? n : null,
+            classNames.TryGetValue(id, out var c) ? c : null));
     }
 
     public Task<ExamSubmission?> GetByIdAsync(Guid id, CancellationToken ct = default)
@@ -69,6 +95,7 @@ public class ExamSubmissionService : IExamSubmissionService
         {
             a.Id           = Guid.NewGuid();
             a.SubmissionId = submission.Id;
+            a.EssayContent = a.EssayContent?.Trim();
             return a;
         }).ToList();
 
