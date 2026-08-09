@@ -44,8 +44,16 @@ public class SchoolService : ISchoolService
         return entity;
     }
 
-    public Task DeleteAsync(int id, CancellationToken ct = default)
-        => _repo.DeleteByIdAsync(id, ct);
+    public async Task DeleteAsync(int id, CancellationToken ct = default)
+    {
+        // Ràng buộc tham chiếu: không xoá trường khi còn khoá học liên kết
+        var school = await _repo.GetWithCohortsAsync(id, ct)
+            ?? throw new InvalidOperationException("Không tìm thấy trường học.");
+        if (school.Cohorts.Count > 0)
+            throw new InvalidOperationException(
+                $"Không thể xoá: trường còn {school.Cohorts.Count} khoá học liên kết.");
+        await _repo.DeleteByIdAsync(id, ct);
+    }
 
     public Task<bool> SetActiveAsync(int id, bool isActive, CancellationToken ct = default)
         => _repo.SetActiveAsync(id, isActive, ct);
