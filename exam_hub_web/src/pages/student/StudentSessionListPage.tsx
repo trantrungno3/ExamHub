@@ -1,7 +1,7 @@
 import {useState} from 'react'
 import {useNavigate} from 'react-router-dom'
 import {Button, Empty, Spin, message} from 'antd'
-import {CalendarOutlined, ReadOutlined} from '@ant-design/icons'
+import {ArrowRightOutlined, CalendarOutlined, ReadOutlined} from '@ant-design/icons'
 import {useMySessionsQuery, useStartSessionMutation} from '../../hooks/queries/useExamSessions'
 import {statusCode} from '../../services/requestService'
 import {useAuth} from '../../AuthProvider'
@@ -13,8 +13,16 @@ const AVAILABILITY: Record<ExamSessionAvailability, string> = {
     closed: 'Đã đóng',
 }
 
-function fmt(ms: number): string {
-    return new Date(ms).toLocaleString('vi-VN', {day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'})
+/** Cùng ngày → "dd/MM/yyyy · HH:mm–HH:mm"; khác ngày → "dd/MM HH:mm → dd/MM HH:mm". */
+function fmtRange(openAt: number, closeAt: number): string {
+    const o = new Date(openAt)
+    const c = new Date(closeAt)
+    const d = (x: Date) => x.toLocaleDateString('vi-VN', {day: '2-digit', month: '2-digit', year: 'numeric'})
+    const dShort = (x: Date) => x.toLocaleDateString('vi-VN', {day: '2-digit', month: '2-digit'})
+    const t = (x: Date) => x.toLocaleTimeString('vi-VN', {hour: '2-digit', minute: '2-digit'})
+    return o.toDateString() === c.toDateString()
+        ? `${d(o)} · ${t(o)}–${t(c)}`
+        : `${dShort(o)} ${t(o)} → ${dShort(c)} ${t(c)}`
 }
 
 function takeUrl(examId: string, sessionId: string, submissionId: string): string {
@@ -38,31 +46,42 @@ export default function StudentSessionListPage() {
         navigate(takeUrl(res.data.examId, s.id, res.data.submissionId))
     }
 
+    const openResults = (s: MySession) => setResults({id: s.id, title: s.title})
+
+    // Nút hành động full-width dưới card. Khi kỳ thi đóng/hết lượt nhưng đã có
+    // bài nộp → tái dụng ô nút để "Xem kết quả" (giữ layout 1 nút như Figma).
     const renderAction = (s: MySession) => {
         const remaining = s.maxAttempts - s.usedAttempts
         if (s.inProgressSubmissionId && s.inProgressExamId) {
             return (
-                <Button type="primary" loading={start.isPending}
+                <Button type="primary" block loading={start.isPending}
+                        icon={<ArrowRightOutlined/>} iconPosition="end"
                         onClick={() => navigate(takeUrl(s.inProgressExamId!, s.id, s.inProgressSubmissionId!))}>
                     Tiếp tục
                 </Button>
             )
         }
         if (s.availability !== 'open') {
-            return <Button disabled>{s.availability === 'upcoming' ? 'Chưa mở' : 'Đã đóng'}</Button>
+            if (s.usedAttempts > 0) return <Button block onClick={() => openResults(s)}>Xem kết quả</Button>
+            return <Button block disabled>{s.availability === 'upcoming' ? 'Chưa mở' : 'Đã đóng'}</Button>
         }
         if (remaining <= 0) {
-            return <Button disabled>Hết lượt</Button>
+            if (s.usedAttempts > 0) return <Button block onClick={() => openResults(s)}>Xem kết quả</Button>
+            return <Button block disabled>Hết lượt</Button>
         }
         if (s.pickMode === 'StudentChoice') {
             return (
-                <Button type="primary" onClick={() => navigate(`/student/session/${s.id}/pool`)}>
+                <Button type="primary" block icon={<ArrowRightOutlined/>} iconPosition="end"
+                        onClick={() => navigate(`/student/session/${s.id}/pool`, {
+                            state: {title: s.title, subjectName: s.subjectName, gradeLevelName: s.gradeLevelName},
+                        })}>
                     Chọn đề
                 </Button>
             )
         }
         return (
-            <Button type="primary" loading={start.isPending} onClick={() => startAndGo(s)}>
+            <Button type="primary" block loading={start.isPending}
+                    icon={<ArrowRightOutlined/>} iconPosition="end" onClick={() => startAndGo(s)}>
                 Vào thi
             </Button>
         )
@@ -85,41 +104,25 @@ export default function StudentSessionListPage() {
                     </div>
                 ) : (
                     <div className="grid gap-4 md:grid-cols-2">
-                        {sessions.map(s => {
-                            const remaining = Math.max(0, s.maxAttempts - s.usedAttempts)
-                            return (
-                                <div key={s.id} className={`exam-ticket exam-ticket--${s.availability} flex flex-col gap-2.5`}>
-                                    <div className="flex items-start justify-between gap-3">
-                                        <h3 className="exam-ticket-title">{s.title}</h3>
-                                        <span className={`exam-stamp exam-stamp--${s.availability}`}>
-                                            {AVAILABILITY[s.availability]}
-                                        </span>
-                                    </div>
-                                    <div className="exam-ticket-meta">
-                                        <ReadOutlined className="text-stone-400"/>
-                                        <span>{s.subjectName ?? '—'} · {s.gradeLevelName ?? '—'}</span>
-                                    </div>
-                                    <div className="exam-ticket-meta">
-                                        <CalendarOutlined className="text-stone-400"/>
-                                        <span>{fmt(s.openAt)} → {fmt(s.closeAt)}</span>
-                                    </div>
-                                    <div className="exam-ticket-foot">
-                                        <span className="text-[13px] text-stone-600">
-                                            Lượt còn lại: <b className="text-stone-900">{remaining}</b>/{s.maxAttempts}
-                                            {s.pickMode === 'StudentChoice' && ' · Tự chọn đề'}
-                                        </span>
-                                        <div className="flex items-center gap-2">
-                                            {s.usedAttempts > 0 && (
-                                                <Button onClick={() => setResults({id: s.id, title: s.title})}>
-                                                    Xem kết quả
-                                                </Button>
-                                            )}
-                                            {renderAction(s)}
-                                        </div>
-                                    </div>
+                        {sessions.map(s => (
+                            <div key={s.id} className={`exam-ticket exam-ticket--${s.availability} flex flex-col gap-2.5`}>
+                                <div className="flex items-start justify-between gap-3">
+                                    <h3 className="exam-ticket-title">{s.title}</h3>
+                                    <span className={`exam-stamp exam-stamp--${s.availability}`}>
+                                        {AVAILABILITY[s.availability]}
+                                    </span>
                                 </div>
-                            )
-                        })}
+                                <div className="exam-ticket-meta">
+                                    <ReadOutlined className="text-stone-400"/>
+                                    <span>{s.subjectName ?? '—'} · {s.gradeLevelName ?? '—'}</span>
+                                </div>
+                                <div className="exam-ticket-meta">
+                                    <CalendarOutlined className="text-stone-400"/>
+                                    <span>{fmtRange(s.openAt, s.closeAt)}</span>
+                                </div>
+                                <div className="mt-1.5">{renderAction(s)}</div>
+                            </div>
+                        ))}
                     </div>
                 )}
             </div>

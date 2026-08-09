@@ -1,3 +1,4 @@
+import {useState} from 'react'
 import {useNavigate, useSearchParams} from 'react-router-dom'
 import {Button, Empty, Spin} from 'antd'
 import {CheckCircleOutlined, CheckOutlined, CloseCircleOutlined} from '@ant-design/icons'
@@ -5,6 +6,12 @@ import {useSubmissionQuery} from '../../hooks/queries/useSubmissions'
 
 const STATUS_LABEL: Record<SubmissionStatus, string> = {
     InProgress: 'Đang làm', Submitted: 'Đã nộp (chờ chấm)', Graded: 'Đã chấm',
+}
+
+function fmtDuration(sec: number): string {
+    const m = Math.floor(sec / 60)
+    const s = sec % 60
+    return s ? `${m} phút ${s} giây` : `${m} phút`
 }
 
 function StatBox({label, value, tone}: {label: string; value: number | string; tone: 'green' | 'red' | 'gray' | 'blue'}) {
@@ -27,6 +34,7 @@ export default function ExamResultPage() {
     const [params] = useSearchParams()
     const submissionId = params.get('submissionId') ?? undefined
     const {data: sub, isLoading} = useSubmissionQuery(submissionId)
+    const [showDetail, setShowDetail] = useState(false)
 
     if (isLoading) return <div className="exam-desk flex justify-center py-24"><Spin size="large"/></div>
     if (!sub) return <div className="exam-desk flex justify-center py-24"><Empty description="Không tìm thấy bài nộp"/></div>
@@ -36,7 +44,7 @@ export default function ExamResultPage() {
     const correct = answers.filter(a => a.isCorrect === true).length
     const wrong = answers.filter(a => a.isCorrect === false).length
     const blank = answers.length - correct - wrong
-    const pass = graded && sub.totalScore != null && sub.totalScore >= 5
+    const pass = graded && (sub.isPassed ?? (sub.totalScore != null && sub.totalScore >= 5))
 
     return (
         <div className="min-h-full" style={{background: '#f5f4f1'}}>
@@ -69,30 +77,42 @@ export default function ExamResultPage() {
                         </p>
                     )}
 
-                    <div className="grid grid-cols-3 gap-3 mt-5">
+                    <div className="grid grid-cols-2 gap-3 mt-5">
                         <StatBox tone="green" label="Số câu đúng" value={correct}/>
                         <StatBox tone="red" label="Số câu sai" value={wrong}/>
                         <StatBox tone="gray" label={graded ? 'Bỏ trống' : 'Chưa chấm'} value={blank}/>
+                        {sub.durationSeconds != null && (
+                            <StatBox tone="blue" label="Thời gian làm" value={fmtDuration(sub.durationSeconds)}/>
+                        )}
                     </div>
 
-                    <div className="mt-6">
-                        <p className="text-[13px] font-semibold mb-1" style={{color: '#6f7788'}}>Chi tiết theo câu</p>
-                        {answers.map((a, i) => (
-                            <div key={a.id} className="flex items-center justify-between py-2 text-[14px]"
-                                 style={{borderBottom: '1px dashed #eceef2'}}>
-                                <span className="font-semibold" style={{color: '#1d2129'}}>Câu {i + 1}</span>
-                                <span className="flex items-center gap-2.5">
-                                    {a.isCorrect === true && <CheckCircleOutlined style={{color: '#1ea375'}}/>}
-                                    {a.isCorrect === false && <CloseCircleOutlined style={{color: '#e74242'}}/>}
-                                    <span className="tabular-nums" style={{color: '#6f7788'}}>{a.scoreEarned} đ</span>
-                                </span>
-                            </div>
-                        ))}
-                    </div>
+                    {showDetail && (
+                        <div className="mt-6">
+                            <p className="text-[13px] font-semibold mb-1" style={{color: '#6f7788'}}>Chi tiết theo câu</p>
+                            {answers.map((a, i) => (
+                                <div key={a.id} className="flex items-center justify-between py-2 text-[14px]"
+                                     style={{borderBottom: '1px dashed #eceef2'}}>
+                                    <span className="font-semibold" style={{color: '#1d2129'}}>Câu {i + 1}</span>
+                                    <span className="flex items-center gap-2.5">
+                                        {a.isCorrect === true && <CheckCircleOutlined style={{color: '#1ea375'}}/>}
+                                        {a.isCorrect === false && <CloseCircleOutlined style={{color: '#e74242'}}/>}
+                                        <span className="tabular-nums" style={{color: '#6f7788'}}>{a.scoreEarned} đ</span>
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    )}
 
-                    <Button type="primary" block className="!mt-7 !h-11 !font-semibold" onClick={() => navigate('/student/exams')}>
-                        Về danh sách kỳ thi
-                    </Button>
+                    <div className="grid grid-cols-2 gap-3 mt-7">
+                        <Button block className="!h-11 !font-semibold"
+                                onClick={() => setShowDetail(v => !v)}>
+                            {showDetail ? 'Ẩn đáp án chi tiết' : 'Xem đáp án chi tiết'}
+                        </Button>
+                        <Button type="primary" block className="!h-11 !font-semibold"
+                                onClick={() => navigate('/student/exams')}>
+                            Về danh sách kỳ thi
+                        </Button>
+                    </div>
                 </div>
             </div>
         </div>

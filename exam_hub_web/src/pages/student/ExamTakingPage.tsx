@@ -1,7 +1,9 @@
 import {useEffect, useMemo, useRef, useState} from 'react'
 import {useNavigate, useSearchParams} from 'react-router-dom'
 import {Button, Empty, Form, Input, Modal, Radio, Spin, message} from 'antd'
-import {ClockCircleOutlined} from '@ant-design/icons'
+import {
+    ArrowLeftOutlined, ArrowRightOutlined, ClockCircleOutlined, FlagFilled, FlagOutlined,
+} from '@ant-design/icons'
 import {useExamWithQuestionsQuery} from '../../hooks/queries/useExams'
 import {useSubmitExamMutation} from '../../hooks/queries/useSubmissions'
 import {useAuth} from '../../AuthProvider'
@@ -18,8 +20,8 @@ export default function ExamTakingPage() {
     const {data: exam, isLoading} = useExamWithQuestionsQuery(examId)
     const {user} = useAuth()
 
-    if (isLoading) return <div className="exam-desk flex justify-center py-24"><Spin size="large"/></div>
-    if (!exam) return <div className="exam-desk flex justify-center py-24"><Empty description="Không tìm thấy đề thi"/></div>
+    if (isLoading) return <div className="take-shell flex items-center justify-center"><Spin size="large"/></div>
+    if (!exam) return <div className="take-shell flex items-center justify-center"><Empty description="Không tìm thấy đề thi"/></div>
 
     return <ExamRunner exam={exam} studentId={user?.id} studentName={user?.displayName ?? user?.userName}
         sessionId={sessionId} submissionId={submissionId}/>
@@ -28,6 +30,7 @@ export default function ExamTakingPage() {
 function ExamRunner({exam, studentId, studentName, sessionId, submissionId}: {
     exam: Exam; studentId?: string; studentName?: string; sessionId?: string; submissionId?: string
 }) {
+    const className = exam.className
     const navigate = useNavigate()
     const submit = useSubmitExamMutation()
     const [form] = Form.useForm()
@@ -40,31 +43,27 @@ function ExamRunner({exam, studentId, studentName, sessionId, submissionId}: {
 
     const [values, setValues] = useState<Record<string, unknown>>({})
     const [activeIdx, setActiveIdx] = useState(0)
+    const [flagged, setFlagged] = useState<Set<string>>(new Set())
     const [timeLeft, setTimeLeft] = useState(() => exam.durationMinutes * 60)
-    const qRefs = useRef<(HTMLElement | null)[]>([])
     const autoSubmitted = useRef(false)
 
+    const total = questions.length
     const answeredCount = questions.filter(q => hasAnswer(values[q.id])).length
+    const unanswered = total - answeredCount
+    const progress = total ? Math.round((answeredCount / total) * 100) : 0
     const mm = String(Math.floor(timeLeft / 60)).padStart(2, '0')
     const ss = String(timeLeft % 60).padStart(2, '0')
     const danger = timeLeft <= 300
+
+    const activeQ = questions[activeIdx]
+    const activeOpts = parsed[activeIdx] ?? []
+    const isEssay = activeOpts.length === 0
 
     // Đồng hồ đếm ngược
     useEffect(() => {
         const id = setInterval(() => setTimeLeft(t => (t > 0 ? t - 1 : 0)), 1000)
         return () => clearInterval(id)
     }, [])
-
-    // Theo dõi câu đang xem để làm nổi trên phiếu trả lời
-    useEffect(() => {
-        const obs = new IntersectionObserver((entries) => {
-            const visible = entries.filter(e => e.isIntersecting)
-                .sort((a, b) => (a.target as HTMLElement).offsetTop - (b.target as HTMLElement).offsetTop)
-            if (visible[0]) setActiveIdx(Number((visible[0].target as HTMLElement).dataset.idx))
-        }, {rootMargin: '-45% 0px -50% 0px', threshold: 0})
-        qRefs.current.forEach(el => el && obs.observe(el))
-        return () => obs.disconnect()
-    }, [questions.length])
 
     const buildAndSubmit = async () => {
         if (!studentId) { message.error('Không xác định được học sinh đang đăng nhập'); return }
@@ -74,11 +73,11 @@ function ExamRunner({exam, studentId, studentName, sessionId, submissionId}: {
             studentId,
             answers: questions.map((eq, idx) => {
                 const v = vals[eq.id]
-                const isEssay = parsed[idx].length === 0
+                const essay = parsed[idx].length === 0
                 return {
                     examQuestionId: eq.id,
-                    selectedAnswerIds: !isEssay && typeof v === 'string' && v ? [v] : undefined,
-                    essayContent: isEssay && typeof v === 'string' ? v : undefined,
+                    selectedAnswerIds: !essay && typeof v === 'string' && v ? [v] : undefined,
+                    essayContent: essay && typeof v === 'string' ? v : undefined,
                 }
             }),
             sessionId,
@@ -104,7 +103,6 @@ function ExamRunner({exam, studentId, studentName, sessionId, submissionId}: {
     }, [timeLeft])
 
     const confirmSubmit = () => {
-        const unanswered = questions.length - answeredCount
         Modal.confirm({
             title: 'Nộp bài thi?',
             content: unanswered > 0 ? `Còn ${unanswered} câu chưa trả lời.` : 'Bạn đã trả lời tất cả các câu.',
@@ -113,128 +111,147 @@ function ExamRunner({exam, studentId, studentName, sessionId, submissionId}: {
         })
     }
 
-    const scrollTo = (idx: number) => qRefs.current[idx]?.scrollIntoView({behavior: 'smooth', block: 'start'})
-    const pickBubble = (qid: string, answerId: string) => {
-        form.setFieldValue(qid, answerId)
-        setValues(form.getFieldsValue())
+    const go = (i: number) => setActiveIdx(Math.max(0, Math.min(total - 1, i)))
+    const toggleFlag = () => setFlagged(prev => {
+        const n = new Set(prev)
+        if (n.has(activeQ.id)) n.delete(activeQ.id); else n.add(activeQ.id)
+        return n
+    })
+    const cellClass = (q: {id: string}, idx: number) => {
+        if (idx === activeIdx) return 'take-cell take-cell--current'
+        if (flagged.has(q.id)) return 'take-cell take-cell--flagged'
+        if (hasAnswer(values[q.id])) return 'take-cell take-cell--answered'
+        return 'take-cell'
     }
+    const avatarChar = (studentName ?? 'A').charAt(0).toUpperCase()
 
     return (
-        <div className="exam-desk flex flex-col">
+        <div className="take-shell">
             {/* Thanh trên cùng */}
-            <div className="exam-topbar">
-                <div className="exam-topbar-brand">
-                    <div className="exam-topbar-icon">EH</div>
-                    <div className="min-w-0">
+            <div className="take-top">
+                <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="take-top-icon">EH</div>
+                    <div className="min-w-0 hidden sm:block">
                         <p className="text-[13px] font-semibold text-stone-800 leading-tight truncate">{exam.title}</p>
                         <p className="text-[11px] text-stone-500 leading-tight truncate">
-                            {exam.examCode ? `Mã đề ${exam.examCode}` : 'ExamHub'}{exam.subjectName ? ` · ${exam.subjectName}` : ''}
+                            {exam.examCode ? `Mã đề ${exam.examCode}` : 'ExamHub'}
+                            {studentName ? ` · ${studentName}` : ''}{className ? ` · Lớp ${className}` : ''}
                         </p>
                     </div>
                 </div>
-                <div className={`exam-timer ${danger ? 'exam-timer--danger' : ''}`}>
-                    <ClockCircleOutlined/>{mm}:{ss}
+                <div className={`take-timer ${danger ? 'take-timer--danger' : ''}`}>
+                    <span className="take-timer-dot"/>{mm}:{ss}
                 </div>
             </div>
 
             <Form form={form} component={false} onValuesChange={() => setValues(form.getFieldsValue())}>
-                <div className="exam-layout">
-                    {/* Tờ đề thi */}
-                    <article className="exam-paper">
-                        <div className="paper-eyebrow">Đề thi{exam.schoolYear ? ` · Năm học ${exam.schoolYear}` : ''}</div>
-                        <h1 className="paper-title">{exam.title}</h1>
-                        <p className="paper-subtitle">
-                            {exam.subjectName ? `Môn: ${exam.subjectName}` : ''}
-                            {` — Thời gian làm bài: ${exam.durationMinutes} phút`}
-                        </p>
-                        <div className="paper-rule"/>
-
-                        <div className="paper-meta">
-                            <div className="paper-meta-row"><span className="paper-meta-key">Mã đề:</span>
-                                <span className="paper-fill">{exam.examCode ?? '—'}</span></div>
-                            <div className="paper-meta-row"><span className="paper-meta-key">Họ và tên:</span>
-                                <span className="paper-fill">{studentName ?? ''}</span></div>
-                            <div className="paper-meta-row"><span className="paper-meta-key">Số câu:</span>
-                                <span className="paper-fill">{questions.length} câu · {exam.totalScore} điểm</span></div>
-                            <div className="paper-meta-row"><span className="paper-meta-key">Lớp:</span>
-                                <span className="paper-fill">{exam.className ?? ''}</span></div>
+                <div className="take-body">
+                    {/* Khu câu hỏi (tối) */}
+                    <div className="take-main">
+                        <div className="flex items-center gap-3">
+                            <span className="take-qnum">{activeIdx + 1}</span>
+                            <span className="text-[15px] font-semibold text-slate-200">
+                                Câu hỏi {activeIdx + 1} <span className="text-slate-500">/ {total}</span>
+                            </span>
+                            {activeQ?.score != null && (
+                                <span className="ml-auto text-[13px] font-semibold text-blue-300">{activeQ.score}đ</span>
+                            )}
                         </div>
 
-                        <div className="paper-divider"/>
+                        {activeQ && (
+                            <>
+                                <div className="take-qbox">{stripHtml(activeQ.contentSnapshot)}</div>
 
-                        {questions.map((q, idx) => {
-                            const opts = parsed[idx]
-                            const isEssay = opts.length === 0
-                            return (
-                                <section key={q.id} className="exam-q" data-idx={idx}
-                                    ref={el => { qRefs.current[idx] = el }}>
-                                    <p className="exam-q-head">
-                                        <span className="exam-q-num">Câu {idx + 1}.</span> {stripHtml(q.contentSnapshot)}
-                                        {q.score != null && <span className="exam-q-score">{q.score}đ</span>}
-                                    </p>
+                                <Form.Item name={activeQ.id} noStyle>
+                                    {isEssay ? (
+                                        <Input.TextArea className="take-essay" autoSize={{minRows: 6}}
+                                            placeholder="Trình bày bài làm..."/>
+                                    ) : (
+                                        <Radio.Group className="take-radio">
+                                            {activeOpts.map((opt, i) => (
+                                                <Radio key={opt.id || i} value={opt.id}>
+                                                    <span className="take-opt-letter">{letter(i)}</span>
+                                                    <span className="flex-1">{stripHtml(opt.content)}</span>
+                                                </Radio>
+                                            ))}
+                                        </Radio.Group>
+                                    )}
+                                </Form.Item>
+                            </>
+                        )}
 
-                                    <Form.Item name={q.id} noStyle>
-                                        {isEssay ? (
-                                            <Input.TextArea className="paper-essay" autoSize={{minRows: 5}}
-                                                placeholder="Trình bày bài làm..."/>
-                                        ) : (
-                                            <Radio.Group className="paper-radio-group">
-                                                {opts.map((opt, i) => (
-                                                    <Radio key={opt.id || i} value={opt.id}>
-                                                        <span className="paper-opt-letter">{letter(i)}.</span>
-                                                        {stripHtml(opt.content)}
-                                                    </Radio>
-                                                ))}
-                                            </Radio.Group>
-                                        )}
-                                    </Form.Item>
-                                </section>
-                            )
-                        })}
+                        {/* Điều hướng câu */}
+                        <div className="take-navbar">
+                            <Button icon={<ArrowLeftOutlined/>} disabled={activeIdx === 0}
+                                    onClick={() => go(activeIdx - 1)}>
+                                Câu trước
+                            </Button>
+                            <div className="flex items-center gap-3">
+                                <button type="button" title="Đánh dấu để xem lại"
+                                        className={`take-flag ${flagged.has(activeQ?.id) ? 'take-flag--on' : ''}`}
+                                        onClick={toggleFlag}>
+                                    {flagged.has(activeQ?.id) ? <FlagFilled/> : <FlagOutlined/>}
+                                </button>
+                                <span className="text-[13px] text-slate-400">Câu {activeIdx + 1} / {total}</span>
+                            </div>
+                            <Button type="primary" icon={<ArrowRightOutlined/>} iconPosition="end"
+                                    disabled={activeIdx >= total - 1} onClick={() => go(activeIdx + 1)}>
+                                Câu tiếp
+                            </Button>
+                        </div>
+                    </div>
 
-                        <div className="paper-end">— Hết —</div>
-                    </article>
-
-                    {/* Phiếu trả lời */}
-                    <aside className="answer-sheet">
-                        <div className="sheet-head">
-                            <div className="sheet-title">Phiếu trả lời</div>
-                            <div className="sheet-stats">
-                                <span className="text-emerald-600 font-semibold">{answeredCount}</span>
-                                <span>/ {questions.length} câu đã làm</span>
+                    {/* Phiếu trả lời (sáng) */}
+                    <aside className="take-side">
+                        <div className="take-side-head">
+                            <div className="take-side-avatar">{avatarChar}</div>
+                            <div className="min-w-0">
+                                <p className="text-[14px] font-semibold text-stone-800 truncate">{studentName ?? '—'}</p>
+                                {className && <p className="text-[12px] text-stone-500">Lớp {className}</p>}
                             </div>
                         </div>
 
-                        <div className="sheet-rows">
-                            {questions.map((q, idx) => {
-                                const opts = parsed[idx]
-                                const val = values[q.id]
-                                const active = idx === activeIdx
-                                return (
-                                    <div key={q.id} className={`sheet-row ${active ? 'sheet-row--active' : ''}`}>
-                                        <span className="sheet-num" onClick={() => scrollTo(idx)}>{idx + 1}</span>
-                                        {opts.length === 0 ? (
-                                            <span className={`sheet-essay-dot ${hasAnswer(val) ? 'sheet-essay-dot--filled' : ''}`}
-                                                title="Câu tự luận"/>
-                                        ) : (
-                                            <span className="sheet-bubbles">
-                                                {opts.map((opt, i) => (
-                                                    <span key={opt.id || i}
-                                                        className={`sheet-bubble ${val === opt.id ? 'sheet-bubble--filled' : ''}`}
-                                                        onClick={() => pickBubble(q.id, opt.id)}>
-                                                        {letter(i)}
-                                                    </span>
-                                                ))}
-                                            </span>
-                                        )}
-                                    </div>
-                                )
-                            })}
+                        <div className="px-4 py-3 flex border-b border-[#eceef2]">
+                            <div className="take-stat">
+                                <p className="take-stat-num text-emerald-600">{answeredCount}</p>
+                                <p className="take-stat-label">Đã trả lời</p>
+                            </div>
+                            <div className="take-stat">
+                                <p className="take-stat-num text-stone-700">{unanswered}</p>
+                                <p className="take-stat-label">Chưa trả lời</p>
+                            </div>
+                            <div className="take-stat">
+                                <p className="take-stat-num text-amber-500">{flagged.size}</p>
+                                <p className="take-stat-label">Đã đánh dấu</p>
+                            </div>
                         </div>
 
-                        <div className="sheet-foot">
-                            <Button danger type="primary" block loading={submit.isPending} onClick={confirmSubmit}
-                                className="!h-11 !font-semibold">
+                        <div className="px-4 py-3 border-b border-[#eceef2]">
+                            <div className="flex items-center justify-between text-[12px] text-stone-500 mb-1.5">
+                                <span>Tiến độ</span><span className="font-semibold text-stone-700">{progress}%</span>
+                            </div>
+                            <div className="take-progress"><div className="take-progress-fill" style={{width: `${progress}%`}}/></div>
+                        </div>
+
+                        <div className="px-4 py-3 flex-1 overflow-auto">
+                            <p className="text-[12px] font-semibold text-stone-600 mb-2">Bảng câu hỏi</p>
+                            <div className="take-grid">
+                                {questions.map((q, idx) => (
+                                    <button key={q.id} type="button" className={cellClass(q, idx)}
+                                            onClick={() => go(idx)}>
+                                        {idx + 1}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="p-3 border-t border-[#eceef2]">
+                            {unanswered > 0 && (
+                                <p className="text-center text-[12px] text-stone-500 mb-2">Còn {unanswered} câu chưa trả lời</p>
+                            )}
+                            <Button type="primary" block loading={submit.isPending} onClick={confirmSubmit}
+                                    className="!h-11 !font-semibold"
+                                    style={{background: '#22c55e', borderColor: '#22c55e'}}>
                                 Nộp bài thi
                             </Button>
                         </div>
@@ -242,10 +259,10 @@ function ExamRunner({exam, studentId, studentName, sessionId, submissionId}: {
                 </div>
             </Form>
 
-            {/* Thanh nộp bài cho màn nhỏ */}
-            <div className="exam-mobilebar">
+            {/* Thanh nộp bài cho màn nhỏ (không có panel bên) */}
+            <div className="lg:hidden flex items-center gap-3 px-4 py-3 bg-white border-t border-[#eceef2]">
                 <span className="text-[13px] text-stone-600 flex-1">
-                    Đã làm <b className="text-emerald-600">{answeredCount}</b>/{questions.length} câu
+                    Đã làm <b className="text-emerald-600">{answeredCount}</b>/{total} câu
                 </span>
                 <Button danger type="primary" loading={submit.isPending} onClick={confirmSubmit} className="!font-semibold">
                     Nộp bài thi

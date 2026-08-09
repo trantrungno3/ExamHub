@@ -1,12 +1,7 @@
 import {useMemo} from 'react'
-import {useQuery} from '@tanstack/react-query'
-import {Table} from 'antd'
-import type {TableColumnsType} from 'antd'
 import {ProfileCard} from './ProfileCard'
-import {StatusTag} from '../../components/StatusTag'
 import {useAuth} from '../../AuthProvider'
 import {useMySubmissionsQuery} from '../../hooks/queries/useSubmissions'
-import {cohortMemberService} from '../../services/cohortMemberService'
 
 function StatBox({label, value, tone}: {label: string; value: string | number; tone: 'blue' | 'green'}) {
     const c = tone === 'blue' ? {bg: '#eef1ff', fg: '#3a74f5'} : {bg: '#e7f7ef', fg: '#1ea375'}
@@ -21,11 +16,6 @@ function StatBox({label, value, tone}: {label: string; value: string | number; t
 export default function StudentProfilePage() {
     const {user} = useAuth()
     const {data: submissions = []} = useMySubmissionsQuery(user?.id)
-    const {data: cohortMembers = []} = useQuery({
-        queryKey: ['cohortMembers', 'student', user?.id],
-        queryFn: async () => (await cohortMemberService.getByStudent(user!.id)).data ?? [],
-        enabled: !!user?.id,
-    })
 
     const stats = useMemo(() => {
         const done = submissions.length
@@ -36,17 +26,12 @@ export default function StudentProfilePage() {
         return {done, avg}
     }, [submissions])
 
-    const cohortColumns: TableColumnsType<CohortMember> = [
-        {title: 'Khoá', dataIndex: 'cohortId', key: 'cohortId', render: v => `Khoá #${v}`},
-        {title: 'Ngày tham gia', dataIndex: 'joinedAt', key: 'joinedAt',
-            render: v => v ? new Date(v).toLocaleDateString('vi-VN') : '—'},
-        {title: 'Trạng thái', dataIndex: 'isActive', key: 'isActive',
-            render: v => <StatusTag status={v ? 'success' : 'default'} label={v ? 'Đang học' : 'Ngừng'}/>},
-    ]
-
     return (
-        <div className="p-6 flex flex-col gap-4">
-            <p className="text-xl font-semibold text-gray-800">Hồ sơ của tôi</p>
+        <div className="p-6 sm:p-8 flex flex-col gap-4 max-w-5xl mx-auto w-full">
+            <div>
+                <h1 className="text-[26px] font-bold" style={{color: '#191d27'}}>Hồ sơ của tôi</h1>
+                <p className="text-[13.5px] mt-1" style={{color: '#6f6a60'}}>Thông tin cá nhân và kết quả học tập</p>
+            </div>
 
             <div className="flex gap-4">
                 <StatBox tone="blue" label="Số đề đã làm" value={stats.done}/>
@@ -54,15 +39,6 @@ export default function StudentProfilePage() {
             </div>
 
             <ProfileCard/>
-
-            <div>
-                <p className="font-medium text-gray-700 mb-2">Khoá học đang tham gia</p>
-                <div className="section-card shrink-0">
-                    <Table columns={cohortColumns} dataSource={cohortMembers} rowKey="id" pagination={false}
-                           scroll={{x: 600}}
-                           locale={{emptyText: 'Chưa tham gia khoá học nào'}}/>
-                </div>
-            </div>
         </div>
     )
 }
