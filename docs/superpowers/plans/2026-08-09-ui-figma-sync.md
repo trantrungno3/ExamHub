@@ -353,9 +353,48 @@ git commit -m "feat(ui): phase 4d — exam cover/taking/result theo Figma"
 
 ---
 
+## Task 8: Phase 5 — Chuyển CSS → SCSS
+
+**Bổ sung theo yêu cầu (2026-08-09):** sau khi xong Phase 4, chuyển `index.css` sang SCSS để tổ chức biến/nesting tốt hơn.
+
+**Files:**
+- Rename: `src/index.css` → `src/index.scss`
+- Modify: `src/main.tsx` (đổi `import './index.css'` → `import './index.scss'`)
+- Modify: `package.json` (devDependency `sass`)
+
+**Lưu ý rủi ro (Tailwind v4):** file dùng `@import "tailwindcss"`, `@theme`, `@apply` — là directive của Tailwind, xử lý bởi plugin `@tailwindcss/vite`. Sass xử lý `@import`/`@use` khác. Cách an toàn:
+- Cài `sass`; Vite tự nhận `.scss`. Thứ tự: Vite chạy Sass trước rồi Tailwind plugin.
+- Giữ nguyên `@import "tailwindcss";` ở đầu (Tailwind plugin vẫn nhận). Nếu Sass báo lỗi `@import` không tìm thấy file, chuyển phần Tailwind sang dùng cú pháp tương thích hoặc tách biến custom sang `_tokens.scss` `@use`.
+- `@apply`/`@theme` để nguyên (Tailwind xử lý). Sass không đụng chúng nếu không phải cú pháp Sass.
+
+- [ ] **Step 1: Cài `sass`**
+
+Run: `cd exam_hub_web && npm i -D sass`
+
+- [ ] **Step 2: Đổi tên file + import**
+
+`git mv src/index.css src/index.scss`; sửa `main.tsx` import `'./index.scss'`.
+
+- [ ] **Step 3: (Tuỳ) refactor biến + nesting**
+
+Chuyển palette sang biến SCSS `$primary: #3a74f5; …` cho các khối custom (`.sidebar*`, `.top-bar*`, student), nesting các selector con. KHÔNG đụng `@theme`/`@apply`/`@import "tailwindcss"`.
+
+- [ ] **Step 4: Build sạch** — `npm run build`. Nếu Sass lỗi với directive Tailwind, xử lý theo mục "Lưu ý rủi ro" (tách `_tokens.scss` + `@use`, giữ Tailwind ở file vào chính).
+
+- [ ] **Step 5: Verify** — mở app, giao diện không đổi so với trước (chỉ đổi cách tổ chức style).
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add exam_hub_web/src/index.scss exam_hub_web/src/main.tsx exam_hub_web/package.json exam_hub_web/package-lock.json
+git commit -m "refactor(ui): phase 5 — chuyển index.css sang SCSS"
+```
+
+---
+
 ## Self-Review
 
-- **Spec coverage:** §1→Task1, §2→Task2, §3→Task3, §4→Task4-7. Đủ.
+- **Spec coverage:** §1→Task1, §2→Task2, §3→Task3, §4→Task4-7, SCSS(bổ sung)→Task8. Đủ.
 - **Placeholder:** không có TBD; code Phase 1 đầy đủ. Phase 4b–d mô tả theo frame + giữ logic (chi tiết JSX sẽ bám screenshot khi làm — chấp nhận vì là visual, verify bằng đối chiếu).
 - **Type consistency:** `StatusTag` signature nhất quán giữa Task 3 định nghĩa và nơi dùng.
 - **Rủi ro AntD v6:** Step 3 Task 1 có nhánh xử lý nếu token đổi tên.
