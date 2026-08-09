@@ -21,6 +21,7 @@ import {useCohortsQuery} from '../../hooks/queries/useCohorts'
 import {useCohortClassesQuery} from '../../hooks/queries/useCohortClasses'
 import {statusCode} from '../../services/requestService'
 import {ROUTES} from '../../routes/paths'
+import {AnalyticsDrawer} from './AnalyticsDrawer'
 
 const PICK_MODE_OPTIONS = [
     {value: 'Random', label: 'Ngẫu nhiên (hệ thống bốc đề)'},
@@ -119,16 +120,17 @@ export default function ExamSessionEditPage() {
                 )}
             </div>
 
-            <div className="exam-admin-bg flex-1 overflow-auto p-6">
-                <div className="flex flex-col gap-4 max-w-4xl mx-auto">
+            <div className="flex-1 overflow-auto p-6">
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 max-w-7xl mx-auto items-start">
                 {isLoading && isEdit ? (
                     <Spin/>
                 ) : (
                     <>
                         {/* ── Cấu hình ── */}
                         <Form form={form} layout="vertical" requiredMark="optional"
-                            initialValues={{maxAttempts: 1, pickMode: 'Random'}} className="paper-panel">
-                            <h3 className="paper-panel-title mb-4">Thông tin kỳ thi</h3>
+                            initialValues={{maxAttempts: 1, pickMode: 'Random'}}
+                            className="bg-white rounded-xl border border-[#eceef2] p-5">
+                            <h3 className="text-[15px] font-semibold text-[#191d27] mb-4">Thông tin kỳ thi</h3>
                             <Form.Item label="Tiêu đề" name="title" rules={[{required: true, message: 'Nhập tiêu đề kỳ thi'}]}>
                                 <Input placeholder="VD: Kiểm tra giữa kỳ 1"/>
                             </Form.Item>
@@ -159,28 +161,26 @@ export default function ExamSessionEditPage() {
                                     <Select options={PICK_MODE_OPTIONS}/>
                                 </Form.Item>
                             </div>
-                            <Button type="primary" loading={create.isPending || update.isPending} onClick={handleSave}>
-                                {isEdit ? 'Lưu thay đổi' : 'Tạo & tiếp tục'}
-                            </Button>
+                            <div className="flex items-center gap-3 mt-2">
+                                <Button type="primary" loading={create.isPending || update.isPending} onClick={handleSave}>
+                                    {isEdit ? 'Lưu thay đổi' : 'Tạo & tiếp tục'}
+                                </Button>
+                                {isEdit && detail && (
+                                    <Button className="border-[#1ea375] text-[#1ea375]"
+                                            disabled={isPublished} loading={publish.isPending}
+                                            onClick={() => publish.mutate(detail.id)}>
+                                        {isPublished ? 'Đã xuất bản' : 'Xuất bản'}
+                                    </Button>
+                                )}
+                            </div>
                         </Form>
 
                         {isEdit && detail && (
-                            <>
+                            <div className="flex flex-col gap-4">
                                 <PoolSection sessionId={detail.id} exams={detail.exams}
                                              subjectId={detail.subjectId} gradeLevelId={detail.gradeLevelId}/>
                                 <AssignmentSection sessionId={detail.id} assignments={detail.assignments}/>
-
-                                <div className="paper-panel flexitems-center justify-between">
-                                    <div>
-                                        <h3 className="paper-panel-title">Phát hành</h3>
-                                        <p className="text-sm text-gray-500">Cần ≥1 đề và ≥1 lớp/khoá, thời điểm đóng ở tương lai.</p>
-                                    </div>
-                                    <Button type="primary" disabled={isPublished} loading={publish.isPending}
-                                            onClick={() => publish.mutate(detail.id)}>
-                                        {isPublished ? 'Đã phát hành' : 'Phát hành kỳ thi'}
-                                    </Button>
-                                </div>
-                            </>
+                            </div>
                         )}
                     </>
                 )}
@@ -195,6 +195,7 @@ function PoolSection({sessionId, exams, subjectId, gradeLevelId}: {
     sessionId: string; exams: SessionExam[]; subjectId: number; gradeLevelId: number
 }) {
     const [modalOpen, setModalOpen] = useState(false)
+    const [analyticsExamId, setAnalyticsExamId] = useState<string>()
     const removeExam = useRemoveSessionExamMutation()
 
     const columns: TableColumnsType<SessionExam> = [
@@ -202,21 +203,25 @@ function PoolSection({sessionId, exams, subjectId, gradeLevelId}: {
         {title: 'Mã đề', dataIndex: 'examCode', key: 'examCode', width: 120, render: v => v ?? '—'},
         {title: 'Điểm', dataIndex: 'totalScore', key: 'totalScore', width: 80},
         {
-            title: '', key: 'actions', width: 80,
+            title: 'Thao tác', key: 'actions', width: 140,
             render: (_, e) => (
-                <Popconfirm title="Gỡ đề khỏi kỳ thi?" okText="Gỡ" cancelText="Hủy"
-                            onConfirm={() => removeExam.mutate({id: sessionId, examId: e.examId})}>
-                    <button className="btn-delete">Gỡ</button>
-                </Popconfirm>
+                <div className="flex items-center gap-3">
+                    <button className="text-[13px] hover:underline" style={{color: '#3a74f5'}}
+                            onClick={() => setAnalyticsExamId(e.examId)}>Phân tích</button>
+                    <Popconfirm title="Gỡ đề khỏi kỳ thi?" okText="Gỡ" cancelText="Hủy"
+                                onConfirm={() => removeExam.mutate({id: sessionId, examId: e.examId})}>
+                        <button className="btn-delete">Gỡ</button>
+                    </Popconfirm>
+                </div>
             ),
         },
     ]
 
     return (
-        <div className="paper-panel flex flex-col gap-3">
+        <div className="bg-white rounded-xl border border-[#eceef2] p-5 flex flex-col gap-3">
             <div className="flex items-center justify-between">
-                <h3 className="paper-panel-title">Đề trong kỳ thi ({exams.length})</h3>
-                <Button icon={<PlusOutlined/>} onClick={() => setModalOpen(true)}>Thêm đề</Button>
+                <h3 className="text-[15px] font-semibold text-[#191d27]">Đề trong kỳ thi ({exams.length})</h3>
+                <Button type="primary" icon={<PlusOutlined/>} onClick={() => setModalOpen(true)}>Thêm đề</Button>
             </div>
             <Table columns={columns} dataSource={exams} rowKey="examId" size="small" pagination={false}
                    scroll={{x: 700}}
@@ -224,6 +229,7 @@ function PoolSection({sessionId, exams, subjectId, gradeLevelId}: {
             <AddExamsModal open={modalOpen} onClose={() => setModalOpen(false)} sessionId={sessionId}
                            subjectId={subjectId} gradeLevelId={gradeLevelId}
                            existingIds={exams.map(e => e.examId)}/>
+            <AnalyticsDrawer examId={analyticsExamId} onClose={() => setAnalyticsExamId(undefined)}/>
         </div>
     )
 }
@@ -306,8 +312,8 @@ function AssignmentSection({sessionId, assignments}: {sessionId: string; assignm
                 ?? (a.cohortClassId ? `Lớp #${a.cohortClassId}` : <span className="text-gray-400">Cả khoá</span>),
         },
         {
-            title: 'Phạm vi', key: 'scope', width: 110,
-            render: (_, a) => a.cohortClassId ? <Tag>Một lớp</Tag> : <Tag color="blue">Cả khoá</Tag>,
+            title: 'Sĩ số', key: 'studentCount', width: 90, align: 'center',
+            render: (_, a) => a.studentCount,
         },
         {
             title: '', key: 'actions', width: 70,
@@ -321,8 +327,8 @@ function AssignmentSection({sessionId, assignments}: {sessionId: string; assignm
     ]
 
     return (
-        <div className="paper-panel flex flex-col gap-3">
-            <h3 className="paper-panel-title">Giao cho ({assignments.length})</h3>
+        <div className="bg-white rounded-xl border border-[#eceef2] p-5 flex flex-col gap-3">
+            <h3 className="text-[15px] font-semibold text-[#191d27]">Giao cho lớp/khoá ({assignments.length})</h3>
             <div className="flex items-end gap-2 flex-wrap">
                 <div>
                     <label className="block text-xs text-gray-500 mb-1">Trường</label>
