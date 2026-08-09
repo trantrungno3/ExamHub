@@ -348,6 +348,7 @@ CREATE TABLE public.questions
     is_verified         BOOLEAN   NOT NULL DEFAULT FALSE,
     verified_by         UUID REFERENCES app_users (id),
     verified_at         TIMESTAMP,
+    rejection_reason    TEXT,     -- Lý do từ chối; ≠ NULL ⇒ câu hỏi "Bị từ chối" (is_verified=false)
 
     created            TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
     created_by           VARCHAR(150),
