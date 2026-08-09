@@ -1,6 +1,6 @@
 import {Navigate, Outlet, useNavigate} from 'react-router-dom'
 import {Button} from 'antd'
-import {LogoutOutlined, UserOutlined} from '@ant-design/icons'
+import {LogoutOutlined} from '@ant-design/icons'
 import {useAuth} from '../AuthProvider'
 
 export default function StudentLayout() {
@@ -14,22 +14,28 @@ export default function StudentLayout() {
         navigate('/login')
     }
 
+    const displayName = user?.displayName ?? user?.userName ?? 'A'
+
     return (
-        <div className="min-h-screen bg-gray-100 flex flex-col">
-            <header className="bg-white border-b border-gray-200 px-6 h-14 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                    <div className="sidebar-logo-icon">EH</div>
-                    <span className="font-semibold text-gray-800">ExamHub</span>
+        <div className="min-h-screen flex flex-col" style={{background: '#f5f4f1'}}>
+            <header className="h-16 px-6 flex items-center justify-between shrink-0" style={{background: '#3a74f5'}}>
+                <div className="flex items-center gap-2.5">
+                    <div className="w-[30px] h-[30px] rounded-md bg-white flex items-center justify-center text-[12px] font-bold"
+                         style={{color: '#3a74f5'}}>
+                        EH
+                    </div>
+                    <span className="font-semibold text-white">ExamHub</span>
                 </div>
-                <div className="flex items-center gap-4">
-                    <button
-                        className="text-sm text-gray-600 hover:text-blue-600 flex items-center gap-1.5"
-                        onClick={() => navigate('/student/profile')}
-                    >
-                        <UserOutlined/>
-                        {user?.displayName ?? user?.userName}
+                <div className="flex items-center gap-4 text-white">
+                    <button className="text-right leading-tight" onClick={() => navigate('/student/profile')}>
+                        <div className="text-[13px] font-medium">{displayName}</div>
+                        <div className="text-[12px]" style={{color: '#cdd9fb'}}>Học sinh</div>
                     </button>
-                    <Button size="small" icon={<LogoutOutlined/>} onClick={handleLogout}>
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center text-[13px] font-semibold"
+                         style={{background: '#eaf0ff', color: '#3a74f5'}}>
+                        {displayName.charAt(0).toUpperCase()}
+                    </div>
+                    <Button size="small" ghost icon={<LogoutOutlined/>} onClick={handleLogout}>
                         Đăng xuất
                     </Button>
                 </div>

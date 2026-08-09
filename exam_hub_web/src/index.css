@@ -426,20 +426,18 @@ body {
 /* Mặt bàn (nền) để tờ đề nổi lên */
 .exam-desk {
   @apply min-h-screen w-full;
-  background:
-    radial-gradient(1100px 520px at 50% -8%, #f6f4ee 0%, transparent 60%),
-    linear-gradient(180deg, #eae7df 0%, #e3dfd6 100%);
+  background: #f5f4f1;
 }
 
 /* Thanh trên cùng */
 .exam-topbar {
   @apply sticky top-0 z-30 flex items-center justify-between gap-4
-         px-4 sm:px-8 h-14 border-b border-stone-300/70 shrink-0
-         bg-[#faf8f3]/95 backdrop-blur;
+         px-4 sm:px-8 h-14 border-b border-[#eceef2] shrink-0
+         bg-white/95 backdrop-blur;
 }
 .exam-topbar-brand { @apply flex items-center gap-2.5 min-w-0; }
 .exam-topbar-icon {
-  @apply w-8 h-8 rounded-md bg-stone-800 text-[#faf8f3] flex items-center
+  @apply w-8 h-8 rounded-md bg-[#3a74f5] text-white flex items-center
          justify-center text-[11px] font-bold shrink-0;
 }
 .exam-timer {
@@ -460,7 +458,7 @@ body {
   @apply relative flex-1 max-w-[820px] mx-auto bg-white text-stone-900
          px-7 sm:px-14 py-11 sm:py-14 rounded-[3px] border border-stone-200;
   box-shadow: 0 1px 2px rgba(0,0,0,.05), 0 18px 50px -20px rgba(30,25,20,.35);
-  font-family: 'Lora', 'Times New Roman', Georgia, serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   animation: paper-rise .5s cubic-bezier(.22,.61,.36,1) both;
 }
 @keyframes paper-rise {
@@ -504,7 +502,7 @@ body {
 .paper-radio-group { @apply flex flex-col gap-1.5 w-full; }
 .paper-radio-group .ant-radio-wrapper {
   @apply items-start m-0 py-1.5 px-2 -mx-2 rounded-md transition-colors text-stone-800;
-  font-family: 'Lora', 'Times New Roman', Georgia, serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 .paper-radio-group .ant-radio-wrapper:hover { @apply bg-stone-50; }
 .paper-radio-group .ant-radio-wrapper-checked { @apply bg-amber-50/70; }
@@ -523,7 +521,7 @@ body {
 /* Ô tự luận dạng giấy kẻ dòng */
 .paper-essay.ant-input {
   @apply border-stone-300 text-stone-800 text-[15px] rounded-sm px-3 leading-[32px];
-  font-family: 'Lora', 'Times New Roman', Georgia, serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   background-image: linear-gradient(transparent 31px, #e7e5e4 31px);
   background-size: 100% 32px;
   background-attachment: local;
@@ -573,12 +571,12 @@ body {
 .paper-note {
   @apply flex gap-3 items-start rounded-md border border-amber-200 bg-amber-50/70
          px-4 py-3 text-[13.5px] leading-6 text-amber-800 mt-2;
-  font-family: 'Lora', 'Times New Roman', Georgia, serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 .paper-info-row {
   @apply flex items-center justify-between py-2.5 border-b border-dotted
          border-stone-200 last:border-0 text-[14px];
-  font-family: 'Lora', 'Times New Roman', Georgia, serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 .paper-info-key { @apply text-stone-500; }
 .paper-info-val { @apply font-semibold text-stone-800; }
@@ -586,29 +584,29 @@ body {
 .result-score {
   @apply relative flex items-center justify-center w-28 h-28 rounded-full mx-auto
          text-[42px] font-bold my-1;
-  font-family: 'Lora', 'Times New Roman', Georgia, serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
-.result-score--graded { @apply text-red-600; border: 3px solid #dc2626; box-shadow: 0 0 0 4px #fee2e2; }
+.result-score--graded { @apply text-[#1ea375]; border: 3px solid #1ea375; box-shadow: 0 0 0 4px #dff5ed; }
 .result-score--pending { @apply text-stone-400; border: 3px dashed #d6d3d1; }
 .result-line {
   @apply flex items-center justify-between py-2 border-b border-dashed
          border-stone-200 last:border-0 text-[14px] text-stone-700;
-  font-family: 'Lora', 'Times New Roman', Georgia, serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 /* ─── Form tạo/sửa kỳ thi (tông giấy, trong app) ── */
-.exam-admin-bg { @apply bg-[#f6f4ee]; }
+.exam-admin-bg { @apply bg-[#f5f4f1]; }
 .paper-panel { @apply bg-white rounded-xl border border-stone-200 shadow-sm p-5; }
 .paper-panel-title {
   @apply text-[15px] font-bold text-stone-800;
-  font-family: 'Lora', 'Times New Roman', Georgia, serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 /* ─── Danh sách kỳ thi của học sinh ── */
 .exam-list-eyebrow { @apply text-[11px] font-semibold uppercase tracking-[.22em] text-stone-500; }
 .exam-list-title {
   @apply text-[26px] font-bold text-stone-900 leading-tight mt-1;
-  font-family: 'Lora', 'Times New Roman', Georgia, serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 .exam-list-sub { @apply text-[13.5px] text-stone-500 mt-1; }
 
@@ -629,7 +627,7 @@ body {
 
 .exam-ticket-title {
   @apply text-[17px] font-bold text-stone-900 leading-snug pr-2;
-  font-family: 'Lora', 'Times New Roman', Georgia, serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 .exam-ticket-meta { @apply flex items-center gap-2 text-[13px] text-stone-500; }
 .exam-ticket-foot {
