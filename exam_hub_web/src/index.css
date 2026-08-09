@@ -596,6 +596,9 @@ body {
 
 /* ─── Form tạo/sửa kỳ thi (tông giấy, trong app) ── */
 .exam-admin-bg { @apply bg-[#f5f4f1]; }
+/* Thu gọn khoảng cách field cho khớp mật độ 2 bảng bên phải */
+.session-info-form .ant-form-item { margin-bottom: 14px; }
+.session-info-form .ant-form-item-label { padding-bottom: 2px; }
 .paper-panel { @apply bg-white rounded-xl border border-stone-200 shadow-sm p-5; }
 .paper-panel-title {
   @apply text-[15px] font-bold text-stone-800;
