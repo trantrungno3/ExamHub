@@ -34,6 +34,9 @@ public interface IQuestionService
     /// <summary>Bỏ duyệt câu hỏi</summary>
     Task UnverifyAsync(Guid id, CancellationToken ct = default);
 
+    /// <summary>Từ chối câu hỏi kèm lý do</summary>
+    Task RejectAsync(Guid id, Guid reviewedBy, string reason, CancellationToken ct = default);
+
     /// <summary>Thống kê số câu hỏi theo trạng thái</summary>
     Task<QuestionStatsResponse> GetStatsAsync(CancellationToken ct = default);
 

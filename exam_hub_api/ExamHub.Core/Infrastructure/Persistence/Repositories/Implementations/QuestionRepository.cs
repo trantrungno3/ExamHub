@@ -216,6 +216,7 @@ public class QuestionRepository : BaseRepository<Question, Guid>, IQuestionRepos
             .Where(x => x.Id == id)
             .ExecuteUpdateAsync(s => s
                 .SetProperty(x => x.IsVerified, true)
+                .SetProperty(x => x.RejectionReason, (string?)null)
                 .SetProperty(x => x.VerifiedBy, verifiedBy)
                 .SetProperty(x => x.VerifiedAt, DateTime.UtcNow), ct);
 
@@ -225,16 +226,29 @@ public class QuestionRepository : BaseRepository<Question, Guid>, IQuestionRepos
             .Where(x => x.Id == id)
             .ExecuteUpdateAsync(s => s
                 .SetProperty(x => x.IsVerified, false)
+                .SetProperty(x => x.RejectionReason, (string?)null)
                 .SetProperty(x => x.VerifiedBy, (Guid?)null)
                 .SetProperty(x => x.VerifiedAt, (DateTime?)null), ct);
+
+    /// <inheritdoc/>
+    public async Task RejectAsync(Guid id, Guid reviewedBy, string reason, CancellationToken ct = default)
+        => await Set
+            .Where(x => x.Id == id)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(x => x.IsVerified, false)
+                .SetProperty(x => x.RejectionReason, reason)
+                .SetProperty(x => x.VerifiedBy, reviewedBy)
+                .SetProperty(x => x.VerifiedAt, DateTime.UtcNow), ct);
 
     /// <inheritdoc/>
     public async Task<QuestionStatsResponse> GetStatsAsync(CancellationToken ct = default)
     {
         var total    = await Set.CountAsync(ct);
         var verified = await Set.CountAsync(x => x.IsVerified, ct);
+        var rejected = await Set.CountAsync(x => !x.IsVerified && x.RejectionReason != null, ct);
+        var pending  = await Set.CountAsync(x => !x.IsVerified && x.RejectionReason == null, ct);
         var inactive = await Set.CountAsync(x => !x.IsActive, ct);
-        return new QuestionStatsResponse(total, verified, total - verified, inactive);
+        return new QuestionStatsResponse(total, verified, pending, rejected, inactive);
     }
 
     /// <inheritdoc/>

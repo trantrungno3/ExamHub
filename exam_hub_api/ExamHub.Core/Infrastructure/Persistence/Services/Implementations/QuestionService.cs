@@ -112,6 +112,14 @@ public class QuestionService : IQuestionService
         await _questionRepo.UnverifyAsync(id, ct);
     }
 
+    public async Task RejectAsync(Guid id, Guid reviewedBy, string reason, CancellationToken ct = default)
+    {
+        // Từ chối cũng loại câu hỏi khỏi pool → invalidate trước khi đổi.
+        var question = await _questionRepo.GetByIdAsync(id, ct);
+        if (question is not null) await InvalidatePoolAsync(question, ct);
+        await _questionRepo.RejectAsync(id, reviewedBy, reason, ct);
+    }
+
     public Task<QuestionStatsResponse> GetStatsAsync(CancellationToken ct = default)
         => _questionRepo.GetStatsAsync(ct);
 

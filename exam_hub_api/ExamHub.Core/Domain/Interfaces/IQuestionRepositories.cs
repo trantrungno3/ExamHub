@@ -59,6 +59,9 @@ public interface IQuestionRepository : IBaseRepository<Question, Guid>
     /// <summary>Bỏ duyệt câu hỏi (đặt lại chưa duyệt)</summary>
     Task UnverifyAsync(Guid id, CancellationToken ct = default);
 
+    /// <summary>Từ chối câu hỏi kèm lý do</summary>
+    Task RejectAsync(Guid id, Guid reviewedBy, string reason, CancellationToken ct = default);
+
     /// <summary>Đếm số câu hỏi theo trạng thái (tổng, đã duyệt, chờ duyệt, không hoạt động)</summary>
     Task<QuestionStatsResponse> GetStatsAsync(CancellationToken ct = default);
 
