@@ -59,6 +59,9 @@ public class AppDbContext : DbContext
     /// <summary>Quan hệ giáo viên – môn học</summary>
     public DbSet<TeacherSubject> TeacherSubjects { get; set; }
 
+    /// <summary>Phân công GV giảng dạy cho lớp</summary>
+    public DbSet<CohortClassTeacher> CohortClassTeachers { get; set; }
+
     /// <summary>Mẫu đề thi</summary>
     public DbSet<ExamTemplate> ExamTemplates { get; set; }
 
@@ -269,6 +272,15 @@ public class AppDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(x => x.SubjectId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // ── CohortClassTeacher (phân công GV giảng dạy) ─────────────────────
+        modelBuilder.Entity<CohortClassTeacher>(e =>
+        {
+            e.ToTable("cohort_class_teachers");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).UseIdentityAlwaysColumn();
+            e.HasIndex(x => new { x.CohortClassId, x.SubjectId }).IsUnique();
         });
 
         // ── ExamTemplate ───────────────────────────────────────────────────

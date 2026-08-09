@@ -83,6 +83,7 @@ public static class DependencyContainer
                 .AddScoped<IQuestionRepository, QuestionRepository>()
                 .AddScoped<IQuestionAnswerRepository, QuestionAnswerRepository>()
                 .AddScoped<ITeacherSubjectRepository, TeacherSubjectRepository>()
+                .AddScoped<ICohortClassTeacherRepository, CohortClassTeacherRepository>()
                 .AddScoped<IExamGeneratorRepository, ExamGeneratorRepository>()
                 // Exam Templates & Exams
                 .AddScoped<IExamTemplateRepository, ExamTemplateRepository>()
@@ -130,7 +131,8 @@ public static class DependencyContainer
                 .AddScoped<ICohortService, CohortService>()
                 .AddScoped<ICohortClassService, CohortClassService>()
                 .AddScoped<ICohortMemberService, CohortMemberService>()
-                .AddScoped<ISchoolMemberService, SchoolMemberService>();
+                .AddScoped<ISchoolMemberService, SchoolMemberService>()
+                .AddScoped<ICohortClassTeacherService, CohortClassTeacherService>();
         }
 
         private IServiceCollection AddProjectAuthService(IConfiguration config)

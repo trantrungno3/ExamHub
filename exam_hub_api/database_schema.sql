@@ -319,6 +319,16 @@ CREATE TABLE public.teacher_subjects
     UNIQUE (user_id, subject_id)
 );
 
+-- Phân công GV giảng dạy cho lớp (1 môn/lớp = 1 GV)
+CREATE TABLE public.cohort_class_teachers
+(
+    id              SERIAL PRIMARY KEY,
+    cohort_class_id INT  NOT NULL REFERENCES cohort_classes (id) ON DELETE CASCADE,
+    subject_id      INT  NOT NULL REFERENCES subjects (id)       ON DELETE CASCADE,
+    teacher_id      UUID NOT NULL REFERENCES app_users (id)      ON DELETE CASCADE,
+    UNIQUE (cohort_class_id, subject_id)
+);
+
 -- ============================================================
 -- PHẦN 4: NGÂN HÀNG CÂU HỎI (Question Bank)
 -- ============================================================

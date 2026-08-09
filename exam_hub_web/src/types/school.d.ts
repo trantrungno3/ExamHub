@@ -100,6 +100,21 @@ interface CohortMemberBody {
     isActive?: boolean
 }
 
+/* ─── CohortClassTeacher (phân công GV giảng dạy cho lớp) ── */
+
+interface CohortClassTeacher {
+    id: number
+    cohortClassId: number
+    subjectId: number
+    teacherId: string
+}
+
+interface AssignTeacherBody {
+    cohortClassId: number
+    subjectId: number
+    teacherId: string
+}
+
 /* ─── Menu ── */
 
 interface MenuItem {
