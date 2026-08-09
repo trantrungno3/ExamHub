@@ -128,7 +128,7 @@ export default function ExamSessionEditPage() {
                     <>
                         {/* ── Cấu hình ── */}
                         <div className="bg-white rounded-xl border border-[#eceef2] p-5">
-                        <Form form={form} layout="vertical" requiredMark="optional"
+                        <Form form={form} layout="vertical"
                             initialValues={{maxAttempts: 1, pickMode: 'Random'}}
                             className="session-info-form">
                             <h3 className="text-[15px] font-semibold text-[#191d27] mb-4">Thông tin kỳ thi</h3>
