@@ -345,10 +345,11 @@ CREATE TABLE public.questions
     tags                TEXT[],
     usage_count         INT       NOT NULL DEFAULT 0,
     is_active           BOOLEAN   NOT NULL DEFAULT TRUE,
-    is_verified         BOOLEAN   NOT NULL DEFAULT FALSE,
+    status              VARCHAR(20) NOT NULL DEFAULT 'pending'
+                             CHECK (status IN ('pending', 'approved', 'rejected')),
     verified_by         UUID REFERENCES app_users (id),
     verified_at         TIMESTAMP,
-    rejection_reason    TEXT,     -- Lý do từ chối; ≠ NULL ⇒ câu hỏi "Bị từ chối" (is_verified=false)
+    rejection_reason    TEXT,     -- Lý do từ chối (đi kèm status = 'rejected')
 
     created            TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
     created_by           VARCHAR(150),
@@ -586,7 +587,7 @@ CREATE INDEX idx_school_members_school ON public.school_members (school_id, role
 CREATE INDEX idx_questions_topic ON public.questions (topic_id);
 CREATE INDEX idx_questions_difficulty ON public.questions (difficulty_level_id);
 CREATE INDEX idx_questions_type ON public.questions (question_type_id);
-CREATE INDEX idx_questions_active ON public.questions (is_active, is_verified);
+CREATE INDEX idx_questions_active ON public.questions (is_active, status);
 CREATE INDEX idx_questions_tags ON public.questions USING GIN(tags);
 CREATE INDEX idx_questions_fulltext ON public.questions USING GIN(to_tsvector('simple', content_plain));
 
@@ -597,11 +598,11 @@ CREATE INDEX idx_questions_cognitive ON public.questions (cognitive_level_id);
 -- [CẬP NHẬT] Thêm cognitive_level_id vào INCLUDE để index-only scan
 -- khi sinh đề có lọc theo cấp độ nhận thức
 CREATE INDEX idx_q_pool ON public.questions (topic_id, difficulty_level_id, question_type_id) INCLUDE (id, cognitive_level_id)
-    WHERE is_active = true AND is_verified = true;
+    WHERE is_active = true AND status = 'approved';
 
 -- [MỚI] Index hỗ trợ lọc pool theo cả cognitive_level
 CREATE INDEX idx_q_pool_cognitive ON public.questions (topic_id, cognitive_level_id, difficulty_level_id) INCLUDE (id)
-    WHERE is_active = true AND is_verified = true;
+    WHERE is_active = true AND status = 'approved';
 
 CREATE INDEX idx_exams_template ON public.exams (exam_template_id);
 CREATE INDEX idx_exams_subject ON public.exams (subject_id);
