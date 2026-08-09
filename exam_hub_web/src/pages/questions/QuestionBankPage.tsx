@@ -1,11 +1,12 @@
 import {useMemo, useState} from 'react'
 import {useNavigate} from 'react-router-dom'
 import type {TableColumnsType} from 'antd'
-import {Button, Input, Popconfirm, Select, Table, message} from 'antd'
+import {Button, Input, Modal, Popconfirm, Select, Table, Tooltip, message} from 'antd'
 import {
     CheckCircleFilled,
     CheckOutlined,
     ClockCircleFilled,
+    CloseCircleFilled,
     DatabaseOutlined,
     PlusOutlined,
     SearchOutlined,
@@ -18,6 +19,7 @@ import {
     useDeleteQuestionMutation,
     useQuestionsQuery,
     useQuestionStatsQuery,
+    useRejectQuestionMutation,
     useUnverifyQuestionMutation,
     useVerifyQuestionMutation,
 } from '../../hooks/queries/useQuestions'
@@ -56,6 +58,10 @@ const TYPE_CHIP: Record<string, ChipColor> = {
     matching:        {bg: '#fff4e5', fg: '#d98a00'},
 }
 const NEUTRAL: ChipColor = {bg: '#eef0f3', fg: '#6f7788'}
+
+type ReviewState = 'approved' | 'rejected' | 'pending'
+const reviewState = (q: Question): ReviewState =>
+    q.isVerified ? 'approved' : (q.rejectionReason ? 'rejected' : 'pending')
 
 function Chip({label, color}: {label: string; color: ChipColor}) {
     return (
@@ -115,6 +121,16 @@ export default function QuestionBankPage() {
     const deleteMutation = useDeleteQuestionMutation()
     const verifyMutation = useVerifyQuestionMutation()
     const unverifyMutation = useUnverifyQuestionMutation()
+    const rejectMutation = useRejectQuestionMutation()
+    const [rejectTarget, setRejectTarget] = useState<Question>()
+    const [rejectReason, setRejectReason] = useState('')
+
+    const handleReject = () => {
+        if (!rejectTarget || !rejectReason.trim()) return
+        rejectMutation.mutate({id: rejectTarget.id, reason: rejectReason.trim()}, {
+            onSuccess: () => { setRejectTarget(undefined); setRejectReason('') },
+        })
+    }
 
     const diffCodeById = useMemo(
         () => Object.fromEntries((difficulties.data ?? []).map(d => [d.id, d.code])),
@@ -178,27 +194,43 @@ export default function QuestionBankPage() {
             },
         },
         {
-            title: 'Duyệt', dataIndex: 'isVerified', key: 'isVerified', width: 110,
-            render: v => <StatusTag status={v ? 'success' : 'warning'} label={v ? 'Đã duyệt' : 'Chờ duyệt'}/>,
+            title: 'Duyệt', dataIndex: 'isVerified', key: 'isVerified', width: 120,
+            render: (_, q) => {
+                const st = reviewState(q)
+                if (st === 'approved') return <StatusTag status="success" label="Đã duyệt"/>
+                if (st === 'pending') return <StatusTag status="warning" label="Chờ duyệt"/>
+                return (
+                    <Tooltip title={q.rejectionReason}>
+                        <span><StatusTag status="danger" label="Bị từ chối"/></span>
+                    </Tooltip>
+                )
+            },
         },
         {
-            title: 'Thao tác', key: 'actions', width: 190, fixed: 'right',
-            render: (_, q) => (
-                <div className="flex gap-2 items-center">
-                    <button className="btn-edit" onClick={() => navigate(`/app/questions/${q.id}/edit`)}>Sửa</button>
-                    {q.isVerified ? (
-                        <button className="text-[13px] hover:underline" style={{color: '#d98a00'}}
-                                onClick={() => unverifyMutation.mutate(q.id)}>Bỏ duyệt</button>
-                    ) : (
-                        <button className="text-[13px] hover:underline flex items-center gap-1" style={{color: '#1ea375'}}
-                                onClick={() => verifyMutation.mutate(q.id)}><CheckOutlined/> Duyệt</button>
-                    )}
-                    <Popconfirm title="Xóa câu hỏi này?" okText="Xóa" cancelText="Hủy" okButtonProps={{danger: true}}
-                                onConfirm={() => deleteMutation.mutate(q.id)}>
-                        <button className="btn-delete">Xóa</button>
-                    </Popconfirm>
-                </div>
-            ),
+            title: 'Thao tác', key: 'actions', width: 230, fixed: 'right',
+            render: (_, q) => {
+                const st = reviewState(q)
+                return (
+                    <div className="flex gap-2 items-center">
+                        <button className="btn-edit" onClick={() => navigate(`/app/questions/${q.id}/edit`)}>Sửa</button>
+                        {st === 'approved' ? (
+                            <button className="text-[13px] hover:underline" style={{color: '#d98a00'}}
+                                    onClick={() => unverifyMutation.mutate(q.id)}>Bỏ duyệt</button>
+                        ) : (
+                            <button className="text-[13px] hover:underline flex items-center gap-1" style={{color: '#1ea375'}}
+                                    onClick={() => verifyMutation.mutate(q.id)}><CheckOutlined/> Duyệt</button>
+                        )}
+                        {st === 'pending' && (
+                            <button className="text-[13px] hover:underline" style={{color: '#e74242'}}
+                                    onClick={() => { setRejectTarget(q); setRejectReason('') }}>Từ chối</button>
+                        )}
+                        <Popconfirm title="Xóa câu hỏi này?" okText="Xóa" cancelText="Hủy" okButtonProps={{danger: true}}
+                                    onConfirm={() => deleteMutation.mutate(q.id)}>
+                            <button className="btn-delete">Xóa</button>
+                        </Popconfirm>
+                    </div>
+                )
+            },
         },
     ]
 
@@ -217,8 +249,9 @@ export default function QuestionBankPage() {
                 <div className="flex gap-4 flex-wrap">
                     <StatCard label="Tổng câu hỏi" value={stats.data?.total} icon={<DatabaseOutlined/>} color="#3a74f5" bg="#eef1ff"/>
                     <StatCard label="Đã duyệt" value={stats.data?.verified} icon={<CheckCircleFilled/>} color="#1ea375" bg="#e7f7ef"/>
-                    <StatCard label="Chờ duyệt" value={stats.data?.unverified} icon={<ClockCircleFilled/>} color="#d98a00" bg="#fff4e5"/>
-                    <StatCard label="Không HĐ" value={stats.data?.inactive} icon={<StopOutlined/>} color="#e74242" bg="#fee5e5"/>
+                    <StatCard label="Chờ duyệt" value={stats.data?.pending} icon={<ClockCircleFilled/>} color="#d98a00" bg="#fff4e5"/>
+                    <StatCard label="Bị từ chối" value={stats.data?.rejected} icon={<CloseCircleFilled/>} color="#e74242" bg="#fee5e5"/>
+                    <StatCard label="Không HĐ" value={stats.data?.inactive} icon={<StopOutlined/>} color="#6f7788" bg="#eef0f3"/>
                 </div>
 
                 {/* Filters */}
@@ -292,6 +325,27 @@ export default function QuestionBankPage() {
                     />
                 </div>
             </div>
+
+            <Modal
+                title="Từ chối câu hỏi"
+                open={!!rejectTarget}
+                onCancel={() => { setRejectTarget(undefined); setRejectReason('') }}
+                onOk={handleReject}
+                okText="Từ chối"
+                cancelText="Huỷ"
+                okButtonProps={{danger: true, disabled: !rejectReason.trim(), loading: rejectMutation.isPending}}
+            >
+                <p className="text-[13px] mb-2" style={{color: '#6f7788'}}>
+                    Nhập lý do từ chối câu hỏi. Câu hỏi sẽ chuyển sang trạng thái <b>Bị từ chối</b> và không dùng để sinh đề.
+                </p>
+                <Input.TextArea
+                    rows={3}
+                    autoFocus
+                    placeholder="VD: Nội dung chưa rõ ràng, thiếu đáp án đúng..."
+                    value={rejectReason}
+                    onChange={e => setRejectReason(e.target.value)}
+                />
+            </Modal>
 
             <BulkImportModal
                 open={importOpen}

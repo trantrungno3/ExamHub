@@ -14,7 +14,7 @@ export function useQuestionStatsQuery() {
     return useQuery({
         queryKey: QUESTION_KEYS.stats,
         queryFn: async () =>
-            (await questionService.getStats()).data ?? {total: 0, verified: 0, unverified: 0, inactive: 0},
+            (await questionService.getStats()).data ?? {total: 0, verified: 0, pending: 0, rejected: 0, inactive: 0},
     })
 }
 
@@ -75,6 +75,20 @@ export function useUnverifyQuestionMutation() {
             void qc.invalidateQueries({queryKey: QUESTION_KEYS.stats})
         },
         onError: () => message.error('Không thể bỏ duyệt câu hỏi'),
+    })
+}
+
+export function useRejectQuestionMutation() {
+    const qc = useQueryClient()
+    return useMutation({
+        mutationFn: ({id, reason}: {id: string; reason: string}) => questionService.reject(id, reason),
+        onSuccess: (res) => {
+            if (res.status === statusCode.Error) { message.error(res.message || 'Không thể từ chối câu hỏi'); return }
+            message.success('Đã từ chối câu hỏi')
+            void qc.invalidateQueries({queryKey: QUESTION_KEYS.all})
+            void qc.invalidateQueries({queryKey: QUESTION_KEYS.stats})
+        },
+        onError: () => message.error('Không thể từ chối câu hỏi'),
     })
 }
 

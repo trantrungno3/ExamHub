@@ -36,6 +36,7 @@ interface Question {
     usageCount: number
     isActive: boolean
     isVerified: boolean
+    rejectionReason?: string | null
     createdAt: number
     updatedAt: number
     answers?: QuestionAnswer[]
@@ -73,7 +74,8 @@ interface QuestionPagedQuery {
 interface QuestionStats {
     total: number
     verified: number
-    unverified: number
+    pending: number
+    rejected: number
     inactive: number
 }
 

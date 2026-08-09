@@ -35,6 +35,10 @@ class QuestionService {
         return AuthHttp.post<void>(`/${this.basePath}/${id}/unverify`)
     }
 
+    reject(id: string, reason: string) {
+        return AuthHttp.post<void>(`/${this.basePath}/${id}/reject`, {reason})
+    }
+
     /** Thống kê số câu hỏi theo trạng thái (stat card). */
     getStats() {
         return AuthHttp.get<QuestionStats>(`/${this.basePath}/stats`)
