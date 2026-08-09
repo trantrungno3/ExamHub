@@ -67,6 +67,14 @@ interface QuestionPagedQuery {
     isVerified?: boolean
 }
 
+/* Thống kê ngân hàng câu hỏi (mirrors QuestionStatsResponse.cs) */
+interface QuestionStats {
+    total: number
+    verified: number
+    unverified: number
+    inactive: number
+}
+
 /* Bulk import (mirrors BulkImportQuestionRequest.cs) */
 interface BulkImportRowError {
     rowNumber: number

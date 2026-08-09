@@ -5,8 +5,17 @@ import {questionService} from '../../services/questionService'
 
 export const QUESTION_KEYS = {
     all: ['questions'] as const,
+    stats: ['questionStats'] as const,
     paged: (query: QuestionPagedQuery) => ['questions', 'paged', query] as const,
     detail: (id: string) => ['questions', 'detail', id] as const,
+}
+
+export function useQuestionStatsQuery() {
+    return useQuery({
+        queryKey: QUESTION_KEYS.stats,
+        queryFn: async () =>
+            (await questionService.getStats()).data ?? {total: 0, verified: 0, unverified: 0, inactive: 0},
+    })
 }
 
 export function useQuestionsQuery(query: QuestionPagedQuery) {
@@ -37,6 +46,7 @@ export function useDeleteQuestionMutation() {
         onSuccess: () => {
             message.success('Đã xóa câu hỏi')
             void qc.invalidateQueries({queryKey: QUESTION_KEYS.all})
+            void qc.invalidateQueries({queryKey: QUESTION_KEYS.stats})
         },
         onError: () => message.error('Không thể xóa câu hỏi'),
     })
@@ -49,8 +59,22 @@ export function useVerifyQuestionMutation() {
         onSuccess: () => {
             message.success('Đã duyệt câu hỏi')
             void qc.invalidateQueries({queryKey: QUESTION_KEYS.all})
+            void qc.invalidateQueries({queryKey: QUESTION_KEYS.stats})
         },
         onError: () => message.error('Không thể duyệt câu hỏi'),
+    })
+}
+
+export function useUnverifyQuestionMutation() {
+    const qc = useQueryClient()
+    return useMutation({
+        mutationFn: (id: string) => questionService.unverify(id),
+        onSuccess: () => {
+            message.success('Đã bỏ duyệt câu hỏi')
+            void qc.invalidateQueries({queryKey: QUESTION_KEYS.all})
+            void qc.invalidateQueries({queryKey: QUESTION_KEYS.stats})
+        },
+        onError: () => message.error('Không thể bỏ duyệt câu hỏi'),
     })
 }
 

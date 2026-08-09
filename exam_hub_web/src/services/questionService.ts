@@ -31,6 +31,15 @@ class QuestionService {
         return AuthHttp.post<void>(`/${this.basePath}/${id}/verify`)
     }
 
+    unverify(id: string) {
+        return AuthHttp.post<void>(`/${this.basePath}/${id}/unverify`)
+    }
+
+    /** Thống kê số câu hỏi theo trạng thái (stat card). */
+    getStats() {
+        return AuthHttp.get<QuestionStats>(`/${this.basePath}/stats`)
+    }
+
     /** Upload ảnh/PDF (≤ 10 MB) cho câu hỏi → trả về URL MinIO. */
     uploadAttachment(id: string, file: File) {
         const form = new FormData()
