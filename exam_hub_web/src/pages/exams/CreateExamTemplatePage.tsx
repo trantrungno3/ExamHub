@@ -14,6 +14,16 @@ import {
     useTopicsQuery,
 } from '../../hooks/queries/useCategoryLists'
 
+const ROMAN = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X']
+const roman = (n: number) => ROMAN[n] ?? String(n)
+
+const PCT_FIELDS = [
+    {name: 'pctEasy', label: 'Dễ', bg: '#dff5ed', fg: '#1ea375'},
+    {name: 'pctMedium', label: 'TB', bg: '#fff4e5', fg: '#d98a00'},
+    {name: 'pctHard', label: 'Khó', bg: '#fee5e5', fg: '#e74242'},
+    {name: 'pctVeryHard', label: 'RK', bg: '#f3ecfe', fg: '#8b5cf6'},
+] as const
+
 const EMPTY_SECTION: ExamTemplateSectionBody = {
     sectionName: '',
     topicId: undefined,
@@ -123,14 +133,17 @@ export default function CreateExamTemplatePage() {
             }
             message.success(isEdit ? 'Cập nhật mẫu đề thành công' : 'Tạo mẫu đề thành công')
             void qc.invalidateQueries({queryKey: EXAM_TEMPLATE_KEYS.all})
-            navigate('/app/exams')
+            void qc.invalidateQueries({queryKey: EXAM_TEMPLATE_KEYS.stats})
         },
         onError: () => message.error('Lưu mẫu đề thất bại'),
     })
 
-    const handleSubmit = async () => {
+    const submit = async (generateAfter: boolean) => {
         const v = await form.validateFields()
-        saveMutation.mutate(v)
+        const res = await saveMutation.mutateAsync(v)
+        if (res.status === statusCode.Error || !res.data) return
+        if (generateAfter && res.data.id) navigate(`/app/generate?templateId=${res.data.id}`)
+        else navigate('/app/exams')
     }
 
     return (
@@ -167,9 +180,12 @@ export default function CreateExamTemplatePage() {
                         <div className="flex-[2] flex flex-col gap-4 min-w-0">
                             <div className="form-section">
                                 <p className="form-section-title">Thông tin mẫu đề</p>
-                                <Form.Item label="Tên đề" name="title"
+                                <Form.Item label="Tiêu đề mẫu đề" name="title"
                                            rules={[{required: true, message: 'Nhập tên đề'}]}>
                                     <Input placeholder="VD: Kiểm tra Toán HK1 Lớp 10"/>
+                                </Form.Item>
+                                <Form.Item label="Mô tả" name="description">
+                                    <Input.TextArea rows={2} placeholder="Mô tả ngắn cho mẫu đề (tuỳ chọn)..."/>
                                 </Form.Item>
                                 <div className="grid grid-cols-2 gap-4">
                                     <Form.Item label="Lớp" name="gradeLevelId"
@@ -251,18 +267,21 @@ export default function CreateExamTemplatePage() {
                                             </Button>
                                         </div>
                                         {fields.map((field, idx) => (
-                                            <div key={field.key} className="form-section">
-                                                <div className="flex items-center justify-between mb-2">
-                                                    <span
-                                                        className="text-[13px] font-semibold text-gray-600">Phần {idx + 1}</span>
+                                            <div key={field.key} className="rounded-xl overflow-hidden border"
+                                                 style={{borderColor: '#eceef2'}}>
+                                                <div className="flex items-center justify-between px-4 py-2.5"
+                                                     style={{background: '#191d27'}}>
+                                                    <span className="text-[13px] font-semibold text-white">
+                                                        Phần {roman(idx + 1)}{watchedSections?.[idx]?.sectionName ? `: ${watchedSections[idx].sectionName}` : ''}
+                                                    </span>
                                                     {fields.length > 1 && (
-                                                        <button type="button"
-                                                                className="text-gray-400 hover:text-red-500"
+                                                        <button type="button" className="text-white/60 hover:text-white"
                                                                 onClick={() => remove(field.name)}>
                                                             <CloseOutlined/>
                                                         </button>
                                                     )}
                                                 </div>
+                                                <div className="p-4">
                                                 <Form.Item label="Tên phần" name={[field.name, 'sectionName']}
                                                            className="!mb-2">
                                                     <Input placeholder="VD: Phần trắc nghiệm"/>
@@ -306,24 +325,37 @@ export default function CreateExamTemplatePage() {
                                                         <InputNumber min={0} step={0.25} className="w-full"/>
                                                     </Form.Item>
                                                 </div>
-                                                <p className="form-label">Phân bố độ khó (%) — tổng phải = 100</p>
+                                                <p className="form-label">Phân bố độ khó (%)</p>
                                                 <div className="grid grid-cols-4 gap-2">
-                                                    <Form.Item name={[field.name, 'pctEasy']} className="!mb-0">
-                                                        <InputNumber min={0} max={100} className="w-full"
-                                                                     suffix="Dễ"/>
-                                                    </Form.Item>
-                                                    <Form.Item name={[field.name, 'pctMedium']} className="!mb-0">
-                                                        <InputNumber min={0} max={100} className="w-full"
-                                                                     suffix="TB"/>
-                                                    </Form.Item>
-                                                    <Form.Item name={[field.name, 'pctHard']} className="!mb-0">
-                                                        <InputNumber min={0} max={100} className="w-full"
-                                                                     suffix="Khó"/>
-                                                    </Form.Item>
-                                                    <Form.Item name={[field.name, 'pctVeryHard']} className="!mb-0">
-                                                        <InputNumber min={0} max={100} className="w-full"
-                                                                     suffix="RK"/>
-                                                    </Form.Item>
+                                                    {PCT_FIELDS.map(pf => (
+                                                        <div key={pf.name} className="rounded-lg px-2 py-1.5"
+                                                             style={{background: pf.bg}}>
+                                                            <div className="text-[11px] font-medium" style={{color: pf.fg}}>{pf.label}</div>
+                                                            <Form.Item name={[field.name, pf.name]} className="!mb-0" noStyle>
+                                                                <InputNumber min={0} max={100} controls={false} variant="borderless"
+                                                                             className="w-full !px-0"
+                                                                             style={{color: pf.fg, fontWeight: 600}}/>
+                                                            </Form.Item>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                                {(() => {
+                                                    const s = watchedSections?.[idx]
+                                                    const sum = (Number(s?.pctEasy) || 0) + (Number(s?.pctMedium) || 0)
+                                                        + (Number(s?.pctHard) || 0) + (Number(s?.pctVeryHard) || 0)
+                                                    const ok = sum === 100
+                                                    return (
+                                                        <div className="flex items-center justify-between mt-2">
+                                                            <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-[12px] font-medium"
+                                                                  style={ok ? {background: '#dff5ed', color: '#1ea375'} : {background: '#fee5e5', color: '#e74242'}}>
+                                                                Tổng: {sum}% {ok ? '✓ Hợp lệ' : '✗'}
+                                                            </span>
+                                                            <span className="text-[12px]" style={{color: '#9aa2b1'}}>
+                                                                Điểm/câu: {s?.scorePerQuestion ?? 0}
+                                                            </span>
+                                                        </div>
+                                                    )
+                                                })()}
                                                 </div>
                                             </div>
                                         ))}
@@ -338,9 +370,15 @@ export default function CreateExamTemplatePage() {
 
             <div className="action-bar">
                 <Button onClick={() => navigate('/app/exams')}>Hủy bỏ</Button>
-                <Button type="primary" loading={saveMutation.isPending} onClick={handleSubmit}>
+                <Button type="primary" loading={saveMutation.isPending} onClick={() => submit(false)}>
                     {isEdit ? 'Cập nhật mẫu đề' : 'Lưu mẫu đề thi'}
                 </Button>
+                {!isEdit && (
+                    <Button loading={saveMutation.isPending} onClick={() => submit(true)}
+                            style={{background: '#1ea375', borderColor: '#1ea375', color: '#fff'}}>
+                        Lưu & Sinh đề ngay
+                    </Button>
+                )}
             </div>
         </>
     )
