@@ -222,7 +222,7 @@ public class AppDbContext : DbContext
             e.Property(x => x.Tags).HasColumnType("text[]");
             e.Property(x => x.UsageCount).HasDefaultValue(0);
             e.Property(x => x.IsActive).HasDefaultValue(true);
-            e.Property(x => x.IsVerified).HasDefaultValue(false);
+            e.Property(x => x.Status).HasMaxLength(20).HasDefaultValue("pending");
             e.Property(x => x.Created).HasColumnName(ModifyFieldsTable.Created).HasDefaultValueSql("now()");
             e.Property(x => x.Modified).HasColumnName(ModifyFieldsTable.Modified).HasDefaultValueSql("now()");
             e.HasOne(x => x.Topic)

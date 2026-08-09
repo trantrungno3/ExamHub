@@ -33,7 +33,6 @@ public interface IQuestionRepository : IBaseRepository<Question, Guid>
         int? difficultyLevelId = null,
         int? cognitiveLevelId = null,
         string? keyword = null,
-        bool? isVerified = null,
         string? reviewStatus = null,
         CancellationToken ct = default);
 

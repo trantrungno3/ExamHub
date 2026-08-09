@@ -47,8 +47,8 @@ public readonly struct QuestionTable
     /// <summary>Kích hoạt</summary>
     public const string IsActive = "is_active";
 
-    /// <summary>Đã được kiểm duyệt</summary>
-    public const string IsVerified = "is_verified";
+    /// <summary>Trạng thái duyệt: pending | approved | rejected</summary>
+    public const string Status = "status";
 
     /// <summary>Người kiểm duyệt</summary>
     public const string VerifiedBy = "verified_by";

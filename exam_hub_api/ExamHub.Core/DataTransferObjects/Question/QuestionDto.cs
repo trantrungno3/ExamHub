@@ -51,7 +51,7 @@ public record QuestionRequest()
    public string? Source { get; set; }
    public string[]? Tags { get; set; }
    public bool IsActive { get; set; } = true;
-   public bool IsVerified { get; set; }
+   public string Status { get; set; } = "pending";
     [ Required(ErrorMessage = "Câu hỏi phải có ít nhất một đáp án.")]
     [HasCorrectAnswer]
     public IEnumerable<QuestionAnswerRequest> Answers{ get; set; }
@@ -71,7 +71,7 @@ public record QuestionRequest()
         Source            = Source,
         Tags              = Tags ?? [],
         IsActive          = IsActive,
-        IsVerified        = IsVerified
+        Status            = Status
     };
 
     /// <summary>Map sang danh sách QuestionAnswer</summary>
@@ -105,7 +105,7 @@ public record QuestionResponse(
     string[] Tags,
     int UsageCount,
     bool IsActive,
-    bool IsVerified,
+    string Status,
     string? RejectionReason,
     long Created,
     long Modified,
@@ -133,7 +133,7 @@ public record QuestionResponse(
             e.Tags,
             e.UsageCount,
             e.IsActive,
-            e.IsVerified,
+            e.Status,
             e.RejectionReason,
             e.Created.ToTimestamp(),
             e.Modified.ToTimestamp(),
@@ -150,7 +150,6 @@ public record QuestionPagedRequest(
     int? DifficultyLevelId = null,
     int? CognitiveLevelId = null,
     string? Keyword = null,
-    bool? IsVerified = null,
     string? ReviewStatus = null
 );
 

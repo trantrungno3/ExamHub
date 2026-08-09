@@ -36,8 +36,8 @@ public class QuestionService : IQuestionService
         int? topicId = null, int? questionTypeId = null,
         int? difficultyLevelId = null, int? cognitiveLevelId = null,
         string? keyword = null,
-        bool? isVerified = null, string? reviewStatus = null, CancellationToken ct = default)
-        => _questionRepo.GetPagedAsync(page, pageSize, topicId, questionTypeId, difficultyLevelId, cognitiveLevelId, keyword, isVerified, reviewStatus, ct);
+        string? reviewStatus = null, CancellationToken ct = default)
+        => _questionRepo.GetPagedAsync(page, pageSize, topicId, questionTypeId, difficultyLevelId, cognitiveLevelId, keyword, reviewStatus, ct);
 
     public async Task<Question> CreateAsync(Question entity, IEnumerable<QuestionAnswer> answers, CancellationToken ct = default)
     {
@@ -99,14 +99,14 @@ public class QuestionService : IQuestionService
     public async Task VerifyAsync(Guid id, Guid verifiedBy, CancellationToken ct = default)
     {
         await _questionRepo.VerifyAsync(id, verifiedBy, ct);
-        // Duyệt câu hỏi đưa nó vào pool (pool chỉ gồm is_verified=true) → invalidate để refetch.
+        // Duyệt câu hỏi đưa nó vào pool (pool chỉ gồm status='approved') → invalidate để refetch.
         var verified = await _questionRepo.GetByIdAsync(id, ct);
         if (verified is not null) await InvalidatePoolAsync(verified, ct);
     }
 
     public async Task UnverifyAsync(Guid id, CancellationToken ct = default)
     {
-        // Bỏ duyệt loại câu hỏi khỏi pool (pool chỉ gồm is_verified=true) → invalidate trước khi đổi.
+        // Bỏ duyệt loại câu hỏi khỏi pool (pool chỉ gồm status='approved') → invalidate trước khi đổi.
         var question = await _questionRepo.GetByIdAsync(id, ct);
         if (question is not null) await InvalidatePoolAsync(question, ct);
         await _questionRepo.UnverifyAsync(id, ct);

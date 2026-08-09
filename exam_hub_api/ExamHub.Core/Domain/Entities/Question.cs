@@ -85,9 +85,9 @@ public class Question : ModifyModelBase, IModelBaseSql<Guid>
     public bool IsActive { get; set; } = true;
 
     /// <summary>Đã được kiểm duyệt hay chưa</summary>
-    [Column(QuestionTable.IsVerified)]
-    [SqlBuilderProperty(QuestionTable.IsVerified, Insert = true, Update = true)]
-    public bool IsVerified { get; set; } = false;
+    [Column(QuestionTable.Status)]
+    [SqlBuilderProperty(QuestionTable.Status, Insert = true, Update = true)]
+    public string Status { get; set; } = "pending";
 
     /// <summary>ID người kiểm duyệt</summary>
     [Column(QuestionTable.VerifiedBy)]
@@ -138,7 +138,7 @@ public class Question : ModifyModelBase, IModelBaseSql<Guid>
         tags = Tags,
         usage_count = UsageCount,
         is_active = IsActive,
-        is_verified = IsVerified,
+        status = Status,
         verified_by = VerifiedBy,
         verified_at = VerifiedAt,
         rejection_reason = RejectionReason,
@@ -163,7 +163,7 @@ public class Question : ModifyModelBase, IModelBaseSql<Guid>
         tags = Tags,
         usage_count = UsageCount,
         is_active = IsActive,
-        is_verified = IsVerified,
+        status = Status,
         verified_by = VerifiedBy,
         verified_at = VerifiedAt,
         rejection_reason = RejectionReason,

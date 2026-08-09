@@ -50,7 +50,7 @@ public class QuestionRepository : BaseRepository<Question, Guid>, IQuestionRepos
         CancellationToken ct = default)
     {
         IQueryable<Question> query = Set.AsNoTracking()
-            .Where(x => x.IsActive && x.IsVerified);
+            .Where(x => x.IsActive && x.Status == "approved");
 
         if (topicId.HasValue)
             query = query.Where(x => x.TopicId == topicId.Value);
@@ -80,7 +80,6 @@ public class QuestionRepository : BaseRepository<Question, Guid>, IQuestionRepos
         int? difficultyLevelId = null,
         int? cognitiveLevelId = null,
         string? keyword = null,
-        bool? isVerified = null,
         string? reviewStatus = null,
         CancellationToken ct = default)
     {
@@ -108,16 +107,8 @@ public class QuestionRepository : BaseRepository<Question, Guid>, IQuestionRepos
                 EF.Functions.ILike(x.Content, $"%{keyword}%") ||
                 (x.ContentPlain != null && EF.Functions.ILike(x.ContentPlain, $"%{keyword}%")));
 
-        if (isVerified.HasValue)
-            query = query.Where(x => x.IsVerified == isVerified.Value);
-
-        query = reviewStatus switch
-        {
-            "approved" => query.Where(x => x.IsVerified),
-            "pending"  => query.Where(x => !x.IsVerified && x.RejectionReason == null),
-            "rejected" => query.Where(x => !x.IsVerified && x.RejectionReason != null),
-            _          => query,
-        };
+        if (!string.IsNullOrWhiteSpace(reviewStatus))
+            query = query.Where(x => x.Status == reviewStatus);
 
         var total = await query.CountAsync(ct);
         var items = await query
@@ -224,7 +215,7 @@ public class QuestionRepository : BaseRepository<Question, Guid>, IQuestionRepos
         => await Set
             .Where(x => x.Id == id)
             .ExecuteUpdateAsync(s => s
-                .SetProperty(x => x.IsVerified, true)
+                .SetProperty(x => x.Status, "approved")
                 .SetProperty(x => x.RejectionReason, (string?)null)
                 .SetProperty(x => x.VerifiedBy, verifiedBy)
                 .SetProperty(x => x.VerifiedAt, DateTime.UtcNow), ct);
@@ -234,7 +225,7 @@ public class QuestionRepository : BaseRepository<Question, Guid>, IQuestionRepos
         => await Set
             .Where(x => x.Id == id)
             .ExecuteUpdateAsync(s => s
-                .SetProperty(x => x.IsVerified, false)
+                .SetProperty(x => x.Status, "pending")
                 .SetProperty(x => x.RejectionReason, (string?)null)
                 .SetProperty(x => x.VerifiedBy, (Guid?)null)
                 .SetProperty(x => x.VerifiedAt, (DateTime?)null), ct);
@@ -244,7 +235,7 @@ public class QuestionRepository : BaseRepository<Question, Guid>, IQuestionRepos
         => await Set
             .Where(x => x.Id == id)
             .ExecuteUpdateAsync(s => s
-                .SetProperty(x => x.IsVerified, false)
+                .SetProperty(x => x.Status, "rejected")
                 .SetProperty(x => x.RejectionReason, reason)
                 .SetProperty(x => x.VerifiedBy, reviewedBy)
                 .SetProperty(x => x.VerifiedAt, DateTime.UtcNow), ct);
@@ -253,9 +244,9 @@ public class QuestionRepository : BaseRepository<Question, Guid>, IQuestionRepos
     public async Task<QuestionStatsResponse> GetStatsAsync(CancellationToken ct = default)
     {
         var total    = await Set.CountAsync(ct);
-        var verified = await Set.CountAsync(x => x.IsVerified, ct);
-        var rejected = await Set.CountAsync(x => !x.IsVerified && x.RejectionReason != null, ct);
-        var pending  = await Set.CountAsync(x => !x.IsVerified && x.RejectionReason == null, ct);
+        var verified = await Set.CountAsync(x => x.Status == "approved", ct);
+        var rejected = await Set.CountAsync(x => x.Status == "rejected", ct);
+        var pending  = await Set.CountAsync(x => x.Status == "pending", ct);
         var inactive = await Set.CountAsync(x => !x.IsActive, ct);
         return new QuestionStatsResponse(total, verified, pending, rejected, inactive);
     }
@@ -296,7 +287,7 @@ public class QuestionRepository : BaseRepository<Question, Guid>, IQuestionRepos
         FROM public.questions q
         {(bySubject ? "JOIN public.topics t ON t.id = q.topic_id" : "")}
         WHERE q.is_active           = true
-          AND q.is_verified         = true
+          AND q.status              = 'approved'
           AND {(bySubject ? "t.subject_id = @SubjectId" : "q.topic_id = @TopicId")}
           AND q.difficulty_level_id = @DifficultyId
           {(filterByType ? "AND q.question_type_id   = @QuestionTypeId" : "")}

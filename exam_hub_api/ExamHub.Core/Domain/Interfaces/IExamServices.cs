@@ -17,7 +17,7 @@ public interface IQuestionService
     Task<IReadOnlyList<Question>> GetByTopicAsync(int topicId, CancellationToken ct = default);
 
     /// <summary>Lấy câu hỏi phân trang với bộ lọc</summary>
-    Task<(IReadOnlyList<Question> Items, int Total)> GetPagedAsync(int page, int pageSize, int? topicId = null, int? questionTypeId = null, int? difficultyLevelId = null, int? cognitiveLevelId = null, string? keyword = null, bool? isVerified = null, string? reviewStatus = null, CancellationToken ct = default);
+    Task<(IReadOnlyList<Question> Items, int Total)> GetPagedAsync(int page, int pageSize, int? topicId = null, int? questionTypeId = null, int? difficultyLevelId = null, int? cognitiveLevelId = null, string? keyword = null, string? reviewStatus = null, CancellationToken ct = default);
 
     /// <summary>Tạo câu hỏi kèm đáp án</summary>
     Task<Question> CreateAsync(Question entity, IEnumerable<QuestionAnswer> answers, CancellationToken ct = default);
