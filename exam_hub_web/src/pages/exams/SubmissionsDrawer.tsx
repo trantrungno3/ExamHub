@@ -1,5 +1,7 @@
 import {useState} from 'react'
+import type {ReactNode} from 'react'
 import {Button, Collapse, Drawer, Empty, InputNumber, Spin, Tag, message} from 'antd'
+import {CheckCircleFilled, CloseCircleFilled, MinusCircleOutlined} from '@ant-design/icons'
 import {useAuth} from '../../AuthProvider'
 import {useExamWithQuestionsQuery} from '../../hooks/queries/useExams'
 import {
@@ -8,7 +10,7 @@ import {
     useSubmissionQuery,
     useSubmissionsBySessionQuery,
 } from '../../hooks/queries/useSubmissions'
-import {stripHtml} from '../../utils/snapshot'
+import {parseAnswers, stripHtml} from '../../utils/snapshot'
 
 type Props = {sessionId?: string; onClose: () => void}
 
@@ -40,10 +42,19 @@ function SubmissionCard({submissionId}: {submissionId: string}) {
 
     if (isLoading || !sub) return <div className="section-card p-4"><Spin/></div>
 
-    const questionContent = (examQuestionId: string) =>
-        stripHtml(exam.data?.questions?.find(q => q.id === examQuestionId)?.contentSnapshot)
+    const questionOf = (examQuestionId: string) =>
+        exam.data?.questions?.find(q => q.id === examQuestionId)
+    const questionContent = (examQuestionId: string) => stripHtml(questionOf(examQuestionId)?.contentSnapshot)
 
-    const essays = (sub.answers ?? []).filter(a => !a.selectedAnswerIds || a.selectedAnswerIds.length === 0)
+    // Phân loại theo LOẠI câu hỏi (có option trong snapshot = trắc nghiệm), không dựa vào việc
+    // học sinh có chọn đáp án hay không — nếu không, câu trắc nghiệm bỏ trống sẽ bị coi là tự luận.
+    const isEssayQuestion = (examQuestionId: string) => parseAnswers(questionOf(examQuestionId)?.answersSnapshot).length === 0
+
+    const answers = sub.answers ?? []
+    const objectives = answers.filter(a => !isEssayQuestion(a.examQuestionId))
+    const essays = answers.filter(a => isEssayQuestion(a.examQuestionId))
+    const objectiveScore = objectives.reduce((s, a) => s + (a.scoreEarned ?? 0), 0)
+    const correctCount = objectives.filter(a => a.isCorrect === true).length
 
     const submitGrade = (answerId: string) => {
         if (!user?.id) {
@@ -64,32 +75,60 @@ function SubmissionCard({submissionId}: {submissionId: string}) {
                 </div>
             </div>
 
-            {essays.length > 0 ? (
+            {objectives.length === 0 && essays.length === 0 && (
+                <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Chưa có câu trả lời"/>
+            )}
+
+            {(objectives.length > 0 || essays.length > 0) && (
                 <Collapse
                     size="small"
-                    items={[{
-                        key: 'essays',
-                        label: `Chấm ${essays.length} câu tự luận`,
-                        children: (
-                            <div className="flex flex-col gap-3">
-                                {essays.map(a => (
-                                    <div key={a.id} className="border-b border-gray-100 pb-2">
-                                        <p className="text-[13px] text-gray-700 font-medium">{questionContent(a.examQuestionId)}</p>
-                                        <p className="text-[13px] text-gray-500 mt-1 whitespace-pre-wrap">{a.essayContent || '(trống)'}</p>
-                                        <div className="flex items-center gap-2 mt-2">
-                                            <InputNumber min={0} max={10} step={0.5} placeholder="Điểm"
-                                                         value={scores[a.id] ?? a.scoreEarned}
-                                                         onChange={v => setScores(p => ({...p, [a.id]: v ?? 0}))}/>
-                                            <Button size="small" loading={grade.isPending} onClick={() => submitGrade(a.id)}>Lưu điểm</Button>
+                    defaultActiveKey={essays.length > 0 ? ['essays'] : ['objectives']}
+                    items={[
+                        objectives.length > 0 && {
+                            key: 'objectives',
+                            label: `Trắc nghiệm — đã tự chấm (${correctCount}/${objectives.length} đúng · ${objectiveScore}đ)`,
+                            children: (
+                                <div className="flex flex-col gap-2">
+                                    {objectives.map((a, i) => (
+                                        <div key={a.id} className="flex items-start gap-2 border-b border-gray-100 pb-2">
+                                            <span className="mt-0.5">
+                                                {a.isCorrect === true && <CheckCircleFilled style={{color: '#1ea375'}}/>}
+                                                {a.isCorrect === false && <CloseCircleFilled style={{color: '#e74242'}}/>}
+                                                {a.isCorrect == null && <MinusCircleOutlined style={{color: '#c0c4cc'}}/>}
+                                            </span>
+                                            <p className="flex-1 text-[13px] text-gray-700">
+                                                <span className="text-gray-400 mr-1">Câu {i + 1}.</span>
+                                                {questionContent(a.examQuestionId)}
+                                                {a.isCorrect == null && <span className="text-gray-400"> (bỏ trống)</span>}
+                                            </p>
+                                            <span className="text-[13px] font-semibold tabular-nums text-gray-600">{a.scoreEarned ?? 0}đ</span>
                                         </div>
-                                    </div>
-                                ))}
-                            </div>
-                        ),
-                    }]}
+                                    ))}
+                                </div>
+                            ),
+                        },
+                        essays.length > 0 && {
+                            key: 'essays',
+                            label: `Chấm ${essays.length} câu tự luận`,
+                            children: (
+                                <div className="flex flex-col gap-3">
+                                    {essays.map(a => (
+                                        <div key={a.id} className="border-b border-gray-100 pb-2">
+                                            <p className="text-[13px] text-gray-700 font-medium">{questionContent(a.examQuestionId)}</p>
+                                            <p className="text-[13px] text-gray-500 mt-1 whitespace-pre-wrap">{a.essayContent || '(trống)'}</p>
+                                            <div className="flex items-center gap-2 mt-2">
+                                                <InputNumber min={0} max={10} step={0.5} placeholder="Điểm"
+                                                             value={scores[a.id] ?? a.scoreEarned}
+                                                             onChange={v => setScores(p => ({...p, [a.id]: v ?? 0}))}/>
+                                                <Button size="small" loading={grade.isPending} onClick={() => submitGrade(a.id)}>Lưu điểm</Button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ),
+                        },
+                    ].filter(Boolean) as {key: string; label: string; children: ReactNode}[]}
                 />
-            ) : (
-                <p className="text-[12px] text-gray-400">Toàn bộ trắc nghiệm — đã chấm tự động.</p>
             )}
 
             <Button type="primary" size="small" className="!mt-3" loading={finalize.isPending}
