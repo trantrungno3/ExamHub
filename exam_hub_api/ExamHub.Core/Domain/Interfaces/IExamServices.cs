@@ -1,3 +1,4 @@
+using ExamHub.Core.DataTransferObjects.Exam;
 using ExamHub.Core.DataTransferObjects.Question;
 using ExamHub.Core.Domain.Entities;
 using ExamHub.Core.Domain.Enums;
@@ -86,6 +87,9 @@ public interface IExamTemplateService
 
     /// <summary>Xóa template</summary>
     Task DeleteAsync(Guid id, CancellationToken ct = default);
+
+    /// <summary>Thống kê mẫu đề thi (tổng, đang dùng, tổng đề sinh, TB số câu)</summary>
+    Task<ExamTemplateStatsResponse> GetStatsAsync(CancellationToken ct = default);
 }
 
 /// <summary>Service interface cho Exam</summary>

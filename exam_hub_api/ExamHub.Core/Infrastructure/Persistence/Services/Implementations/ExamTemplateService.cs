@@ -1,3 +1,4 @@
+using ExamHub.Core.DataTransferObjects.Exam;
 using ExamHub.Core.Domain.Entities;
 using ExamHub.Core.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -120,4 +121,18 @@ public class ExamTemplateService : IExamTemplateService
 
     public Task DeleteAsync(Guid id, CancellationToken ct = default)
         => _templateRepo.DeleteByIdAsync(id, ct);
+
+    public async Task<ExamTemplateStatsResponse> GetStatsAsync(CancellationToken ct = default)
+    {
+        var total     = await _db.ExamTemplates.CountAsync(ct);
+        var active    = await _db.ExamTemplates.CountAsync(x => x.IsActive, ct);
+        var generated = await _db.Exams.CountAsync(ct);
+        var avg = total == 0
+            ? 0
+            : (int)Math.Round(await _db.ExamTemplates
+                .Where(x => x.TotalQuestions != null)
+                .Select(x => (double?)x.TotalQuestions)
+                .AverageAsync(ct) ?? 0);
+        return new ExamTemplateStatsResponse(total, active, generated, avg);
+    }
 }

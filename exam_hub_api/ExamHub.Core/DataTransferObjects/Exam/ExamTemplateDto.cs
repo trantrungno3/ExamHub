@@ -147,3 +147,6 @@ public record ExamTemplateResponse(
             includeSections ? e.Sections.Select(ExamTemplateSectionResponse.FromEntity).ToList() : null
         );
 }
+
+/// <summary>Thống kê mẫu đề thi (stat card).</summary>
+public record ExamTemplateStatsResponse(int TotalTemplates, int ActiveTemplates, int TotalExamsGenerated, int AvgQuestions);

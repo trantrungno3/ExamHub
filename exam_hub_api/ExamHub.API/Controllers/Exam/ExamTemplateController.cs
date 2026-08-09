@@ -11,6 +11,14 @@ namespace ExamHub.API.Controllers.Exam;
 [Route("api/exam-templates")]
 public class ExamTemplateController(IExamTemplateService service) : AuthorizeControllerBase
 {
+    /// <summary>Thống kê mẫu đề thi (stat card)</summary>
+    [HttpGet("stats")]
+    public async Task<ActionResult<RequestResponse<ExamTemplateStatsResponse>>> GetStats(CancellationToken ct)
+    {
+        var s = await service.GetStatsAsync(ct);
+        return Ok(RequestResponse<ExamTemplateStatsResponse>.Success("Lấy thống kê thành công!", s, 1));
+    }
+
     /// <summary>Lấy mẫu đề thi theo ID</summary>
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<RequestResponse<ExamTemplateResponse>>> GetById(Guid id, CancellationToken ct)
