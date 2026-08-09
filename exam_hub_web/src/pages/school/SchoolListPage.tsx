@@ -1,8 +1,9 @@
 import {useState} from 'react'
 import {useNavigate} from 'react-router-dom'
-import {Button, Form, Input, Modal, Popconfirm, Table, Tag} from 'antd'
+import {Button, Form, Input, Modal, Popconfirm, Table} from 'antd'
 import type {TableColumnsType} from 'antd'
 import {PlusOutlined, RightOutlined} from '@ant-design/icons'
+import {StatusTag} from '../../components/StatusTag'
 import {
     useSchoolsQuery,
     useCreateSchoolMutation,
@@ -47,7 +48,7 @@ export default function SchoolListPage() {
         {title: 'Email', dataIndex: 'email', key: 'email', render: v => v ?? '—'},
         {
             title: 'Trạng thái', dataIndex: 'isActive', key: 'isActive',
-            render: v => <Tag color={v ? 'green' : 'default'}>{v ? 'Hoạt động' : 'Tắt'}</Tag>,
+            render: v => <StatusTag status={v ? 'success' : 'default'} label={v ? 'Hoạt động' : 'Tắt'}/>,
         },
         {
             title: 'Thao tác', key: 'actions', width: 160,

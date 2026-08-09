@@ -3,6 +3,7 @@ import {useNavigate, useParams} from 'react-router-dom'
 import {Breadcrumb, Button, Form, Input, Modal, Popconfirm, Select, Table, Tabs, Tag} from 'antd'
 import type {TableColumnsType} from 'antd'
 import {PlusOutlined, RightOutlined} from '@ant-design/icons'
+import {StatusTag} from '../../components/StatusTag'
 import {useSchoolsQuery} from '../../hooks/queries/useSchools'
 import {useCohortsQuery, useCreateCohortMutation, useDeleteCohortMutation} from '../../hooks/queries/useCohorts'
 import {useSchoolMembersQuery, useAddSchoolMemberMutation, useRemoveSchoolMemberMutation, useSetSchoolMemberActiveMutation} from '../../hooks/queries/useSchoolMembers'
@@ -54,7 +55,7 @@ export default function SchoolDetailPage() {
         {title: 'Năm bắt đầu', dataIndex: 'startYear', key: 'startYear'},
         {title: 'Năm kết thúc', dataIndex: 'endYear', key: 'endYear'},
         {title: 'Lớp bắt đầu', dataIndex: 'gradeStart', key: 'gradeStart'},
-        {title: 'Trạng thái', dataIndex: 'isActive', key: 'isActive', render: v => <Tag color={v ? 'green' : 'default'}>{v ? 'Hoạt động' : 'Tắt'}</Tag>},
+        {title: 'Trạng thái', dataIndex: 'isActive', key: 'isActive', render: v => <StatusTag status={v ? 'success' : 'default'} label={v ? 'Hoạt động' : 'Tắt'}/>},
         {
             title: 'Thao tác', key: 'actions', width: 140,
             render: (_, record) => (
@@ -74,7 +75,7 @@ export default function SchoolDetailPage() {
     const memberColumns: TableColumnsType<SchoolMember> = [
         {title: 'User ID', dataIndex: 'userId', key: 'userId', render: v => <span className="font-mono text-xs">{v}</span>},
         {title: 'Vai trò', dataIndex: 'role', key: 'role', render: v => <Tag>{v}</Tag>},
-        {title: 'Trạng thái', dataIndex: 'isActive', key: 'isActive', render: v => <Tag color={v ? 'green' : 'default'}>{v ? 'Hoạt động' : 'Tắt'}</Tag>},
+        {title: 'Trạng thái', dataIndex: 'isActive', key: 'isActive', render: v => <StatusTag status={v ? 'success' : 'default'} label={v ? 'Hoạt động' : 'Tắt'}/>},
         {
             title: 'Thao tác', key: 'actions', width: 140,
             render: (_, record) => (

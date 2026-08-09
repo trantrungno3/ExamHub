@@ -1,5 +1,5 @@
 import {useMemo, useState} from 'react'
-import {Drawer, Dropdown, Input, Popconfirm, Select, Spin, Table, Tag, message} from 'antd'
+import {Drawer, Dropdown, Input, Popconfirm, Select, Spin, Table, message} from 'antd'
 import type {TableColumnsType} from 'antd'
 import {BarChartOutlined, DownloadOutlined, EyeOutlined, SearchOutlined} from '@ant-design/icons'
 import {AnalyticsDrawer} from './AnalyticsDrawer'
@@ -12,8 +12,9 @@ import {
 import {useGradeLevelsListQuery, useSubjectsQuery} from '../../hooks/queries/useCategoryLists'
 import {examService} from '../../services/examService'
 import {parseAnswers, stripHtml} from '../../utils/snapshot'
+import {StatusTag, type StatusVariant} from '../../components/StatusTag'
 
-const STATUS_COLOR: Record<ExamStatus, string> = {Draft: 'gold', Published: 'green', Archived: 'default'}
+const STATUS_VARIANT: Record<ExamStatus, StatusVariant> = {Draft: 'warning', Published: 'success', Archived: 'default'}
 const STATUS_LABEL: Record<ExamStatus, string> = {Draft: 'Nháp', Published: 'Đã phát hành', Archived: 'Lưu trữ'}
 
 export default function ExamListPage() {
@@ -59,7 +60,7 @@ export default function ExamListPage() {
         {title: 'Điểm', dataIndex: 'totalScore', key: 'totalScore', width: 70},
         {
             title: 'Trạng thái', dataIndex: 'status', key: 'status', width: 130,
-            render: (v: ExamStatus) => <Tag color={STATUS_COLOR[v]}>{STATUS_LABEL[v]}</Tag>,
+            render: (v: ExamStatus) => <StatusTag status={STATUS_VARIANT[v]} label={STATUS_LABEL[v]}/>,
         },
         {
             title: 'Thao tác', key: 'actions', width: 440, fixed: 'right',

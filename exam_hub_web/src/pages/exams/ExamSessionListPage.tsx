@@ -1,6 +1,6 @@
 import {useMemo, useState} from 'react'
 import {useNavigate} from 'react-router-dom'
-import {Button, Input, Popconfirm, Select, Table, Tag} from 'antd'
+import {Button, Input, Popconfirm, Select, Table} from 'antd'
 import type {TableColumnsType} from 'antd'
 import {PlusOutlined, SearchOutlined} from '@ant-design/icons'
 import {
@@ -12,8 +12,9 @@ import {
 import {useGradeLevelsListQuery, useSubjectsQuery} from '../../hooks/queries/useCategoryLists'
 import {SubmissionsDrawer} from './SubmissionsDrawer'
 import {ROUTES} from '../../routes/paths'
+import {StatusTag, type StatusVariant} from '../../components/StatusTag'
 
-const STATUS_COLOR: Record<ExamSessionStatus, string> = {draft: 'gold', published: 'green', closed: 'default'}
+const STATUS_VARIANT: Record<ExamSessionStatus, StatusVariant> = {draft: 'warning', published: 'success', closed: 'default'}
 const STATUS_LABEL: Record<ExamSessionStatus, string> = {draft: 'Nháp', published: 'Đã phát hành', closed: 'Đã đóng'}
 const PICK_MODE_LABEL: Record<ExamSessionPickMode, string> = {Random: 'Ngẫu nhiên', StudentChoice: 'HS tự chọn'}
 
@@ -56,7 +57,7 @@ export default function ExamSessionListPage() {
         {title: 'Lớp/khoá', dataIndex: 'assignmentCount', key: 'assignmentCount', width: 90, align: 'center'},
         {
             title: 'Trạng thái', dataIndex: 'status', key: 'status', width: 130,
-            render: (v: ExamSessionStatus) => <Tag color={STATUS_COLOR[v]}>{STATUS_LABEL[v]}</Tag>,
+            render: (v: ExamSessionStatus) => <StatusTag status={STATUS_VARIANT[v]} label={STATUS_LABEL[v]}/>,
         },
         {
             title: 'Thao tác', key: 'actions', width: 280, fixed: 'right',

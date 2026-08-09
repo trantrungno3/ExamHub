@@ -1,8 +1,9 @@
 import {useState} from 'react'
 import {useNavigate, useParams} from 'react-router-dom'
-import {Breadcrumb, Button, Form, Modal, Popconfirm, Select, Table, Tabs, Tag} from 'antd'
+import {Breadcrumb, Button, Form, Modal, Popconfirm, Select, Table, Tabs} from 'antd'
 import type {TableColumnsType} from 'antd'
 import {PlusOutlined} from '@ant-design/icons'
+import {StatusTag} from '../../components/StatusTag'
 import {useCohortClassesQuery, useSetHomeroomTeacherMutation} from '../../hooks/queries/useCohortClasses'
 import {useCohortMembersQuery, useAddCohortMemberMutation, useRemoveCohortMemberMutation, useSetCohortMemberActiveMutation, useSetCohortMemberSectionMutation} from '../../hooks/queries/useCohortMembers'
 import {statusCode} from '../../services/requestService'
@@ -85,7 +86,7 @@ export default function CohortDetailPage() {
                 />
             ),
         },
-        {title: 'Trạng thái', dataIndex: 'isActive', key: 'isActive', render: v => <Tag color={v ? 'green' : 'default'}>{v ? 'Hoạt động' : 'Tắt'}</Tag>},
+        {title: 'Trạng thái', dataIndex: 'isActive', key: 'isActive', render: v => <StatusTag status={v ? 'success' : 'default'} label={v ? 'Hoạt động' : 'Tắt'}/>},
         {
             title: 'Thao tác', key: 'actions', width: 140,
             render: (_, record) => (
