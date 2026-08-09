@@ -66,7 +66,7 @@ public sealed record ExamSessionDetailResponse(
     IReadOnlyList<SessionExamResponse> Exams,
     IReadOnlyList<AssignmentResponse> Assignments);
 
-public sealed record AssignmentResponse(Guid Id, int? CohortId, string? CohortName, int? CohortClassId, string? CohortClassName, string? SchoolName);
+public sealed record AssignmentResponse(Guid Id, int? CohortId, string? CohortName, int? CohortClassId, string? CohortClassName, string? SchoolName, int StudentCount);
 
 /// <summary>Kỳ thi được giao — hiển thị phía học sinh.</summary>
 public sealed record MySessionResponse(

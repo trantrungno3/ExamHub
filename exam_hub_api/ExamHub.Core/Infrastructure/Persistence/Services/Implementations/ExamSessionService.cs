@@ -59,15 +59,19 @@ public class ExamSessionService(IExamSessionRepository _repo, IExamRepository _e
             .Where(e => e.Exam is not null)
             .Select(e => new SessionExamResponse(e.ExamId, e.Exam!.Title, e.Exam.ExamCode, e.Exam.TotalScore))
             .ToList();
-        var assignments = s.Assignments
-            .Select(a => new AssignmentResponse(
+        var assignments = new List<AssignmentResponse>(s.Assignments.Count);
+        foreach (var a in s.Assignments)
+        {
+            var count = await _repo.CountStudentsForAssignmentAsync(a, ct);
+            assignments.Add(new AssignmentResponse(
                 a.Id,
                 a.CohortId,
                 a.CohortClass?.Cohort?.Name ?? a.Cohort?.Name,
                 a.CohortClassId,
                 a.CohortClass?.ClassName,
-                a.CohortClass?.Cohort?.School?.Name ?? a.Cohort?.School?.Name))
-            .ToList();
+                a.CohortClass?.Cohort?.School?.Name ?? a.Cohort?.School?.Name,
+                count));
+        }
         return new ExamSessionDetailResponse(
             s.Id, s.Title, s.Description, s.SubjectId, s.Subject?.Name,
             s.GradeLevelId, s.GradeLevel?.Name, ToMs(s.OpenAt), ToMs(s.CloseAt),

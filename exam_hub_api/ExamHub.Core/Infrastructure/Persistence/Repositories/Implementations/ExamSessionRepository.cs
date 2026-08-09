@@ -138,6 +138,25 @@ public class ExamSessionRepository(AppDbContext _db) : IExamSessionRepository
         await _db.SaveChangesAsync(ct);
     }
 
+    /// <inheritdoc/>
+    public async Task<int> CountStudentsForAssignmentAsync(ExamSessionAssignment a, CancellationToken ct = default)
+    {
+        if (a.CohortClassId != null && a.CohortClass != null)
+        {
+            var cid = a.CohortClass.CohortId;
+            var section = a.CohortClass.Section;
+            return await _db.Set<CohortMember>()
+                .CountAsync(m => m.IsActive && m.CohortId == cid && m.Section != null && m.Section == section, ct);
+        }
+        if (a.CohortId != null)
+        {
+            var cid = a.CohortId.Value;
+            return await _db.Set<CohortMember>()
+                .CountAsync(m => m.IsActive && m.CohortId == cid, ct);
+        }
+        return 0;
+    }
+
     // ── Phía học sinh ───────────────────────────────────────────────────
     /// <inheritdoc/>
     public async Task<IReadOnlyList<ExamSession>> GetAssignedToStudentAsync(Guid studentId, CancellationToken ct = default)
