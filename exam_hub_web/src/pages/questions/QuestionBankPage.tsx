@@ -60,8 +60,7 @@ const TYPE_CHIP: Record<string, ChipColor> = {
 const NEUTRAL: ChipColor = {bg: '#eef0f3', fg: '#6f7788'}
 
 type ReviewState = 'approved' | 'rejected' | 'pending'
-const reviewState = (q: Question): ReviewState =>
-    q.isVerified ? 'approved' : (q.rejectionReason ? 'rejected' : 'pending')
+const reviewState = (q: Question): ReviewState => (q.status as ReviewState) ?? 'pending'
 
 function Chip({label, color}: {label: string; color: ChipColor}) {
     return (
@@ -194,7 +193,7 @@ export default function QuestionBankPage() {
             },
         },
         {
-            title: 'Duyệt', dataIndex: 'isVerified', key: 'isVerified', width: 120,
+            title: 'Duyệt', dataIndex: 'status', key: 'status', width: 120,
             render: (_, q) => {
                 const st = reviewState(q)
                 if (st === 'approved') return <StatusTag status="success" label="Đã duyệt"/>

@@ -35,7 +35,7 @@ interface Question {
     tags: string[]
     usageCount: number
     isActive: boolean
-    isVerified: boolean
+    status: string
     rejectionReason?: string | null
     createdAt: number
     updatedAt: number
@@ -55,7 +55,7 @@ interface QuestionBody {
     source?: string
     tags?: string[]
     isActive?: boolean
-    isVerified?: boolean
+    status?: string
     answers: QuestionAnswerBody[]
 }
 
@@ -67,7 +67,6 @@ interface QuestionPagedQuery {
     difficultyLevelId?: number
     cognitiveLevelId?: number
     keyword?: string
-    isVerified?: boolean
     reviewStatus?: string
 }
 
