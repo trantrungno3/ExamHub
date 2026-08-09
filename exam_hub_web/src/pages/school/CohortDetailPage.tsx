@@ -8,6 +8,7 @@ import {useCohortMembersQuery, useAddCohortMemberMutation, useRemoveCohortMember
 import {statusCode} from '../../services/requestService'
 import {userService} from '../../services/userService'
 import {useQuery} from '@tanstack/react-query'
+import {TeachingAssignmentDrawer} from './TeachingAssignmentDrawer'
 
 export default function CohortDetailPage() {
     const {id} = useParams<{id: string}>()
@@ -31,6 +32,7 @@ export default function CohortDetailPage() {
 
     const [memberModal, setMemberModal] = useState(false)
     const [memberForm] = Form.useForm<CohortMemberBody>()
+    const [assignClass, setAssignClass] = useState<CohortClass>()
 
     const handleAddMember = async () => {
         const values = await memberForm.validateFields()
@@ -51,17 +53,20 @@ export default function CohortDetailPage() {
             },
         },
         {
-            title: 'Thao tác', key: 'actions', width: 140,
+            title: 'Thao tác', key: 'actions', width: 300,
             render: (_, record) => (
-                <Select
-                    style={{width: 180}}
-                    allowClear
-                    placeholder="Chọn GVCN"
-                    value={record.homeroomTeacherId ?? undefined}
-                    showSearch optionFilterProp="label"
-                    options={allUsers.filter(u => u.roles.includes('Teacher')).map(u => ({value: u.id, label: u.displayName ?? u.userName}))}
-                    onChange={(val) => setHomeroomMutation.mutate({id: record.id, body: {teacherId: val ?? null}})}
-                />
+                <div className="flex items-center gap-2">
+                    <Select
+                        style={{width: 170}}
+                        allowClear
+                        placeholder="Chọn GVCN"
+                        value={record.homeroomTeacherId ?? undefined}
+                        showSearch optionFilterProp="label"
+                        options={allUsers.filter(u => u.roles.includes('Teacher')).map(u => ({value: u.id, label: u.displayName ?? u.userName}))}
+                        onChange={(val) => setHomeroomMutation.mutate({id: record.id, body: {teacherId: val ?? null}})}
+                    />
+                    <Button size="small" onClick={() => setAssignClass(record)}>Phân công</Button>
+                </div>
             ),
         },
     ]
@@ -155,6 +160,12 @@ export default function CohortDetailPage() {
                     </Form.Item>
                 </Form>
             </Modal>
+
+            <TeachingAssignmentDrawer
+                cohortClass={assignClass}
+                open={!!assignClass}
+                onClose={() => setAssignClass(undefined)}
+            />
         </>
     )
 }
