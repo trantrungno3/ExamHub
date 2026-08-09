@@ -106,6 +106,7 @@ public record QuestionResponse(
     int UsageCount,
     bool IsActive,
     bool IsVerified,
+    string? RejectionReason,
     long Created,
     long Modified,
     IReadOnlyList<QuestionAnswerResponse>? Answers
@@ -133,6 +134,7 @@ public record QuestionResponse(
             e.UsageCount,
             e.IsActive,
             e.IsVerified,
+            e.RejectionReason,
             e.Created.ToTimestamp(),
             e.Modified.ToTimestamp(),
             includeAnswers ? e.Answers.Select(QuestionAnswerResponse.FromEntity).ToList() : null

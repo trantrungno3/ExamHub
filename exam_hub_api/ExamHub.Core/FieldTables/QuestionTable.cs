@@ -55,5 +55,8 @@ public readonly struct QuestionTable
 
     /// <summary>Thời điểm kiểm duyệt</summary>
     public const string VerifiedAt = "verified_at";
+
+    /// <summary>Lý do từ chối (≠ null ⇒ câu hỏi bị từ chối)</summary>
+    public const string RejectionReason = "rejection_reason";
 }
 

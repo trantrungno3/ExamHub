@@ -99,6 +99,11 @@ public class Question : ModifyModelBase, IModelBaseSql<Guid>
     [SqlBuilderProperty(QuestionTable.VerifiedAt, Insert = true, Update = true)]
     public DateTime? VerifiedAt { get; set; }
 
+    /// <summary>Lý do từ chối (≠ null ⇒ câu hỏi bị từ chối)</summary>
+    [Column(QuestionTable.RejectionReason)]
+    [SqlBuilderProperty(QuestionTable.RejectionReason, Insert = true, Update = true)]
+    public string? RejectionReason { get; set; }
+
     // ── Navigation ──────────────────────────────────────────────
     /// <summary>Chủ đề của câu hỏi</summary>
     public Topic? Topic { get; set; }
@@ -136,6 +141,7 @@ public class Question : ModifyModelBase, IModelBaseSql<Guid>
         is_verified = IsVerified,
         verified_by = VerifiedBy,
         verified_at = VerifiedAt,
+        rejection_reason = RejectionReason,
         created = Created,
         modified = Modified
     };
@@ -160,6 +166,7 @@ public class Question : ModifyModelBase, IModelBaseSql<Guid>
         is_verified = IsVerified,
         verified_by = VerifiedBy,
         verified_at = VerifiedAt,
+        rejection_reason = RejectionReason,
         updated_at = DateTime.UtcNow
     };
 }
