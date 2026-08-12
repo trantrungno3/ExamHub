@@ -39,7 +39,11 @@ start
 if (Xác nhận xoá?) then (đồng ý)
   |Hệ thống|
   :Kiểm tra khoá học có lớp học đang hoạt động;
-  if (Còn lớp đang hoạt động?) then (có)
+  if (Còn lớp đang hoạt động?) then (không)
+    :Xoá khoá học khỏi cơ sở dữ liệu;
+    :Hiển thị thông báo xoá thành công và cập nhật danh sách;
+    stop
+  else (có)
     :Hiển thị cảnh báo khoá học còn lớp học đang hoạt động;
     |Quản trị viên|
     if (Xoá bắt buộc?) then (có)
@@ -48,12 +52,9 @@ if (Xác nhận xoá?) then (đồng ý)
       :Hiển thị thông báo xoá thành công và cập nhật danh sách;
       stop
     else (huỷ)
+      |Quản trị viên|
       stop
     endif
-  else (không)
-    :Xoá khoá học khỏi cơ sở dữ liệu;
-    :Hiển thị thông báo xoá thành công và cập nhật danh sách;
-    stop
   endif
 else (huỷ)
   stop

@@ -1,12 +1,13 @@
 @startuml SD31_xuat_va_xem_truoc_de_thi
+autonumber
 skinparam sequenceArrowThickness 2
 skinparam roundcorner 8
 skinparam maxmessagesize 160
 skinparam sequence {
     ArrowColor #2E75B6
     ActorBorderColor #333333
-    LifeLineBorderColor #336699
-    LifeLineBackgroundColor #EEF4FF
+    LifeLineBorderColor #2E75B6
+    LifeLineBackgroundColor #9DC3E6
     ParticipantBorderColor #336699
     ParticipantBackgroundColor #DDEEFF
     ParticipantFontSize 14
@@ -18,34 +19,34 @@ skinparam sequence {
     NoteBorderColor #CCCC00
 }
 skinparam fontname "DejaVu Sans"
+hide footbox
 
 actor "Giáo viên" as Teacher
 participant "Giao diện" as FE
 participant "Hệ thống" as SYS
 
-Teacher -> FE : Chọn đề thi và bấm Xem trước / Xuất đề
+activate Teacher
+Teacher -> FE ++ : Chọn đề thi và bấm Xem trước / Xuất đề
 
 alt Xem trước
-    FE -> SYS : Yêu cầu xem trước đề thi
+    FE -> SYS ++ : Yêu cầu xem trước đề thi
     SYS -> SYS : Lấy nội dung đề thi đã lưu
-    SYS --> FE : Trả về nội dung đề thi để hiển thị
+    SYS --> FE -- : Trả về nội dung đề thi để hiển thị
     FE --> Teacher : Hiển thị đề thi trực tiếp trên trình duyệt
 
 else Xuất PDF
-    FE -> SYS : Yêu cầu xuất đề thi dạng PDF
-    SYS -> SYS : Lấy nội dung đề thi đã lưu
-    SYS -> SYS : Kết xuất nội dung thành file PDF
-    SYS -> SYS : Lưu trữ file và đường dẫn tải file
-    SYS --> FE : Trả về đường dẫn tải file PDF
+    FE -> SYS ++ : Yêu cầu xuất đề thi dạng PDF
+    SYS -> SYS : Lấy nội dung đề thi đã lưu, kết xuất nội dung thành file PDF, lưu trữ file và đường dẫn tải file, trả về đường dẫn tải file PDF
+    deactivate SYS
     FE --> Teacher : Hiển thị liên kết tải PDF
 
 else Xuất Word
-    FE -> SYS : Yêu cầu xuất đề thi dạng Word
-    SYS -> SYS : Lấy nội dung đề thi đã lưu
-    SYS -> SYS : Kết xuất nội dung thành file Word
-    SYS -> SYS : Lưu trữ file và đường dẫn tải file
-    SYS --> FE : Trả về đường dẫn tải file Word
+    FE -> SYS ++ : Yêu cầu xuất đề thi dạng Word
+    SYS -> SYS : Lấy nội dung đề thi đã lưu, kết xuất nội dung thành file Word, lưu trữ file và đường dẫn tải file, trả về đường dẫn tải file Word
+    deactivate SYS
     FE --> Teacher : Hiển thị liên kết tải Word
 end
+deactivate FE
+deactivate Teacher
 
 @enduml

@@ -1,12 +1,13 @@
-@startuml SD41_cap_nhat_trang_thai_de_thi
+@startuml SD40_cap_nhat_trang_thai_de_thi
+autonumber
 skinparam sequenceArrowThickness 2
 skinparam roundcorner 8
 skinparam maxmessagesize 160
 skinparam sequence {
     ArrowColor #2E75B6
     ActorBorderColor #333333
-    LifeLineBorderColor #336699
-    LifeLineBackgroundColor #EEF4FF
+    LifeLineBorderColor #2E75B6
+    LifeLineBackgroundColor #9DC3E6
     ParticipantBorderColor #336699
     ParticipantBackgroundColor #DDEEFF
     ParticipantFontSize 14
@@ -18,22 +19,24 @@ skinparam sequence {
     NoteBorderColor #CCCC00
 }
 skinparam fontname "DejaVu Sans"
+hide footbox
 
 actor "Giáo viên" as Teacher
 participant "Giao diện" as FE
 participant "Hệ thống" as SYS
 
-Teacher -> FE : Truy cập trang Quản lý đề thi
-FE -> SYS : Yêu cầu danh sách đề thi kèm trạng thái
+activate Teacher
+Teacher -> FE ++ : Truy cập trang Quản lý đề thi
+FE -> SYS ++ : Yêu cầu danh sách đề thi kèm trạng thái
 SYS -> SYS : Truy vấn danh sách đề thi và trạng thái hiện tại
-SYS --> FE : Trả về danh sách đề thi
+SYS --> FE -- : Trả về danh sách đề thi
 FE --> Teacher : Hiển thị danh sách với trạng thái hiện tại
 
 Teacher -> FE : Chọn đề thi cần cập nhật trạng thái
 FE --> Teacher : Hiển thị danh sách trạng thái có thể chuyển:\nBản nháp → Đang hoạt động → Đã kết thúc
 
 Teacher -> FE : Chọn trạng thái mới
-FE -> SYS : Yêu cầu cập nhật trạng thái đề thi
+FE -> SYS ++ : Yêu cầu cập nhật trạng thái đề thi
 SYS -> SYS : Kiểm tra tính hợp lệ của thay đổi trạng thái\n(chỉ cho phép chuyển theo chiều\nBản nháp → Đang hoạt động → Đã kết thúc)
 
 alt Trạng thái hợp lệ
@@ -45,5 +48,8 @@ else Trạng thái không hợp lệ
     SYS --> FE : Trả về lý do không hợp lệ
     FE --> Teacher : Thông báo lỗi chuyển trạng thái không được phép
 end
+deactivate SYS
+deactivate FE
+deactivate Teacher
 
 @enduml

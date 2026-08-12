@@ -1,12 +1,13 @@
 @startuml SD19_xem_cau_hinh_danh_muc
+autonumber
 skinparam sequenceArrowThickness 2
 skinparam roundcorner 8
 skinparam maxmessagesize 160
 skinparam sequence {
     ArrowColor #2E75B6
     ActorBorderColor #333333
-    LifeLineBorderColor #336699
-    LifeLineBackgroundColor #EEF4FF
+    LifeLineBorderColor #2E75B6
+    LifeLineBackgroundColor #9DC3E6
     ParticipantBorderColor #336699
     ParticipantBackgroundColor #DDEEFF
     ParticipantFontSize 14
@@ -18,21 +19,25 @@ skinparam sequence {
     NoteBorderColor #CCCC00
 }
 skinparam fontname "DejaVu Sans"
+hide footbox
 
 actor "Quản trị viên" as Admin
 participant "Giao diện" as FE
 participant "Hệ thống" as SYS
 
-Admin -> FE : Truy cập trang Cấu hình danh mục
-FE -> SYS : Yêu cầu danh sách danh mục
+activate Admin
+Admin -> FE ++ : Truy cập trang Cấu hình danh mục
+FE -> SYS ++ : Yêu cầu danh sách danh mục
 SYS -> SYS : Truy vấn danh sách danh mục
-SYS --> FE : Trả về danh sách danh mục
+SYS --> FE -- : Trả về danh sách danh mục
 FE --> Admin : Hiển thị danh sách danh mục
 
 Admin -> FE : Chọn mục danh mục cần xem chi tiết
-FE -> SYS : Yêu cầu thông tin chi tiết mục danh mục
+FE -> SYS ++ : Yêu cầu thông tin chi tiết mục danh mục
 SYS -> SYS : Lấy thông tin chi tiết mục danh mục
-SYS --> FE : Trả về tên, mô tả, trạng thái và ngày tạo
+SYS --> FE -- : Trả về tên, mô tả, trạng thái và ngày tạo
 FE --> Admin : Hiển thị đầy đủ thông tin mục danh mục
+deactivate FE
+deactivate Admin
 
 @enduml

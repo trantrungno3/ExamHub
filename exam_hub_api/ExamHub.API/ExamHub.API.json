@@ -1374,6 +1374,216 @@
         ]
       }
     },
+    "/api/cohort-class-teachers/by-class/{cohortClassId}": {
+      "get": {
+        "tags": [
+          "CohortClassTeacher"
+        ],
+        "summary": "Danh sách phân công của một lớp",
+        "parameters": [
+          {
+            "name": "cohortClassId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfCohortClassTeacherResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfCohortClassTeacherResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfCohortClassTeacherResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/cohort-class-teachers/eligible-teachers": {
+      "get": {
+        "tags": [
+          "CohortClassTeacher"
+        ],
+        "summary": "Danh sách Id GV hợp lệ để phân công môn cho lớp",
+        "parameters": [
+          {
+            "name": "cohortClassId",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "subjectId",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfGuid"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfGuid"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfGuid"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/cohort-class-teachers/assign": {
+      "post": {
+        "tags": [
+          "CohortClassTeacher"
+        ],
+        "summary": "Phân công GV dạy môn cho lớp (validate + kiểm ràng buộc)",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignTeacherRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignTeacherRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignTeacherRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfCohortClassTeacherResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfCohortClassTeacherResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfCohortClassTeacherResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/cohort-class-teachers/remove/{id}": {
+      "delete": {
+        "tags": [
+          "CohortClassTeacher"
+        ],
+        "summary": "Xoá một phân công theo Id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
     "/api/Cohort/by-school/{schoolId}": {
       "get": {
         "tags": [
@@ -3331,10 +3541,10 @@
             }
           },
           {
-            "name": "IsVerified",
+            "name": "ReviewStatus",
             "in": "query",
             "schema": {
-              "type": "boolean"
+              "type": "string"
             }
           }
         ],
@@ -3602,6 +3812,67 @@
         ]
       }
     },
+    "/api/questions/{id}/audio": {
+      "post": {
+        "tags": [
+          "Question"
+        ],
+        "summary": "Tải lên tệp audio (tối đa 10 MB) cho câu hỏi → MinIO",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "$ref": "#/components/schemas/IFormFile"
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfObject"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfObject"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfObject"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
     "/api/questions/{id}/verify": {
       "post": {
         "tags": [
@@ -3622,6 +3893,136 @@
         "responses": {
           "200": {
             "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/questions/{id}/unverify": {
+      "post": {
+        "tags": [
+          "Question"
+        ],
+        "summary": "Bỏ duyệt câu hỏi",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/questions/{id}/reject": {
+      "post": {
+        "tags": [
+          "Question"
+        ],
+        "summary": "Từ chối câu hỏi kèm lý do",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RejectQuestionRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RejectQuestionRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/RejectQuestionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfObject"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfObject"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfObject"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/questions/stats": {
+      "get": {
+        "tags": [
+          "Question"
+        ],
+        "summary": "Thống kê số câu hỏi theo trạng thái",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfQuestionStatsResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfQuestionStatsResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfQuestionStatsResponse"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -5231,6 +5632,107 @@
         ]
       }
     },
+    "/api/exam-submissions/by-session/{sessionId}": {
+      "get": {
+        "tags": [
+          "ExamSubmission"
+        ],
+        "summary": "Lấy danh sách bài nộp theo kỳ thi (giáo viên chấm bài)",
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfExamSubmissionResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfExamSubmissionResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfExamSubmissionResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/exam-submissions/by-session/{sessionId}/student/{studentId}": {
+      "get": {
+        "tags": [
+          "ExamSubmission"
+        ],
+        "summary": "Lấy các lần nộp của một học sinh trong một kỳ thi (học sinh xem lại kết quả)",
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "studentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfExamSubmissionResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfExamSubmissionResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfExamSubmissionResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
     "/api/exam-submissions": {
       "post": {
         "tags": [
@@ -5369,6 +5871,41 @@
               "text/json": {
                 "schema": {
                   "$ref": "#/components/schemas/RequestResponseOfExamSubmissionResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/exam-templates/stats": {
+      "get": {
+        "tags": [
+          "ExamTemplate"
+        ],
+        "summary": "Thống kê mẫu đề thi (stat card)",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfExamTemplateStatsResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfExamTemplateStatsResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfExamTemplateStatsResponse"
                 }
               }
             }
@@ -8162,7 +8699,8 @@
           "cohortName",
           "cohortClassId",
           "cohortClassName",
-          "schoolName"
+          "schoolName",
+          "studentCount"
         ],
         "type": "object",
         "properties": {
@@ -8205,8 +8743,47 @@
               "null",
               "string"
             ]
+          },
+          "studentCount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
           }
         }
+      },
+      "AssignTeacherRequest": {
+        "required": [
+          "cohortClassId",
+          "subjectId",
+          "teacherId"
+        ],
+        "type": "object",
+        "properties": {
+          "cohortClassId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "subjectId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "teacherId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "description": "Request phân công GV giảng dạy cho lớp theo môn."
       },
       "BatchGenerateExamApiRequest": {
         "required": [
@@ -8602,6 +9179,46 @@
           }
         },
         "description": "Response DTO cho CohortClass.\r\nCohortClass được sinh tự động bởi DB trigger khi tạo Cohort — không có Create request."
+      },
+      "CohortClassTeacherResponse": {
+        "required": [
+          "id",
+          "cohortClassId",
+          "subjectId",
+          "teacherId"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "cohortClassId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "subjectId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "teacherId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "description": "Response DTO cho một phân công GV giảng dạy.\r\nTên môn/GV được FE resolve từ danh sách môn + người dùng đã tải (theo pattern CohortDetailPage)."
       },
       "CohortMemberRequest": {
         "required": [
@@ -9771,6 +10388,18 @@
             "items": {
               "$ref": "#/components/schemas/SubmissionAnswerResponse"
             }
+          },
+          "studentName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "studentClassName": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         },
         "description": "Response DTO cho bài nộp"
@@ -10251,6 +10880,50 @@
           }
         },
         "description": "Response DTO cho một phần trong mẫu đề thi"
+      },
+      "ExamTemplateStatsResponse": {
+        "required": [
+          "totalTemplates",
+          "activeTemplates",
+          "totalExamsGenerated",
+          "avgQuestions"
+        ],
+        "type": "object",
+        "properties": {
+          "totalTemplates": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "activeTemplates": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "totalExamsGenerated": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "avgQuestions": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        },
+        "description": "Thống kê mẫu đề thi (stat card)."
       },
       "GenerateExamApiRequest": {
         "required": [
@@ -10859,6 +11532,12 @@
               "type": "string"
             }
           },
+          "isActive": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "string"
+          },
           "answers": {
             "type": "array",
             "items": {
@@ -10888,7 +11567,8 @@
           "tags",
           "usageCount",
           "isActive",
-          "isVerified",
+          "status",
+          "rejectionReason",
           "created",
           "modified",
           "answers"
@@ -11006,8 +11686,14 @@
           "isActive": {
             "type": "boolean"
           },
-          "isVerified": {
-            "type": "boolean"
+          "status": {
+            "type": "string"
+          },
+          "rejectionReason": {
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "created": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
@@ -11036,6 +11722,59 @@
           }
         },
         "description": "Response DTO cho câu hỏi"
+      },
+      "QuestionStatsResponse": {
+        "required": [
+          "total",
+          "verified",
+          "pending",
+          "rejected",
+          "inactive"
+        ],
+        "type": "object",
+        "properties": {
+          "total": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "verified": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "pending": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "rejected": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "inactive": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        },
+        "description": "Thống kê số lượng câu hỏi theo trạng thái (cho stat card ngân hàng câu hỏi)."
       },
       "QuestionTypeRequest": {
         "required": [
@@ -11129,6 +11868,18 @@
           }
         },
         "description": ""
+      },
+      "RejectQuestionRequest": {
+        "required": [
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string"
+          }
+        },
+        "description": "Request từ chối câu hỏi kèm lý do."
       },
       "RequestResponseOfBatchGenerateExamResponse": {
         "type": "object",
@@ -11330,6 +12081,43 @@
               {
                 "description": "Dữ liệu",
                 "$ref": "#/components/schemas/CohortClassResponse"
+              }
+            ]
+          },
+          "totalRecord": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Tổng số bản ghi",
+            "format": "int64"
+          }
+        },
+        "description": ""
+      },
+      "RequestResponseOfCohortClassTeacherResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "description": "Trạng thái",
+            "$ref": "#/components/schemas/RequestResponseStatus"
+          },
+          "message": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Message"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "Dữ liệu",
+                "$ref": "#/components/schemas/CohortClassTeacherResponse"
               }
             ]
           },
@@ -11641,6 +12429,43 @@
         },
         "description": ""
       },
+      "RequestResponseOfExamTemplateStatsResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "description": "Trạng thái",
+            "$ref": "#/components/schemas/RequestResponseStatus"
+          },
+          "message": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Message"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "Dữ liệu",
+                "$ref": "#/components/schemas/ExamTemplateStatsResponse"
+              }
+            ]
+          },
+          "totalRecord": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Tổng số bản ghi",
+            "format": "int64"
+          }
+        },
+        "description": ""
+      },
       "RequestResponseOfGradeLevelResponse": {
         "type": "object",
         "properties": {
@@ -11766,6 +12591,42 @@
             ],
             "items": {
               "$ref": "#/components/schemas/CohortClassResponse"
+            },
+            "description": "Dữ liệu"
+          },
+          "totalRecord": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Tổng số bản ghi",
+            "format": "int64"
+          }
+        },
+        "description": ""
+      },
+      "RequestResponseOfIReadOnlyListOfCohortClassTeacherResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "description": "Trạng thái",
+            "$ref": "#/components/schemas/RequestResponseStatus"
+          },
+          "message": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Message"
+          },
+          "data": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/CohortClassTeacherResponse"
             },
             "description": "Dữ liệu"
           },
@@ -12018,6 +12879,43 @@
             ],
             "items": {
               "$ref": "#/components/schemas/GradeLevelResponse"
+            },
+            "description": "Dữ liệu"
+          },
+          "totalRecord": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Tổng số bản ghi",
+            "format": "int64"
+          }
+        },
+        "description": ""
+      },
+      "RequestResponseOfIReadOnlyListOfGuid": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "description": "Trạng thái",
+            "$ref": "#/components/schemas/RequestResponseStatus"
+          },
+          "message": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Message"
+          },
+          "data": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string",
+              "format": "uuid"
             },
             "description": "Dữ liệu"
           },
@@ -12516,6 +13414,43 @@
               {
                 "description": "Dữ liệu",
                 "$ref": "#/components/schemas/QuestionResponse"
+              }
+            ]
+          },
+          "totalRecord": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Tổng số bản ghi",
+            "format": "int64"
+          }
+        },
+        "description": ""
+      },
+      "RequestResponseOfQuestionStatsResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "description": "Trạng thái",
+            "$ref": "#/components/schemas/RequestResponseStatus"
+          },
+          "message": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Message"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "Dữ liệu",
+                "$ref": "#/components/schemas/QuestionStatsResponse"
               }
             ]
           },
@@ -14315,6 +15250,9 @@
     },
     {
       "name": "CohortClass"
+    },
+    {
+      "name": "CohortClassTeacher"
     },
     {
       "name": "Cohort"

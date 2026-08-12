@@ -1,12 +1,13 @@
 @startuml SD27_import_cau_hoi_hang_loat_tu_excel
+autonumber
 skinparam sequenceArrowThickness 2
 skinparam roundcorner 8
 skinparam maxmessagesize 160
 skinparam sequence {
     ArrowColor #2E75B6
     ActorBorderColor #333333
-    LifeLineBorderColor #336699
-    LifeLineBackgroundColor #EEF4FF
+    LifeLineBorderColor #2E75B6
+    LifeLineBackgroundColor #9DC3E6
     ParticipantBorderColor #336699
     ParticipantBackgroundColor #DDEEFF
     ParticipantFontSize 14
@@ -18,12 +19,14 @@ skinparam sequence {
     NoteBorderColor #CCCC00
 }
 skinparam fontname "DejaVu Sans"
+hide footbox
 
 actor "Giáo viên" as Teacher
 participant "Giao diện" as FE
 participant "Hệ thống" as SYS
 
-Teacher -> FE : Chọn chức năng Import Excel
+activate Teacher
+Teacher -> FE ++ : Chọn chức năng Import Excel
 FE --> Teacher : Hiển thị trang import và nút tải file mẫu
 
 opt Tải file mẫu
@@ -32,17 +35,17 @@ opt Tải file mẫu
 end
 
 Teacher -> FE : Upload file Excel đã điền
-FE -> SYS : Yêu cầu import danh sách câu hỏi từ file
+FE -> SYS ++ : Yêu cầu import danh sách câu hỏi từ file
 
-SYS -> SYS : Đọc và phân tích nội dung file Excel
-SYS -> SYS : Kiểm tra định dạng từng dòng dữ liệu
+SYS -> SYS : Đọc và phân tích nội dung file Excel, kiểm tra định dạng từng dòng dữ liệu
 
 loop Mỗi câu hỏi hợp lệ
-    SYS -> SYS : Phân loại Bloom và độ khó
-    SYS -> SYS : Tạo câu hỏi với trạng thái Chờ duyệt
+    SYS -> SYS : Phân loại Bloom và độ khó, tạo câu hỏi với trạng thái Chờ duyệt
 end
 
-SYS --> FE : Trả về báo cáo kết quả\n(số câu thành công, số câu lỗi, chi tiết lỗi)
+SYS --> FE -- : Trả về báo cáo kết quả\n(số câu thành công, số câu lỗi, chi tiết lỗi)
 FE --> Teacher : Hiển thị kết quả import chi tiết
+deactivate FE
+deactivate Teacher
 
 @enduml

@@ -1,12 +1,13 @@
-@startuml SD40_tim_kiem_cau_hinh_de_thi
+@startuml SD39_tim_kiem_cau_hinh_de_thi
+autonumber
 skinparam sequenceArrowThickness 2
 skinparam roundcorner 8
 skinparam maxmessagesize 160
 skinparam sequence {
     ArrowColor #2E75B6
     ActorBorderColor #333333
-    LifeLineBorderColor #336699
-    LifeLineBackgroundColor #EEF4FF
+    LifeLineBorderColor #2E75B6
+    LifeLineBackgroundColor #9DC3E6
     ParticipantBorderColor #336699
     ParticipantBackgroundColor #DDEEFF
     ParticipantFontSize 14
@@ -18,18 +19,19 @@ skinparam sequence {
     NoteBorderColor #CCCC00
 }
 skinparam fontname "DejaVu Sans"
+hide footbox
 
 actor "Giáo viên" as Teacher
 participant "Giao diện" as FE
 participant "Hệ thống" as SYS
 
-Teacher -> FE : Truy cập trang Cấu hình đề thi
+activate Teacher
+Teacher -> FE ++ : Truy cập trang Cấu hình đề thi
 FE --> Teacher : Hiển thị ô tìm kiếm với bộ lọc: tên, môn học, trạng thái
 
-Teacher -> FE : Nhập từ khoá và chọn điều kiện lọc
-Teacher -> FE : Bấm Tìm kiếm
+Teacher -> FE : Nhập từ khoá và chọn điều kiện lọc, bấm Tìm kiếm
 
-FE -> SYS : Yêu cầu tìm kiếm cấu hình theo tiêu chí
+FE -> SYS ++ : Yêu cầu tìm kiếm cấu hình theo tiêu chí
 SYS -> SYS : Truy vấn cấu hình theo tiêu chí
 
 alt Tìm thấy kết quả
@@ -40,5 +42,8 @@ else Không tìm thấy
     FE --> Teacher : Thông báo không tìm thấy cấu hình phù hợp
     Teacher -> FE : Điều chỉnh tiêu chí và tìm lại
 end
+deactivate SYS
+deactivate FE
+deactivate Teacher
 
 @enduml

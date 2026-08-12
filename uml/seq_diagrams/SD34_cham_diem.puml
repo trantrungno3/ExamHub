@@ -1,12 +1,13 @@
-@startuml SD34_cham_diem
+@startuml
+autonumber
 skinparam sequenceArrowThickness 2
 skinparam roundcorner 8
 skinparam maxmessagesize 160
 skinparam sequence {
     ArrowColor #2E75B6
     ActorBorderColor #333333
-    LifeLineBorderColor #336699
-    LifeLineBackgroundColor #EEF4FF
+    LifeLineBorderColor #2E75B6
+    LifeLineBackgroundColor #9DC3E6
     ParticipantBorderColor #336699
     ParticipantBackgroundColor #DDEEFF
     ParticipantFontSize 14
@@ -18,6 +19,7 @@ skinparam sequence {
     NoteBorderColor #CCCC00
 }
 skinparam fontname "DejaVu Sans"
+hide footbox
 
 actor "Học sinh" as Student
 actor "Giáo viên" as Teacher
@@ -26,15 +28,14 @@ participant "Hệ thống" as SYS
 
 note over Student, SYS : Sau khi Học sinh nộp bài
 
-SYS -> SYS : Lấy bài làm và đáp án đề thi đã lưu
-SYS -> SYS : Chấm điểm tự động các câu trắc nghiệm\n(so sánh với đáp án đúng)
-SYS -> SYS : Lưu điểm tự động
+activate SYS
+SYS -> SYS : Lấy bài làm và đáp án đề thi đã lưu, chấm điểm tự động các câu trắc nghiệm(so sánh với đáp án đúng), lưu điểm tự động
 
 alt Đề thi có câu tự luận
     SYS -> SYS : Cập nhật bài làm sang trạng thái Chờ chấm tay
-    SYS -> Teacher : Gửi thông báo có bài cần chấm tay\n(thông báo đẩy / Email)
+    SYS -> Teacher ++ : Gửi thông báo có bài cần chấm tay\n(thông báo đẩy / Email)
 
-    Teacher -> FE : Mở giao diện chấm tay
+    Teacher -> FE ++ : Mở giao diện chấm tay
     FE -> SYS : Yêu cầu nội dung câu tự luận và bài làm học sinh
     SYS --> FE : Trả về câu tự luận và bài làm
     FE --> Teacher : Hiển thị bài làm tự luận
@@ -45,12 +46,13 @@ alt Đề thi có câu tự luận
         SYS -> SYS : Lưu điểm tay từng câu
     end
 
-    SYS -> SYS : Tính tổng điểm (điểm tự động + điểm thủ công)
-    SYS -> SYS : Cập nhật bài làm sang trạng thái Đã chấm
+    SYS -> SYS : Tính tổng điểm (điểm tự động + điểm thủ công), cập nhật bài làm sang trạng thái Đã chấm
+    deactivate FE
+    deactivate Teacher
 else Chỉ có câu trắc nghiệm
     SYS -> SYS : Cập nhật tổng điểm bằng điểm tự động,\ntrạng thái Đã chấm
 end
 
 SYS -> Student : Gửi thông báo điểm cho học sinh\n(thông báo đẩy / Email)
-
+deactivate SYS
 @enduml

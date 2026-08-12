@@ -1,6 +1,6 @@
-import {useState} from 'react'
 import type {ReactNode} from 'react'
-import {Button, Collapse, Drawer, Empty, InputNumber, Spin, Tag, message} from 'antd'
+import {useState} from 'react'
+import {Button, Collapse, Drawer, Empty, InputNumber, message, Spin, Tag} from 'antd'
 import {CheckCircleFilled, CloseCircleFilled, MinusCircleOutlined} from '@ant-design/icons'
 import {useAuth} from '../../AuthProvider'
 import {useExamWithQuestionsQuery} from '../../hooks/queries/useExams'
@@ -12,9 +12,12 @@ import {
 } from '../../hooks/queries/useSubmissions'
 import {parseAnswers, stripHtml} from '../../utils/snapshot'
 
-type Props = {sessionId?: string; onClose: () => void}
+type Props = { sessionId?: string; onClose: () => void }
 
 const STATUS_COLOR: Record<SubmissionStatus, string> = {InProgress: 'default', Submitted: 'gold', Graded: 'green'}
+const STATUS_LABEL: Record<SubmissionStatus, string> = {
+    InProgress: 'Đang làm', Submitted: 'Đã nộp (chờ chấm)', Graded: 'Đã chấm',
+}
 
 export function SubmissionsDrawer({sessionId, onClose}: Props) {
     const {data: submissions, isLoading} = useSubmissionsBySessionQuery(sessionId)
@@ -76,7 +79,7 @@ function SubmissionCard({submissionId, studentName, studentClassName}: {
                     {studentClassName && <span className="text-gray-400 font-normal"> · Lớp {studentClassName}</span>}
                 </span>
                 <div className="flex items-center gap-2">
-                    <Tag color={STATUS_COLOR[sub.status]}>{sub.status}</Tag>
+                    <Tag color={STATUS_COLOR[sub.status]}>{STATUS_LABEL[sub.status]}</Tag>
                     {sub.totalScore != null && <span className="text-sm font-semibold">{sub.totalScore} đ</span>}
                 </div>
             </div>
@@ -96,18 +99,24 @@ function SubmissionCard({submissionId, studentName, studentClassName}: {
                             children: (
                                 <div className="flex flex-col gap-2">
                                     {objectives.map((a, i) => (
-                                        <div key={a.id} className="flex items-start gap-2 border-b border-gray-100 pb-2">
+                                        <div key={a.id}
+                                             className="flex items-start gap-2 border-b border-gray-100 pb-2">
                                             <span className="mt-0.5">
-                                                {a.isCorrect === true && <CheckCircleFilled style={{color: '#1ea375'}}/>}
-                                                {a.isCorrect === false && <CloseCircleFilled style={{color: '#e74242'}}/>}
-                                                {a.isCorrect == null && <MinusCircleOutlined style={{color: '#c0c4cc'}}/>}
+                                                {a.isCorrect === true &&
+                                                    <CheckCircleFilled style={{color: '#1ea375'}}/>}
+                                                {a.isCorrect === false &&
+                                                    <CloseCircleFilled style={{color: '#e74242'}}/>}
+                                                {a.isCorrect == null &&
+                                                    <MinusCircleOutlined style={{color: '#c0c4cc'}}/>}
                                             </span>
                                             <p className="flex-1 text-[13px] text-gray-700">
                                                 <span className="text-gray-400 mr-1">Câu {i + 1}.</span>
                                                 {questionContent(a.examQuestionId)}
-                                                {a.isCorrect == null && <span className="text-gray-400"> (bỏ trống)</span>}
+                                                {a.isCorrect == null &&
+                                                    <span className="text-gray-400"> (bỏ trống)</span>}
                                             </p>
-                                            <span className="text-[13px] font-semibold tabular-nums text-gray-600">{a.scoreEarned ?? 0}đ</span>
+                                            <span
+                                                className="text-[13px] font-semibold tabular-nums text-gray-600">{a.scoreEarned ?? 0}đ</span>
                                         </div>
                                     ))}
                                 </div>
@@ -126,14 +135,15 @@ function SubmissionCard({submissionId, studentName, studentClassName}: {
                                                 <InputNumber min={0} max={10} step={0.5} placeholder="Điểm"
                                                              value={scores[a.id] ?? a.scoreEarned}
                                                              onChange={v => setScores(p => ({...p, [a.id]: v ?? 0}))}/>
-                                                <Button size="small" loading={grade.isPending} onClick={() => submitGrade(a.id)}>Lưu điểm</Button>
+                                                <Button size="small" loading={grade.isPending}
+                                                        onClick={() => submitGrade(a.id)}>Lưu điểm</Button>
                                             </div>
                                         </div>
                                     ))}
                                 </div>
                             ),
                         },
-                    ].filter(Boolean) as {key: string; label: string; children: ReactNode}[]}
+                    ].filter(Boolean) as { key: string; label: string; children: ReactNode }[]}
                 />
             )}
 

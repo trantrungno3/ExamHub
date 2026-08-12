@@ -30,7 +30,7 @@ skinparam maxMessageSize 160
 start
 :Truy cập mục Quản lý trường;
 |Hệ thống|
-:Hiển thị ô tìm kiếm với bộ lọc (tên trường, mã trường);
+:Hiển thị ô tìm kiếm với bộ lọc\n(tên trường, mã trường);
 |Quản trị viên|
 :Nhập từ khoá và/hoặc chọn bộ lọc;
 :Bấm nút Tìm kiếm;
@@ -39,7 +39,7 @@ start
 if (Có kết quả phù hợp?) then (có)
   :Hiển thị danh sách trường học phù hợp;
 else (không)
-  :Hiển thị thông báo không tìm thấy trường học phù hợp;
+  :Hiển thị thông báo không tìm thấy\ntrường học phù hợp;
 endif
 stop
 @enduml

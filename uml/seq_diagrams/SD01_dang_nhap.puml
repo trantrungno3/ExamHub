@@ -1,12 +1,13 @@
 @startuml SD01_dang_nhap
+autonumber
 skinparam sequenceArrowThickness 2
 skinparam roundcorner 8
 skinparam maxmessagesize 160
 skinparam sequence {
     ArrowColor #2E75B6
     ActorBorderColor #333333
-    LifeLineBorderColor #336699
-    LifeLineBackgroundColor #EEF4FF
+    LifeLineBorderColor #2E75B6
+    LifeLineBackgroundColor #9DC3E6
     ParticipantBorderColor #336699
     ParticipantBackgroundColor #DDEEFF
     ParticipantFontSize 14
@@ -18,35 +19,38 @@ skinparam sequence {
     NoteBorderColor #CCCC00
 }
 skinparam fontname "DejaVu Sans"
+hide footbox
 
 actor "Quản trị viên/\nGiáo viên/Học sinh" as User
 participant "Giao diện" as FE
 participant "Hệ thống" as SYS
 
-User -> FE : Truy cập trang đăng nhập
+activate User
+User -> FE ++ : Truy cập trang đăng nhập
 FE --> User : Hiển thị form đăng nhập
 
-User -> FE : Nhập tên đăng nhập và mật khẩu
-User -> FE : Bấm nút Đăng nhập
+User -> FE : Nhập tên đăng nhập và mật khẩu, bấm nút Đăng nhập
 
 FE -> FE : Kiểm tra dữ liệu bắt buộc
 
 alt Dữ liệu không hợp lệ
     FE --> User : Hiển thị lỗi kiểm tra dữ liệu
 else Dữ liệu hợp lệ
-    FE -> SYS : Yêu cầu đăng nhập với tên đăng nhập và mật khẩu
+    FE -> SYS ++ : Yêu cầu đăng nhập với tên đăng nhập và mật khẩu
     SYS -> SYS : Truy vấn và xác thực thông tin tài khoản
 
     alt Tài khoản không tồn tại hoặc sai mật khẩu
         SYS --> FE : Thông báo sai tài khoản hoặc mật khẩu
         FE --> User : Hiển thị thông báo sai tài khoản / mật khẩu
     else Xác thực thành công
-        SYS -> SYS : Tạo phiên đăng nhập và xác định quyền theo vai trò
-        SYS -> SYS : Ghi nhận thời gian đăng nhập
+        SYS -> SYS : Tạo phiên đăng nhập và xác định quyền theo vai trò, ghi nhận thời gian đăng nhập
         SYS --> FE : Trả về thông tin phiên đăng nhập và quyền truy cập
         FE -> FE : Lưu thông tin phiên đăng nhập
         FE --> User : Chuyển hướng đến trang tương ứng với vai trò
     end
+    deactivate SYS
 end
+deactivate FE
+deactivate User
 
 @enduml

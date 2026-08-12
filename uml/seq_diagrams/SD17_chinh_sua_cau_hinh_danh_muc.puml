@@ -1,12 +1,13 @@
 @startuml SD17_chinh_sua_cau_hinh_danh_muc
+autonumber
 skinparam sequenceArrowThickness 2
 skinparam roundcorner 8
 skinparam maxmessagesize 160
 skinparam sequence {
     ArrowColor #2E75B6
     ActorBorderColor #333333
-    LifeLineBorderColor #336699
-    LifeLineBackgroundColor #EEF4FF
+    LifeLineBorderColor #2E75B6
+    LifeLineBackgroundColor #9DC3E6
     ParticipantBorderColor #336699
     ParticipantBackgroundColor #DDEEFF
     ParticipantFontSize 14
@@ -18,27 +19,28 @@ skinparam sequence {
     NoteBorderColor #CCCC00
 }
 skinparam fontname "DejaVu Sans"
+hide footbox
 
 actor "Quản trị viên" as Admin
 participant "Giao diện" as FE
 participant "Hệ thống" as SYS
 
-Admin -> FE : Truy cập trang Cấu hình danh mục
-FE -> SYS : Yêu cầu danh sách danh mục
+activate Admin
+Admin -> FE ++ : Truy cập trang Cấu hình danh mục
+FE -> SYS ++ : Yêu cầu danh sách danh mục
 SYS -> SYS : Truy vấn danh sách danh mục
-SYS --> FE : Trả về danh sách danh mục
+SYS --> FE -- : Trả về danh sách danh mục
 FE --> Admin : Hiển thị danh sách
 
 Admin -> FE : Chọn danh mục cần chỉnh sửa và bấm Sửa
-FE -> SYS : Yêu cầu chi tiết danh mục
+FE -> SYS ++ : Yêu cầu chi tiết danh mục
 SYS -> SYS : Lấy chi tiết danh mục
-SYS --> FE : Trả về dữ liệu hiện tại
+SYS --> FE -- : Trả về dữ liệu hiện tại
 FE --> Admin : Hiển thị form chỉnh sửa với dữ liệu hiện tại
 
-Admin -> FE : Cập nhật thông tin
-Admin -> FE : Bấm Lưu
+Admin -> FE : Cập nhật thông tin, bấm Lưu
 
-FE -> SYS : Yêu cầu cập nhật danh mục
+FE -> SYS ++ : Yêu cầu cập nhật danh mục
 SYS -> SYS : Kiểm tra hợp lệ và không trùng lặp
 
 alt Dữ liệu hợp lệ
@@ -49,5 +51,8 @@ else Dữ liệu không hợp lệ
     SYS --> FE : Trả về lý do lỗi
     FE --> Admin : Hiển thị thông báo lỗi
 end
+deactivate SYS
+deactivate FE
+deactivate Admin
 
 @enduml

@@ -1,12 +1,13 @@
-@startuml SD37_chinh_sua_cau_hinh_de_thi
+@startuml SD36_chinh_sua_cau_hinh_de_thi
+autonumber
 skinparam sequenceArrowThickness 2
 skinparam roundcorner 8
 skinparam maxmessagesize 160
 skinparam sequence {
     ArrowColor #2E75B6
     ActorBorderColor #333333
-    LifeLineBorderColor #336699
-    LifeLineBackgroundColor #EEF4FF
+    LifeLineBorderColor #2E75B6
+    LifeLineBackgroundColor #9DC3E6
     ParticipantBorderColor #336699
     ParticipantBackgroundColor #DDEEFF
     ParticipantFontSize 14
@@ -18,21 +19,22 @@ skinparam sequence {
     NoteBorderColor #CCCC00
 }
 skinparam fontname "DejaVu Sans"
+hide footbox
 
 actor "Giáo viên" as Teacher
 participant "Giao diện" as FE
 participant "Hệ thống" as SYS
 
-Teacher -> FE : Chọn cấu hình đề thi cần sửa và bấm Chỉnh sửa
-FE -> SYS : Yêu cầu thông tin chi tiết cấu hình
+activate Teacher
+Teacher -> FE ++ : Chọn cấu hình đề thi cần sửa và bấm Chỉnh sửa
+FE -> SYS ++ : Yêu cầu thông tin chi tiết cấu hình
 SYS -> SYS : Lấy thông tin chi tiết cấu hình
-SYS --> FE : Trả về dữ liệu cấu hình hiện tại
+SYS --> FE -- : Trả về dữ liệu cấu hình hiện tại
 FE --> Teacher : Hiển thị form chỉnh sửa với dữ liệu hiện tại
 
-Teacher -> FE : Cập nhật thông tin cần thay đổi
-Teacher -> FE : Bấm Lưu
+Teacher -> FE : Cập nhật thông tin cần thay đổi, bấm Lưu
 
-FE -> SYS : Yêu cầu cập nhật cấu hình đề thi
+FE -> SYS ++ : Yêu cầu cập nhật cấu hình đề thi
 SYS -> SYS : Kiểm tra tính hợp lệ dữ liệu
 
 alt Dữ liệu hợp lệ
@@ -43,5 +45,8 @@ else Dữ liệu không hợp lệ
     SYS --> FE : Trả về chi tiết lỗi
     FE --> Teacher : Hiển thị thông báo lỗi
 end
+deactivate SYS
+deactivate FE
+deactivate Teacher
 
 @enduml

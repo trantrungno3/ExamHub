@@ -1,12 +1,13 @@
 @startuml SD09_chinh_sua_khoa_hoc
+autonumber
 skinparam sequenceArrowThickness 2
 skinparam roundcorner 8
 skinparam maxmessagesize 160
 skinparam sequence {
     ArrowColor #2E75B6
     ActorBorderColor #333333
-    LifeLineBorderColor #336699
-    LifeLineBackgroundColor #EEF4FF
+    LifeLineBorderColor #2E75B6
+    LifeLineBackgroundColor #9DC3E6
     ParticipantBorderColor #336699
     ParticipantBackgroundColor #DDEEFF
     ParticipantFontSize 14
@@ -18,26 +19,27 @@ skinparam sequence {
     NoteBorderColor #CCCC00
 }
 skinparam fontname "DejaVu Sans"
+hide footbox
 
 actor "Quản trị viên" as Admin
 participant "Giao diện" as FE
 participant "Hệ thống" as SYS
 
-Admin -> FE : Truy cập mục Quản lý khoá học
-FE -> SYS : Yêu cầu danh sách khoá học
+activate Admin
+Admin -> FE ++ : Truy cập mục Quản lý khoá học
+FE -> SYS ++ : Yêu cầu danh sách khoá học
 SYS -> SYS : Truy vấn danh sách khoá học
-SYS --> FE : Trả về danh sách khoá học
+SYS --> FE -- : Trả về danh sách khoá học
 FE --> Admin : Hiển thị danh sách khoá học
 
 Admin -> FE : Chọn khoá học cần sửa và bấm Chỉnh sửa
-FE -> SYS : Yêu cầu chi tiết khoá học
-SYS --> FE : Trả về dữ liệu hiện tại
+FE -> SYS ++ : Yêu cầu chi tiết khoá học
+SYS --> FE -- : Trả về dữ liệu hiện tại
 FE --> Admin : Hiển thị form với dữ liệu hiện tại
 
-Admin -> FE : Cập nhật tên khoá học, năm học
-Admin -> FE : Bấm Lưu
+Admin -> FE : Cập nhật tên khoá học, năm học, bấm Lưu
 
-FE -> SYS : Yêu cầu cập nhật khoá học
+FE -> SYS ++ : Yêu cầu cập nhật khoá học
 SYS -> SYS : Kiểm tra tính hợp lệ dữ liệu
 
 alt Dữ liệu hợp lệ
@@ -48,5 +50,8 @@ else Dữ liệu không hợp lệ
     SYS --> FE : Trả về lý do lỗi
     FE --> Admin : Hiển thị thông báo lỗi
 end
+deactivate SYS
+deactivate FE
+deactivate Admin
 
 @enduml

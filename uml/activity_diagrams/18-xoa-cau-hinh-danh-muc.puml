@@ -36,11 +36,11 @@ if (Xác nhận xoá?) then (đồng ý)
   |Hệ thống|
   :Kiểm tra mục danh mục có đang được sử dụng;
   if (Đang được sử dụng?) then (có)
-    :Hiển thị cảnh báo mục đang được sử dụng, không thể xoá;
+    :Hiển thị cảnh báo mục\nđang được sử dụng, không thể xoá;
     stop
   else (không)
     :Xoá mục danh mục khỏi cơ sở dữ liệu;
-    :Hiển thị thông báo xoá thành công và cập nhật danh sách;
+    :Hiển thị thông báo xoá thành công và\ncập nhật danh sách;
     stop
   endif
 else (huỷ)

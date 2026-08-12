@@ -1,12 +1,13 @@
 @startuml SD06_xem_truong_hoc
+autonumber
 skinparam sequenceArrowThickness 2
 skinparam roundcorner 8
 skinparam maxmessagesize 160
 skinparam sequence {
     ArrowColor #2E75B6
     ActorBorderColor #333333
-    LifeLineBorderColor #336699
-    LifeLineBackgroundColor #EEF4FF
+    LifeLineBorderColor #2E75B6
+    LifeLineBackgroundColor #9DC3E6
     ParticipantBorderColor #336699
     ParticipantBackgroundColor #DDEEFF
     ParticipantFontSize 14
@@ -18,21 +19,25 @@ skinparam sequence {
     NoteBorderColor #CCCC00
 }
 skinparam fontname "DejaVu Sans"
+hide footbox
 
 actor "Quản trị viên" as Admin
 participant "Giao diện" as FE
 participant "Hệ thống" as SYS
 
-Admin -> FE : Truy cập mục Quản lý trường
-FE -> SYS : Yêu cầu danh sách trường học
+activate Admin
+Admin -> FE ++ : Truy cập mục Quản lý trường
+FE -> SYS ++ : Yêu cầu danh sách trường học
 SYS -> SYS : Truy vấn danh sách trường
-SYS --> FE : Trả về danh sách trường học
+SYS --> FE -- : Trả về danh sách trường học
 FE --> Admin : Hiển thị danh sách trường
 
 Admin -> FE : Chọn trường cần xem
-FE -> SYS : Yêu cầu thông tin chi tiết trường
+FE -> SYS ++ : Yêu cầu thông tin chi tiết trường
 SYS -> SYS : Truy vấn thông tin chi tiết trường học
-SYS --> FE : Trả về chi tiết trường học
+SYS --> FE -- : Trả về chi tiết trường học
 FE --> Admin : Hiển thị đầy đủ thông tin\n(tên, mã, địa chỉ, liên hệ, số khoá học/lớp liên quan)
+deactivate FE
+deactivate Admin
 
 @enduml

@@ -1,12 +1,13 @@
 @startuml SD21_duyet_cau_hoi
+autonumber
 skinparam sequenceArrowThickness 2
 skinparam roundcorner 8
 skinparam maxmessagesize 160
 skinparam sequence {
     ArrowColor #2E75B6
     ActorBorderColor #333333
-    LifeLineBorderColor #336699
-    LifeLineBackgroundColor #EEF4FF
+    LifeLineBorderColor #2E75B6
+    LifeLineBackgroundColor #9DC3E6
     ParticipantBorderColor #336699
     ParticipantBackgroundColor #DDEEFF
     ParticipantFontSize 14
@@ -18,36 +19,38 @@ skinparam sequence {
     NoteBorderColor #CCCC00
 }
 skinparam fontname "DejaVu Sans"
+hide footbox
 
 actor "Admin / Giáo viên" as Reviewer
 participant "Giao diện" as FE
 participant "Hệ thống" as SYS
 
-Reviewer -> FE : Truy cập mục Duyệt câu hỏi
-FE -> SYS : Yêu cầu danh sách câu hỏi chờ duyệt
+activate Reviewer
+Reviewer -> FE ++ : Truy cập mục Duyệt câu hỏi
+FE -> SYS ++ : Yêu cầu danh sách câu hỏi chờ duyệt
 SYS -> SYS : Truy vấn câu hỏi có trạng thái Chờ duyệt
-SYS --> FE : Trả về danh sách câu hỏi chờ duyệt
+SYS --> FE -- : Trả về danh sách câu hỏi chờ duyệt
 FE --> Reviewer : Hiển thị danh sách câu hỏi
 
 Reviewer -> FE : Chọn một câu hỏi để xem xét
-FE -> SYS : Yêu cầu chi tiết câu hỏi
-SYS --> FE : Trả về chi tiết câu hỏi
+FE -> SYS ++ : Yêu cầu chi tiết câu hỏi
+SYS --> FE -- : Trả về chi tiết câu hỏi
 FE --> Reviewer : Hiển thị nội dung đầy đủ
 
 alt Phê duyệt
     Reviewer -> FE : Bấm Phê duyệt
-    FE -> SYS : Yêu cầu phê duyệt câu hỏi
-    SYS -> SYS : Cập nhật trạng thái thành Đã duyệt
-    SYS -> SYS : Gửi thông báo đến người tạo câu hỏi
-    SYS --> FE : Xác nhận phê duyệt thành công
+    FE -> SYS ++ : Yêu cầu phê duyệt câu hỏi
+    SYS -> SYS : Cập nhật trạng thái thành Đã duyệt, gửi thông báo đến người tạo câu hỏi
+    SYS --> FE -- : Xác nhận phê duyệt thành công
     FE --> Reviewer : Thông báo phê duyệt thành công
 else Từ chối
     Reviewer -> FE : Bấm Từ chối và nhập lý do
-    FE -> SYS : Yêu cầu từ chối câu hỏi kèm lý do
-    SYS -> SYS : Cập nhật trạng thái thành Từ chối kèm lý do
-    SYS -> SYS : Gửi thông báo từ chối kèm lý do đến người tạo
-    SYS --> FE : Xác nhận từ chối thành công
+    FE -> SYS ++ : Yêu cầu từ chối câu hỏi kèm lý do
+    SYS -> SYS : Cập nhật trạng thái thành Từ chối kèm lý do, gửi thông báo từ chối kèm lý do đến người tạo
+    SYS --> FE -- : Xác nhận từ chối thành công
     FE --> Reviewer : Thông báo từ chối thành công
 end
+deactivate FE
+deactivate Reviewer
 
 @enduml

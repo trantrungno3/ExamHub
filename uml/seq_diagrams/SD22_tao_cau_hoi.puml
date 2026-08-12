@@ -1,12 +1,13 @@
 @startuml SD22_tao_cau_hoi
+autonumber
 skinparam sequenceArrowThickness 2
 skinparam roundcorner 8
 skinparam maxmessagesize 160
 skinparam sequence {
     ArrowColor #2E75B6
     ActorBorderColor #333333
-    LifeLineBorderColor #336699
-    LifeLineBackgroundColor #EEF4FF
+    LifeLineBorderColor #2E75B6
+    LifeLineBackgroundColor #9DC3E6
     ParticipantBorderColor #336699
     ParticipantBackgroundColor #DDEEFF
     ParticipantFontSize 14
@@ -18,34 +19,33 @@ skinparam sequence {
     NoteBorderColor #CCCC00
 }
 skinparam fontname "DejaVu Sans"
+hide footbox
 
 actor "Giáo viên" as Teacher
 participant "Giao diện" as FE
 participant "Hệ thống" as SYS
 
-Teacher -> FE : Chọn Tạo câu hỏi mới
+activate Teacher
+Teacher -> FE ++ : Chọn Tạo câu hỏi mới
 FE --> Teacher : Hiển thị form tạo câu hỏi
 
-Teacher -> FE : Chọn loại câu hỏi (TN / Tự luận)
-Teacher -> FE : Nhập nội dung và đáp án
-Teacher -> FE : Chọn môn học, chủ đề, chương
+Teacher -> FE : Chọn loại câu hỏi (TN / Tự luận), nhập nội dung và đáp án, chọn môn học, chủ đề, chương
 
 opt Có upload ảnh minh hoạ
     Teacher -> FE : Chọn file ảnh đính kèm
-    FE -> SYS : Tải ảnh minh hoạ lên
-    SYS --> FE : Trả về đường dẫn ảnh
+    FE -> SYS ++ : Tải ảnh minh hoạ lên
+    SYS --> FE -- : Trả về đường dẫn ảnh
     FE --> Teacher : Hiển thị ảnh xem trước
 end
 
-Teacher -> FE : Chọn cấp độ Bloom và mức độ khó
-Teacher -> FE : Bấm Lưu câu hỏi
+Teacher -> FE : Chọn cấp độ Bloom và mức độ khó, bấm Lưu câu hỏi
 
-FE -> SYS : Yêu cầu tạo câu hỏi mới với nội dung đã nhập
-SYS -> SYS : Kiểm tra tính hợp lệ dữ liệu
-SYS -> SYS : Xác nhận phân loại Bloom và độ khó hợp lệ
-SYS -> SYS : Lưu câu hỏi với trạng thái Chờ duyệt
+FE -> SYS ++ : Yêu cầu tạo câu hỏi mới với nội dung đã nhập
+SYS -> SYS : Kiểm tra tính hợp lệ dữ liệu, xác nhận phân loại Bloom và độ khó hợp lệ, lưu câu hỏi với trạng thái Chờ duyệt
 
-SYS --> FE : Trả về kết quả tạo câu hỏi thành công
+SYS --> FE -- : Trả về kết quả tạo câu hỏi thành công
 FE --> Teacher : Thông báo tạo thành công\n(Câu hỏi đang chờ duyệt)
+deactivate FE
+deactivate Teacher
 
 @enduml

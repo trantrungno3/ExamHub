@@ -1,12 +1,13 @@
 @startuml SD13_enroll_hoc_sinh_vao_lop
+autonumber
 skinparam sequenceArrowThickness 2
 skinparam roundcorner 8
 skinparam maxmessagesize 160
 skinparam sequence {
     ArrowColor #2E75B6
     ActorBorderColor #333333
-    LifeLineBorderColor #336699
-    LifeLineBackgroundColor #EEF4FF
+    LifeLineBorderColor #2E75B6
+    LifeLineBackgroundColor #9DC3E6
     ParticipantBorderColor #336699
     ParticipantBackgroundColor #DDEEFF
     ParticipantFontSize 14
@@ -18,25 +19,26 @@ skinparam sequence {
     NoteBorderColor #CCCC00
 }
 skinparam fontname "DejaVu Sans"
+hide footbox
 
 actor "Quản trị viên" as Admin
 participant "Giao diện" as FE
 participant "Hệ thống" as SYS
 
-Admin -> FE : Truy cập trang chi tiết lớp học
-FE -> SYS : Yêu cầu danh sách học sinh chưa thuộc lớp
+activate Admin
+Admin -> FE ++ : Truy cập trang chi tiết lớp học
+FE -> SYS ++ : Yêu cầu danh sách học sinh chưa thuộc lớp
 SYS -> SYS : Lấy danh sách học sinh chưa thuộc lớp
-SYS --> FE : Trả về danh sách học sinh
+SYS --> FE -- : Trả về danh sách học sinh
 FE --> Admin : Hiển thị danh sách học sinh chưa thuộc lớp
 
-Admin -> FE : Chọn một hoặc nhiều học sinh
-Admin -> FE : Xác nhận
+Admin -> FE : Chọn một hoặc nhiều học sinh, xác nhận
 
-FE -> SYS : Yêu cầu thêm học sinh đã chọn vào lớp
+FE -> SYS ++ : Yêu cầu thêm học sinh đã chọn vào lớp
 SYS -> SYS : Kiểm tra tính hợp lệ\n(học sinh chưa thuộc lớp khác cùng khối)
 
 alt Học sinh hợp lệ
-    SYS -> SYS : Lưu bản ghi
+    SYS -> SYS : Lưu bản ghi thêm học sinh vào lớp
     SYS --> FE : Trả về kết quả thành công
     FE --> Admin : Thông báo thành công
     FE --> Admin : Cập nhật danh sách thành viên lớp
@@ -45,5 +47,8 @@ else Học sinh đã thuộc lớp khác
     FE --> Admin : Cảnh báo học sinh đã thuộc lớp khác cùng khối
     Admin -> FE : Chọn bỏ qua học sinh đó hoặc huỷ
 end
+deactivate SYS
+deactivate FE
+deactivate Admin
 
 @enduml

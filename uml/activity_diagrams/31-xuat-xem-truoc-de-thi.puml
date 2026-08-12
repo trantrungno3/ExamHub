@@ -28,18 +28,18 @@ skinparam maxMessageSize 160
 
 |Giáo viên|
 start
-:Chọn đề thi và bấm Xem trước hoặc Xuất đề;
+:Chọn đề thi và bấm\nXem trước hoặc Xuất đề;
 |Hệ thống|
 if (Lựa chọn?) then (Xem trước)
-  :Hiển thị đề thi trực tiếp trên trình duyệt với đầy đủ định dạng;
+  :Hiển thị đề thi trực tiếp trên\ntrình duyệt với đầy đủ định dạng;
   stop
 else (Xuất đề)
   if (Định dạng?) then (PDF)
-    :Render đề thi ra file PDF theo định dạng chuẩn;
+    :Render đề thi ra file PDF\ntheo định dạng chuẩn;
   else (Word)
-    :Tạo file DOCX với nội dung đề thi;
+    :Tạo file DOCX với nội dung\nđề thi;
   endif
-  :Tải file lên hệ thống lưu trữ MinIO và lấy đường dẫn;
+  :Tải file lên hệ thống lưu trữ MinIO\nvà lấy đường dẫn;
   :Trả về đường dẫn tải file cho Giáo viên;
   |Giáo viên|
   :Tải file về máy;

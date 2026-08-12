@@ -1,12 +1,13 @@
 @startuml SD24_xoa_cau_hoi
+autonumber
 skinparam sequenceArrowThickness 2
 skinparam roundcorner 8
 skinparam maxmessagesize 160
 skinparam sequence {
     ArrowColor #2E75B6
     ActorBorderColor #333333
-    LifeLineBorderColor #336699
-    LifeLineBackgroundColor #EEF4FF
+    LifeLineBorderColor #2E75B6
+    LifeLineBackgroundColor #9DC3E6
     ParticipantBorderColor #336699
     ParticipantBackgroundColor #DDEEFF
     ParticipantFontSize 14
@@ -18,13 +19,15 @@ skinparam sequence {
     NoteBorderColor #CCCC00
 }
 skinparam fontname "DejaVu Sans"
+hide footbox
 
 actor "Giáo viên" as Teacher
 participant "Giao diện" as FE
 participant "Hệ thống" as SYS
 
-Teacher -> FE : Chọn câu hỏi cần xoá và bấm Xoá
-FE -> SYS : Yêu cầu kiểm tra tình trạng sử dụng câu hỏi
+activate Teacher
+Teacher -> FE ++ : Chọn câu hỏi cần xoá và bấm Xoá
+FE -> SYS ++ : Yêu cầu kiểm tra tình trạng sử dụng câu hỏi
 SYS -> SYS : Kiểm tra câu hỏi có đang dùng trong đề thi không
 
 alt Câu hỏi đang được sử dụng trong đề thi
@@ -48,5 +51,8 @@ else Câu hỏi chưa được sử dụng
     SYS --> FE : Trả về kết quả xoá thành công
     FE --> Teacher : Thông báo xoá thành công
 end
+deactivate SYS
+deactivate FE
+deactivate Teacher
 
 @enduml

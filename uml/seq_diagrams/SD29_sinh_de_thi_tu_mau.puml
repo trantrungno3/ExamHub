@@ -1,12 +1,13 @@
 @startuml SD29_sinh_de_thi_tu_mau
+autonumber
 skinparam sequenceArrowThickness 2
 skinparam roundcorner 8
 skinparam maxmessagesize 160
 skinparam sequence {
     ArrowColor #2E75B6
     ActorBorderColor #333333
-    LifeLineBorderColor #336699
-    LifeLineBackgroundColor #EEF4FF
+    LifeLineBorderColor #2E75B6
+    LifeLineBackgroundColor #9DC3E6
     ParticipantBorderColor #336699
     ParticipantBackgroundColor #DDEEFF
     ParticipantFontSize 14
@@ -18,25 +19,26 @@ skinparam sequence {
     NoteBorderColor #CCCC00
 }
 skinparam fontname "DejaVu Sans"
+hide footbox
 
 actor "Giáo viên" as Teacher
 participant "Giao diện" as FE
 participant "Hệ thống" as SYS
 
-Teacher -> FE : Chọn mẫu đề và bấm Sinh đề
-FE -> SYS : Yêu cầu sinh đề thi từ mẫu đã chọn
+activate Teacher
+Teacher -> FE ++ : Chọn mẫu đề và bấm Sinh đề
+FE -> SYS ++ : Yêu cầu sinh đề thi từ mẫu đã chọn
 SYS -> SYS : Lấy cấu hình mẫu đề và danh sách các phần thi
 
 loop Mỗi phần thi trong mẫu
-    SYS -> SYS : Lấy các câu hỏi đã duyệt phù hợp\n(môn học, chủ đề, Bloom, độ khó)
-    SYS -> SYS : Chọn số câu theo từng tầng độ khó và Bloom\n(lấy mẫu phân tầng)
-    SYS -> SYS : Xáo trộn thứ tự câu hỏi và thứ tự đáp án
+    SYS -> SYS : Lấy các câu hỏi đã duyệt phù hợp\n(môn học, chủ đề, Bloom, độ khó), chọn số câu theo từng tầng độ khó và Bloom\n(lấy mẫu phân tầng), xáo trộn thứ tự câu hỏi và thứ tự đáp án
 end
 
-SYS -> SYS : Lưu lại nội dung câu hỏi tại thời điểm sinh đề
-SYS -> SYS : Tạo đề thi mới với mã đề và ngày tạo
+SYS -> SYS : Lưu lại nội dung câu hỏi tại thời điểm sinh đề, tạo đề thi mới với mã đề và ngày tạo
 
-SYS --> FE : Trả về đề thi vừa sinh cùng mã đề
+SYS --> FE -- : Trả về đề thi vừa sinh cùng mã đề
 FE --> Teacher : Hiển thị đề vừa sinh, cho phép xem trước
+deactivate FE
+deactivate Teacher
 
 @enduml

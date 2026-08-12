@@ -1,12 +1,13 @@
 @startuml SD14_phan_cong_giao_vien
+autonumber
 skinparam sequenceArrowThickness 2
 skinparam roundcorner 8
 skinparam maxmessagesize 160
 skinparam sequence {
     ArrowColor #2E75B6
     ActorBorderColor #333333
-    LifeLineBorderColor #336699
-    LifeLineBackgroundColor #EEF4FF
+    LifeLineBorderColor #2E75B6
+    LifeLineBackgroundColor #9DC3E6
     ParticipantBorderColor #336699
     ParticipantBackgroundColor #DDEEFF
     ParticipantFontSize 14
@@ -18,21 +19,22 @@ skinparam sequence {
     NoteBorderColor #CCCC00
 }
 skinparam fontname "DejaVu Sans"
+hide footbox
 
 actor "Quản trị viên" as Admin
 participant "Giao diện" as FE
 participant "Hệ thống" as SYS
 
-Admin -> FE : Truy cập trang chi tiết lớp học
-FE -> SYS : Yêu cầu danh sách giáo viên và môn học
+activate Admin
+Admin -> FE ++ : Truy cập trang chi tiết lớp học
+FE -> SYS ++ : Yêu cầu danh sách giáo viên và môn học
 SYS -> SYS : Lấy danh sách giáo viên và môn học
-SYS --> FE : Trả về danh sách giáo viên và môn học
+SYS --> FE -- : Trả về danh sách giáo viên và môn học
 FE --> Admin : Hiển thị danh sách để chọn
 
-Admin -> FE : Chọn giáo viên, môn học
-Admin -> FE : Xác nhận
+Admin -> FE : Chọn giáo viên, môn học, xác nhận
 
-FE -> SYS : Yêu cầu phân công giáo viên cho lớp
+FE -> SYS ++ : Yêu cầu phân công giáo viên cho lớp
 SYS -> SYS : Kiểm tra tính hợp lệ\n(không trùng phân công môn học đã có)
 
 alt Hợp lệ
@@ -44,5 +46,8 @@ else Trùng phân công môn học
     FE --> Admin : Cảnh báo môn học đã được phân công cho giáo viên khác
     Admin -> FE : Chọn giáo viên khác hoặc huỷ
 end
+deactivate SYS
+deactivate FE
+deactivate Admin
 
 @enduml

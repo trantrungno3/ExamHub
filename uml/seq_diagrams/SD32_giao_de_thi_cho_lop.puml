@@ -1,12 +1,13 @@
 @startuml SD32_giao_de_thi_cho_lop
+autonumber
 skinparam sequenceArrowThickness 2
 skinparam roundcorner 8
 skinparam maxmessagesize 160
 skinparam sequence {
     ArrowColor #2E75B6
     ActorBorderColor #333333
-    LifeLineBorderColor #336699
-    LifeLineBackgroundColor #EEF4FF
+    LifeLineBorderColor #2E75B6
+    LifeLineBackgroundColor #9DC3E6
     ParticipantBorderColor #336699
     ParticipantBackgroundColor #DDEEFF
     ParticipantFontSize 14
@@ -18,38 +19,37 @@ skinparam sequence {
     NoteBorderColor #CCCC00
 }
 skinparam fontname "DejaVu Sans"
+hide footbox
 
 actor "Giáo viên" as Teacher
 participant "Giao diện" as FE
 participant "Hệ thống" as SYS
 
-Teacher -> FE : Chọn đề thi và bấm Giao đề cho lớp
-FE --> Teacher : Hiển thị form giao đề
+activate Teacher
+Teacher -> FE ++ : Chọn kỳ thi và bấm Giao kỳ cho lớp
+FE --> Teacher : Hiển thị form giao kỳ
 
-Teacher -> FE : Chọn lớp học
-Teacher -> FE : Đặt thời gian mở bài, đóng bài
-Teacher -> FE : Đặt thời gian làm bài (phút)
+Teacher -> FE : Chọn lớp học, đặt thời gian mở bài, đóng bài, đặt thời gian làm bài (phút)
 
 opt Xem trước trước khi giao
-    Teacher -> FE : Bấm xem trước đề
-    FE --> Teacher : Hiển thị nội dung đề thi
+    Teacher -> FE : Bấm xem trước kỳ
+    FE --> Teacher : Hiển thị nội dung kỳ thi
 end
 
-Teacher -> FE : Bấm Xác nhận giao đề
-FE -> SYS : Yêu cầu giao đề cho lớp đã chọn
+Teacher -> FE : Bấm Xác nhận giao kỳ
+FE -> SYS ++ : Yêu cầu giao kỳ cho lớp đã chọn
 
-SYS -> SYS : Kiểm tra thời gian hợp lệ
-SYS -> SYS : Kiểm tra lớp tồn tại và giáo viên có quyền quản lý
+SYS -> SYS : Kiểm tra thời gian hợp lệ, kiểm tra lớp tồn tại và giáo viên có quyền quản lý
 
 alt Dữ liệu không hợp lệ
     SYS --> FE : Trả về chi tiết lỗi
     FE --> Teacher : Hiển thị thông báo lỗi
 else Hợp lệ
-    SYS -> SYS : Lưu bản ghi giao đề (đề thi, lớp, thời gian)
-    SYS -> SYS : Lấy danh sách học sinh trong lớp
-    SYS -> SYS : Gửi thông báo đến toàn bộ học sinh trong lớp
-    SYS --> FE : Trả về kết quả giao đề thành công
-    FE --> Teacher : Thông báo giao đề thành công
+    SYS -> SYS : Lưu bản ghi giao kỳ (kỳ thi, lớp, thời gian), lấy danh sách học sinh trong lớp, gửi thông báo đến toàn bộ học sinh trong lớp, trả về kết quả giao kỳ thành công
+    FE --> Teacher : Thông báo giao kỳ thành công
 end
+deactivate SYS
+deactivate FE
+deactivate Teacher
 
 @enduml

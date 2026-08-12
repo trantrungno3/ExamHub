@@ -28,9 +28,9 @@ skinparam maxMessageSize 160
 
 |Giáo viên|
 start
-:Chọn đề thi và bấm Giao đề cho lớp;
+:Chọn kỳ thi và bấm Giao kỳ cho lớp;
 |Hệ thống|
-:Hiển thị form giao đề\n(chọn lớp, ngày mở, ngày đóng, thời gian làm bài);
+:Hiển thị form giao kỳ\n(chọn lớp, ngày mở, ngày đóng, thời gian làm bài);
 |Giáo viên|
 if (Cần kiểm tra lại nội dung?) then (có)
   :Xem trước đề thi;
@@ -38,12 +38,12 @@ else (không)
 endif
 repeat
   :Chọn lớp học đích và thiết lập thời gian;
-  :Bấm xác nhận giao đề;
+  :Bấm xác nhận giao kỳ;
   |Hệ thống|
   :Kiểm tra tính hợp lệ của thời gian và lớp học;
   backward:Hiển thị thông báo lỗi và yêu cầu điều chỉnh;
 repeat while (Thời gian và lớp hợp lệ?) is (không hợp lệ) not (hợp lệ)
-:Lưu thông tin giao đề và gửi thông báo đến học sinh trong lớp;
-:Hiển thị xác nhận giao đề thành công;
+:Lưu thông tin giao kỳ và gửi thông báo đến học sinh trong lớp;
+:Hiển thị xác nhận giao kỳ thành công;
 stop
 @enduml

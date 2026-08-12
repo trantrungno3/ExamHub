@@ -1,12 +1,13 @@
 @startuml SD10_xoa_khoa_hoc
+autonumber
 skinparam sequenceArrowThickness 2
 skinparam roundcorner 8
 skinparam maxmessagesize 160
 skinparam sequence {
     ArrowColor #2E75B6
     ActorBorderColor #333333
-    LifeLineBorderColor #336699
-    LifeLineBackgroundColor #EEF4FF
+    LifeLineBorderColor #2E75B6
+    LifeLineBackgroundColor #9DC3E6
     ParticipantBorderColor #336699
     ParticipantBackgroundColor #DDEEFF
     ParticipantFontSize 14
@@ -18,17 +19,19 @@ skinparam sequence {
     NoteBorderColor #CCCC00
 }
 skinparam fontname "DejaVu Sans"
+hide footbox
 
 actor "Quản trị viên" as Admin
 participant "Giao diện" as FE
 participant "Hệ thống" as SYS
 
-Admin -> FE : Chọn khoá học cần xoá
+activate Admin
+Admin -> FE ++ : Chọn khoá học cần xoá
 FE --> Admin : Hiển thị hộp thoại xác nhận xoá
 
 alt Quản trị viên xác nhận
     Admin -> FE : Xác nhận xoá
-    FE -> SYS : Yêu cầu xoá khoá học
+    FE -> SYS ++ : Yêu cầu xoá khoá học
     SYS -> SYS : Kiểm tra khoá học có lớp đang hoạt động
 
     alt Còn lớp đang hoạt động
@@ -40,8 +43,11 @@ alt Quản trị viên xác nhận
         FE --> Admin : Thông báo xoá thành công
         FE --> Admin : Cập nhật danh sách khoá học
     end
+    deactivate SYS
 else Quản trị viên huỷ
     FE --> Admin : Đóng hộp thoại, giữ nguyên danh sách
 end
+deactivate FE
+deactivate Admin
 
 @enduml

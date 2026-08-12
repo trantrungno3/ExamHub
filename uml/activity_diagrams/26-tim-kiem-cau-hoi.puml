@@ -37,9 +37,9 @@ start
 |Hệ thống|
 :Truy vấn cơ sở dữ liệu theo tiêu chí đã chọn;
 if (Có câu hỏi phù hợp?) then (có)
-  :Hiển thị danh sách câu hỏi phù hợp kèm thông tin tóm tắt;
+  :Hiển thị danh sách câu\nhỏi phù hợp kèm thông tin\ntóm tắt;
 else (không)
-  :Hiển thị thông báo Không tìm thấy câu hỏi phù hợp;
+  :Hiển thị thông báo\nKhông tìm thấy câu hỏi\nphù hợp;
 endif
 stop
 @enduml

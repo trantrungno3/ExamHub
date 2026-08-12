@@ -1,0 +1,24 @@
+@startuml UC32_giao_ky_thi_cho_lop
+!pragma layout smetana
+left to right direction
+skinparam defaultFontName "DejaVu Sans"
+skinparam usecase {
+    BackgroundColor #DDEEFF
+    BorderColor #336699
+    FontSize 14
+    FontName "DejaVu Sans"
+}
+skinparam actor {
+    BackgroundColor White
+    BorderColor #333333
+    FontSize 14
+    FontName "DejaVu Sans"
+}
+
+actor "Giáo viên" as Teacher
+usecase "Giao kỳ thi cho lớp" as UC_Giao
+usecase "Xem trước đề thi" as UC_Xem
+
+Teacher --> UC_Giao
+UC_Xem ..> UC_Giao : <<extend>>
+@enduml
