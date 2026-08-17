@@ -18,7 +18,11 @@ public class ExamSubmissionController(IExamSubmissionService service) : Authoriz
     {
         var result = await service.GetWithAnswersAsync(id, ct);
         if (result is null) return NotFound();
-        return Ok(RequestResponse<ExamSubmissionResponse>.Success("Lấy dữ liệu thành công!", ExamSubmissionResponse.FromEntity(result, includeAnswers: true), 1));
+        var directory = await service.GetStudentDirectoryAsync(new List<Guid> { result.StudentId }, ct);
+        directory.TryGetValue(result.StudentId, out var info);
+        return Ok(RequestResponse<ExamSubmissionResponse>.Success(
+            "Lấy dữ liệu thành công!",
+            ExamSubmissionResponse.FromEntity(result, info?.Name, info?.ClassName, includeAnswers: true), 1));
     }
 
     /// <summary>Lấy danh sách bài nộp theo đề thi</summary>
