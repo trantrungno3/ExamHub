@@ -1,23 +1,24 @@
 import {useMemo, useState} from 'react'
-import {Drawer, Dropdown, Input, Popconfirm, Select, Spin, Table, message} from 'antd'
+import {useNavigate} from 'react-router-dom'
+import {Dropdown, Input, Popconfirm, Select, Table, message} from 'antd'
 import type {TableColumnsType} from 'antd'
 import {BarChartOutlined, DownloadOutlined, EyeOutlined, SearchOutlined} from '@ant-design/icons'
 import {AnalyticsDrawer} from './AnalyticsDrawer'
 import {
     useDeleteExamMutation,
     useExamsQuery,
-    useExamWithQuestionsQuery,
     usePublishExamMutation,
 } from '../../hooks/queries/useExams'
 import {useGradeLevelsListQuery, useSubjectsQuery} from '../../hooks/queries/useCategoryLists'
 import {examService} from '../../services/examService'
-import {parseAnswers, stripHtml} from '../../utils/snapshot'
 import {StatusTag, type StatusVariant} from '../../components/StatusTag'
+import {ROUTES} from '../../routes/paths'
 
 const STATUS_VARIANT: Record<ExamStatus, StatusVariant> = {Draft: 'warning', Published: 'success', Archived: 'default'}
 const STATUS_LABEL: Record<ExamStatus, string> = {Draft: 'Nháp', Published: 'Đã phát hành', Archived: 'Lưu trữ'}
 
 export default function ExamListPage() {
+    const navigate = useNavigate()
     const grades = useGradeLevelsListQuery()
     const subjects = useSubjectsQuery()
 
@@ -27,7 +28,6 @@ export default function ExamListPage() {
     const [subjectId, setSubjectId] = useState<number>()
     const [status, setStatus] = useState<ExamStatus>()
     const [keyword, setKeyword] = useState('')
-    const [previewId, setPreviewId] = useState<string>()
     const [analyticsExamId, setAnalyticsExamId] = useState<string>()
     const [exporting, setExporting] = useState<string>()
 
@@ -67,7 +67,7 @@ export default function ExamListPage() {
             render: (_, e) => (
                 <div className="flex gap-2 items-center">
                     <button className="text-blue-600 text-sm hover:underline flex items-center gap-1"
-                            onClick={() => setPreviewId(e.id)}>
+                            onClick={() => navigate(ROUTES.EXAM_DETAIL.replace(':id', e.id))}>
                         <EyeOutlined/> Xem
                     </button>
                     <button className="text-gray-600 text-sm hover:underline flex items-center gap-1"
@@ -152,40 +152,7 @@ export default function ExamListPage() {
                 </div>
             </div>
 
-            <ExamPreviewDrawer examId={previewId} onClose={() => setPreviewId(undefined)}/>
             <AnalyticsDrawer examId={analyticsExamId} onClose={() => setAnalyticsExamId(undefined)}/>
         </>
-    )
-}
-
-function ExamPreviewDrawer({examId, onClose}: {examId?: string; onClose: () => void}) {
-    const {data: exam, isLoading} = useExamWithQuestionsQuery(examId)
-
-    return (
-        <Drawer title={exam?.title ?? 'Xem trước đề thi'} open={!!examId} onClose={onClose} width={640}>
-            {isLoading && <Spin/>}
-            {exam && (
-                <div className="flex flex-col gap-4">
-                    <div className="text-sm text-gray-500">
-                        {exam.examCode && <span>Mã đề: {exam.examCode} · </span>}
-                        Thời gian: {exam.durationMinutes} phút · Tổng điểm: {exam.totalScore}
-                    </div>
-                    {(exam.questions ?? []).map((q, i) => (
-                        <div key={q.id} className="border-b border-gray-100 pb-3">
-                            <p className="font-medium text-gray-800">
-                                Câu {i + 1}{q.score != null ? ` (${q.score}đ)` : ''}: {stripHtml(q.contentSnapshot)}
-                            </p>
-                            <ol className="list-[upper-alpha] pl-6 mt-1 text-gray-600 text-sm">
-                                {parseAnswers(q.answersSnapshot).map((a, ai) => (
-                                    <li key={ai} className={a.isCorrect ? 'text-green-600 font-medium' : ''}>
-                                        {stripHtml(a.content)}
-                                    </li>
-                                ))}
-                            </ol>
-                        </div>
-                    ))}
-                </div>
-            )}
-        </Drawer>
     )
 }
