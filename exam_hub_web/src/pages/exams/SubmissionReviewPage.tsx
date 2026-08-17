@@ -1,7 +1,13 @@
+import {useState} from 'react'
 import {useLocation, useNavigate, useParams} from 'react-router-dom'
-import {Empty, Spin} from 'antd'
+import {Button, Empty, InputNumber, Spin, message} from 'antd'
 import {ArrowLeftOutlined} from '@ant-design/icons'
-import {useSubmissionQuery} from '../../hooks/queries/useSubmissions'
+import {useAuth} from '../../AuthProvider'
+import {
+    useFinalizeSubmissionMutation,
+    useGradeAnswerMutation,
+    useSubmissionQuery,
+} from '../../hooks/queries/useSubmissions'
 import {useExamWithQuestionsQuery} from '../../hooks/queries/useExams'
 import {parseAnswers, stripHtml} from '../../utils/snapshot'
 
@@ -14,8 +20,21 @@ export default function SubmissionReviewPage() {
     const {id} = useParams<{id: string}>()
     const navigate = useNavigate()
     const {state} = useLocation() as {state?: {studentName?: string; studentClassName?: string}}
+    const {user} = useAuth()
     const {data: sub, isLoading} = useSubmissionQuery(id)
     const {data: exam} = useExamWithQuestionsQuery(sub?.examId)
+    const grade = useGradeAnswerMutation()
+    const finalize = useFinalizeSubmissionMutation()
+    const [scores, setScores] = useState<Record<string, number>>({})
+
+    const submitGrade = (answerId: string) => {
+        if (!user?.id) {
+            message.error('Không xác định được giáo viên đang đăng nhập')
+            return
+        }
+        const score = scores[answerId] ?? 0
+        grade.mutate({answerId, body: {scoreEarned: score, isCorrect: score > 0, gradedBy: user.id}})
+    }
 
     if (isLoading) return <div className="flex justify-center py-24"><Spin size="large"/></div>
     if (!sub) return <div className="p-6"><Empty description="Không tìm thấy bài nộp"/></div>
@@ -115,9 +134,19 @@ export default function SubmissionReviewPage() {
                                     </div>
                                     <p className="text-[13px] text-gray-700 font-medium">{stripHtml(q?.contentSnapshot)}</p>
                                     {isEssay ? (
-                                        <p className="text-[13px] text-gray-500 mt-1 whitespace-pre-wrap">
-                                            Bài làm: {a.essayContent || '(trống)'}
-                                        </p>
+                                        <div className="mt-1">
+                                            <p className="text-[13px] text-gray-500 whitespace-pre-wrap">
+                                                Bài làm: {a.essayContent || '(trống)'}
+                                            </p>
+                                            <div className="flex items-center gap-2 mt-2">
+                                                <span className="text-[13px] text-gray-500">Chấm điểm:</span>
+                                                <InputNumber min={0} max={10} step={0.5} placeholder="Điểm"
+                                                             value={scores[a.id] ?? a.scoreEarned}
+                                                             onChange={v => setScores(p => ({...p, [a.id]: v ?? 0}))}/>
+                                                <Button size="small" loading={grade.isPending}
+                                                        onClick={() => submitGrade(a.id)}>Lưu điểm</Button>
+                                            </div>
+                                        </div>
                                     ) : (
                                         <div className="grid grid-cols-2 gap-x-8 mt-1">
                                             <span className="text-[13px] font-semibold" style={{color: ok ? '#1ea375' : '#dc3c3c'}}>
@@ -131,6 +160,12 @@ export default function SubmissionReviewPage() {
                                 </div>
                             )
                         })}
+                    </div>
+                    <div className="flex justify-end pt-4 mt-4 border-t border-gray-100">
+                        <Button type="primary" loading={finalize.isPending}
+                                onClick={() => finalize.mutate(sub.id)}>
+                            Chốt điểm
+                        </Button>
                     </div>
                 </div>
             </div>
