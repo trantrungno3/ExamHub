@@ -65,7 +65,7 @@ export default function ExamDetailPage() {
                         </div>
 
                         {/* Info card */}
-                        <div className="section-card p-5 flex items-start justify-between gap-4">
+                        <div className="section-card shrink-0 p-5 flex items-start justify-between gap-4">
                             <div>
                                 <h2 className="text-lg font-semibold text-gray-800">{exam.title}</h2>
                                 <p className="text-sm text-gray-500 mt-2 flex flex-wrap gap-x-4 gap-y-1">
@@ -81,7 +81,7 @@ export default function ExamDetailPage() {
                         </div>
 
                         {/* Questions card */}
-                        <div className="section-card p-5">
+                        <div className="section-card shrink-0 p-5">
                             <div className="flex items-center justify-between border-b border-gray-100 pb-3 mb-4">
                                 <h3 className="text-sm font-semibold text-gray-800">Nội dung đề thi</h3>
                                 <span className="text-xs text-gray-400">{questions.length} câu · Tổng {exam.totalScore} điểm</span>

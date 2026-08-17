@@ -52,7 +52,7 @@ export default function SubmissionReviewPage() {
                 </div>
 
                 {/* Student + score card */}
-                <div className="section-card p-5 flex items-start justify-between gap-4">
+                <div className="section-card shrink-0 p-5 flex items-start justify-between gap-4">
                     <div className="flex items-start gap-4">
                         <div className="w-14 h-14 rounded-full flex items-center justify-center text-lg font-semibold"
                              style={{background: '#e9ecfe', color: '#3a74f5'}}>
@@ -78,7 +78,7 @@ export default function SubmissionReviewPage() {
                 </div>
 
                 {/* Answer sheet */}
-                <div className="section-card p-5">
+                <div className="section-card shrink-0 p-5">
                     <div className="flex items-center justify-between border-b border-gray-100 pb-3 mb-4">
                         <h3 className="text-sm font-semibold text-gray-800">Chi tiết bài làm</h3>
                         <span className="text-xs text-gray-400">
