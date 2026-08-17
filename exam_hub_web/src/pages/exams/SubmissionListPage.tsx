@@ -1,8 +1,8 @@
 import {useLocation, useNavigate, useParams} from 'react-router-dom'
-import {Button, Table} from 'antd'
 import type {TableColumnsType} from 'antd'
+import {Button, Table} from 'antd'
 import {ArrowLeftOutlined} from '@ant-design/icons'
-import {useSubmissionsBySessionQuery, useFinalizeSubmissionMutation} from '../../hooks/queries/useSubmissions'
+import {useFinalizeSubmissionMutation, useSubmissionsBySessionQuery} from '../../hooks/queries/useSubmissions'
 import {StatusTag, type StatusVariant} from '../../components/StatusTag'
 import {formatTimestamp} from '../../utils/datetime'
 import {ROUTES} from '../../routes/paths'
@@ -15,9 +15,9 @@ const STATUS_LABEL: Record<SubmissionStatus, string> = {
 }
 
 export default function SubmissionListPage() {
-    const {id} = useParams<{id: string}>()
+    const {id} = useParams<{ id: string }>()
     const navigate = useNavigate()
-    const {state} = useLocation() as {state?: {title?: string; subjectName?: string; gradeLevelName?: string}}
+    const {state} = useLocation() as { state?: { title?: string; subjectName?: string; gradeLevelName?: string } }
     const {data: submissions, isLoading} = useSubmissionsBySessionQuery(id)
     const finalize = useFinalizeSubmissionMutation()
 
@@ -46,7 +46,13 @@ export default function SubmissionListPage() {
             render: (v: SubmissionStatus) => <StatusTag status={STATUS_VARIANT[v]} label={STATUS_LABEL[v]}/>,
         },
         {title: 'Điểm', dataIndex: 'totalScore', key: 'totalScore', width: 90, render: v => v ?? '—'},
-        {title: 'Nộp lúc', dataIndex: 'submittedAt', key: 'submittedAt', width: 140, render: (v: number) => formatTimestamp(v)},
+        {
+            title: 'Nộp lúc',
+            dataIndex: 'submittedAt',
+            key: 'submittedAt',
+            width: 160,
+            render: (v: number) => formatTimestamp(v)
+        },
         {
             title: 'Thao tác', key: 'actions', width: 140, fixed: 'right',
             render: (_, s) => (
