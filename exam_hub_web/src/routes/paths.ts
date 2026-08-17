@@ -10,6 +10,8 @@ export const ROUTES = {
     EXAMS: '/app/exams',
     EXAMS_CREATE: '/app/exams/create',
     EXAM_LIST: '/app/exam-list',
+    EXAM_DETAIL: '/app/exam-list/:id',
+    SUBMISSION_REVIEW: '/app/submissions/:id/review',
     EXAM_SESSIONS: '/app/exam-sessions',
     EXAM_SESSIONS_CREATE: '/app/exam-sessions/create',
     CATEGORY: '/app/category',
