@@ -6,6 +6,7 @@ import {subjectService} from '../../../services/subjectService'
 import {gradeLevelService} from '../../../services/gradeLevelService'
 import {SubjectFormModal} from './SubjectFormModal'
 import {useCategoryTab} from '../../../hooks/useCategoryTab'
+import {formatTimestamp} from '../../../utils/datetime'
 
 export function SubjectTab() {
     const [gradeLevels, setGradeLevels] = useState<GradeLevel[]>([])
@@ -68,7 +69,7 @@ export function SubjectTab() {
         },
         {
             title: 'Ngày tạo', dataIndex: 'createdAt', key: 'createdAt',
-            render: v => <span className="text-gray-400">{v ? new Date(v).toLocaleDateString('vi-VN') : '—'}</span>,
+            render: v => <span className="text-gray-400">{formatTimestamp(v, 'DD/MM/YYYY')}</span>,
         },
         {
             title: 'Thao tác', key: 'actions', width: 120,

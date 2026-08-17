@@ -3,6 +3,7 @@ import type { TableColumnsType } from 'antd'
 import { Button, Input, Popconfirm, Table, Tag } from 'antd'
 import { PlusOutlined, SearchOutlined } from '@ant-design/icons'
 import { GradeFormModal } from './GradeFormModal'
+import { formatTimestamp } from '../../../utils/datetime'
 import {
     useGradeLevelsQuery,
     useCreateGradeLevelMutation,
@@ -62,7 +63,7 @@ export function GradeTab() {
         },
         {
             title: 'Ngày tạo', dataIndex: 'createdAt', key: 'createdAt',
-            render: v => <span className="text-gray-400">{v ? new Date(v).toLocaleDateString('vi-VN') : '—'}</span>,
+            render: v => <span className="text-gray-400">{formatTimestamp(v, 'DD/MM/YYYY')}</span>,
         },
         {
             title: 'Thao tác', key: 'actions', width: 120,

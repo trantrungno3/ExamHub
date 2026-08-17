@@ -6,6 +6,7 @@ import {FileTextOutlined, PlusOutlined, ThunderboltOutlined, UploadOutlined} fro
 import {Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip} from 'recharts'
 import {useExamsQuery} from '../../hooks/queries/useExams'
 import {useQuestionsQuery} from '../../hooks/queries/useQuestions'
+import {formatTimestamp} from '../../utils/datetime'
 
 const STATUS_LABEL: Record<ExamStatus, string> = {Draft: 'Nháp', Published: 'Đã công bố', Archived: 'Lưu trữ'}
 const STATUS_COLOR: Record<ExamStatus, string> = {Draft: 'gold', Published: 'green', Archived: 'default'}
@@ -48,7 +49,7 @@ export default function DashboardPage() {
         },
         {
             title: 'Ngày tạo', dataIndex: 'createdAt', key: 'createdAt',
-            render: (v: number) => <span className="text-gray-400">{new Date(v).toLocaleDateString('vi-VN')}</span>,
+            render: (v: number) => <span className="text-gray-400">{formatTimestamp(v, 'DD/MM/YYYY')}</span>,
         },
     ]
 
