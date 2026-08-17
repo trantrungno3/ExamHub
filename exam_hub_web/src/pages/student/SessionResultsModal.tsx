@@ -2,11 +2,7 @@ import {useNavigate} from 'react-router-dom'
 import {Empty, List, Modal, Spin, Tag} from 'antd'
 import {useMySessionSubmissionsQuery} from '../../hooks/queries/useSubmissions'
 import {formatTimestamp} from '../../utils/datetime'
-
-const STATUS_COLOR: Record<SubmissionStatus, string> = {InProgress: 'default', Submitted: 'gold', Graded: 'green'}
-const STATUS_LABEL: Record<SubmissionStatus, string> = {
-    InProgress: 'Đang làm', Submitted: 'Đã nộp (chờ chấm)', Graded: 'Đã chấm',
-}
+import {SUBMISSION_STATUS_LABEL_STUDENT, SUBMISSION_STATUS_TAG_COLOR} from '../../constants'
 
 type Props = {sessionId?: string; studentId?: string; title?: string; onClose: () => void}
 
@@ -30,7 +26,7 @@ export function SessionResultsModal({sessionId, studentId, title, onClose}: Prop
                                     Lần {(submissions?.length ?? 0) - i} · {formatTimestamp(s.submittedAt ?? s.createdAt)}
                                 </span>
                                 <div className="flex items-center gap-2">
-                                    <Tag color={STATUS_COLOR[s.status]}>{STATUS_LABEL[s.status]}</Tag>
+                                    <Tag color={SUBMISSION_STATUS_TAG_COLOR[s.status]}>{SUBMISSION_STATUS_LABEL_STUDENT[s.status]}</Tag>
                                     <span className="text-sm font-semibold text-stone-900">
                                         {s.status === 'Graded' && s.totalScore != null ? `${s.totalScore} đ` : '—'}
                                     </span>

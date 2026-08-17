@@ -3,10 +3,7 @@ import {useNavigate, useSearchParams} from 'react-router-dom'
 import {Button, Empty, Spin} from 'antd'
 import {CheckCircleOutlined, CheckOutlined, CloseCircleOutlined} from '@ant-design/icons'
 import {useSubmissionQuery} from '../../hooks/queries/useSubmissions'
-
-const STATUS_LABEL: Record<SubmissionStatus, string> = {
-    InProgress: 'Đang làm', Submitted: 'Đã nộp (chờ chấm)', Graded: 'Đã chấm',
-}
+import {SUBMISSION_STATUS_LABEL_STUDENT} from '../../constants'
 
 function fmtDuration(sec: number): string {
     const m = Math.floor(sec / 60)
@@ -57,7 +54,7 @@ export default function ExamResultPage() {
                 <h1 className="mt-3 text-[26px] font-bold">
                     {graded ? (pass ? 'Bạn đã ĐẠT!' : 'Chưa đạt') : 'Đã nộp bài'}
                 </h1>
-                <p className="mt-1 text-[14px]" style={{color: '#cdd9fb'}}>{STATUS_LABEL[sub.status]}</p>
+                <p className="mt-1 text-[14px]" style={{color: '#cdd9fb'}}>{SUBMISSION_STATUS_LABEL_STUDENT[sub.status]}</p>
             </div>
 
             {/* Card kết quả */}

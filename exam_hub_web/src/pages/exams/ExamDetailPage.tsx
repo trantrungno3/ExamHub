@@ -4,14 +4,9 @@ import {ArrowLeftOutlined} from '@ant-design/icons'
 import {useExamWithQuestionsQuery} from '../../hooks/queries/useExams'
 import {examService} from '../../services/examService'
 import {parseAnswers, stripHtml} from '../../utils/snapshot'
-import {StatusTag, type StatusVariant} from '../../components/StatusTag'
+import {StatusTag} from '../../components/StatusTag'
+import {EXAM_STATUS_LABEL, EXAM_STATUS_VARIANT, OPTION_LETTER} from '../../constants'
 import {ROUTES} from '../../routes/paths'
-
-// Bản đồ trạng thái — đồng bộ với ExamListPage (giữ cục bộ để tránh phụ thuộc chéo).
-const STATUS_VARIANT: Record<ExamStatus, StatusVariant> = {Draft: 'warning', Published: 'success', Archived: 'default'}
-const STATUS_LABEL: Record<ExamStatus, string> = {Draft: 'Nháp', Published: 'Đã phát hành', Archived: 'Lưu trữ'}
-
-const OPTION_LETTER = ['A', 'B', 'C', 'D', 'E', 'F']
 
 export default function ExamDetailPage() {
     const {id} = useParams<{id: string}>()
@@ -74,7 +69,7 @@ export default function ExamDetailPage() {
                                     <span>Tổng điểm {exam.totalScore}</span>
                                 </p>
                             </div>
-                            <StatusTag status={STATUS_VARIANT[exam.status]} label={STATUS_LABEL[exam.status]}/>
+                            <StatusTag status={EXAM_STATUS_VARIANT[exam.status]} label={EXAM_STATUS_LABEL[exam.status]}/>
                         </div>
 
                         {/* Questions card */}

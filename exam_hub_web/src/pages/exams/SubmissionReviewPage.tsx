@@ -11,11 +11,7 @@ import {
 import {useExamWithQuestionsQuery} from '../../hooks/queries/useExams'
 import {parseAnswers, stripHtml} from '../../utils/snapshot'
 import {formatTimestamp} from '../../utils/datetime'
-
-const STATUS_LABEL: Record<SubmissionStatus, string> = {
-    InProgress: 'Đang làm', Submitted: 'Chờ chấm', Graded: 'Đã chấm',
-}
-const OPTION_LETTER = ['A', 'B', 'C', 'D', 'E', 'F']
+import {OPTION_LETTER, SUBMISSION_STATUS_LABEL} from '../../constants'
 
 export default function SubmissionReviewPage() {
     const {id} = useParams<{id: string}>()
@@ -89,7 +85,7 @@ export default function SubmissionReviewPage() {
                         </span>
                         <span className="text-sm text-gray-500"> / 10</span>
                         <p className="text-xs text-gray-500 mt-1">
-                            {STATUS_LABEL[sub.status]} · Đúng {correctCount}/{objectives.length} câu
+                            {SUBMISSION_STATUS_LABEL[sub.status]} · Đúng {correctCount}/{objectives.length} câu
                         </p>
                     </div>
                 </div>

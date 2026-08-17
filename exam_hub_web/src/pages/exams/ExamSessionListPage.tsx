@@ -11,11 +11,8 @@ import {
 } from '../../hooks/queries/useExamSessions'
 import {useGradeLevelsListQuery, useSubjectsQuery} from '../../hooks/queries/useCategoryLists'
 import {ROUTES} from '../../routes/paths'
-import {StatusTag, type StatusVariant} from '../../components/StatusTag'
-
-const STATUS_VARIANT: Record<ExamSessionStatus, StatusVariant> = {draft: 'warning', published: 'success', closed: 'default'}
-const STATUS_LABEL: Record<ExamSessionStatus, string> = {draft: 'Nháp', published: 'Đã phát hành', closed: 'Đã đóng'}
-const PICK_MODE_LABEL: Record<ExamSessionPickMode, string> = {Random: 'Ngẫu nhiên', StudentChoice: 'HS tự chọn'}
+import {StatusTag} from '../../components/StatusTag'
+import {PICK_MODE_LABEL, SESSION_STATUS_LABEL, SESSION_STATUS_VARIANT} from '../../constants'
 
 function fmt(ms: number): string {
     return new Date(ms).toLocaleString('vi-VN', {day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'})
@@ -55,7 +52,7 @@ export default function ExamSessionListPage() {
         {title: 'Lớp/khoá', dataIndex: 'assignmentCount', key: 'assignmentCount', width: 90, align: 'center'},
         {
             title: 'Trạng thái', dataIndex: 'status', key: 'status', width: 130,
-            render: (v: ExamSessionStatus) => <StatusTag status={STATUS_VARIANT[v]} label={STATUS_LABEL[v]}/>,
+            render: (v: ExamSessionStatus) => <StatusTag status={SESSION_STATUS_VARIANT[v]} label={SESSION_STATUS_LABEL[v]}/>,
         },
         {
             title: 'Thao tác', key: 'actions', width: 280, fixed: 'right',
@@ -122,7 +119,7 @@ export default function ExamSessionListPage() {
                                 setStatus(v)
                                 setPage(1)
                             }}
-                            options={(['draft', 'published', 'closed'] as ExamSessionStatus[]).map(s => ({value: s, label: STATUS_LABEL[s]}))}/>
+                            options={(['draft', 'published', 'closed'] as ExamSessionStatus[]).map(s => ({value: s, label: SESSION_STATUS_LABEL[s]}))}/>
                     <Button type="primary" icon={<PlusOutlined/>} className="ml-auto"
                             onClick={() => navigate(ROUTES.EXAM_SESSIONS_CREATE)}>Tạo kỳ thi</Button>
                 </div>

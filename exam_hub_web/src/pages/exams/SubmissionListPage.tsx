@@ -3,16 +3,10 @@ import type {TableColumnsType} from 'antd'
 import {Button, Table} from 'antd'
 import {ArrowLeftOutlined} from '@ant-design/icons'
 import {useFinalizeSubmissionMutation, useSubmissionsBySessionQuery} from '../../hooks/queries/useSubmissions'
-import {StatusTag, type StatusVariant} from '../../components/StatusTag'
+import {StatusTag} from '../../components/StatusTag'
+import {SUBMISSION_STATUS_LABEL, SUBMISSION_STATUS_VARIANT} from '../../constants'
 import {formatTimestamp} from '../../utils/datetime'
 import {ROUTES} from '../../routes/paths'
-
-const STATUS_VARIANT: Record<SubmissionStatus, StatusVariant> = {
-    InProgress: 'default', Submitted: 'warning', Graded: 'success',
-}
-const STATUS_LABEL: Record<SubmissionStatus, string> = {
-    InProgress: 'Đang làm', Submitted: 'Chờ chấm', Graded: 'Đã chấm',
-}
 
 export default function SubmissionListPage() {
     const {id} = useParams<{ id: string }>()
@@ -43,7 +37,7 @@ export default function SubmissionListPage() {
         },
         {
             title: 'Trạng thái', dataIndex: 'status', key: 'status', width: 140,
-            render: (v: SubmissionStatus) => <StatusTag status={STATUS_VARIANT[v]} label={STATUS_LABEL[v]}/>,
+            render: (v: SubmissionStatus) => <StatusTag status={SUBMISSION_STATUS_VARIANT[v]} label={SUBMISSION_STATUS_LABEL[v]}/>,
         },
         {title: 'Điểm', dataIndex: 'totalScore', key: 'totalScore', width: 90, render: v => v ?? '—'},
         {

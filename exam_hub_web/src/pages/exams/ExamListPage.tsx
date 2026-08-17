@@ -11,11 +11,9 @@ import {
 } from '../../hooks/queries/useExams'
 import {useGradeLevelsListQuery, useSubjectsQuery} from '../../hooks/queries/useCategoryLists'
 import {examService} from '../../services/examService'
-import {StatusTag, type StatusVariant} from '../../components/StatusTag'
+import {StatusTag} from '../../components/StatusTag'
+import {EXAM_STATUS_LABEL, EXAM_STATUS_VARIANT} from '../../constants'
 import {ROUTES} from '../../routes/paths'
-
-const STATUS_VARIANT: Record<ExamStatus, StatusVariant> = {Draft: 'warning', Published: 'success', Archived: 'default'}
-const STATUS_LABEL: Record<ExamStatus, string> = {Draft: 'Nháp', Published: 'Đã phát hành', Archived: 'Lưu trữ'}
 
 export default function ExamListPage() {
     const navigate = useNavigate()
@@ -60,7 +58,7 @@ export default function ExamListPage() {
         {title: 'Điểm', dataIndex: 'totalScore', key: 'totalScore', width: 70},
         {
             title: 'Trạng thái', dataIndex: 'status', key: 'status', width: 130,
-            render: (v: ExamStatus) => <StatusTag status={STATUS_VARIANT[v]} label={STATUS_LABEL[v]}/>,
+            render: (v: ExamStatus) => <StatusTag status={EXAM_STATUS_VARIANT[v]} label={EXAM_STATUS_LABEL[v]}/>,
         },
         {
             title: 'Thao tác', key: 'actions', width: 440, fixed: 'right',
@@ -135,7 +133,7 @@ export default function ExamListPage() {
                                 setStatus(v)
                                 setPage(1)
                             }}
-                            options={(['Draft', 'Published', 'Archived'] as ExamStatus[]).map(s => ({value: s, label: STATUS_LABEL[s]}))}/>
+                            options={(['Draft', 'Published', 'Archived'] as ExamStatus[]).map(s => ({value: s, label: EXAM_STATUS_LABEL[s]}))}/>
                 </div>
 
                 <div className="section-card shrink-0">

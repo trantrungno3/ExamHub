@@ -7,10 +7,7 @@ import {Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip} from 'rechart
 import {useExamsQuery} from '../../hooks/queries/useExams'
 import {useQuestionsQuery} from '../../hooks/queries/useQuestions'
 import {formatTimestamp} from '../../utils/datetime'
-
-const STATUS_LABEL: Record<ExamStatus, string> = {Draft: 'Nháp', Published: 'Đã công bố', Archived: 'Lưu trữ'}
-const STATUS_COLOR: Record<ExamStatus, string> = {Draft: 'gold', Published: 'green', Archived: 'default'}
-const PIE_COLOR: Record<ExamStatus, string> = {Draft: '#FAAD14', Published: '#52C41A', Archived: '#BFBFBF'}
+import {EXAM_STATUS_LABEL, EXAM_STATUS_PIE_COLOR, EXAM_STATUS_TAG_COLOR} from '../../constants'
 
 export default function DashboardPage() {
     const navigate = useNavigate()
@@ -29,7 +26,7 @@ export default function DashboardPage() {
     const statusPie = useMemo(() => {
         const counts: Record<string, number> = {}
         for (const e of recentExams.data?.items ?? []) counts[e.status] = (counts[e.status] ?? 0) + 1
-        return (Object.keys(counts) as ExamStatus[]).map(s => ({name: STATUS_LABEL[s], status: s, value: counts[s]}))
+        return (Object.keys(counts) as ExamStatus[]).map(s => ({name: EXAM_STATUS_LABEL[s], status: s, value: counts[s]}))
     }, [recentExams.data])
 
     const quickActions = [
@@ -45,7 +42,7 @@ export default function DashboardPage() {
         {title: 'Lớp', dataIndex: 'gradeLevelName', key: 'gradeLevelName', render: v => v ?? '—'},
         {
             title: 'Trạng thái', dataIndex: 'status', key: 'status',
-            render: (v: ExamStatus) => <Tag color={STATUS_COLOR[v]}>{STATUS_LABEL[v]}</Tag>,
+            render: (v: ExamStatus) => <Tag color={EXAM_STATUS_TAG_COLOR[v]}>{EXAM_STATUS_LABEL[v]}</Tag>,
         },
         {
             title: 'Ngày tạo', dataIndex: 'createdAt', key: 'createdAt',
@@ -109,7 +106,7 @@ export default function DashboardPage() {
                                 <ResponsiveContainer width="100%" height={180}>
                                     <PieChart>
                                         <Pie data={statusPie} dataKey="value" nameKey="name" outerRadius={70} label>
-                                            {statusPie.map(s => <Cell key={s.status} fill={PIE_COLOR[s.status]}/>)}
+                                            {statusPie.map(s => <Cell key={s.status} fill={EXAM_STATUS_PIE_COLOR[s.status]}/>)}
                                         </Pie>
                                         <Tooltip/>
                                         <Legend/>
