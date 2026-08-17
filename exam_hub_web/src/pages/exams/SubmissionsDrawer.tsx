@@ -1,8 +1,10 @@
 import type {ReactNode} from 'react'
 import {useState} from 'react'
+import {useNavigate} from 'react-router-dom'
 import {Button, Collapse, Drawer, Empty, InputNumber, message, Spin, Tag} from 'antd'
 import {CheckCircleFilled, CloseCircleFilled, MinusCircleOutlined} from '@ant-design/icons'
 import {useAuth} from '../../AuthProvider'
+import {ROUTES} from '../../routes/paths'
 import {useExamWithQuestionsQuery} from '../../hooks/queries/useExams'
 import {
     useFinalizeSubmissionMutation,
@@ -40,6 +42,7 @@ function SubmissionCard({submissionId, studentName, studentClassName}: {
     submissionId: string; studentName?: string; studentClassName?: string
 }) {
     const {user} = useAuth()
+    const navigate = useNavigate()
     const {data: sub, isLoading} = useSubmissionQuery(submissionId)
     const exam = useExamWithQuestionsQuery(sub?.examId)
     const grade = useGradeAnswerMutation()
@@ -79,6 +82,13 @@ function SubmissionCard({submissionId, studentName, studentClassName}: {
                     {studentClassName && <span className="text-gray-400 font-normal"> · Lớp {studentClassName}</span>}
                 </span>
                 <div className="flex items-center gap-2">
+                    <button className="text-blue-600 text-[13px] hover:underline"
+                            onClick={() => navigate(
+                                ROUTES.SUBMISSION_REVIEW.replace(':id', submissionId),
+                                {state: {studentName, studentClassName}},
+                            )}>
+                        Xem bài làm
+                    </button>
                     <Tag color={STATUS_COLOR[sub.status]}>{STATUS_LABEL[sub.status]}</Tag>
                     {sub.totalScore != null && <span className="text-sm font-semibold">{sub.totalScore} đ</span>}
                 </div>
