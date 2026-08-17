@@ -2,7 +2,7 @@ import {useEffect, useMemo, useRef, useState} from 'react'
 import {useNavigate, useSearchParams} from 'react-router-dom'
 import {Button, Empty, Form, Input, Modal, Radio, Spin, message} from 'antd'
 import {
-    ArrowLeftOutlined, ArrowRightOutlined, ClockCircleOutlined, FlagFilled, FlagOutlined,
+    ArrowLeftOutlined, ArrowRightOutlined, FlagFilled, FlagOutlined,
 } from '@ant-design/icons'
 import {useExamWithQuestionsQuery} from '../../hooks/queries/useExams'
 import {useSubmitExamMutation} from '../../hooks/queries/useSubmissions'
