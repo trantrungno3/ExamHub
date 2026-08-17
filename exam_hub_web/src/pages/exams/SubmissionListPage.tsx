@@ -15,7 +15,9 @@ const STATUS_LABEL: Record<SubmissionStatus, string> = {
 
 function fmt(ms?: number): string {
     if (!ms) return '—'
-    return new Date(ms).toLocaleString('vi-VN', {day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'})
+    const d = new Date(ms)
+    const p = (n: number) => String(n).padStart(2, '0')
+    return `${p(d.getHours())}:${p(d.getMinutes())} ${p(d.getDate())}/${p(d.getMonth() + 1)}/${d.getFullYear()}`
 }
 
 export default function SubmissionListPage() {
