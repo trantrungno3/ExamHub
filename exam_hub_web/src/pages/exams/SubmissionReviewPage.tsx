@@ -10,6 +10,7 @@ import {
 } from '../../hooks/queries/useSubmissions'
 import {useExamWithQuestionsQuery} from '../../hooks/queries/useExams'
 import {parseAnswers, stripHtml} from '../../utils/snapshot'
+import {formatTimestamp} from '../../utils/datetime'
 
 const STATUS_LABEL: Record<SubmissionStatus, string> = {
     InProgress: 'Đang làm', Submitted: 'Chờ chấm', Graded: 'Đã chấm',
@@ -78,7 +79,7 @@ export default function SubmissionReviewPage() {
                             <h2 className="text-lg font-semibold text-gray-800">{studentName}</h2>
                             <p className="text-sm text-gray-500 mt-1">
                                 {studentClassName && <span>Lớp {studentClassName} · </span>}
-                                {sub.submittedAt && <span>Nộp lúc {new Date(sub.submittedAt).toLocaleString('vi-VN')}</span>}
+                                {sub.submittedAt && <span>Nộp lúc {formatTimestamp(sub.submittedAt)}</span>}
                             </p>
                         </div>
                     </div>

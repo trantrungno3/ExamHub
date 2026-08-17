@@ -4,6 +4,7 @@ import type {TableColumnsType} from 'antd'
 import {ArrowLeftOutlined} from '@ant-design/icons'
 import {useSubmissionsBySessionQuery, useFinalizeSubmissionMutation} from '../../hooks/queries/useSubmissions'
 import {StatusTag, type StatusVariant} from '../../components/StatusTag'
+import {formatTimestamp} from '../../utils/datetime'
 import {ROUTES} from '../../routes/paths'
 
 const STATUS_VARIANT: Record<SubmissionStatus, StatusVariant> = {
@@ -11,13 +12,6 @@ const STATUS_VARIANT: Record<SubmissionStatus, StatusVariant> = {
 }
 const STATUS_LABEL: Record<SubmissionStatus, string> = {
     InProgress: 'Đang làm', Submitted: 'Chờ chấm', Graded: 'Đã chấm',
-}
-
-function fmt(ms?: number): string {
-    if (!ms) return '—'
-    const d = new Date(ms)
-    const p = (n: number) => String(n).padStart(2, '0')
-    return `${p(d.getHours())}:${p(d.getMinutes())} ${p(d.getDate())}/${p(d.getMonth() + 1)}/${d.getFullYear()}`
 }
 
 export default function SubmissionListPage() {
@@ -52,7 +46,7 @@ export default function SubmissionListPage() {
             render: (v: SubmissionStatus) => <StatusTag status={STATUS_VARIANT[v]} label={STATUS_LABEL[v]}/>,
         },
         {title: 'Điểm', dataIndex: 'totalScore', key: 'totalScore', width: 90, render: v => v ?? '—'},
-        {title: 'Nộp lúc', dataIndex: 'submittedAt', key: 'submittedAt', width: 140, render: (v: number) => fmt(v)},
+        {title: 'Nộp lúc', dataIndex: 'submittedAt', key: 'submittedAt', width: 140, render: (v: number) => formatTimestamp(v)},
         {
             title: 'Thao tác', key: 'actions', width: 140, fixed: 'right',
             render: (_, s) => (
