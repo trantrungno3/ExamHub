@@ -1,8 +1,8 @@
 @startuml
 skinparam defaultFontName DejaVu Sans
-skinparam defaultFontSize 13
-skinparam Nodesep 28
-skinparam Ranksep 45
+skinparam defaultFontSize 15
+skinparam Nodesep 14
+skinparam Ranksep 70
 skinparam roundcorner 4
 skinparam shadowing false
 skinparam linetype ortho
@@ -138,6 +138,16 @@ class TeacherSubject {
     UserId : Guid
     SubjectId : int
     GetTeacherSubjects()
+    Assign()
+    Unassign()
+}
+
+class CohortClassTeacher {
+    Id : int
+    CohortClassId : int
+    SubjectId : int
+    TeacherId : Guid
+    GetClassTeachers()
     Assign()
     Unassign()
 }
@@ -345,6 +355,7 @@ class SubmissionAnswer {
 School *-- SchoolMember       /' 1 trường sở hữu nhiều thành viên (giáo viên / quản trị) '/
 School *-- Cohort             /' 1 trường sở hữu nhiều khoá học '/
 Cohort *-- CohortClass        /' 1 khoá sinh ra & sở hữu nhiều lớp học '/
+CohortClass *-- CohortClassTeacher /' 1 lớp sở hữu các bản ghi phân công GV bộ môn '/
 Cohort *-- CohortMember       /' 1 khoá quản lý danh sách học sinh của khoá '/
 GradeLevel *-- Subject        /' 1 khối lớp gồm nhiều môn học '/
 Subject *-- Topic             /' 1 môn học gồm nhiều chủ đề / chương '/
@@ -372,6 +383,9 @@ Question --> AppUser           /' Câu hỏi được 1 người kiểm duyệt 
 
 TeacherSubject --> AppUser     /' Bản ghi phân công ứng với 1 giáo viên '/
 TeacherSubject --> Subject     /' Giáo viên được phân công dạy 1 môn '/
+
+CohortClassTeacher --> Subject /' Phân công theo 1 môn học (1 môn/lớp = 1 GV) '/
+CohortClassTeacher --> AppUser /' Giáo viên được phân công giảng dạy lớp '/
 
 ExamTemplate --> GradeLevel    /' Mẫu đề dành cho 1 khối lớp '/
 ExamTemplate --> Subject       /' Mẫu đề thuộc 1 môn học '/

@@ -1,8 +1,8 @@
 @startuml
 skinparam defaultFontName DejaVu Sans
-skinparam defaultFontSize 13
-skinparam Nodesep 40
-skinparam Ranksep 50
+skinparam defaultFontSize 15
+skinparam Nodesep 12
+skinparam Ranksep 18
 skinparam roundcorner 6
 skinparam shadowing false
 skinparam linetype ortho
@@ -123,6 +123,14 @@ entity "teacher_subjects" as teacher_subjects {
     --
     user_id : uuid <<FK>>
     subject_id : int <<FK>>
+}
+
+entity "cohort_class_teachers" as cohort_class_teachers {
+    * id : serial <<PK>>
+    --
+    cohort_class_id : int <<FK>>
+    subject_id : int <<FK>>
+    teacher_id : uuid <<FK>>
 }
 
 ' ═══════════════════════════════════════════════════════════
@@ -358,6 +366,10 @@ subjects ||--o{ topics              /' 1 môn học có nhiều chủ đề / ch
 topics |o--o{ topics                /' Chủ đề tự phân cấp cha–con (parent_id, có thể rỗng) '/
 app_users ||--o{ teacher_subjects   /' 1 giáo viên phụ trách nhiều môn '/
 subjects ||--o{ teacher_subjects    /' 1 môn được nhiều giáo viên dạy (bảng nối N–N) '/
+
+cohort_classes ||--o{ cohort_class_teachers /' 1 lớp có nhiều bản ghi phân công GV bộ môn '/
+subjects ||--o{ cohort_class_teachers        /' Phân công theo môn (UNIQUE lớp+môn = 1 GV) '/
+app_users ||--o{ cohort_class_teachers       /' 1 giáo viên giảng dạy nhiều lớp '/
 
 ' ═══════════════════════════════════════════════════════════
 ' QUAN HỆ — Ngân hàng câu hỏi
