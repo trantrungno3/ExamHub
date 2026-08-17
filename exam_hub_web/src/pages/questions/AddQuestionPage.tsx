@@ -15,16 +15,8 @@ import {
     useSubjectsQuery,
     useTopicsQuery,
 } from '../../hooks/queries/useCategoryLists'
+import {BLOOM_CHIP, NEUTRAL_CHIP} from '../../constants'
 
-const BLOOM_COLOR: Record<string, { bg: string; fg: string }> = {
-    remember: {bg: '#e7f7ef', fg: '#1ea375'},
-    understand: {bg: '#eef1ff', fg: '#3a74f5'},
-    apply: {bg: '#fff4e5', fg: '#d98a00'},
-    analyze: {bg: '#f3ecfe', fg: '#8b5cf6'},
-    evaluate: {bg: '#fee5e5', fg: '#e74242'},
-    create: {bg: '#e6f6f6', fg: '#0ea5a5'},
-}
-const NEUTRAL = {bg: '#eef0f3', fg: '#6f7788'}
 
 type AnswerForm = { content: string; isCorrect: boolean }
 type QuestionForm = {
@@ -336,7 +328,7 @@ export default function AddQuestionPage() {
                                      style={{background: '#f7f8fa'}}>
                                     <span className="text-[11px]" style={{color: '#9aa2b1'}}>Gợi ý:</span>
                                     {[...(cognitives.data ?? [])].sort((a, b) => a.levelOrder - b.levelOrder).map(c => {
-                                        const col = BLOOM_COLOR[c.code] ?? NEUTRAL
+                                        const col = BLOOM_CHIP[c.code] ?? NEUTRAL_CHIP
                                         return (
                                             <span key={c.id} style={{background: col.bg, color: col.fg}}
                                                   className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium">

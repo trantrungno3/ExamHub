@@ -46,3 +46,48 @@ export const SUBMISSION_STATUS_TAG_COLOR: Record<SubmissionStatus, string> = {
 
 /* ─── Dùng chung ─── */
 export const OPTION_LETTER = ['A', 'B', 'C', 'D', 'E', 'F']
+
+/* ─── Chip câu hỏi ─── */
+export type ChipColor = {bg: string; fg: string}
+
+export const NEUTRAL_CHIP: ChipColor = {bg: '#eef0f3', fg: '#6f7788'}
+
+/** Màu chip theo mức Bloom (khoá = cognitive code). */
+export const BLOOM_CHIP: Record<string, ChipColor> = {
+    remember:   {bg: '#e7f7ef', fg: '#1ea375'},
+    understand: {bg: '#eef1ff', fg: '#3a74f5'},
+    apply:      {bg: '#fff4e5', fg: '#d98a00'},
+    analyze:    {bg: '#f3ecfe', fg: '#8b5cf6'},
+    evaluate:   {bg: '#fee5e5', fg: '#e74242'},
+    create:     {bg: '#e6f6f6', fg: '#0ea5a5'},
+}
+/** Số thứ tự mức Bloom. */
+export const BLOOM_NUM: Record<string, number> = {
+    remember: 1, understand: 2, apply: 3, analyze: 4, evaluate: 5, create: 6,
+}
+export const DIFF_CHIP: Record<string, ChipColor> = {
+    easy:      {bg: '#dff5ed', fg: '#1ea375'},
+    medium:    {bg: '#fff4e5', fg: '#d98a00'},
+    hard:      {bg: '#fee5e5', fg: '#e74242'},
+    very_hard: {bg: '#fdd9d9', fg: '#c62828'},
+}
+export const TYPE_CHIP: Record<string, ChipColor> = {
+    multiple_choice: {bg: '#eef1ff', fg: '#3a74f5'},
+    multiple_select: {bg: '#eef1ff', fg: '#3a74f5'},
+    true_false:      {bg: '#e6f6f6', fg: '#0ea5a5'},
+    fill_blank:      {bg: '#fdeef4', fg: '#db2777'},
+    essay:           {bg: '#eceafe', fg: '#6d5bd0'},
+    matching:        {bg: '#fff4e5', fg: '#d98a00'},
+}
+
+/* ─── Role ─── */
+export const ROLE_LABEL: Record<string, string> = {
+    Admin: 'Quản trị viên', Teacher: 'Giáo viên', Student: 'Học sinh',
+}
+export const ROLE_COLOR: Record<string, string> = {
+    Admin: 'red', Teacher: 'blue', Student: 'green',
+}
+
+/* ─── Pagination mặc định ─── */
+export const DEFAULT_PAGE = 1
+export const DEFAULT_PAGE_SIZE = 20

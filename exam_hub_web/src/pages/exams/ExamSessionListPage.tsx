@@ -12,7 +12,7 @@ import {
 import {useGradeLevelsListQuery, useSubjectsQuery} from '../../hooks/queries/useCategoryLists'
 import {ROUTES} from '../../routes/paths'
 import {StatusTag} from '../../components/StatusTag'
-import {PICK_MODE_LABEL, SESSION_STATUS_LABEL, SESSION_STATUS_VARIANT} from '../../constants'
+import {DEFAULT_PAGE, DEFAULT_PAGE_SIZE, PICK_MODE_LABEL, SESSION_STATUS_LABEL, SESSION_STATUS_VARIANT} from '../../constants'
 
 function fmt(ms: number): string {
     return new Date(ms).toLocaleString('vi-VN', {day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'})
@@ -23,8 +23,8 @@ export default function ExamSessionListPage() {
     const grades = useGradeLevelsListQuery()
     const subjects = useSubjectsQuery()
 
-    const [page, setPage] = useState(1)
-    const [pageSize, setPageSize] = useState(20)
+    const [page, setPage] = useState(DEFAULT_PAGE)
+    const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE)
     const [gradeLevelId, setGradeLevelId] = useState<number>()
     const [subjectId, setSubjectId] = useState<number>()
     const [status, setStatus] = useState<ExamSessionStatus>()

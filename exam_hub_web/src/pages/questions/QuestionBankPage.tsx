@@ -32,32 +32,7 @@ import {
 import {questionService} from '../../services/questionService'
 import {StatusTag} from '../../components/StatusTag'
 import {BulkImportModal} from './BulkImportModal'
-
-type ChipColor = {bg: string; fg: string}
-
-const BLOOM: Record<string, {num: number} & ChipColor> = {
-    remember:   {num: 1, bg: '#e7f7ef', fg: '#1ea375'},
-    understand: {num: 2, bg: '#eef1ff', fg: '#3a74f5'},
-    apply:      {num: 3, bg: '#fff4e5', fg: '#d98a00'},
-    analyze:    {num: 4, bg: '#f3ecfe', fg: '#8b5cf6'},
-    evaluate:   {num: 5, bg: '#fee5e5', fg: '#e74242'},
-    create:     {num: 6, bg: '#e6f6f6', fg: '#0ea5a5'},
-}
-const DIFF_CHIP: Record<string, ChipColor> = {
-    easy:      {bg: '#dff5ed', fg: '#1ea375'},
-    medium:    {bg: '#fff4e5', fg: '#d98a00'},
-    hard:      {bg: '#fee5e5', fg: '#e74242'},
-    very_hard: {bg: '#fdd9d9', fg: '#c62828'},
-}
-const TYPE_CHIP: Record<string, ChipColor> = {
-    multiple_choice: {bg: '#eef1ff', fg: '#3a74f5'},
-    multiple_select: {bg: '#eef1ff', fg: '#3a74f5'},
-    true_false:      {bg: '#e6f6f6', fg: '#0ea5a5'},
-    fill_blank:      {bg: '#fdeef4', fg: '#db2777'},
-    essay:           {bg: '#eceafe', fg: '#6d5bd0'},
-    matching:        {bg: '#fff4e5', fg: '#d98a00'},
-}
-const NEUTRAL: ChipColor = {bg: '#eef0f3', fg: '#6f7788'}
+import {BLOOM_CHIP, BLOOM_NUM, DEFAULT_PAGE, DEFAULT_PAGE_SIZE, DIFF_CHIP, NEUTRAL_CHIP, TYPE_CHIP, type ChipColor} from '../../constants'
 
 type ReviewState = 'approved' | 'rejected' | 'pending'
 const reviewState = (q: Question): ReviewState => (q.status as ReviewState) ?? 'pending'
@@ -94,8 +69,8 @@ export default function QuestionBankPage() {
     const navigate = useNavigate()
     const qc = useQueryClient()
 
-    const [page, setPage] = useState(1)
-    const [pageSize, setPageSize] = useState(20)
+    const [page, setPage] = useState(DEFAULT_PAGE)
+    const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE)
     const [keyword, setKeyword] = useState('')
     const [topicId, setTopicId] = useState<number>()
     const [questionTypeId, setQuestionTypeId] = useState<number>()
@@ -175,21 +150,23 @@ export default function QuestionBankPage() {
         {
             title: 'Loại', dataIndex: 'questionTypeName', key: 'questionTypeName', width: 150,
             render: (_, q) => q.questionTypeName
-                ? <Chip label={q.questionTypeName} color={TYPE_CHIP[typeCodeById[q.questionTypeId]] ?? NEUTRAL}/>
+                ? <Chip label={q.questionTypeName} color={TYPE_CHIP[typeCodeById[q.questionTypeId]] ?? NEUTRAL_CHIP}/>
                 : '—',
         },
         {
             title: 'Độ khó', dataIndex: 'difficultyLevelName', key: 'difficultyLevelName', width: 110,
             render: (_, q) => q.difficultyLevelName
-                ? <Chip label={q.difficultyLevelName} color={DIFF_CHIP[diffCodeById[q.difficultyLevelId]] ?? NEUTRAL}/>
+                ? <Chip label={q.difficultyLevelName} color={DIFF_CHIP[diffCodeById[q.difficultyLevelId]] ?? NEUTRAL_CHIP}/>
                 : '—',
         },
         {
             title: 'Bloom', dataIndex: 'cognitiveLevelName', key: 'cognitiveLevelName', width: 130,
             render: (_, q) => {
                 if (!q.cognitiveLevelId || !q.cognitiveLevelName) return <span style={{color: '#c4cad3'}}>—</span>
-                const b = BLOOM[cogCodeById[q.cognitiveLevelId]]
-                return <Chip label={`${b?.num ?? ''}${b ? '.' : ''}${q.cognitiveLevelName}`} color={b ?? NEUTRAL}/>
+                const code = cogCodeById[q.cognitiveLevelId]
+                const b = BLOOM_CHIP[code]
+                const num = BLOOM_NUM[code]
+                return <Chip label={`${num ?? ''}${num ? '.' : ''}${q.cognitiveLevelName}`} color={b ?? NEUTRAL_CHIP}/>
             },
         },
         {
@@ -289,7 +266,7 @@ export default function QuestionBankPage() {
                 <div className="flex items-center gap-2 flex-wrap text-[12px]">
                     <span style={{color: '#6f7788'}}>Bloom:</span>
                     {[...(cognitives.data ?? [])].sort((a, b) => a.levelOrder - b.levelOrder).map(c => (
-                        <Chip key={c.id} label={`${c.levelOrder}.${c.name}`} color={BLOOM[c.code] ?? NEUTRAL}/>
+                        <Chip key={c.id} label={`${c.levelOrder}.${c.name}`} color={BLOOM_CHIP[c.code] ?? NEUTRAL_CHIP}/>
                     ))}
                 </div>
 

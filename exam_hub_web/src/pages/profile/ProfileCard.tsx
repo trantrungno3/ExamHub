@@ -5,8 +5,7 @@ import {useProfileQuery} from '../../hooks/queries/useProfile'
 import {useAuth} from '../../AuthProvider'
 import {EditProfileModal} from './EditProfileModal'
 import {ChangePasswordModal} from './ChangePasswordModal'
-
-const ROLE_COLOR: Record<string, string> = {Admin: 'red', Teacher: 'blue', Student: 'green'}
+import {ROLE_COLOR, ROLE_LABEL} from '../../constants'
 
 /** Thẻ thông tin tài khoản dùng chung cho cả 3 màn profile. */
 export function ProfileCard() {
@@ -32,7 +31,7 @@ export function ProfileCard() {
                                 </p>
                                 <p className="text-sm text-gray-500">@{info?.userName ?? user?.userName}</p>
                                 <div className="flex gap-1 mt-1">
-                                    {roles.map(r => <Tag key={r} color={ROLE_COLOR[r] ?? 'default'}>{r}</Tag>)}
+                                    {roles.map(r => <Tag key={r} color={ROLE_COLOR[r] ?? 'default'}>{ROLE_LABEL[r] ?? r}</Tag>)}
                                 </div>
                             </>
                         )}

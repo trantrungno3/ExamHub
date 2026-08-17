@@ -12,7 +12,7 @@ import {
 import {useGradeLevelsListQuery, useSubjectsQuery} from '../../hooks/queries/useCategoryLists'
 import {examService} from '../../services/examService'
 import {StatusTag} from '../../components/StatusTag'
-import {EXAM_STATUS_LABEL, EXAM_STATUS_VARIANT} from '../../constants'
+import {DEFAULT_PAGE, DEFAULT_PAGE_SIZE, EXAM_STATUS_LABEL, EXAM_STATUS_VARIANT} from '../../constants'
 import {ROUTES} from '../../routes/paths'
 
 export default function ExamListPage() {
@@ -20,8 +20,8 @@ export default function ExamListPage() {
     const grades = useGradeLevelsListQuery()
     const subjects = useSubjectsQuery()
 
-    const [page, setPage] = useState(1)
-    const [pageSize, setPageSize] = useState(20)
+    const [page, setPage] = useState(DEFAULT_PAGE)
+    const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE)
     const [gradeLevelId, setGradeLevelId] = useState<number>()
     const [subjectId, setSubjectId] = useState<number>()
     const [status, setStatus] = useState<ExamStatus>()
