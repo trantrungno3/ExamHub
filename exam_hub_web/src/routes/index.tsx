@@ -12,6 +12,7 @@ import GeneratePage from '../pages/exams/GeneratePage'
 import ExamListPage from '../pages/exams/ExamListPage'
 import ExamDetailPage from '../pages/exams/ExamDetailPage'
 import SubmissionReviewPage from '../pages/exams/SubmissionReviewPage'
+import SubmissionListPage from '../pages/exams/SubmissionListPage'
 import ExamSessionListPage from '../pages/exams/ExamSessionListPage'
 import ExamSessionEditPage from '../pages/exams/ExamSessionEditPage'
 import ExamCoverPage from '../pages/student/ExamCoverPage'
@@ -79,6 +80,7 @@ export const router = createBrowserRouter([
                     { path: 'exam-sessions',                    element: <ExamSessionListPage /> },
                     { path: 'exam-sessions/create',             element: <ExamSessionEditPage /> },
                     { path: 'exam-sessions/:id/edit',           element: <ExamSessionEditPage /> },
+                    { path: 'exam-sessions/:id/submissions',    element: <SubmissionListPage /> },
                     { path: 'submissions/:id/review',           element: <SubmissionReviewPage /> },
                     { path: 'users',                            element: <UserPage /> },
                     { path: 'schools',      element: <SchoolListPage /> },
