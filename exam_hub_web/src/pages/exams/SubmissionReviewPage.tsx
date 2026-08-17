@@ -1,6 +1,6 @@
 import {useLocation, useNavigate, useParams} from 'react-router-dom'
 import {Empty, Spin} from 'antd'
-import {ArrowLeftOutlined, PrinterOutlined} from '@ant-design/icons'
+import {ArrowLeftOutlined} from '@ant-design/icons'
 import {useSubmissionQuery} from '../../hooks/queries/useSubmissions'
 import {useExamWithQuestionsQuery} from '../../hooks/queries/useExams'
 import {parseAnswers, stripHtml} from '../../utils/snapshot'
@@ -45,9 +45,6 @@ export default function SubmissionReviewPage() {
                     <button className="text-blue-600 text-sm hover:underline flex items-center gap-1"
                             onClick={() => navigate(-1)}>
                         <ArrowLeftOutlined/> Danh sách bài nộp
-                    </button>
-                    <button className="btn-neutral-sm inline-flex items-center gap-1" onClick={() => window.print()}>
-                        <PrinterOutlined/> Xuất bảng điểm
                     </button>
                 </div>
 

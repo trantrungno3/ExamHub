@@ -1,6 +1,6 @@
 import {useNavigate, useParams} from 'react-router-dom'
 import {Empty, Spin, message} from 'antd'
-import {ArrowLeftOutlined, PrinterOutlined} from '@ant-design/icons'
+import {ArrowLeftOutlined} from '@ant-design/icons'
 import {useExamWithQuestionsQuery} from '../../hooks/queries/useExams'
 import {examService} from '../../services/examService'
 import {parseAnswers, stripHtml} from '../../utils/snapshot'
@@ -58,9 +58,6 @@ export default function ExamDetailPage() {
                             <div className="flex items-center gap-2">
                                 <button className="btn-primary-sm" onClick={() => void handleExport('pdf')}>Xuất PDF</button>
                                 <button className="btn-neutral-sm" onClick={() => void handleExport('docx')}>Xuất Word</button>
-                                <button className="btn-neutral-sm inline-flex items-center gap-1" onClick={() => window.print()}>
-                                    <PrinterOutlined/> In
-                                </button>
                             </div>
                         </div>
 
