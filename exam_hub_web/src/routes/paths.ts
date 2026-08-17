@@ -14,6 +14,7 @@ export const ROUTES = {
     SUBMISSION_REVIEW: '/app/submissions/:id/review',
     EXAM_SESSIONS: '/app/exam-sessions',
     EXAM_SESSIONS_CREATE: '/app/exam-sessions/create',
+    EXAM_SESSION_SUBMISSIONS: '/app/exam-sessions/:id/submissions',
     CATEGORY: '/app/category',
     GENERATE: '/app/generate',
     USERS: '/app/users',
