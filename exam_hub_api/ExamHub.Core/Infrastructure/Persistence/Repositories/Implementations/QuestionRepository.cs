@@ -23,6 +23,12 @@ public class QuestionRepository : BaseRepository<Question, Guid>, IQuestionRepos
     }
 
     /// <inheritdoc/>
+    /// <remarks>Override base (FindAsync – có tracking) sang AsNoTracking để tránh xung đột
+    /// tracking khi luồng update nạp entity cũ rồi gọi Set.Update(entity mới) cùng Id.</remarks>
+    public override async Task<Question?> GetByIdAsync(Guid id, CancellationToken ct = default)
+        => await Set.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id, ct);
+
+    /// <inheritdoc/>
     public async Task<Question?> GetWithAnswersAsync(Guid id, CancellationToken ct = default)
         => await Set.AsNoTracking()
             .Include(x => x.Answers.OrderBy(a => a.SortOrder))

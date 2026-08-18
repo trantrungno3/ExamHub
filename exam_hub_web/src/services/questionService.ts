@@ -44,18 +44,18 @@ class QuestionService {
         return AuthHttp.get<QuestionStats>(`/${this.basePath}/stats`)
     }
 
-    /** Upload ảnh/PDF (≤ 10 MB) cho câu hỏi → trả về URL MinIO. */
-    uploadAttachment(id: string, file: File) {
+    /** Upload ảnh/PDF (≤ 10 MB) → trả URL MinIO. URL chỉ được lưu khi Save câu hỏi. */
+    uploadAttachment(file: File) {
         const form = new FormData()
         form.append('file', file)
-        return AuthHttp.postForm<{url: string}>(`/${this.basePath}/${id}/attachment`, form)
+        return AuthHttp.postForm<{url: string}>(`/${this.basePath}/attachment`, form)
     }
 
-    /** Upload audio (≤ 10 MB) cho câu hỏi → trả về URL MinIO. */
-    uploadAudio(id: string, file: File) {
+    /** Upload audio (≤ 10 MB) → trả URL MinIO. URL chỉ được lưu khi Save câu hỏi. */
+    uploadAudio(file: File) {
         const form = new FormData()
         form.append('file', file)
-        return AuthHttp.postForm<{url: string}>(`/${this.basePath}/${id}/audio`, form)
+        return AuthHttp.postForm<{url: string}>(`/${this.basePath}/audio`, form)
     }
 
     /** Import hàng loạt từ file .xlsx. */

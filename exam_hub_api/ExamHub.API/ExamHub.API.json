@@ -3751,23 +3751,12 @@
         ]
       }
     },
-    "/api/questions/{id}/attachment": {
+    "/api/questions/attachment": {
       "post": {
         "tags": [
           "Question"
         ],
-        "summary": "Tải lên tệp đính kèm (ảnh/PDF, tối đa 10 MB) cho câu hỏi → MinIO",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
+        "summary": "Tải tệp đính kèm (ảnh/PDF, ≤ 10 MB) lên MinIO → trả URL. KHÔNG ghi DB;\r\nURL chỉ được lưu khi Save câu hỏi (client gửi kèm `ImageUrl` trong QuestionRequest).\r\nCho phép upload trước cả khi câu hỏi được tạo (không cần id).",
         "requestBody": {
           "content": {
             "multipart/form-data": {
@@ -3812,23 +3801,12 @@
         ]
       }
     },
-    "/api/questions/{id}/audio": {
+    "/api/questions/audio": {
       "post": {
         "tags": [
           "Question"
         ],
-        "summary": "Tải lên tệp audio (tối đa 10 MB) cho câu hỏi → MinIO",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
+        "summary": "Tải tệp audio (≤ 10 MB) lên MinIO → trả URL. KHÔNG ghi DB;\r\nURL chỉ được lưu khi Save câu hỏi (client gửi kèm `AudioUrl` trong QuestionRequest).",
         "requestBody": {
           "content": {
             "multipart/form-data": {
@@ -9786,7 +9764,9 @@
           "sortOrder",
           "score",
           "contentSnapshot",
-          "answersSnapshot"
+          "answersSnapshot",
+          "imageUrl",
+          "audioUrl"
         ],
         "type": "object",
         "properties": {
@@ -9825,6 +9805,18 @@
             "type": "string"
           },
           "answersSnapshot": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "imageUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "audioUrl": {
             "type": [
               "null",
               "string"

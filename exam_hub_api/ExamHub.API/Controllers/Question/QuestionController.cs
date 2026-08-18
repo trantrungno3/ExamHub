@@ -129,9 +129,14 @@ public class QuestionController(
             $"Import hoàn tất: {result.SuccessCount} thành công, {result.ErrorCount} lỗi.", result, result.SuccessCount));
     }
 
-    /// <summary>Tải lên tệp đính kèm (ảnh/PDF, tối đa 10 MB) cho câu hỏi → MinIO</summary>
-    [HttpPost("{id:guid}/attachment")]
-    public async Task<ActionResult<RequestResponse<object>>> UploadAttachment(Guid id, IFormFile file, CancellationToken ct)
+    /// <summary>
+    /// Tải tệp đính kèm (ảnh/PDF, ≤ 10 MB) lên MinIO → trả URL. KHÔNG ghi DB;
+    /// URL chỉ được lưu khi Save câu hỏi (client gửi kèm <c>ImageUrl</c> trong QuestionRequest).
+    /// Cho phép upload trước cả khi câu hỏi được tạo (không cần id).
+    /// </summary>
+    [HttpPost("attachment")]
+    [Authorize(Roles = "Admin,Teacher")]
+    public async Task<ActionResult<RequestResponse<object>>> UploadAttachment(IFormFile file, CancellationToken ct)
     {
         if (file is null || file.Length == 0)
             return BadRequest(RequestResponse<object>.Error("Tệp đính kèm không được để trống."));
@@ -140,30 +145,22 @@ public class QuestionController(
         if (!AllowedContentTypes.Contains(file.ContentType))
             return BadRequest(RequestResponse<object>.Error("Chỉ chấp nhận ảnh (jpeg/png/gif/webp) hoặc PDF."));
 
-        var existing = await service.GetByIdAsync(id, ct);
-        if (existing is null) return NotFound();
-
-        var topic = await topicRepo.GetByIdAsync(existing.TopicId, ct);
-        if (topic is null)
-            return NotFound(RequestResponse<object>.Error($"Chủ đề {existing.TopicId} không tồn tại."));
-
-        var authResult = await authorizationService.AuthorizeAsync(User, topic.SubjectId, "TeacherOwnsSubject");
-        if (!authResult.Succeeded)
-            return StatusCode(403, RequestResponse<object>.Error("Bạn không phụ trách môn học này."));
-
-        var objectName = $"questions/{id}/{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
+        var objectName = $"questions/_uploads/{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
         await using var stream = file.OpenReadStream();
         var (ok, url) = await storage.UploadStreamAsync(stream, objectName, file.ContentType);
         if (!ok || url is null)
             return StatusCode(500, RequestResponse<object>.Error("Tải tệp lên MinIO thất bại."));
 
-        await service.SetImageUrlAsync(id, url, ct);
         return Ok(RequestResponse<object>.Success("Tải tệp đính kèm thành công!", new { Url = url }, 1));
     }
 
-    /// <summary>Tải lên tệp audio (tối đa 10 MB) cho câu hỏi → MinIO</summary>
-    [HttpPost("{id:guid}/audio")]
-    public async Task<ActionResult<RequestResponse<object>>> UploadAudio(Guid id, IFormFile file, CancellationToken ct)
+    /// <summary>
+    /// Tải tệp audio (≤ 10 MB) lên MinIO → trả URL. KHÔNG ghi DB;
+    /// URL chỉ được lưu khi Save câu hỏi (client gửi kèm <c>AudioUrl</c> trong QuestionRequest).
+    /// </summary>
+    [HttpPost("audio")]
+    [Authorize(Roles = "Admin,Teacher")]
+    public async Task<ActionResult<RequestResponse<object>>> UploadAudio(IFormFile file, CancellationToken ct)
     {
         if (file is null || file.Length == 0)
             return BadRequest(RequestResponse<object>.Error("Tệp audio không được để trống."));
@@ -172,24 +169,12 @@ public class QuestionController(
         if (!AllowedAudioTypes.Contains(file.ContentType))
             return BadRequest(RequestResponse<object>.Error("Chỉ chấp nhận tệp audio (mp3/wav/ogg/webm/mp4)."));
 
-        var existing = await service.GetByIdAsync(id, ct);
-        if (existing is null) return NotFound();
-
-        var topic = await topicRepo.GetByIdAsync(existing.TopicId, ct);
-        if (topic is null)
-            return NotFound(RequestResponse<object>.Error($"Chủ đề {existing.TopicId} không tồn tại."));
-
-        var authResult = await authorizationService.AuthorizeAsync(User, topic.SubjectId, "TeacherOwnsSubject");
-        if (!authResult.Succeeded)
-            return StatusCode(403, RequestResponse<object>.Error("Bạn không phụ trách môn học này."));
-
-        var objectName = $"questions/{id}/audio/{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
+        var objectName = $"questions/_uploads/audio/{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
         await using var stream = file.OpenReadStream();
         var (ok, url) = await storage.UploadStreamAsync(stream, objectName, file.ContentType);
         if (!ok || url is null)
             return StatusCode(500, RequestResponse<object>.Error("Tải audio lên MinIO thất bại."));
 
-        await service.SetAudioUrlAsync(id, url, ct);
         return Ok(RequestResponse<object>.Success("Tải audio thành công!", new { Url = url }, 1));
     }
 

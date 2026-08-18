@@ -8,6 +8,7 @@ import {useExamWithQuestionsQuery} from '../../hooks/queries/useExams'
 import {useSubmitExamMutation} from '../../hooks/queries/useSubmissions'
 import {useAuth} from '../../AuthProvider'
 import {parseAnswers, stripHtml} from '../../utils/snapshot'
+import QuestionMedia from '../../components/QuestionMedia'
 
 const letter = (i: number) => String.fromCharCode(65 + i)
 const hasAnswer = (v: unknown) => (typeof v === 'string' ? v.trim().length > 0 : v != null)
@@ -161,6 +162,8 @@ function ExamRunner({exam, studentId, studentName, sessionId, submissionId}: {
                         {activeQ && (
                             <>
                                 <div className="take-qbox">{stripHtml(activeQ.contentSnapshot)}</div>
+
+                                <QuestionMedia imageUrl={activeQ.imageUrl} audioUrl={activeQ.audioUrl} className="mt-4"/>
 
                                 <Form.Item name={activeQ.id} noStyle>
                                     {isEssay ? (

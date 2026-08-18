@@ -34,12 +34,16 @@ public record ExamQuestionResponse(
     int SortOrder,
     decimal? Score,
     string ContentSnapshot,
-    string? AnswersSnapshot
+    string? AnswersSnapshot,
+    // Media lấy từ câu hỏi gốc (không snapshot) — ImageUrl có thể là ảnh hoặc pdf.
+    string? ImageUrl,
+    string? AudioUrl
 )
 {
     /// <summary>Map từ entity</summary>
     public static ExamQuestionResponse FromEntity(ExamQuestion e) =>
-        new(e.Id, e.QuestionId, e.SectionName, e.SortOrder, e.Score, e.ContentSnapshot, e.AnswersSnapshot);
+        new(e.Id, e.QuestionId, e.SectionName, e.SortOrder, e.Score, e.ContentSnapshot, e.AnswersSnapshot,
+            e.Question?.ImageUrl, e.Question?.AudioUrl);
 }
 
 // ── Exam ──────────────────────────────────────────────────────────────────────

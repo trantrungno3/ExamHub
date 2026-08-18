@@ -1,8 +1,9 @@
-import {useEffect, useMemo} from 'react'
+import {useEffect, useMemo, useState} from 'react'
 import {useNavigate, useParams} from 'react-router-dom'
-import {Button, Checkbox, Form, Input, message, Select, Switch, Upload} from 'antd'
-import {CloseOutlined, PictureOutlined, PlusOutlined, SoundOutlined} from '@ant-design/icons'
+import {Button, Checkbox, Form, Input, message, Select, Spin, Switch, Upload} from 'antd'
+import {CloseOutlined, LoadingOutlined, PictureOutlined, PlusOutlined, SoundOutlined} from '@ant-design/icons'
 import RichTextEditor from '../../components/RichTextEditor'
+import QuestionMedia from '../../components/QuestionMedia'
 import {useMutation, useQueryClient} from '@tanstack/react-query'
 import {questionService} from '../../services/questionService'
 import {statusCode} from '../../services/requestService'
@@ -48,6 +49,10 @@ export default function AddQuestionPage() {
     const isEdit = !!id
     const [form] = Form.useForm<QuestionForm>()
     const qc = useQueryClient()
+    const [imageUrl, setImageUrl] = useState<string>()
+    const [audioUrl, setAudioUrl] = useState<string>()
+    const [imageUploading, setImageUploading] = useState(false)
+    const [audioUploading, setAudioUploading] = useState(false)
 
     const topics = useTopicsQuery()
     const subjects = useSubjectsQuery()
@@ -94,6 +99,10 @@ export default function AddQuestionPage() {
         }
     }, [isEdit, existing, form])
 
+    // Ưu tiên URL vừa upload, nếu chưa thì lấy từ câu hỏi đang sửa.
+    const shownImageUrl = imageUrl ?? existing?.imageUrl
+    const shownAudioUrl = audioUrl ?? existing?.audioUrl
+
     useEffect(() => {
         if (!isEdit || !existing || !topics.data || !subjects.data) return
         const topic = topics.data.find(t => t.id === existing.topicId)
@@ -126,6 +135,8 @@ export default function AddQuestionPage() {
             content: v.content,
             contentPlain: stripHtml(v.content),
             explanation: v.explanation,
+            imageUrl: shownImageUrl,
+            audioUrl: shownAudioUrl,
             source: v.source,
             tags: v.tags,
             isActive: v.isActive,
@@ -135,25 +146,43 @@ export default function AddQuestionPage() {
         saveMutation.mutate(body)
     }
 
+    // Upload chỉ đẩy tệp lên MinIO và giữ URL ở form; URL được ghi DB khi bấm Lưu.
     const uploadImage = async (file: File) => {
-        if (!id) {
-            message.warning('Hãy lưu câu hỏi trước khi đính kèm tệp');
-            return
+        setImageUploading(true)
+        try {
+            const res = await questionService.uploadAttachment(file)
+            if (res.data?.url) {
+                setImageUrl(res.data.url)
+                message.success('Đã tải ảnh lên. Bấm Lưu để áp dụng.')
+            } else message.error(res.message || 'Tải ảnh thất bại')
+        } catch {
+            message.error('Tải ảnh thất bại')
+        } finally {
+            setImageUploading(false)
         }
-        const res = await questionService.uploadAttachment(id, file)
-        if (res.data?.url) message.success('Đã tải ảnh lên'); else message.error(res.message || 'Tải ảnh thất bại')
     }
     const uploadAudioFile = async (file: File) => {
-        if (!id) {
-            message.warning('Hãy lưu câu hỏi trước khi đính kèm tệp');
-            return
+        setAudioUploading(true)
+        try {
+            const res = await questionService.uploadAudio(file)
+            if (res.data?.url) {
+                setAudioUrl(res.data.url)
+                message.success('Đã tải audio lên. Bấm Lưu để áp dụng.')
+            } else message.error(res.message || 'Tải audio thất bại')
+        } catch {
+            message.error('Tải audio thất bại')
+        } finally {
+            setAudioUploading(false)
         }
-        const res = await questionService.uploadAudio(id, file)
-        if (res.data?.url) message.success('Đã tải audio lên'); else message.error(res.message || 'Tải audio thất bại')
     }
+
+    const busyTip = imageUploading ? 'Đang tải ảnh...'
+        : audioUploading ? 'Đang tải audio...'
+        : saveMutation.isPending ? 'Đang lưu câu hỏi...' : ''
 
     return (
         <>
+            <Spin fullscreen spinning={!!busyTip} tip={busyTip}/>
             <div className="top-bar">
                 <div>
                     <p className="top-bar-title">{isEdit ? 'Sửa câu hỏi' : 'Thêm câu hỏi mới'}</p>
@@ -186,35 +215,38 @@ export default function AddQuestionPage() {
                                 <p className="form-section-title">Tệp đính kèm (ảnh · audio)</p>
                                 <div className="flex gap-3">
                                     <Upload accept="image/*,application/pdf" showUploadList={false}
+                                            disabled={imageUploading}
                                             beforeUpload={(f) => {
                                                 void uploadImage(f as unknown as File);
                                                 return false
                                             }}
                                             className="flex-1">
                                         <div
-                                            className="flex flex-col items-center justify-center gap-1 rounded-lg py-6 border border-dashed cursor-pointer w-full"
+                                            className={`flex flex-col items-center justify-center gap-1 rounded-lg py-6 border border-dashed w-full ${imageUploading ? 'cursor-wait' : 'cursor-pointer'}`}
                                             style={{borderColor: '#c4cad3', background: '#f9fafb', color: '#9aa2b1'}}>
-                                            <PictureOutlined className="text-[18px]"/>
-                                            <span className="text-[13px]">Tải ảnh lên</span>
+                                            {imageUploading ? <LoadingOutlined className="text-[18px]"/> : <PictureOutlined className="text-[18px]"/>}
+                                            <span className="text-[13px]">{imageUploading ? 'Đang tải ảnh...' : 'Tải ảnh lên'}</span>
                                         </div>
                                     </Upload>
                                     <Upload accept="audio/*" showUploadList={false}
+                                            disabled={audioUploading}
                                             beforeUpload={(f) => {
                                                 void uploadAudioFile(f as unknown as File);
                                                 return false
                                             }}
                                             className="flex-1">
                                         <div
-                                            className="flex flex-col items-center justify-center gap-1 rounded-lg py-6 border border-dashed cursor-pointer w-full"
+                                            className={`flex flex-col items-center justify-center gap-1 rounded-lg py-6 border border-dashed w-full ${audioUploading ? 'cursor-wait' : 'cursor-pointer'}`}
                                             style={{borderColor: '#c4cad3', background: '#f9fafb', color: '#9aa2b1'}}>
-                                            <SoundOutlined className="text-[18px]"/>
-                                            <span className="text-[13px]">Tải audio lên</span>
+                                            {audioUploading ? <LoadingOutlined className="text-[18px]"/> : <SoundOutlined className="text-[18px]"/>}
+                                            <span className="text-[13px]">{audioUploading ? 'Đang tải audio...' : 'Tải audio lên'}</span>
                                         </div>
                                     </Upload>
                                 </div>
-                                {!isEdit &&
-                                    <p className="text-[12px] mt-2" style={{color: '#9aa2b1'}}>Lưu câu hỏi trước để đính
-                                        kèm tệp.</p>}
+                                <p className="text-[12px] mt-2" style={{color: '#9aa2b1'}}>
+                                    Tệp sẽ được lưu khi bấm {isEdit ? 'Cập nhật' : 'Lưu câu hỏi'}.
+                                </p>
+                                <QuestionMedia imageUrl={shownImageUrl} audioUrl={shownAudioUrl} className="mt-3"/>
                             </div>
 
                             <div className="form-section">

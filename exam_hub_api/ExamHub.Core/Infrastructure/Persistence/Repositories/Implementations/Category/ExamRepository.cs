@@ -15,7 +15,9 @@ public class ExamRepository : BaseRepository<Exam, Guid>, IExamRepository
     /// <inheritdoc/>
     public async Task<Exam?> GetWithQuestionsAsync(Guid id, CancellationToken ct = default)
         => await Set
+            .AsNoTracking()
             .Include(x => x.Questions.OrderBy(q => q.SortOrder))
+                .ThenInclude(q => q.Question)
             .Include(x => x.GradeLevel)
             .Include(x => x.Subject)
             .FirstOrDefaultAsync(x => x.Id == id, ct);

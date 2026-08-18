@@ -12,6 +12,9 @@ interface ExamQuestionSnapshot {
     contentSnapshot: string
     /** JSON string: [{id, content, is_correct, sort_order, explanation}] */
     answersSnapshot?: string
+    /** Tệp đính kèm lấy từ câu hỏi gốc — imageUrl có thể là ảnh hoặc pdf. */
+    imageUrl?: string
+    audioUrl?: string
 }
 
 interface Exam {

@@ -4,6 +4,7 @@ import {ArrowLeftOutlined} from '@ant-design/icons'
 import {useExamWithQuestionsQuery} from '../../hooks/queries/useExams'
 import {examService} from '../../services/examService'
 import {parseAnswers, stripHtml} from '../../utils/snapshot'
+import QuestionMedia from '../../components/QuestionMedia'
 import {StatusTag} from '../../components/StatusTag'
 import {EXAM_STATUS_LABEL, EXAM_STATUS_VARIANT, OPTION_LETTER} from '../../constants'
 import {ROUTES} from '../../routes/paths'
@@ -89,6 +90,7 @@ export default function ExamDetailPage() {
                                                 {q.score != null && <span className="text-xs text-gray-400">· {q.score} điểm</span>}
                                             </div>
                                             <p className="text-[13px] text-gray-700 font-medium">{stripHtml(q.contentSnapshot)}</p>
+                                            <QuestionMedia imageUrl={q.imageUrl} audioUrl={q.audioUrl} className="mt-2"/>
                                             {options.length > 0 && (
                                                 <div className="grid grid-cols-2 gap-x-8 gap-y-1 mt-2">
                                                     {options.map((a, ai) => (

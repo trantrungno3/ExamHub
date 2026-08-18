@@ -1,7 +1,7 @@
 import {useMemo} from 'react'
 import {useNavigate} from 'react-router-dom'
-import {Table, Tag} from 'antd'
 import type {TableColumnsType} from 'antd'
+import {Table, Tag} from 'antd'
 import {FileTextOutlined, PlusOutlined, ThunderboltOutlined, UploadOutlined} from '@ant-design/icons'
 import {Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip} from 'recharts'
 import {useExamsQuery} from '../../hooks/queries/useExams'
@@ -11,7 +11,12 @@ import {EXAM_STATUS_LABEL, EXAM_STATUS_PIE_COLOR, EXAM_STATUS_TAG_COLOR} from '.
 
 export default function DashboardPage() {
     const navigate = useNavigate()
-    const today = new Date().toLocaleDateString('vi-VN', {weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric'})
+    const today = new Date().toLocaleDateString('vi-VN', {
+        weekday: 'long',
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+    })
 
     // Tổng số lấy từ trường `total` của kết quả phân trang (pageSize nhỏ để nhẹ).
     const questions = useQuestionsQuery({page: 1, pageSize: 1})
@@ -26,18 +31,45 @@ export default function DashboardPage() {
     const statusPie = useMemo(() => {
         const counts: Record<string, number> = {}
         for (const e of recentExams.data?.items ?? []) counts[e.status] = (counts[e.status] ?? 0) + 1
-        return (Object.keys(counts) as ExamStatus[]).map(s => ({name: EXAM_STATUS_LABEL[s], status: s, value: counts[s]}))
+        return (Object.keys(counts) as ExamStatus[]).map(s => ({
+            name: EXAM_STATUS_LABEL[s],
+            status: s,
+            value: counts[s]
+        }))
     }, [recentExams.data])
 
     const quickActions = [
-        {label: 'Thêm câu hỏi', icon: <PlusOutlined/>, bg: 'bg-blue-50', text: 'text-blue-700', to: '/app/questions/add'},
-        {label: 'Tạo mẫu đề', icon: <FileTextOutlined/>, bg: 'bg-purple-50', text: 'text-purple-700', to: '/app/exams/create'},
-        {label: 'Sinh đề ngay', icon: <ThunderboltOutlined/>, bg: 'bg-green-50', text: 'text-green-700', to: '/app/generate'},
+        {
+            label: 'Thêm câu hỏi',
+            icon: <PlusOutlined/>,
+            bg: 'bg-blue-50',
+            text: 'text-blue-700',
+            to: '/app/questions/add'
+        },
+        {
+            label: 'Tạo mẫu đề',
+            icon: <FileTextOutlined/>,
+            bg: 'bg-purple-50',
+            text: 'text-purple-700',
+            to: '/app/exams/create'
+        },
+        {
+            label: 'Sinh đề ngay',
+            icon: <ThunderboltOutlined/>,
+            bg: 'bg-green-50',
+            text: 'text-green-700',
+            to: '/app/generate'
+        },
         {label: 'Đề thi', icon: <UploadOutlined/>, bg: 'bg-orange-50', text: 'text-orange-700', to: '/app/exam-list'},
     ]
 
     const columns: TableColumnsType<Exam> = [
-        {title: 'Tên đề thi', dataIndex: 'title', key: 'title', render: v => <span className="font-medium text-gray-800">{v}</span>},
+        {
+            title: 'Tên đề thi',
+            dataIndex: 'title',
+            key: 'title',
+            render: v => <span className="font-medium text-gray-800">{v}</span>
+        },
         {title: 'Môn', dataIndex: 'subjectName', key: 'subjectName', render: v => v ?? '—'},
         {title: 'Lớp', dataIndex: 'gradeLevelName', key: 'gradeLevelName', render: v => v ?? '—'},
         {
@@ -45,7 +77,7 @@ export default function DashboardPage() {
             render: (v: ExamStatus) => <Tag color={EXAM_STATUS_TAG_COLOR[v]}>{EXAM_STATUS_LABEL[v]}</Tag>,
         },
         {
-            title: 'Ngày tạo', dataIndex: 'createdAt', key: 'createdAt',
+            title: 'Ngày tạo', dataIndex: 'created', key: 'created',
             render: (v: number) => <span className="text-gray-400">{formatTimestamp(v, 'DD/MM/YYYY')}</span>,
         },
     ]
@@ -78,7 +110,8 @@ export default function DashboardPage() {
                         <div className="section-card-header border-b border-gray-50">
                             <span className="section-card-title">Đề thi gần đây</span>
                             <button className="text-xs text-blue-600 font-medium hover:underline"
-                                    onClick={() => navigate('/app/exam-list')}>Xem tất cả →</button>
+                                    onClick={() => navigate('/app/exam-list')}>Xem tất cả →
+                            </button>
                         </div>
                         <Table columns={columns} dataSource={recentExams.data?.items ?? []} rowKey="id"
                                loading={recentExams.isLoading} pagination={false} size="small" scroll={{x: 600}}/>
@@ -106,7 +139,8 @@ export default function DashboardPage() {
                                 <ResponsiveContainer width="100%" height={180}>
                                     <PieChart>
                                         <Pie data={statusPie} dataKey="value" nameKey="name" outerRadius={70} label>
-                                            {statusPie.map(s => <Cell key={s.status} fill={EXAM_STATUS_PIE_COLOR[s.status]}/>)}
+                                            {statusPie.map(s => <Cell key={s.status}
+                                                                      fill={EXAM_STATUS_PIE_COLOR[s.status]}/>)}
                                         </Pie>
                                         <Tooltip/>
                                         <Legend/>

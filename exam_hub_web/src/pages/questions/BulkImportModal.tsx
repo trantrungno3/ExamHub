@@ -1,7 +1,7 @@
 import {useState} from 'react'
 import {Alert, Button, Modal, Select, Upload} from 'antd'
 import type {UploadFile} from 'antd'
-import {InboxOutlined} from '@ant-design/icons'
+import {DownloadOutlined, InboxOutlined} from '@ant-design/icons'
 import {useBulkImportMutation} from '../../hooks/queries/useQuestions'
 
 type Props = {
@@ -99,6 +99,21 @@ export function BulkImportModal({open, onClose, topics, difficulties, cognitives
                         onChange={setCognitiveId}
                         options={cognitives.map(c => ({value: c.id, label: c.name}))}
                     />
+                </div>
+
+                <div className="flex items-center justify-between rounded-md bg-blue-50 px-3 py-2">
+                    <span className="text-sm text-gray-600">
+                        Chưa có file? Tải mẫu để điền theo đúng định dạng.
+                    </span>
+                    <Button
+                        type="link"
+                        size="small"
+                        icon={<DownloadOutlined/>}
+                        href="/question_import_template.xlsx"
+                        download
+                    >
+                        Tải file mẫu (.xlsx)
+                    </Button>
                 </div>
 
                 <Upload.Dragger

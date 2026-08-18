@@ -10,6 +10,7 @@ import {
 } from '../../hooks/queries/useSubmissions'
 import {useExamWithQuestionsQuery} from '../../hooks/queries/useExams'
 import {parseAnswers, stripHtml} from '../../utils/snapshot'
+import QuestionMedia from '../../components/QuestionMedia'
 import {formatTimestamp} from '../../utils/datetime'
 import {OPTION_LETTER, SUBMISSION_STATUS_LABEL} from '../../constants'
 
@@ -130,6 +131,7 @@ export default function SubmissionReviewPage() {
                                         </div>
                                     </div>
                                     <p className="text-[13px] text-gray-700 font-medium">{stripHtml(q?.contentSnapshot)}</p>
+                                    <QuestionMedia imageUrl={q?.imageUrl} audioUrl={q?.audioUrl} className="mt-2"/>
                                     {isEssay ? (
                                         <div className="mt-1">
                                             <p className="text-[13px] text-gray-500 whitespace-pre-wrap">
