@@ -10,7 +10,7 @@ builder.Configuration.GetSection("AudienceConfig:AudienceRefresh").Bind(AppCommo
 AppCommon.SaltPassHash = builder.Configuration.GetValue<string>("SaltPassHash");
 
 builder.Services.AddCustomGlobalFilterControllers();
-builder.Services.AddExceptionHandler<CustomExceptionHandler>();
+// builder.Services.AddExceptionHandler<CustomExceptionHandler>();
 builder.Services.AddOpenApi(op => { op.AddAuthOpenApiDoc(); });
 builder.Services.AddServicesApi(builder.Configuration, builder.Environment.IsDevelopment());
 builder.Services.AddAuthorizationBuilder()
@@ -36,7 +36,7 @@ if (app.Environment.IsDevelopment())
     app.MapScalarApiReference("/docs");
 }
 
-app.UseServices();
+// app.UseServices();
 app.UseHttpsRedirection();
 app.UseCors("all");
 app.UseAuthentication();
