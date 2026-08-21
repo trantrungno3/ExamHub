@@ -1,3 +1,4 @@
+using ExamHub.Core.Application.Services;
 using ExamHub.Core.Domain.Entities;
 using ExamHub.Core.Domain.Interfaces;
 
@@ -7,7 +8,13 @@ namespace ExamHub.Core.Infrastructure.Persistence.Services.Implementations;
 public class CohortService : ICohortService
 {
     private readonly ICohortRepository _repo;
-    public CohortService(ICohortRepository repo) => _repo = repo;
+    private readonly ICohortMemberRepository _memberRepo;
+
+    public CohortService(ICohortRepository repo, ICohortMemberRepository memberRepo)
+    {
+        _repo = repo;
+        _memberRepo = memberRepo;
+    }
 
     public Task<IReadOnlyList<Cohort>> GetAllAsync(CancellationToken ct = default)
         => _repo.GetAllAsync(ct);
@@ -44,7 +51,20 @@ public class CohortService : ICohortService
     }
 
     public Task DeleteAsync(int id, CancellationToken ct = default)
-        => _repo.DeleteByIdAsync(id, ct);
+        => DeleteAsync(id, false, ct);
+
+    public async Task DeleteAsync(int id, bool force, CancellationToken ct = default)
+    {
+        var hasMembers = await _memberRepo.CountAsync(m => m.CohortId == id, ct) > 0;
+        if (hasMembers && !force)
+            throw new EntityInUseException("Khoá học còn học sinh/lớp đang hoạt động. Dùng xoá bắt buộc để xoá luôn dữ liệu liên quan.");
+        if (force)
+        {
+            var members = await _memberRepo.GetByCohortAsync(id, ct);
+            foreach (var m in members) await _memberRepo.DeleteByIdAsync(m.Id, ct);
+        }
+        await _repo.DeleteByIdAsync(id, ct);
+    }
 
     public Task<bool> SetActiveAsync(int id, bool isActive, CancellationToken ct = default)
         => _repo.SetActiveAsync(id, isActive, ct);

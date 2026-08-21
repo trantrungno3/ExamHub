@@ -1,3 +1,4 @@
+using ExamHub.Core.Application.Services;
 using ExamHub.Core.DataTransferObjects.School;
 using ExamHub.Core.Domain.Entities;
 using ExamHub.Core.Domain.Interfaces;
@@ -48,5 +49,13 @@ public class CohortController(ICohortService service)
         var result = await service.GetWithMembersAsync(id, ct);
         if (result is null) return NotFound();
         return Ok(RequestResponse<CohortResponse>.Success("Lấy dữ liệu thành công!", ToResponse(result), 1));
+    }
+
+    /// <summary>Xoá bắt buộc khoá học kèm toàn bộ dữ liệu liên quan</summary>
+    [HttpDelete("{id:int}/force")]
+    public async Task<IActionResult> ForceDelete(int id, CancellationToken ct = default)
+    {
+        await service.DeleteAsync(id, true, ct);
+        return NoContent();
     }
 }

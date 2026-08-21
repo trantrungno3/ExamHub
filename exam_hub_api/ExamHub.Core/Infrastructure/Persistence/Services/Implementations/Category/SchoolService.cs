@@ -1,3 +1,4 @@
+using ExamHub.Core.Application.Services;
 using ExamHub.Core.Domain.Entities;
 using ExamHub.Core.Domain.Interfaces;
 
@@ -7,7 +8,15 @@ namespace ExamHub.Core.Infrastructure.Persistence.Services.Implementations;
 public class SchoolService : ISchoolService
 {
     private readonly ISchoolRepository _repo;
-    public SchoolService(ISchoolRepository repo) => _repo = repo;
+    private readonly ICohortRepository _cohortRepo;
+    private readonly ICohortService _cohortService;
+
+    public SchoolService(ISchoolRepository repo, ICohortRepository cohortRepo, ICohortService cohortService)
+    {
+        _repo = repo;
+        _cohortRepo = cohortRepo;
+        _cohortService = cohortService;
+    }
 
     public Task<IReadOnlyList<School>> GetAllAsync(CancellationToken ct = default)
         => _repo.GetAllAsync(ct);
@@ -44,14 +53,16 @@ public class SchoolService : ISchoolService
         return entity;
     }
 
-    public async Task DeleteAsync(int id, CancellationToken ct = default)
+    public Task DeleteAsync(int id, CancellationToken ct = default)
+        => DeleteAsync(id, false, ct);
+
+    public async Task DeleteAsync(int id, bool force, CancellationToken ct = default)
     {
-        // Ràng buộc tham chiếu: không xoá trường khi còn khoá học liên kết
-        var school = await _repo.GetWithCohortsAsync(id, ct)
-            ?? throw new InvalidOperationException("Không tìm thấy trường học.");
-        if (school.Cohorts.Count > 0)
-            throw new InvalidOperationException(
-                $"Không thể xoá: trường còn {school.Cohorts.Count} khoá học liên kết.");
+        var cohorts = await _cohortRepo.GetBySchoolAsync(id, ct);
+        if (cohorts.Count > 0 && !force)
+            throw new EntityInUseException("Trường đang có khoá học/lớp liên kết. Dùng xoá bắt buộc để xoá luôn.");
+        if (force)
+            foreach (var c in cohorts) await _cohortService.DeleteAsync(c.Id, true, ct);
         await _repo.DeleteByIdAsync(id, ct);
     }
 

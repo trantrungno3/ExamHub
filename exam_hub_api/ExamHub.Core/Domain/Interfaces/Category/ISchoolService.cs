@@ -13,4 +13,7 @@ public interface ISchoolService : ICategoryService<School, int>
 
     /// <summary>Lấy trường kèm danh sách thành viên</summary>
     Task<School?> GetWithMembersAsync(int id, CancellationToken ct = default);
+
+    /// <summary>Xoá trường; force=true để xoá kèm khoá học và dữ liệu liên quan</summary>
+    Task DeleteAsync(int id, bool force, CancellationToken ct = default);
 }
