@@ -12,6 +12,9 @@ public enum SubmissionStatusEnum : byte
     Submitted = 2,
 
     /// <summary>Đã chấm điểm</summary>
-    Graded = 3
+    Graded = 3,
+
+    /// <summary>Chờ giáo viên chấm tay (có câu tự luận)</summary>
+    PendingManualGrade = 4
 }
 
