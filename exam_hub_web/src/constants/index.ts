@@ -27,21 +27,21 @@ export const PICK_MODE_LABEL: Record<ExamSessionPickMode, string> = {
     Random: 'Ngẫu nhiên', StudentChoice: 'HS tự chọn',
 }
 
-/* ─── Submission (InProgress | Submitted | Graded) ─── */
+/* ─── Submission (InProgress | Submitted | PendingManualGrade | Graded) ─── */
 /** Nhãn cho màn admin/GV. */
 export const SUBMISSION_STATUS_LABEL: Record<SubmissionStatus, string> = {
-    InProgress: 'Đang làm', Submitted: 'Chờ chấm', Graded: 'Đã chấm',
+    InProgress: 'Đang làm', Submitted: 'Đã nộp', PendingManualGrade: 'Chờ chấm tay', Graded: 'Đã chấm',
 }
 /** Nhãn cho màn học sinh (diễn đạt theo góc nhìn HS). */
 export const SUBMISSION_STATUS_LABEL_STUDENT: Record<SubmissionStatus, string> = {
-    InProgress: 'Đang làm', Submitted: 'Đã nộp (chờ chấm)', Graded: 'Đã chấm',
+    InProgress: 'Đang làm', Submitted: 'Đã nộp', PendingManualGrade: 'Đã nộp (chờ chấm)', Graded: 'Đã chấm',
 }
 export const SUBMISSION_STATUS_VARIANT: Record<SubmissionStatus, StatusVariant> = {
-    InProgress: 'default', Submitted: 'warning', Graded: 'success',
+    InProgress: 'default', Submitted: 'default', PendingManualGrade: 'warning', Graded: 'success',
 }
 /** Màu cho AntD <Tag> (SessionResultsModal). */
 export const SUBMISSION_STATUS_TAG_COLOR: Record<SubmissionStatus, string> = {
-    InProgress: 'default', Submitted: 'gold', Graded: 'green',
+    InProgress: 'default', Submitted: 'default', PendingManualGrade: 'gold', Graded: 'green',
 }
 
 /* ─── Dùng chung ─── */

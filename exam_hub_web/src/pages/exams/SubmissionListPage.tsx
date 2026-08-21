@@ -17,7 +17,7 @@ export default function SubmissionListPage() {
 
     const rows = submissions ?? []
     const gradedCount = rows.filter(s => s.status === 'Graded').length
-    const pending = rows.filter(s => s.status === 'Submitted')
+    const pending = rows.filter(s => s.status === 'PendingManualGrade')
 
     const subtitle = [state?.title, state?.subjectName, state?.gradeLevelName].filter(Boolean).join(' · ')
 

@@ -1,6 +1,6 @@
 /* ─── Exam Submission types (mirrors ExamSubmissionDto.cs) ─── */
 
-type SubmissionStatus = 'InProgress' | 'Submitted' | 'Graded'
+type SubmissionStatus = 'InProgress' | 'Submitted' | 'PendingManualGrade' | 'Graded'
 
 interface SubmissionAnswer {
     id: string
