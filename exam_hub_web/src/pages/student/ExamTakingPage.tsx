@@ -9,6 +9,7 @@ import {useSubmitExamMutation} from '../../hooks/queries/useSubmissions'
 import {useAuth} from '../../AuthProvider'
 import {parseAnswers, stripHtml} from '../../utils/snapshot'
 import QuestionMedia from '../../components/QuestionMedia'
+import {submissionService} from '../../services/submissionService'
 
 const letter = (i: number) => String.fromCharCode(65 + i)
 const hasAnswer = (v: unknown) => (typeof v === 'string' ? v.trim().length > 0 : v != null)
@@ -47,6 +48,49 @@ function ExamRunner({exam, studentId, studentName, sessionId, submissionId}: {
     const [flagged, setFlagged] = useState<Set<string>>(new Set())
     const [timeLeft, setTimeLeft] = useState(() => exam.durationMinutes * 60)
     const autoSubmitted = useRef(false)
+
+    // Hàm chuyển state đáp án sang payload (tái dùng logic của buildAndSubmit)
+    const toAnswerPayload = (vals: Record<string, unknown>): SubmissionAnswerBody[] =>
+        questions.map((eq, idx) => {
+            const v = vals[eq.id]
+            const essay = parsed[idx].length === 0
+            return {
+                examQuestionId: eq.id,
+                selectedAnswerIds: !essay && typeof v === 'string' && v ? [v] : undefined,
+                essayContent: essay && typeof v === 'string' ? v : undefined,
+            }
+        })
+
+    // Khôi phục đáp án đã lưu khi vào lại (chỉ luồng kỳ thi có submissionId InProgress)
+    useEffect(() => {
+        if (!submissionId) return
+        submissionService.getById(submissionId).then(res => {
+            const saved = res.data?.answers
+            if (!saved || saved.length === 0) return
+            const restored: Record<string, unknown> = {}
+            for (const a of saved) {
+                if (a.essayContent != null) {
+                    restored[a.examQuestionId] = a.essayContent
+                } else if (a.selectedAnswerIds && a.selectedAnswerIds.length > 0) {
+                    restored[a.examQuestionId] = a.selectedAnswerIds[0]
+                }
+            }
+            form.setFieldsValue(restored)
+            setValues(restored)
+        }).catch(() => {})
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [submissionId])
+
+    // Autosave định kỳ mỗi 20 giây (chỉ luồng kỳ thi có submissionId InProgress)
+    useEffect(() => {
+        if (!submissionId) return
+        const id = setInterval(() => {
+            const vals = form.getFieldsValue()
+            submissionService.saveProgress(submissionId, toAnswerPayload(vals)).catch(() => {})
+        }, 20000)
+        return () => clearInterval(id)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [submissionId, questions, parsed])
 
     const total = questions.length
     const answeredCount = questions.filter(q => hasAnswer(values[q.id])).length

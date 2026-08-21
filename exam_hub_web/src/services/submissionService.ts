@@ -41,6 +41,11 @@ class SubmissionService {
     finalize(id: string) {
         return AuthHttp.post<ExamSubmission>(`/${this.basePath}/${id}/finalize`)
     }
+
+    /** Lưu tiến trình làm bài (autosave định kỳ, không đổi trạng thái). */
+    saveProgress(submissionId: string, answers: SubmissionAnswerBody[]) {
+        return AuthHttp.put<void>(`/${this.basePath}/${submissionId}/progress`, answers)
+    }
 }
 
 export const submissionService = new SubmissionService()
