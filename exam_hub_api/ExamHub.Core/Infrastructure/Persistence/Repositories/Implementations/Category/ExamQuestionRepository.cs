@@ -32,4 +32,8 @@ public class ExamQuestionRepository : BaseRepository<ExamQuestion, Guid>, IExamQ
     /// <inheritdoc/>
     public async Task DeleteByExamAsync(Guid examId, CancellationToken ct = default)
         => await Set.Where(x => x.ExamId == examId).ExecuteDeleteAsync(ct);
+
+    /// <inheritdoc/>
+    public Task<bool> ExistsByQuestionAsync(Guid questionId, CancellationToken ct = default)
+        => Set.AsNoTracking().AnyAsync(x => x.QuestionId == questionId, ct);
 }

@@ -111,8 +111,15 @@ public class QuestionController(
     {
         var existing = await service.GetByIdAsync(id, ct);
         if (existing is null) return NotFound();
-        await service.DeleteAsync(id, ct);
-        return NoContent();
+        try
+        {
+            await service.DeleteAsync(id, ct);
+            return NoContent();
+        }
+        catch (EntityInUseException ex)
+        {
+            return Conflict(RequestResponse<object>.Error(ex.Message));
+        }
     }
 
     /// <summary>Import câu hỏi hàng loạt từ file Excel (.xlsx)</summary>

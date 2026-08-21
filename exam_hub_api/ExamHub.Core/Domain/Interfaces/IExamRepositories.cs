@@ -70,6 +70,9 @@ public interface IExamQuestionRepository : IBaseRepository<ExamQuestion, Guid>
 
     /// <summary>Xóa tất cả câu hỏi của đề thi</summary>
     Task DeleteByExamAsync(Guid examId, CancellationToken ct = default);
+
+    /// <summary>Câu hỏi có đang được dùng trong đề thi nào không (snapshot).</summary>
+    Task<bool> ExistsByQuestionAsync(Guid questionId, CancellationToken ct = default);
 }
 
 /// <summary>Interface repository cho ExamSubmission</summary>
