@@ -1,3 +1,4 @@
+using ExamHub.Core.Application.Services;
 using ExamHub.Core.Domain.Entities;
 using ExamHub.Core.Domain.Interfaces;
 using TVT.Core.Db.Redis;
@@ -5,7 +6,7 @@ using TVT.Core.Db.Redis;
 namespace ExamHub.Core.Infrastructure.Persistence.Services.Implementations;
 
 /// <summary>Triển khai service cho DifficultyLevel</summary>
-public class DifficultyLevelService(IDifficultyLevelRepository repo, IRedisService cache)
+public class DifficultyLevelService(IDifficultyLevelRepository repo, IRedisService cache, IQuestionRepository questionRepo)
     : IDifficultyLevelService
 {
     private const string AllKey    = "category:difficulty-levels:all";
@@ -43,6 +44,8 @@ public class DifficultyLevelService(IDifficultyLevelRepository repo, IRedisServi
 
     public async Task DeleteAsync(int id, CancellationToken ct = default)
     {
+        if (await questionRepo.ExistsAsync(q => q.DifficultyLevelId == id, ct))
+            throw new EntityInUseException("Độ khó đang được dùng bởi câu hỏi, không thể xoá.");
         await repo.DeleteByIdAsync(id, ct);
         await InvalidateCacheAsync(ct);
     }

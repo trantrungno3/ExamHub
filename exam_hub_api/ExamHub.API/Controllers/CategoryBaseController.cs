@@ -76,8 +76,15 @@ public abstract class CategoryBaseController<TEntity, TKey, TRequest, TResponse>
     [HttpDelete("{id}")]
     public virtual async Task<IActionResult> Delete(TKey id, CancellationToken ct = default)
     {
-        await service.DeleteAsync(id, ct);
-        return NoContent();
+        try
+        {
+            await service.DeleteAsync(id, ct);
+            return NoContent();
+        }
+        catch (ExamHub.Core.Application.Services.EntityInUseException ex)
+        {
+            return Conflict(RequestResponse<object>.Error(ex.Message));
+        }
     }
 
     /// <summary>Bật/tắt kích hoạt</summary>
