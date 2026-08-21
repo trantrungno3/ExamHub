@@ -35,4 +35,8 @@ public class CohortMemberRepository : BaseRepository<CohortMember, Guid>, ICohor
         => await Set
             .Where(x => x.Id == id)
             .ExecuteUpdateAsync(s => s.SetProperty(x => x.Section, section), ct) > 0;
+
+    /// <inheritdoc/>
+    public Task<bool> ExistsActiveMembershipAsync(int cohortId, Guid studentId, CancellationToken ct = default)
+        => ExistsAsync(m => m.CohortId == cohortId && m.StudentId == studentId && m.IsActive, ct);
 }
