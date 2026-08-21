@@ -1,4 +1,4 @@
-import {useEffect, useMemo, useRef, useState} from 'react'
+import {useCallback, useEffect, useMemo, useRef, useState} from 'react'
 import {useNavigate, useSearchParams} from 'react-router-dom'
 import {Button, Empty, Form, Input, Modal, Radio, Spin, message} from 'antd'
 import {
@@ -50,7 +50,7 @@ function ExamRunner({exam, studentId, studentName, sessionId, submissionId}: {
     const autoSubmitted = useRef(false)
 
     // Hàm chuyển state đáp án sang payload (tái dùng logic của buildAndSubmit)
-    const toAnswerPayload = (vals: Record<string, unknown>): SubmissionAnswerBody[] =>
+    const toAnswerPayload = useCallback((vals: Record<string, unknown>): SubmissionAnswerBody[] =>
         questions.map((eq, idx) => {
             const v = vals[eq.id]
             const essay = parsed[idx].length === 0
@@ -59,7 +59,7 @@ function ExamRunner({exam, studentId, studentName, sessionId, submissionId}: {
                 selectedAnswerIds: !essay && typeof v === 'string' && v ? [v] : undefined,
                 essayContent: essay && typeof v === 'string' ? v : undefined,
             }
-        })
+        }), [questions, parsed])
 
     // Khôi phục đáp án đã lưu khi vào lại (chỉ luồng kỳ thi có submissionId InProgress)
     useEffect(() => {
@@ -75,8 +75,10 @@ function ExamRunner({exam, studentId, studentName, sessionId, submissionId}: {
                     restored[a.examQuestionId] = a.selectedAnswerIds[0]
                 }
             }
-            form.setFieldsValue(restored)
-            setValues(restored)
+            // Merge: existing in-progress values win over restored ones
+            const merged = { ...restored, ...form.getFieldsValue() }
+            form.setFieldsValue(merged)
+            setValues(prev => ({ ...restored, ...prev }))
         }).catch(() => {})
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [submissionId])
@@ -89,8 +91,7 @@ function ExamRunner({exam, studentId, studentName, sessionId, submissionId}: {
             submissionService.saveProgress(submissionId, toAnswerPayload(vals)).catch(() => {})
         }, 20000)
         return () => clearInterval(id)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [submissionId, questions, parsed])
+    }, [submissionId, toAnswerPayload])
 
     const total = questions.length
     const answeredCount = questions.filter(q => hasAnswer(values[q.id])).length
@@ -116,15 +117,7 @@ function ExamRunner({exam, studentId, studentName, sessionId, submissionId}: {
         const body: ExamSubmissionBody = {
             examId: exam.id,
             studentId,
-            answers: questions.map((eq, idx) => {
-                const v = vals[eq.id]
-                const essay = parsed[idx].length === 0
-                return {
-                    examQuestionId: eq.id,
-                    selectedAnswerIds: !essay && typeof v === 'string' && v ? [v] : undefined,
-                    essayContent: essay && typeof v === 'string' ? v : undefined,
-                }
-            }),
+            answers: toAnswerPayload(vals),
             sessionId,
             submissionId,
         }
