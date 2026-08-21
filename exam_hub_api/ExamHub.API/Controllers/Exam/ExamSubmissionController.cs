@@ -117,4 +117,20 @@ public class ExamSubmissionController(IExamSubmissionService service) : Authoriz
         var result = await service.FinalizeAsync(id, CurrentUser.UserId!.Value, ct);
         return Ok(RequestResponse<ExamSubmissionResponse>.Success("Chốt điểm thành công!", ExamSubmissionResponse.FromEntity(result), 1));
     }
+
+    /// <summary>Lưu tạm bài làm (autosave) cho bản InProgress — không đổi trạng thái, không chấm.</summary>
+    [HttpPut("{id:guid}/progress")]
+    public async Task<ActionResult<RequestResponse<bool>>> SaveProgress(
+        Guid id, [FromBody] IEnumerable<SubmissionAnswerRequest> answers, CancellationToken ct)
+    {
+        try
+        {
+            await service.SaveProgressAsync(id, answers.Select(a => a.ToEntity()), ct);
+            return Ok(RequestResponse<bool>.Success("Đã lưu tạm bài làm.", true, 1));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(RequestResponse<object>.Error(ex.Message));
+        }
+    }
 }
