@@ -14,11 +14,16 @@ public class GradingStatusTests
     private const string ObjectiveSnap =
         "[{\"id\":\"11111111-1111-1111-1111-111111111111\",\"is_correct\":true}]";
 
+    private const string MixedSnap =
+        "[{\"id\":\"11111111-1111-1111-1111-111111111111\",\"is_correct\":true}," +
+         "{\"id\":\"22222222-2222-2222-2222-222222222222\",\"is_correct\":false}]";
+
     [Fact]
     public void CorrectAnswerIds_parses_only_correct()
     {
-        var ids = SubmissionGrading.CorrectAnswerIds(ObjectiveSnap);
+        var ids = SubmissionGrading.CorrectAnswerIds(MixedSnap);
         Assert.Single(ids);
+        Assert.Contains(Guid.Parse("11111111-1111-1111-1111-111111111111"), ids);
     }
 
     [Fact]
