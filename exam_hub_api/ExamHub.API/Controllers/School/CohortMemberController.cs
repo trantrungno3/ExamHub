@@ -43,9 +43,16 @@ public class CohortMemberController(ICohortMemberService service) : AuthorizeCon
     [HttpPost("")]
     public async Task<ActionResult<RequestResponse<CohortMemberResponse>>> AddStudent([FromBody] CohortMemberRequest request, CancellationToken ct = default)
     {
-        var entity = request.ToEntity();
-        var result = await service.AddStudentAsync(entity, ct);
-        return Ok(RequestResponse<CohortMemberResponse>.Success("Thêm học sinh thành công!", CohortMemberResponse.FromEntity(result), 1));
+        try
+        {
+            var entity = request.ToEntity();
+            var result = await service.AddStudentAsync(entity, ct);
+            return Ok(RequestResponse<CohortMemberResponse>.Success("Thêm học sinh thành công!", CohortMemberResponse.FromEntity(result), 1));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(RequestResponse<object>.Error(ex.Message));
+        }
     }
 
     /// <summary>Xóa học sinh khỏi khoá học</summary>

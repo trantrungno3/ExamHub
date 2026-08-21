@@ -26,6 +26,8 @@ public class CohortMemberService : ICohortMemberService
 
     public async Task<CohortMember> AddStudentAsync(CohortMember entity, CancellationToken ct = default)
     {
+        if (await _repo.ExistsActiveMembershipAsync(entity.CohortId, entity.StudentId, ct))
+            throw new InvalidOperationException("Học sinh đã thuộc lớp khác trong khối này.");
         entity.Section = NormalizeSection(entity.Section);
         await ValidateSectionAsync(entity.CohortId, entity.Section, ct);
         entity.Id       = Guid.NewGuid();
