@@ -22,4 +22,17 @@ public class SubmissionAnswerRepository : BaseRepository<SubmissionAnswer, Guid>
     /// <inheritdoc/>
     public async Task DeleteBySubmissionAsync(Guid submissionId, CancellationToken ct = default)
         => await Set.Where(x => x.SubmissionId == submissionId).ExecuteDeleteAsync(ct);
+
+    /// <inheritdoc/>
+    public async Task ReplaceForSubmissionAsync(
+        Guid submissionId, IReadOnlyList<SubmissionAnswer> answers, CancellationToken ct = default)
+    {
+        await Set.Where(a => a.SubmissionId == submissionId).ExecuteDeleteAsync(ct);
+        if (answers.Count > 0)
+        {
+            foreach (var a in answers) a.SubmissionId = submissionId;
+            await Set.AddRangeAsync(answers, ct);
+            await Db.SaveChangesAsync(ct);
+        }
+    }
 }

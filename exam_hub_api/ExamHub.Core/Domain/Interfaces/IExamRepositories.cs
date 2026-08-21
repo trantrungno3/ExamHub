@@ -110,5 +110,8 @@ public interface ISubmissionAnswerRepository : IBaseRepository<SubmissionAnswer,
 
     /// <summary>Xóa tất cả câu trả lời của bài nộp</summary>
     Task DeleteBySubmissionAsync(Guid submissionId, CancellationToken ct = default);
+
+    /// <summary>Thay toàn bộ đáp án của một bài nộp (dùng cho lưu tạm định kỳ).</summary>
+    Task ReplaceForSubmissionAsync(Guid submissionId, IReadOnlyList<SubmissionAnswer> answers, CancellationToken ct = default);
 }
 
