@@ -180,6 +180,25 @@ public class ExamSubmissionService : IExamSubmissionService
         return submission;
     }
 
+    public async Task SaveProgressAsync(
+        Guid submissionId, IEnumerable<SubmissionAnswer> answers, CancellationToken ct = default)
+    {
+        var existing = await _submissionRepo.GetByIdAsync(submissionId, ct)
+            ?? throw new InvalidOperationException("Không tìm thấy bài làm.");
+        if (existing.Status != SubmissionStatusEnum.InProgress)
+            throw new InvalidOperationException("Bài làm đã nộp, không thể lưu tạm.");
+
+        var list = answers.Select(a =>
+        {
+            a.Id           = Guid.NewGuid();
+            a.SubmissionId = submissionId;
+            a.EssayContent = a.EssayContent?.Trim();
+            return a;
+        }).ToList();
+
+        await _answerRepo.ReplaceForSubmissionAsync(submissionId, list, ct);
+    }
+
     public async Task GradeAnswerAsync(
         Guid submissionAnswerId,
         decimal scoreEarned,
