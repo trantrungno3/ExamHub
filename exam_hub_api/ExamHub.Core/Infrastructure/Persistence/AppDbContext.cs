@@ -514,6 +514,10 @@ public class AppDbContext : DbContext
             e.HasKey(x => x.Id);
             e.Property(x => x.Id).HasDefaultValueSql("gen_random_uuid()");
             e.Property(x => x.TotalScore).HasPrecision(6, 2);
+            // 20 = độ dài cột exam_submissions.status trong database_schema.sql. Chuỗi dài nhất
+            // hiện nay là 'pending_manual_grade' — đúng 20 ký tự, KHÔNG còn dư chỗ: thêm trạng
+            // thái mới có tên dài hơn phải nâng cả HasMaxLength ở đây lẫn VARCHAR(20) + CHECK
+            // (status IN ...) trong database_schema.sql.
             e.Property(x => x.Status)
                 .HasConversion(new SnakeCaseEnumConverter<SubmissionStatusEnum>())
                 .HasMaxLength(20)

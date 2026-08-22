@@ -552,8 +552,11 @@ CREATE TABLE public.exam_submissions
 
     total_score      NUMERIC(5, 2),
     is_passed        BOOLEAN,
+    -- LƯU Ý: 'pending_manual_grade' dài đúng 20 ký tự = VARCHAR(20) không còn dư chỗ.
+    -- Thêm trạng thái mới dài hơn 20 ký tự PHẢI nâng độ dài cột ở đây VÀ ở
+    -- AppDbContext (ExamSubmission.Status .HasMaxLength(20)).
     status           VARCHAR(20) NOT NULL DEFAULT 'in_progress'
-        CHECK (status IN ('in_progress', 'submitted', 'graded')),
+        CHECK (status IN ('in_progress', 'submitted', 'graded', 'pending_manual_grade')),
 
     created            TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
     created_by           VARCHAR(150),
