@@ -1,3 +1,4 @@
+using ExamHub.Core.Application.Submissions;
 using ExamHub.Core.Domain.Entities;
 using ExamHub.Core.Domain.Enums;
 using ExamHub.Core.Domain.Interfaces;
@@ -209,8 +210,7 @@ public class ExamSessionRepository(AppDbContext _db) : IExamSessionRepository
     /// <inheritdoc/>
     public Task<int> CountSubmittedAttemptsAsync(Guid sessionId, Guid studentId, CancellationToken ct = default)
         => _db.Set<ExamSubmission>().CountAsync(
-            x => x.SessionId == sessionId && x.StudentId == studentId
-                 && (x.Status == SubmissionStatusEnum.Submitted || x.Status == SubmissionStatusEnum.Graded), ct);
+            SubmissionAttempts.UsedAttemptFilter(sessionId, studentId), ct);
 
     /// <inheritdoc/>
     public Task<ExamSubmission?> GetInProgressAsync(Guid sessionId, Guid studentId, CancellationToken ct = default)

@@ -125,8 +125,16 @@ public class ExamSubmissionController(IExamSubmissionService service) : Authoriz
     {
         try
         {
-            await service.SaveProgressAsync(id, (answers ?? Enumerable.Empty<SubmissionAnswerRequest>()).Select(a => a.ToEntity()), ct);
+            await service.SaveProgressAsync(
+                id,
+                CurrentUser.UserId!.Value,
+                (answers ?? Enumerable.Empty<SubmissionAnswerRequest>()).Select(a => a.ToEntity()),
+                ct);
             return Ok(RequestResponse<bool>.Success("Đã lưu tạm bài làm.", true, 1));
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return StatusCode(403, RequestResponse<object>.Error(ex.Message));
         }
         catch (InvalidOperationException ex)
         {

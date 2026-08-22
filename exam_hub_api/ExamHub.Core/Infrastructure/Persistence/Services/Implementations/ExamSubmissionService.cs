@@ -141,8 +141,13 @@ public class ExamSubmissionService : IExamSubmissionService
 
         await _submissionRepo.UpdateAsync(existing, ct);
 
-        if (answerList.Count > 0)
-            await _answerRepo.AddRangeAsync(answerList, ct);
+        // Bản in_progress CÓ THỂ đã có sẵn đáp án do autosave (SaveProgressAsync) ghi trước đó.
+        // Vì vậy phải xoá sạch rồi ghi lại (ReplaceForSubmissionAsync = delete-then-insert, cùng
+        // ngữ nghĩa autosave đang dùng) — nếu chỉ AddRange sẽ sinh bản ghi trùng cho mỗi câu:
+        // vi phạm UNIQUE (submission_id, exam_question_id), và nếu lọt qua thì màn chấm hiện
+        // mỗi câu hai lần còn FinalizeAsync cộng điểm sai. Gọi cả khi danh sách rỗng để không
+        // sót lại đáp án autosave cũ.
+        await _answerRepo.ReplaceForSubmissionAsync(existing.Id, answerList, ct);
 
         return existing;
     }
@@ -181,10 +186,15 @@ public class ExamSubmissionService : IExamSubmissionService
     }
 
     public async Task SaveProgressAsync(
-        Guid submissionId, IEnumerable<SubmissionAnswer> answers, CancellationToken ct = default)
+        Guid submissionId, Guid currentUserId, IEnumerable<SubmissionAnswer> answers, CancellationToken ct = default)
     {
         var existing = await _submissionRepo.GetByIdAsync(submissionId, ct)
             ?? throw new InvalidOperationException("Không tìm thấy bài làm.");
+        // Chỉ chủ nhân bài làm được ghi đè. ReplaceForSubmissionAsync là delete-then-insert nên
+        // nếu thiếu kiểm tra này, bất kỳ tài khoản nào biết/đoán được submissionId đều có thể
+        // xoá trắng bài làm đang thi của học sinh khác.
+        if (existing.StudentId != currentUserId)
+            throw new UnauthorizedAccessException("Bạn không có quyền lưu bài làm này.");
         if (existing.Status != SubmissionStatusEnum.InProgress)
             throw new InvalidOperationException("Bài làm đã nộp, không thể lưu tạm.");
 

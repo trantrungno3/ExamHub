@@ -169,6 +169,10 @@ public interface IExamSubmissionService
     /// </summary>
     Task<ExamSubmission> FinalizeAsync(Guid submissionId, Guid gradedBy, CancellationToken ct = default);
 
-    /// <summary>Lưu tạm đáp án cho bài đang làm (InProgress) — không đổi trạng thái, không chấm.</summary>
-    Task SaveProgressAsync(Guid submissionId, IEnumerable<SubmissionAnswer> answers, CancellationToken ct = default);
+    /// <summary>
+    /// Lưu tạm đáp án cho bài đang làm (InProgress) — không đổi trạng thái, không chấm.
+    /// Ném <see cref="UnauthorizedAccessException"/> nếu <paramref name="currentUserId"/> không
+    /// phải học sinh sở hữu bài làm.
+    /// </summary>
+    Task SaveProgressAsync(Guid submissionId, Guid currentUserId, IEnumerable<SubmissionAnswer> answers, CancellationToken ct = default);
 }
