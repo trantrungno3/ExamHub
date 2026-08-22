@@ -1,6 +1,7 @@
 using ExamHub.Core;
 using ExamHub.Core.Application.Services;
 using ExamHub.Core.DataTransferObjects.User;
+using ExamHub.Core.Domain.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TVT.Core;
@@ -13,7 +14,8 @@ namespace ExamHub.API.Controllers;
 [Route("api/users")]
 public class UserController(
     IUserManagementService userService,
-    IUserBulkImportService bulkUserImportService) : AuthorizeControllerBase
+    IUserBulkImportService bulkUserImportService,
+    IExamSubmissionRepository submissionRepo) : AuthorizeControllerBase
 {
     // ── Quản lý người dùng ──────────────────────────────────────
 
@@ -89,12 +91,23 @@ public class UserController(
         return Ok(RequestResponse<UserResponse>.Success("Cập nhật thành công!", UserResponse.FromEntity(updated), 1));
     }
 
-    /// <summary>Xóa người dùng</summary>
+    /// <summary>Xóa người dùng. Nếu còn bài nộp/đề thi liên quan, trả về 409 trừ khi <paramref name="force"/> = true.</summary>
     [HttpDelete("{id:guid}")]
-    public async Task<IActionResult> Delete(Guid id)
+    public async Task<IActionResult> Delete(Guid id, [FromQuery] bool force = false, CancellationToken ct = default)
     {
         var user = await userService.FindByIdAsync(id);
         if (user is null) return NotFound();
+
+        var submissions = await submissionRepo.GetByStudentAsync(id, ct);
+        if (submissions.Count > 0 && !force)
+            return Conflict(RequestResponse<object>.Error(
+                "Người dùng đang có dữ liệu liên quan (bài làm/đề thi). Dùng xoá bắt buộc nếu chắc chắn."));
+
+        // FK exam_submissions.student_id không có ON DELETE CASCADE → dọn bài nộp trước khi xoá user.
+        if (force)
+            foreach (var submission in submissions)
+                await submissionRepo.DeleteAsync(submission, ct);
+
         await userService.DeleteAsync(user);
         return NoContent();
     }

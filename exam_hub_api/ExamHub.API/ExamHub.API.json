@@ -547,7 +547,7 @@
         "tags": [
           "User"
         ],
-        "summary": "Xóa người dùng",
+        "summary": "Xóa người dùng. Nếu còn bài nộp/đề thi liên quan, trả về 409 trừ khi force = true.",
         "parameters": [
           {
             "name": "id",
@@ -556,6 +556,14 @@
             "schema": {
               "type": "string",
               "format": "uuid"
+            }
+          },
+          {
+            "name": "force",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": false
             }
           }
         ],
@@ -1725,6 +1733,36 @@
         ]
       }
     },
+    "/api/Cohort/{id}/force": {
+      "delete": {
+        "tags": [
+          "Cohort"
+        ],
+        "summary": "Xoá bắt buộc khoá học kèm toàn bộ dữ liệu liên quan",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
     "/api/Cohort": {
       "get": {
         "tags": [
@@ -2565,6 +2603,36 @@
                 }
               }
             }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/School/{id}/force": {
+      "delete": {
+        "tags": [
+          "School"
+        ],
+        "summary": "Xoá bắt buộc trường học kèm toàn bộ dữ liệu liên quan",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
           }
         },
         "security": [
@@ -5849,6 +5917,81 @@
               "text/json": {
                 "schema": {
                   "$ref": "#/components/schemas/RequestResponseOfExamSubmissionResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/exam-submissions/{id}/progress": {
+      "put": {
+        "tags": [
+          "ExamSubmission"
+        ],
+        "summary": "Lưu tạm bài làm (autosave) cho bản InProgress — không đổi trạng thái, không chấm.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/SubmissionAnswerRequest"
+                }
+              }
+            },
+            "text/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/SubmissionAnswerRequest"
+                }
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/SubmissionAnswerRequest"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfboolean"
                 }
               }
             }

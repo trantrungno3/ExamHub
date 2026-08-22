@@ -22,6 +22,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ExamHub.Core\ExamHub.Core.csproj" />
+    <!-- Needed for UserDeleteTests.cs: the D5 guard lives in UserController (controller-level
+         check per the task-D5 ruling), so the controller itself must be testable here. -->
+    <ProjectReference Include="..\ExamHub.API\ExamHub.API.csproj" />
   </ItemGroup>
 
   <ItemGroup>
