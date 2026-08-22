@@ -1,6 +1,7 @@
 using ExamHub.Core.Domain.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using TVT.Core;
 
 namespace ExamHub.API.Controllers;
@@ -84,6 +85,16 @@ public abstract class CategoryBaseController<TEntity, TKey, TRequest, TResponse>
         catch (ExamHub.Core.Application.Services.EntityInUseException ex)
         {
             return Conflict(RequestResponse<object>.Error(ex.Message));
+        }
+        catch (DbUpdateException)
+        {
+            // Backstop cho các tham chiếu khoá ngoại KHÔNG được service kiểm tra tường minh
+            // (vd. cohort_classes.grade_level_id, exam_templates/exam_sessions.subject_id,
+            // exam_template_sections.topic_id/question_type_id...). Không có middleware xử lý
+            // exception toàn cục trong codebase này, nên nếu không bắt ở đây sẽ lộ 500 thay vì
+            // 409 tiếng Việt như UC18 yêu cầu. Cùng pattern với UserController (task D5).
+            return Conflict(RequestResponse<object>.Error(
+                "Dữ liệu đang được sử dụng ở nơi khác, không thể xoá."));
         }
     }
 

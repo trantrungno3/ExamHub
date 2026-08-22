@@ -1,4 +1,3 @@
-using ExamHub.Core.Application.Services;
 using ExamHub.Core.DataTransferObjects.School;
 using ExamHub.Core.Domain.Entities;
 using ExamHub.Core.Domain.Interfaces;
@@ -51,8 +50,12 @@ public class CohortController(ICohortService service)
         return Ok(RequestResponse<CohortResponse>.Success("Lấy dữ liệu thành công!", ToResponse(result), 1));
     }
 
-    /// <summary>Xoá bắt buộc khoá học kèm toàn bộ dữ liệu liên quan</summary>
+    /// <summary>
+    /// Xoá bắt buộc khoá học kèm toàn bộ dữ liệu liên quan.
+    /// Chỉ Admin: đây là thao tác cascade không hoàn tác được (lớp, thành viên, phân công kỳ thi).
+    /// </summary>
     [HttpDelete("{id:int}/force")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> ForceDelete(int id, CancellationToken ct = default)
     {
         await service.DeleteAsync(id, true, ct);

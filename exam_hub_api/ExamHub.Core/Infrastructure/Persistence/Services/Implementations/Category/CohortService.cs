@@ -55,14 +55,15 @@ public class CohortService : ICohortService
 
     public async Task DeleteAsync(int id, bool force, CancellationToken ct = default)
     {
-        var hasMembers = await _memberRepo.CountAsync(m => m.CohortId == id, ct) > 0;
-        if (hasMembers && !force)
+        // Chỉ tính thành viên ĐANG HOẠT ĐỘNG — khớp đúng với thông báo bên dưới. Thành viên đã
+        // rời lớp (IsActive = false) không chặn xoá; chúng bị dọn theo cascade như phía dưới.
+        var hasActiveMembers = await _memberRepo.ExistsAsync(m => m.CohortId == id && m.IsActive, ct);
+        if (hasActiveMembers && !force)
             throw new EntityInUseException("Khoá học còn học sinh/lớp đang hoạt động. Dùng xoá bắt buộc để xoá luôn dữ liệu liên quan.");
-        if (force)
-        {
-            var members = await _memberRepo.GetByCohortAsync(id, ct);
-            foreach (var m in members) await _memberRepo.DeleteByIdAsync(m.Id, ct);
-        }
+
+        // Không cần xoá thủ công cohort_members/cohort_classes: cả database_schema.sql
+        // (cohort_id ... ON DELETE CASCADE) lẫn AppDbContext (OnDelete(DeleteBehavior.Cascade))
+        // đều cascade khi xoá cohort, nên vòng lặp xoá từng thành viên chỉ là N round-trip thừa.
         await _repo.DeleteByIdAsync(id, ct);
     }
 

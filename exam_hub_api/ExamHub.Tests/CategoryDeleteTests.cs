@@ -45,7 +45,7 @@ file sealed class FakeCohortMemberRepository(List<string> callLog) : ICohortMemb
         => throw new NotSupportedException();
 
     public Task<bool> ExistsAsync(Expression<Func<CohortMember, bool>> predicate, CancellationToken ct = default)
-        => throw new NotSupportedException();
+        => Task.FromResult(Members.Any(predicate.Compile()));
 
     public Task<int> CountAsync(Expression<Func<CohortMember, bool>>? predicate = null, CancellationToken ct = default)
     {
@@ -267,11 +267,12 @@ public class CohortServiceDeleteTests
         NumClasses = 1
     };
 
-    private static CohortMember NewMember(int cohortId) => new()
+    private static CohortMember NewMember(int cohortId, bool isActive = true) => new()
     {
         Id = Guid.NewGuid(),
         CohortId = cohortId,
-        StudentId = Guid.NewGuid()
+        StudentId = Guid.NewGuid(),
+        IsActive = isActive
     };
 
     [Fact]
@@ -307,25 +308,59 @@ public class CohortServiceDeleteTests
     }
 
     [Fact]
-    public async Task DeleteAsync_Force_WithMembers_DeletesMembersBeforeCohort()
+    public async Task DeleteAsync_NoForce_OnlyInactiveMembers_DeletesCohort()
+    {
+        // Thông báo lỗi nói "còn học sinh/lớp đang hoạt động" ⇒ guard chỉ được chặn khi
+        // thực sự còn thành viên IsActive. Thành viên đã rời lớp không chặn xoá.
+        var log = new List<string>();
+        var memberRepo = new FakeCohortMemberRepository(log);
+        var cohortRepo = new FakeCohortRepository(log, allowDirectDelete: true);
+        cohortRepo.Cohorts.Add(NewCohort(1));
+        memberRepo.Members.Add(NewMember(1, isActive: false));
+        memberRepo.Members.Add(NewMember(1, isActive: false));
+        var service = new CohortService(cohortRepo, memberRepo);
+
+        await service.DeleteAsync(1, force: false, ct: default);
+
+        Assert.Empty(cohortRepo.Cohorts);
+        Assert.Contains("cohort-delete:1", log);
+    }
+
+    [Fact]
+    public async Task DeleteAsync_NoForce_MixedMembers_ThrowsBecauseOneIsActive()
     {
         var log = new List<string>();
         var memberRepo = new FakeCohortMemberRepository(log);
         var cohortRepo = new FakeCohortRepository(log, allowDirectDelete: true);
         cohortRepo.Cohorts.Add(NewCohort(1));
-        var m1 = NewMember(1);
-        var m2 = NewMember(1);
-        memberRepo.Members.Add(m1);
-        memberRepo.Members.Add(m2);
+        memberRepo.Members.Add(NewMember(1, isActive: false));
+        memberRepo.Members.Add(NewMember(1, isActive: true));
+        var service = new CohortService(cohortRepo, memberRepo);
+
+        await Assert.ThrowsAsync<EntityInUseException>(() => service.DeleteAsync(1, force: false, ct: default));
+
+        Assert.Single(cohortRepo.Cohorts);
+    }
+
+    [Fact]
+    public async Task DeleteAsync_Force_WithMembers_DeletesCohortWithoutPerMemberRoundTrips()
+    {
+        // cohort_members.cohort_id là ON DELETE CASCADE (database_schema.sql) và
+        // AppDbContext cấu hình DeleteBehavior.Cascade ⇒ chỉ cần xoá cohort, KHÔNG lặp
+        // xoá từng thành viên.
+        var log = new List<string>();
+        var memberRepo = new FakeCohortMemberRepository(log);
+        var cohortRepo = new FakeCohortRepository(log, allowDirectDelete: true);
+        cohortRepo.Cohorts.Add(NewCohort(1));
+        memberRepo.Members.Add(NewMember(1));
+        memberRepo.Members.Add(NewMember(1));
         var service = new CohortService(cohortRepo, memberRepo);
 
         await service.DeleteAsync(1, force: true, ct: default);
 
-        Assert.Empty(memberRepo.Members);
         Assert.Empty(cohortRepo.Cohorts);
-        Assert.Equal(
-            [$"member-delete:{m1.Id}", $"member-delete:{m2.Id}", "cohort-delete:1"],
-            log);
+        Assert.Equal(["cohort-delete:1"], log);
+        Assert.DoesNotContain(log, e => e.StartsWith("member-delete:"));
     }
 }
 

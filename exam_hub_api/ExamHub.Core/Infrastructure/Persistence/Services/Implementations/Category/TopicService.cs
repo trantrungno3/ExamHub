@@ -55,6 +55,11 @@ public class TopicService(ITopicRepository repo, IRedisService cache, IQuestionR
     {
         if (await questionRepo.ExistsAsync(q => q.TopicId == id, ct))
             throw new EntityInUseException("Chủ đề đang được dùng bởi câu hỏi, không thể xoá.");
+        // topics.parent_id tự tham chiếu (RESTRICT) — không kiểm tra ở đây thì xoá chủ đề cha
+        // sẽ ném DbUpdateException. Các tham chiếu còn lại (vd. exam_template_sections.topic_id)
+        // do backstop DbUpdateException → 409 ở CategoryBaseController.Delete xử lý.
+        if (await repo.ExistsAsync(t => t.ParentId == id, ct))
+            throw new EntityInUseException("Chủ đề đang có chủ đề con, không thể xoá.");
         await repo.DeleteByIdAsync(id, ct);
         await InvalidateCacheAsync(ct);
     }
