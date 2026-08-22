@@ -4,6 +4,7 @@ using ExamHub.Core.DataTransferObjects.User;
 using ExamHub.Core.Domain.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using TVT.Core;
 
 namespace ExamHub.API.Controllers;
@@ -104,11 +105,25 @@ public class UserController(
                 "Người dùng đang có dữ liệu liên quan (bài làm/đề thi). Dùng xoá bắt buộc nếu chắc chắn."));
 
         // FK exam_submissions.student_id không có ON DELETE CASCADE → dọn bài nộp trước khi xoá user.
-        if (force)
-            foreach (var submission in submissions)
-                await submissionRepo.DeleteAsync(submission, ct);
+        // Ngoài ra còn các FK khác tới app_users (vd. submission_answers.graded_by,
+        // questions.verified_by) không có repository/kiểm tra riêng ở đây — nếu người dùng còn
+        // được tham chiếu qua các bảng đó, DeleteAsync bên dưới sẽ ném DbUpdateException do vi
+        // phạm khoá ngoại; bắt chung để trả về 409 tiếng Việt thay vì để lộ lỗi 500 (không có
+        // middleware xử lý exception toàn cục trong codebase này).
+        try
+        {
+            if (force)
+                foreach (var submission in submissions)
+                    await submissionRepo.DeleteAsync(submission, ct);
 
-        await userService.DeleteAsync(user);
+            await userService.DeleteAsync(user);
+        }
+        catch (DbUpdateException)
+        {
+            return Conflict(RequestResponse<object>.Error(
+                "Không thể xoá người dùng do còn dữ liệu liên quan (bài chấm, câu hỏi đã duyệt, ...)."));
+        }
+
         return NoContent();
     }
 

@@ -5,6 +5,7 @@ using ExamHub.Core.DataTransferObjects.User;
 using ExamHub.Core.Domain.Entities;
 using ExamHub.Core.Domain.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using TVT.Core;
 using TVT.Core.IdentityUser.PostgreSql.Models;
 using Xunit;
@@ -87,11 +88,16 @@ file sealed class FakeExamSubmissionRepository(List<string> callLog) : IExamSubm
 }
 
 /// <summary>Fake IUserManagementService — only FindByIdAsync/DeleteAsync are exercised
-/// by UserController.Delete. Records DeleteAsync calls for assertions.</summary>
+/// by UserController.Delete. Records DeleteAsync calls for assertions. Set
+/// <see cref="ThrowDbUpdateExceptionOnDelete"/> to simulate an FK violation that isn't
+/// caught by the student-submission guard (e.g. the user is referenced via
+/// submission_answers.graded_by or questions.verified_by, neither of which this
+/// controller queries directly).</summary>
 file sealed class FakeUserManagementService(List<string> callLog) : IUserManagementService
 {
     public List<UserAdmin> Users { get; } = [];
     public List<Guid> DeleteCalls { get; } = [];
+    public bool ThrowDbUpdateExceptionOnDelete { get; set; }
 
     public IEnumerable<UserAdmin> GetList() => throw new NotSupportedException();
 
@@ -108,6 +114,12 @@ file sealed class FakeUserManagementService(List<string> callLog) : IUserManagem
 
     public Task DeleteAsync(UserAdmin user)
     {
+        if (ThrowDbUpdateExceptionOnDelete)
+        {
+            callLog.Add($"user-delete-attempt-fk-violation:{user.Id}");
+            throw new DbUpdateException("FK violation: user referenced by submission_answers.graded_by or questions.verified_by");
+        }
+
         DeleteCalls.Add(user.Id);
         Users.RemoveAll(u => u.Id == user.Id);
         callLog.Add($"user-delete:{user.Id}");
@@ -217,6 +229,32 @@ public class UserControllerDeleteTests
         Assert.Equal(
             [$"submission-delete:{s1.Id}", $"submission-delete:{s2.Id}", $"user-delete:{userId}"],
             log);
+    }
+
+    [Fact]
+    public async Task Delete_Force_NoStudentSubmissions_ButFkViolationOnDelete_ReturnsConflict_NotUnhandledException()
+    {
+        // Covers the review finding: the student-submission guard only checks
+        // GetByStudentAsync, so it stays silent when the user is referenced elsewhere
+        // (submission_answers.graded_by, questions.verified_by, ...). Force-delete must
+        // still surface a Vietnamese 409 instead of an unhandled DbUpdateException/500.
+        var log = new List<string>();
+        var userService = new FakeUserManagementService(log) { ThrowDbUpdateExceptionOnDelete = true };
+        var submissionRepo = new FakeExamSubmissionRepository(log);
+        var controller = new UserController(userService, new FakeUserBulkImportService(), submissionRepo);
+        var userId = Guid.NewGuid();
+        userService.Users.Add(NewUser(userId));
+        // No student submissions on record → the existing guard would not block this.
+
+        var result = await controller.Delete(userId, force: true, ct: default);
+
+        var conflict = Assert.IsType<ConflictObjectResult>(result);
+        var response = Assert.IsType<RequestResponse<object>>(conflict.Value);
+        Assert.Equal(
+            "Không thể xoá người dùng do còn dữ liệu liên quan (bài chấm, câu hỏi đã duyệt, ...).",
+            response.Message);
+        Assert.Single(userService.Users); // user untouched — delete did not silently "succeed"
+        Assert.Empty(userService.DeleteCalls);
     }
 
     [Fact]
