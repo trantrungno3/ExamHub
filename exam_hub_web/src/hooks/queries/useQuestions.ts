@@ -43,7 +43,11 @@ export function useDeleteQuestionMutation() {
     const qc = useQueryClient()
     return useMutation({
         mutationFn: (id: string) => questionService.remove(id),
-        onSuccess: () => {
+        onSuccess: (res) => {
+            if (res.status === statusCode.Error || res.status === statusCode.Conflict) {
+                message.error(res.message || 'Không thể xóa câu hỏi')
+                return
+            }
             message.success('Đã xóa câu hỏi')
             void qc.invalidateQueries({queryKey: QUESTION_KEYS.all})
             void qc.invalidateQueries({queryKey: QUESTION_KEYS.stats})

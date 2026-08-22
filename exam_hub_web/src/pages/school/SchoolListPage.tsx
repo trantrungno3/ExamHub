@@ -56,7 +56,7 @@ export default function SchoolListPage() {
                 <div className="flex gap-2">
                     <button className="btn-edit" onClick={() => openEdit(record)}>Sửa</button>
                     <Popconfirm title="Xóa trường này?" okText="Xóa" cancelText="Hủy" okButtonProps={{danger: true}}
-                        onConfirm={() => deleteMutation.mutate(record.id)}>
+                        onConfirm={() => deleteMutation.mutate({id: record.id})}>
                         <button className="btn-delete">Xóa</button>
                     </Popconfirm>
                     <Button size="small" icon={<RightOutlined/>} onClick={() => navigate(`/app/schools/${record.id}`)}>

@@ -1,5 +1,5 @@
 import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query'
-import {message} from 'antd'
+import {message, Modal} from 'antd'
 import {statusCode} from '../../services/requestService'
 import {schoolService} from '../../services/schoolService'
 
@@ -46,12 +46,25 @@ export function useUpdateSchoolMutation() {
 
 export function useDeleteSchoolMutation() {
     const qc = useQueryClient()
-    return useMutation({
-        mutationFn: (id: number) => schoolService.remove(id),
-        onSuccess: () => {
+    const mutation = useMutation({
+        mutationFn: ({id, force = false}: {id: number; force?: boolean}) => schoolService.remove(id, force),
+        onSuccess: (res, variables) => {
+            if (res.status === statusCode.Conflict) {
+                Modal.confirm({
+                    title: 'Đang được sử dụng',
+                    content: res.message,
+                    okText: 'Xoá bắt buộc',
+                    okType: 'danger',
+                    cancelText: 'Hủy',
+                    onOk: () => mutation.mutate({id: variables.id, force: true}),
+                })
+                return
+            }
+            if (res.status === statusCode.Error) { message.error(res.message || 'Không thể xóa'); return }
             message.success('Đã xóa')
             void qc.invalidateQueries({queryKey: SCHOOL_KEYS.all})
         },
         onError: () => message.error('Không thể xóa'),
     })
+    return mutation
 }

@@ -30,6 +30,7 @@ import {
     useTopicsQuery,
 } from '../../hooks/queries/useCategoryLists'
 import {questionService} from '../../services/questionService'
+import {statusCode} from '../../services/requestService'
 import {StatusTag} from '../../components/StatusTag'
 import {BulkImportModal} from './BulkImportModal'
 import {BLOOM_CHIP, BLOOM_NUM, DEFAULT_PAGE, DEFAULT_PAGE_SIZE, DIFF_CHIP, NEUTRAL_CHIP, TYPE_CHIP, type ChipColor} from '../../constants'
@@ -126,8 +127,16 @@ export default function QuestionBankPage() {
         setSelectedRowKeys([]); invalidate()
     }
     const bulkDelete = async () => {
-        await Promise.all(selectedRowKeys.map(id => questionService.remove(id)))
-        message.success(`Đã xoá ${selectedRowKeys.length} câu hỏi`)
+        const results = await Promise.all(selectedRowKeys.map(id => questionService.remove(id)))
+        const succeeded = results.filter(r => r.status === statusCode.Deleted).length
+        const failed = results.length - succeeded
+        if (failed === 0) {
+            message.success(`Đã xoá ${succeeded} câu hỏi`)
+        } else if (succeeded === 0) {
+            message.error(`Không thể xoá ${failed} câu hỏi (đang được sử dụng hoặc lỗi khác)`)
+        } else {
+            message.warning(`Đã xoá ${succeeded} câu hỏi, ${failed} câu hỏi không thể xoá (đang được sử dụng hoặc lỗi khác)`)
+        }
         setSelectedRowKeys([]); invalidate()
     }
 

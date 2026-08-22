@@ -1,6 +1,7 @@
 import {useCallback, useEffect, useState} from 'react'
 import {message} from 'antd'
 import type {CategoryServiceBase} from '../services/categoryServiceBase'
+import {statusCode} from '../services/requestService'
 
 export function useCategoryTab<TEntity extends { id: number }, TBody>(
     service: CategoryServiceBase<TEntity, TBody>,
@@ -44,7 +45,11 @@ export function useCategoryTab<TEntity extends { id: number }, TBody>(
 
     const handleDelete = useCallback(async (id: number) => {
         try {
-            await service.remove(id)
+            const res = await service.remove(id)
+            if (res.status !== statusCode.Deleted) {
+                message.error(res.message || 'Không thể xóa')
+                return
+            }
             message.success('Đã xóa')
             setData(prev => prev.filter(item => item.id !== id))
         } catch {

@@ -1,9 +1,10 @@
 import {useCallback, useEffect, useMemo, useState} from 'react'
 import type {TableColumnsType} from 'antd'
-import {Button, Input, Popconfirm, Switch, Table, Tag, Tooltip} from 'antd'
+import {Button, Input, Modal, Popconfirm, Switch, Table, Tag, Tooltip} from 'antd'
 import {BookOutlined, DeleteOutlined, EditOutlined, KeyOutlined, PlusOutlined, SearchOutlined, TeamOutlined, UploadOutlined} from '@ant-design/icons'
 import {message} from 'antd'
 import {userService} from '../../services/userService'
+import {statusCode} from '../../services/requestService'
 import {UserFormModal} from './UserFormModal'
 import {ResetPasswordModal} from './ResetPasswordModal'
 import {RolesModal} from './RolesModal'
@@ -62,9 +63,24 @@ export default function UserPage() {
         } catch { message.error('Có lỗi xảy ra'); return false }
     }, [modal, fetchData])
 
-    const handleDelete = useCallback(async (id: string) => {
+    const handleDelete = useCallback(async (id: string, force = false) => {
         try {
-            await userService.remove(id)
+            const res = await userService.remove(id, force)
+            if (res.status === statusCode.Conflict) {
+                Modal.confirm({
+                    title: 'Đang được sử dụng',
+                    content: res.message,
+                    okText: 'Xoá bắt buộc',
+                    okType: 'danger',
+                    cancelText: 'Hủy',
+                    onOk: () => handleDelete(id, true),
+                })
+                return
+            }
+            if (res.status !== statusCode.Deleted) {
+                message.error(res.message || 'Không thể xóa người dùng')
+                return
+            }
             message.success('Đã xóa người dùng')
             setData(prev => prev.filter(u => u.id !== id))
         } catch { message.error('Không thể xóa người dùng') }

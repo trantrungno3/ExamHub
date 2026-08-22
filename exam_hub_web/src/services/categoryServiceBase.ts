@@ -27,8 +27,8 @@ export class CategoryServiceBase<TEntity, TBody> {
         return AuthHttp.put<TEntity>(`/${this.basePath}/${id}`, body)
     }
 
-    remove(id: number) {
-        return AuthHttp.delete<void>(`/${this.basePath}/${id}`)
+    remove(id: number, force = false) {
+        return AuthHttp.delete<void>(`/${this.basePath}/${id}${force ? '/force' : ''}`)
     }
 
     toggleActive(id: number, active: boolean) {

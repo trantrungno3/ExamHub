@@ -61,7 +61,7 @@ export default function SchoolDetailPage() {
             render: (_, record) => (
                 <div className="flex gap-2">
                     <Popconfirm title="Xóa khoá học này?" okText="Xóa" cancelText="Hủy" okButtonProps={{danger: true}}
-                        onConfirm={() => deleteCohortMutation.mutate(record.id)}>
+                        onConfirm={() => deleteCohortMutation.mutate({id: record.id})}>
                         <button className="btn-delete">Xóa</button>
                     </Popconfirm>
                     <Button size="small" icon={<RightOutlined/>} onClick={() => navigate(`/app/cohorts/${record.id}`)}>

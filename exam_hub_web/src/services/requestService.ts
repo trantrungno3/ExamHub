@@ -7,6 +7,7 @@ export const statusCode = {
     Updated: 3,
     Deleted: 4,
     NotFound: 5,
+    Conflict: 6,
 }
 
 export interface ApiResponse<T> {
@@ -127,6 +128,10 @@ function createHttp(auth: boolean) {
                 body: body === undefined ? undefined : JSON.stringify(body),
             }).then(async res => {
                 if (res.status === 204) return {status: statusCode.Deleted, message: 'Xoá thành công'}
+                if (res.status === 409) {
+                    const body = await handleResponse<T>(res)
+                    return {...body, status: statusCode.Conflict}
+                }
                 return handleResponse<T>(res)
             }))
         },
