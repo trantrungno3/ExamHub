@@ -27,8 +27,13 @@ export class CategoryServiceBase<TEntity, TBody> {
         return AuthHttp.put<TEntity>(`/${this.basePath}/${id}`, body)
     }
 
-    remove(id: number, force = false) {
-        return AuthHttp.delete<void>(`/${this.basePath}/${id}${force ? '/force' : ''}`)
+    /**
+     * Xoá thường. Chỉ Cohort/School có route `/force` (xem cohortService/schoolService) —
+     * vì vậy tham số `force` KHÔNG nằm ở base: nếu để ở đây, gọi
+     * `subjectService.remove(id, true)` sẽ lặng lẽ nhận 404 vì route không tồn tại.
+     */
+    remove(id: number) {
+        return AuthHttp.delete<void>(`/${this.basePath}/${id}`)
     }
 
     toggleActive(id: number, active: boolean) {

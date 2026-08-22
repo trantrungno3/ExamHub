@@ -17,6 +17,13 @@ class SchoolService extends CategoryServiceBase<School, SchoolBody> {
     getWithMembers(id: number) {
         return AuthHttp.get<School>(`/${this.basePath}/${id}/with-members`)
     }
+
+    /** School là một trong hai danh mục duy nhất có route xoá bắt buộc (`DELETE {id}/force`). */
+    override remove(id: number, force = false) {
+        return force
+            ? AuthHttp.delete<void>(`/${this.basePath}/${id}/force`)
+            : super.remove(id)
+    }
 }
 
 export const schoolService = new SchoolService()

@@ -7,21 +7,23 @@ import {useExamsQuery} from '../../hooks/queries/useExams'
 import {useMySubmissionsQuery} from '../../hooks/queries/useSubmissions'
 import {useGradeLevelsListQuery, useSubjectsQuery} from '../../hooks/queries/useCategoryLists'
 import {useAuth} from '../../AuthProvider'
+import {SUBMISSION_STATUS_LABEL_STUDENT, SUBMISSION_STATUS_TAG_COLOR} from '../../constants'
 
-/** Trạng thái làm bài nhìn từ phía học sinh. */
-type StudentStatus = 'NotStarted' | 'InProgress' | 'Submitted' | 'Graded'
+/**
+ * Trạng thái làm bài nhìn từ phía học sinh = mọi SubmissionStatus + 'NotStarted' (chưa có bài nộp).
+ * Nhãn/màu lấy từ constants dùng chung (Task A4) — KHÔNG khai báo bản sao cục bộ, vì bản sao cũ
+ * thiếu 'PendingManualGrade' làm <Tag> render rỗng cho mọi bài tự luận.
+ */
+type StudentStatus = SubmissionStatus | 'NotStarted'
 
+// NotStarted đứng đầu để thứ tự option trong dropdown lọc đi theo vòng đời bài làm.
 const STUDENT_STATUS_LABEL: Record<StudentStatus, string> = {
     NotStarted: 'Chưa làm',
-    InProgress: 'Đang làm',
-    Submitted: 'Đã nộp (chờ chấm)',
-    Graded: 'Đã chấm',
+    ...SUBMISSION_STATUS_LABEL_STUDENT,
 }
 const STUDENT_STATUS_COLOR: Record<StudentStatus, string> = {
     NotStarted: 'default',
-    InProgress: 'processing',
-    Submitted: 'gold',
-    Graded: 'green',
+    ...SUBMISSION_STATUS_TAG_COLOR,
 }
 
 interface ExamRow extends Exam {

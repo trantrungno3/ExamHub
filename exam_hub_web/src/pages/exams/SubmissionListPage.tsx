@@ -17,7 +17,11 @@ export default function SubmissionListPage() {
 
     const rows = submissions ?? []
     const gradedCount = rows.filter(s => s.status === 'Graded').length
-    const pending = rows.filter(s => s.status === 'PendingManualGrade')
+    // 'Submitted' phải nằm trong hàng đợi chấm: theo Global Constraint "KHÔNG backfill dữ liệu
+    // submission cũ", mọi bài tự luận nộp TRƯỚC nhánh này vẫn mang status='Submitted' vĩnh viễn.
+    // Nếu chỉ lọc 'PendingManualGrade' thì chúng biến mất khỏi màn "cần chấm" và không còn lối
+    // vào nào khác.
+    const pending = rows.filter(s => s.status === 'PendingManualGrade' || s.status === 'Submitted')
 
     const subtitle = [state?.title, state?.subjectName, state?.gradeLevelName].filter(Boolean).join(' · ')
 
