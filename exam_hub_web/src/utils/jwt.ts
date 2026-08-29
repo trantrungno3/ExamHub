@@ -21,6 +21,11 @@ export function isTokenExpired(expiresAt: number, bufferMs = 0): boolean {
     return Date.now() >= expiresAt - bufferMs
 }
 
+function extractIds(raw: unknown): number[] {
+    const arr = Array.isArray(raw) ? raw : raw !== undefined && raw !== null ? [raw] : []
+    return arr.map(Number).filter((n) => !Number.isNaN(n))
+}
+
 /** Đọc UserInfo từ payload JWT (claim names của ASP.NET Core) */
 export function extractUserFromToken(accessToken: string): UserInfo {
     const p = decodePayload(accessToken)
@@ -35,5 +40,8 @@ export function extractUserFromToken(accessToken: string): UserInfo {
     const raw = p['Role'] ??
         p['http://schemas.microsoft.com/ws/2008/06/identity/claims/role']
     const roles = Array.isArray(raw) ? (raw as string[]) : raw ? [String(raw)] : []
-    return {id, userName, roles}
+    const schoolIds = extractIds(p['SchoolId'])
+    const cohortClassIds = extractIds(p['CohortClassId'])
+    const subjectIds = extractIds(p['SubjectId'])
+    return {id, userName, roles, schoolIds, cohortClassIds, subjectIds}
 }

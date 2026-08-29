@@ -26,5 +26,8 @@ interface UserInfo {
     phoneNumber?: string
     email?: string
     roles: string[]
+    schoolIds: number[]
+    cohortClassIds: number[]
+    subjectIds: number[]
 }
 
