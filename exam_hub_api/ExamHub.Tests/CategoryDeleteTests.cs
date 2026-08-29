@@ -17,6 +17,9 @@ file sealed class FakeCohortMemberRepository(List<string> callLog) : ICohortMemb
     public Task<IReadOnlyList<CohortMember>> GetByCohortAsync(int cohortId, CancellationToken ct = default)
         => Task.FromResult<IReadOnlyList<CohortMember>>(Members.Where(m => m.CohortId == cohortId).ToList());
 
+    public Task<IReadOnlyList<CohortMember>> GetBySchoolAsync(int schoolId, CancellationToken ct = default)
+        => throw new NotSupportedException();
+
     public Task<IReadOnlyList<CohortMember>> GetByStudentAsync(Guid studentId, CancellationToken ct = default)
         => throw new NotSupportedException();
 

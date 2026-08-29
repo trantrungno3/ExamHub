@@ -2220,6 +2220,53 @@
         ]
       }
     },
+    "/api/CohortMember/by-school/{schoolId}": {
+      "get": {
+        "tags": [
+          "CohortMember"
+        ],
+        "summary": "Lấy danh sách học sinh theo trường (gộp tất cả các khoá của trường)",
+        "parameters": [
+          {
+            "name": "schoolId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfCohortMemberResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfCohortMemberResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfCohortMemberResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
     "/api/CohortMember/by-student/{studentId}": {
       "get": {
         "tags": [

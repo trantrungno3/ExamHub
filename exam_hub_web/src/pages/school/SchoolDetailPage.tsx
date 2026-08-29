@@ -7,6 +7,7 @@ import {StatusTag} from '../../components/StatusTag'
 import {useSchoolsQuery} from '../../hooks/queries/useSchools'
 import {useCohortsQuery, useCreateCohortMutation, useDeleteCohortMutation} from '../../hooks/queries/useCohorts'
 import {useSchoolMembersQuery, useAddSchoolMemberMutation, useRemoveSchoolMemberMutation, useSetSchoolMemberActiveMutation} from '../../hooks/queries/useSchoolMembers'
+import {useCohortMembersBySchoolQuery} from '../../hooks/queries/useCohortMembers'
 import {statusCode} from '../../services/requestService'
 import {userService} from '../../services/userService'
 import {useQuery} from '@tanstack/react-query'
@@ -21,6 +22,7 @@ export default function SchoolDetailPage() {
 
     const {data: cohorts = [], isFetching: fetchingCohorts} = useCohortsQuery(schoolId)
     const {data: members = [], isFetching: fetchingMembers} = useSchoolMembersQuery(schoolId)
+    const {data: students = [], isFetching: fetchingStudents} = useCohortMembersBySchoolQuery(schoolId)
 
     const createCohortMutation = useCreateCohortMutation(schoolId)
     const deleteCohortMutation = useDeleteCohortMutation(schoolId)
@@ -73,7 +75,17 @@ export default function SchoolDetailPage() {
     ]
 
     const memberColumns: TableColumnsType<SchoolMember> = [
-        {title: 'User ID', dataIndex: 'userId', key: 'userId', render: v => <span className="font-mono text-xs">{v}</span>},
+        {
+            title: 'Họ tên', key: 'displayName',
+            render: (_, record) => {
+                const user = allUsers.find(u => u.id === record.userId)
+                return user ? user.displayName ?? user.userName : <span className="font-mono text-xs">{record.userId}</span>
+            },
+        },
+        {
+            title: 'Email', key: 'email',
+            render: (_, record) => allUsers.find(u => u.id === record.userId)?.email ?? '—',
+        },
         {title: 'Vai trò', dataIndex: 'role', key: 'role', render: v => <Tag>{v}</Tag>},
         {title: 'Trạng thái', dataIndex: 'isActive', key: 'isActive', render: v => <StatusTag status={v ? 'success' : 'default'} label={v ? 'Hoạt động' : 'Tắt'}/>},
         {
@@ -90,6 +102,26 @@ export default function SchoolDetailPage() {
                 </div>
             ),
         },
+    ]
+
+    const studentColumns: TableColumnsType<CohortMember> = [
+        {
+            title: 'Học sinh', key: 'displayName',
+            render: (_, record) => {
+                const user = allUsers.find(u => u.id === record.studentId)
+                return user ? user.displayName ?? user.userName : <span className="font-mono text-xs">{record.studentId}</span>
+            },
+        },
+        {
+            title: 'Email', key: 'email',
+            render: (_, record) => allUsers.find(u => u.id === record.studentId)?.email ?? '—',
+        },
+        {
+            title: 'Khoá', key: 'cohortName',
+            render: (_, record) => cohorts.find(c => c.id === record.cohortId)?.name ?? `#${record.cohortId}`,
+        },
+        {title: 'Lớp', dataIndex: 'section', key: 'section', render: v => v ?? <span className="text-gray-400">Chưa xếp</span>},
+        {title: 'Trạng thái', dataIndex: 'isActive', key: 'isActive', render: v => <StatusTag status={v ? 'success' : 'default'} label={v ? 'Đang học' : 'Tắt'}/>},
     ]
 
     const tabItems = [
@@ -116,6 +148,14 @@ export default function SchoolDetailPage() {
                         </Button>
                     </div>
                     <Table columns={memberColumns} dataSource={members} rowKey="id" loading={fetchingMembers} pagination={false} scroll={{x: 700}}/>
+                </div>
+            ),
+        },
+        {
+            key: 'students', label: 'Học sinh',
+            children: (
+                <div className="flex flex-col gap-4 p-4">
+                    <Table columns={studentColumns} dataSource={students} rowKey="id" loading={fetchingStudents} pagination={false} scroll={{x: 700}}/>
                 </div>
             ),
         },

@@ -30,6 +30,15 @@ public class CohortMemberController(ICohortMemberService service) : AuthorizeCon
         return Ok(RequestResponse<IReadOnlyList<CohortMemberResponse>>.Success("Lấy danh sách thành công!", list, list.Count));
     }
 
+    /// <summary>Lấy danh sách học sinh theo trường (gộp tất cả các khoá của trường)</summary>
+    [HttpGet("by-school/{schoolId:int}")]
+    public async Task<ActionResult<RequestResponse<IReadOnlyList<CohortMemberResponse>>>> GetBySchool(int schoolId, CancellationToken ct = default)
+    {
+        var result = await service.GetBySchoolAsync(schoolId, ct);
+        var list = result.Select(CohortMemberResponse.FromEntity).ToList();
+        return Ok(RequestResponse<IReadOnlyList<CohortMemberResponse>>.Success("Lấy danh sách thành công!", list, list.Count));
+    }
+
     /// <summary>Lấy các khoá học của một học sinh</summary>
     [HttpGet("by-student/{studentId:guid}")]
     public async Task<ActionResult<RequestResponse<IReadOnlyList<CohortMemberResponse>>>> GetByStudent(Guid studentId, CancellationToken ct = default)

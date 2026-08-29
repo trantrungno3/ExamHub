@@ -7,6 +7,8 @@ public interface ICohortMemberService
 {
     /// <summary>Lấy danh sách học sinh theo khoá</summary>
     Task<IReadOnlyList<CohortMember>> GetByCohortAsync(int cohortId, CancellationToken ct = default);
+    /// <summary>Lấy danh sách học sinh theo trường (gộp tất cả các khoá của trường)</summary>
+    Task<IReadOnlyList<CohortMember>> GetBySchoolAsync(int schoolId, CancellationToken ct = default);
     /// <summary>Lấy các khoá học của một học sinh</summary>
     Task<IReadOnlyList<CohortMember>> GetByStudentAsync(Guid studentId, CancellationToken ct = default);
     /// <summary>Lấy theo ID</summary>

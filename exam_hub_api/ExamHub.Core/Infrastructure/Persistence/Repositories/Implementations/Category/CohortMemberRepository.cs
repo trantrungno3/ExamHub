@@ -16,6 +16,13 @@ public class CohortMemberRepository : BaseRepository<CohortMember, Guid>, ICohor
             .OrderBy(x => x.JoinedAt)
             .ToListAsync(ct);
 
+    public async Task<IReadOnlyList<CohortMember>> GetBySchoolAsync(int schoolId, CancellationToken ct = default)
+        => await Set.AsNoTracking()
+            .Include(x => x.Cohort)
+            .Where(x => x.Cohort!.SchoolId == schoolId && x.IsActive)
+            .OrderBy(x => x.JoinedAt)
+            .ToListAsync(ct);
+
     public async Task<IReadOnlyList<CohortMember>> GetByStudentAsync(Guid studentId, CancellationToken ct = default)
         => await Set.AsNoTracking()
             .Where(x => x.StudentId == studentId)
