@@ -33,6 +33,9 @@ public interface IExamSessionRepository
     Task AddAssignmentAsync(ExamSessionAssignment a, CancellationToken ct = default);
     Task RemoveAssignmentAsync(Guid assignmentId, CancellationToken ct = default);
 
+    /// <summary>Chi tiết một assignment theo Id (dùng để kiểm tra quyền trước khi gỡ).</summary>
+    Task<ExamSessionAssignment?> GetAssignmentByIdAsync(Guid assignmentId, CancellationToken ct = default);
+
     /// <summary>Đếm số HS active thuộc phạm vi 1 assignment (cả khoá hoặc 1 lớp/section).</summary>
     Task<int> CountStudentsForAssignmentAsync(ExamSessionAssignment a, CancellationToken ct = default);
 

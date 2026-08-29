@@ -152,6 +152,10 @@ public class ExamSessionService(IExamSessionRepository _repo, IExamRepository _e
     public Task RemoveAssignmentAsync(Guid assignmentId, CancellationToken ct = default)
         => _repo.RemoveAssignmentAsync(assignmentId, ct);
 
+    /// <inheritdoc/>
+    public Task<ExamSessionAssignment?> GetAssignmentByIdAsync(Guid assignmentId, CancellationToken ct = default)
+        => _repo.GetAssignmentByIdAsync(assignmentId, ct);
+
     // ── Phía học sinh ───────────────────────────────────────────────────
     /// <inheritdoc/>
     public async Task<IReadOnlyList<MySessionResponse>> GetMySessionsAsync(Guid studentId, CancellationToken ct = default)

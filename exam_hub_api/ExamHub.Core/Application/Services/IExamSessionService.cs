@@ -25,6 +25,9 @@ public interface IExamSessionService
     Task<Guid> AddAssignmentAsync(Guid sessionId, CreateAssignmentRequest req, CancellationToken ct = default);
     Task RemoveAssignmentAsync(Guid assignmentId, CancellationToken ct = default);
 
+    /// <summary>Chi tiết một assignment theo Id (dùng để kiểm tra quyền trước khi gỡ).</summary>
+    Task<ExamHub.Core.Domain.Entities.ExamSessionAssignment?> GetAssignmentByIdAsync(Guid assignmentId, CancellationToken ct = default);
+
     // ── Phía học sinh ───────────────────────────────────────────────────
     Task<IReadOnlyList<MySessionResponse>> GetMySessionsAsync(Guid studentId, CancellationToken ct = default);
     Task<IReadOnlyList<SessionPoolItemResponse>> GetPoolForStudentAsync(Guid sessionId, Guid studentId, CancellationToken ct = default);

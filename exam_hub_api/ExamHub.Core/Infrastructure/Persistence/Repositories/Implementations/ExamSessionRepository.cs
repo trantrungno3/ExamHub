@@ -140,6 +140,10 @@ public class ExamSessionRepository(AppDbContext _db) : IExamSessionRepository
     }
 
     /// <inheritdoc/>
+    public Task<ExamSessionAssignment?> GetAssignmentByIdAsync(Guid assignmentId, CancellationToken ct = default)
+        => _db.Set<ExamSessionAssignment>().FirstOrDefaultAsync(a => a.Id == assignmentId, ct);
+
+    /// <inheritdoc/>
     public async Task<int> CountStudentsForAssignmentAsync(ExamSessionAssignment a, CancellationToken ct = default)
     {
         if (a.CohortClassId != null && a.CohortClass != null)
