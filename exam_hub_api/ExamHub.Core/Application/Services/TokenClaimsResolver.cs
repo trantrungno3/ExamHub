@@ -22,7 +22,7 @@ public sealed class TokenClaimsResolver(
         if (roles.Contains("Student"))
             await AddStudentClaimsAsync(userId, claims, ct);
 
-        return claims;
+        return claims.Distinct().ToList();
     }
 
     private async Task AddTeacherClaimsAsync(Guid teacherId, List<KeyValuePair<string, string>> claims, CancellationToken ct)

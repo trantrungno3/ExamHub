@@ -75,7 +75,10 @@ export const useAuthStore = create<AuthStore>()(
             name: 'examhub_auth',
             partialize: (state) => ({ token: state.token, user: state.user }),
             onRehydrateStorage: () => (state) => {
-                if (state?.token) state.isAuthenticated = true
+                if (state?.token) {
+                    state.isAuthenticated = true
+                    state.user = extractUserFromToken(state.token.accessToken)
+                }
             },
         }
     )

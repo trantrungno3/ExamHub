@@ -23,7 +23,11 @@ public sealed class CurrentUserInfo
     }
 
     private static IReadOnlyList<int> ParseIntClaims(ClaimsPrincipal user, string claimType)
-        => user.FindAll(claimType).Select(c => int.Parse(c.Value)).ToList();
+        => user.FindAll(claimType)
+            .Select(c => int.TryParse(c.Value, out var value) ? value : (int?)null)
+            .Where(v => v.HasValue)
+            .Select(v => v!.Value)
+            .ToList();
 
     /// <summary>ID người dùng</summary>
     public Guid? UserId { get; set; }
