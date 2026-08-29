@@ -132,7 +132,8 @@ public static class DependencyContainer
                 .AddScoped<ICohortClassService, CohortClassService>()
                 .AddScoped<ICohortMemberService, CohortMemberService>()
                 .AddScoped<ISchoolMemberService, SchoolMemberService>()
-                .AddScoped<ICohortClassTeacherService, CohortClassTeacherService>();
+                .AddScoped<ICohortClassTeacherService, CohortClassTeacherService>()
+                .AddScoped<ITokenClaimsResolver, TokenClaimsResolver>();
         }
 
         private IServiceCollection AddProjectAuthService(IConfiguration config)
