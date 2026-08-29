@@ -18,10 +18,14 @@ builder.Services.AddAuthorizationBuilder()
         .RequireAuthenticatedUser()
         .Build())
     .AddPolicy("TeacherOwnsSubject", policy =>
-        policy.Requirements.Add(new ExamHub.API.Authorization.TeacherOwnsSubjectRequirement()));
+        policy.Requirements.Add(new ExamHub.API.Authorization.TeacherOwnsSubjectRequirement()))
+    .AddPolicy("TeacherOwnsCohortClass", policy =>
+        policy.Requirements.Add(new ExamHub.API.Authorization.TeacherOwnsCohortClassRequirement()));
 
 builder.Services.AddScoped<Microsoft.AspNetCore.Authorization.IAuthorizationHandler,
     ExamHub.API.Authorization.TeacherOwnsSubjectHandler>();
+builder.Services.AddScoped<Microsoft.AspNetCore.Authorization.IAuthorizationHandler,
+    ExamHub.API.Authorization.TeacherOwnsCohortClassHandler>();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy(name: "all",
