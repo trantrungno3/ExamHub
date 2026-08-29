@@ -11,7 +11,7 @@ namespace ExamHub.API.Controllers.Exam;
 /// <summary>Controller quản lý kỳ thi (exam sessions) và luồng làm bài của học sinh.</summary>
 [ApiController]
 [Route("api/exam-sessions")]
-public class ExamSessionController(IExamSessionService service) : AuthorizeControllerBase
+public class ExamSessionController(IExamSessionService service, IAuthorizationService authorizationService) : AuthorizeControllerBase
 {
     // ── Quản lý (Admin/Teacher) ─────────────────────────────────────────
     /// <summary>Danh sách kỳ thi phân trang.</summary>
@@ -85,6 +85,17 @@ public class ExamSessionController(IExamSessionService service) : AuthorizeContr
     [HttpPost("{id:guid}/assignments"), Authorize(Roles = "Admin,Teacher")]
     public async Task<ActionResult<RequestResponse<Guid>>> AddAssignment(Guid id, [FromBody] CreateAssignmentRequest request, CancellationToken ct)
     {
+        if (request.CohortClassId is { } cohortClassId)
+        {
+            var authResult = await authorizationService.AuthorizeAsync(User, cohortClassId, "TeacherOwnsCohortClass");
+            if (!authResult.Succeeded)
+                return StatusCode(403, RequestResponse<object>.Error("Bạn không phụ trách lớp học này."));
+        }
+        else if (!User.IsInRole("Admin"))
+        {
+            return StatusCode(403, RequestResponse<object>.Error("Chỉ Quản trị viên được giao kỳ thi cho cả khoá."));
+        }
+
         var assignmentId = await service.AddAssignmentAsync(id, request, ct);
         return StatusCode(201, RequestResponse<Guid>.Success("Giao kỳ thi thành công!", assignmentId, 1));
     }
