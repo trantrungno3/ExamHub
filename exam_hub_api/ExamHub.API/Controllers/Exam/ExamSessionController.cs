@@ -104,6 +104,20 @@ public class ExamSessionController(IExamSessionService service, IAuthorizationSe
     [HttpDelete("{id:guid}/assignments/{assignmentId:guid}"), Authorize(Roles = "Admin,Teacher")]
     public async Task<ActionResult<RequestResponse<bool>>> RemoveAssignment(Guid id, Guid assignmentId, CancellationToken ct)
     {
+        var assignment = await service.GetAssignmentByIdAsync(assignmentId, ct);
+        if (assignment is null) return NotFound();
+
+        if (assignment.CohortClassId is { } cohortClassId)
+        {
+            var authResult = await authorizationService.AuthorizeAsync(User, cohortClassId, "TeacherOwnsCohortClass");
+            if (!authResult.Succeeded)
+                return StatusCode(403, RequestResponse<object>.Error("Bạn không phụ trách lớp học này."));
+        }
+        else if (!User.IsInRole("Admin"))
+        {
+            return StatusCode(403, RequestResponse<object>.Error("Chỉ Quản trị viên được gỡ giao cả khoá."));
+        }
+
         await service.RemoveAssignmentAsync(assignmentId, ct);
         return Ok(RequestResponse<bool>.Success("Gỡ giao thành công!", true, 1));
     }
