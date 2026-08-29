@@ -14,6 +14,10 @@ public class CohortClassTeacherService : ICohortClassTeacherService
         => _repo.GetAsync(x => x.CohortClassId == cohortClassId, ct);
 
     /// <inheritdoc/>
+    public Task<IReadOnlyList<CohortClassTeacher>> GetByTeacherAsync(Guid teacherId, CancellationToken ct = default)
+        => _repo.GetAsync(x => x.TeacherId == teacherId, ct);
+
+    /// <inheritdoc/>
     public Task<IReadOnlyList<Guid>> GetEligibleTeacherIdsAsync(int cohortClassId, int subjectId, CancellationToken ct = default)
         => _repo.GetEligibleTeacherIdsAsync(cohortClassId, subjectId, ct);
 

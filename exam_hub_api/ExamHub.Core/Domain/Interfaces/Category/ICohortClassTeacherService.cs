@@ -8,6 +8,9 @@ public interface ICohortClassTeacherService
     /// <summary>Danh sách phân công của một lớp</summary>
     Task<IReadOnlyList<CohortClassTeacher>> GetByClassAsync(int cohortClassId, CancellationToken ct = default);
 
+    /// <summary>Danh sách phân công của một giáo viên (mọi lớp/môn)</summary>
+    Task<IReadOnlyList<CohortClassTeacher>> GetByTeacherAsync(Guid teacherId, CancellationToken ct = default);
+
     /// <summary>Danh sách Id GV hợp lệ để phân công môn cho lớp</summary>
     Task<IReadOnlyList<Guid>> GetEligibleTeacherIdsAsync(int cohortClassId, int subjectId, CancellationToken ct = default);
 
