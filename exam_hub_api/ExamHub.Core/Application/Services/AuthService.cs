@@ -7,7 +7,7 @@ using TVT.Core.Models;
 
 namespace ExamHub.Core.Application.Services;
 
-public sealed class AuthService(IUserService userService) : IAuthService
+public sealed class AuthService(IUserService userService, ITokenClaimsResolver tokenClaimsResolver) : IAuthService
 {
     /// <summary>
     ///     Đăng nhập
@@ -23,8 +23,9 @@ public sealed class AuthService(IUserService userService) : IAuthService
             return RequestResponse<TokenModel>.Error("Không tìm thấy người dùng!");
         if (!userInfo.PasswordHash!.Contains(dto.Password.GetPasswordHash(AppCommon.SaltPassHash!)))
             return RequestResponse<TokenModel>.Error("Tài khoản hoặc mật khẩu sai!");
+        var customClaims = await tokenClaimsResolver.ResolveAsync(userInfo.Id, userInfo.Roles);
         var jwtToken = await userService.CreateTokenJwt(AppCommon.Audience, AppCommon.AudienceRefresh, userInfo,
-            TimeSpan.FromHours(8));
+            customClaims, TimeSpan.FromHours(8));
         return RequestResponse<TokenModel>.Success("Đăng nhập thành công!",
             new TokenModel(jwtToken.Item1, jwtToken.Item2), 1);
     }
