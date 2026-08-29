@@ -52,7 +52,7 @@ export function CognitiveTab() {
             ),
         },
         {
-            title: 'Mã (code)', dataIndex: 'code', key: 'code',
+            title: 'Mã', dataIndex: 'code', key: 'code',
             render: (code, record) => (
                 <span className={`badge text-[10px] ${vis(record.levelOrder).tagColor}`}>{code}</span>
             ),

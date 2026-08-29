@@ -86,7 +86,7 @@ export function SubjectFormModal({open, record, gradeLevels, onClose, onSave}: P
                     <Input placeholder="VD: Toán học"/>
                 </Form.Item>
                 <Form.Item
-                    label="Mã môn (code)"
+                    label="Mã môn"
                     name="code"
                     rules={[{required: true, message: 'Vui lòng nhập mã môn'}]}
                 >

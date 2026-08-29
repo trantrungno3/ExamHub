@@ -71,27 +71,27 @@ export function DifficultyFormModal({open, record, onClose, onSave}: Props) {
                 }
             >
                 <Form.Item
-                    label="Mã (code)"
+                    label="Mã"
                     name="code"
                     rules={[{required: true, message: 'Vui lòng nhập mã'}]}
                 >
                     <Input placeholder="VD: easy"/>
                 </Form.Item>
                 <Form.Item
-                    label="Tên (name)"
+                    label="Tên"
                     name="name"
                     rules={[{required: true, message: 'Vui lòng nhập tên'}]}
                 >
                     <Input placeholder="VD: Dễ"/>
                 </Form.Item>
                 <Form.Item
-                    label="Hệ số (score_weight)"
+                    label="Hệ số"
                     name="scoreWeight"
                     rules={[{required: true, message: 'Vui lòng nhập hệ số'}]}
                 >
                     <InputNumber min={0.1} step={0.1} precision={2} className="w-full" placeholder="VD: 1.00"/>
                 </Form.Item>
-                <Form.Item label="Thứ tự (sort_order)" name="sortOrder">
+                <Form.Item label="Thứ tự" name="sortOrder">
                     <InputNumber min={1} className="w-full" placeholder="VD: 1"/>
                 </Form.Item>
                 <Form.Item label="Trạng thái" name="isActive" valuePropName="checked">

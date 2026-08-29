@@ -134,10 +134,10 @@ export function TopicFormModal({open, record, subjects, onClose, onSave}: Readon
                 >
                     <Input placeholder="VD: Đại số"/>
                 </Form.Item>
-                <Form.Item label="Mã (code)" name="code">
+                <Form.Item label="Mã" name="code">
                     <Input placeholder="VD: ALG"/>
                 </Form.Item>
-                <Form.Item label="Thứ tự (sort_order)" name="sortOrder">
+                <Form.Item label="Thứ tự" name="sortOrder">
                     <InputNumber min={1} className="w-full"/>
                 </Form.Item>
                 <Form.Item label="Mô tả" name="description">

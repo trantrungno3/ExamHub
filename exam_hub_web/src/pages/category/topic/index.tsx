@@ -95,7 +95,7 @@ export function TopicTab() {
             ),
         },
         {
-            title: 'Mã (code)', dataIndex: 'code', key: 'code',
+            title: 'Mã', dataIndex: 'code', key: 'code',
             render: v => v
                 ? <span className="badge bg-amber-50 text-amber-700">{v}</span>
                 : <span className="text-gray-300">—</span>,

@@ -45,7 +45,7 @@ export default function CohortDetailPage() {
         {title: 'Lớp', dataIndex: 'className', key: 'className', render: v => <span className="font-medium">{v}</span>},
         {title: 'Lớp', dataIndex: 'section', key: 'section', width: 80},
         {title: 'Năm học', dataIndex: 'schoolYear', key: 'schoolYear'},
-        {title: 'Năm học (index)', dataIndex: 'yearIndex', key: 'yearIndex'},
+        {title: 'Năm thứ', dataIndex: 'yearIndex', key: 'yearIndex'},
         {
             title: 'GVCN', dataIndex: 'homeroomTeacherId', key: 'homeroomTeacherId',
             render: (v) => {

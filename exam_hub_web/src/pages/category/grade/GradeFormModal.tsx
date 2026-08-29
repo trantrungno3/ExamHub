@@ -76,7 +76,7 @@ export function GradeFormModal({open, record, onClose, onSave}: Props) {
                     <Input placeholder="VD: Lớp 10"/>
                 </Form.Item>
                 <Form.Item
-                    label="Số lớp (grade_number)"
+                    label="Số lớp"
                     name="gradeNumber"
                     rules={[{required: true, message: 'Vui lòng nhập số lớp'}]}
                 >

@@ -52,7 +52,7 @@ export function GradeTab() {
                 </span>
             ),
         },
-        { title: 'grade_number', dataIndex: 'gradeNumber', key: 'gradeNumber' },
+        { title: 'Số lớp', dataIndex: 'gradeNumber', key: 'gradeNumber' },
         {
             title: 'Mô tả', dataIndex: 'description', key: 'description',
             render: v => <span className="text-gray-500">{v ?? '—'}</span>,

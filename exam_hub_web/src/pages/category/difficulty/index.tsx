@@ -26,19 +26,19 @@ export function DifficultyTab() {
             render: v => <span className="text-gray-400">{v}</span>,
         },
         {
-            title: 'Mã (code)', dataIndex: 'code', key: 'code',
+            title: 'Mã', dataIndex: 'code', key: 'code',
             render: code => <span className={`badge ${badge(code)}`}>{code}</span>,
         },
         {
-            title: 'Tên (name)', dataIndex: 'name', key: 'name',
+            title: 'Tên', dataIndex: 'name', key: 'name',
             render: (name, record) => <span className={`badge ${badge(record.code)}`}>{name}</span>,
         },
         {
-            title: 'Hệ số (score_weight)', dataIndex: 'scoreWeight', key: 'scoreWeight',
+            title: 'Hệ số', dataIndex: 'scoreWeight', key: 'scoreWeight',
             render: v => <span className="font-bold text-gray-800">×{Number(v).toFixed(2)}</span>,
         },
         {
-            title: 'Thứ tự (sort_order)', dataIndex: 'sortOrder', key: 'sortOrder',
+            title: 'Thứ tự', dataIndex: 'sortOrder', key: 'sortOrder',
             render: v => <span className="text-gray-500">Ưu tiên {v}</span>,
         },
         {

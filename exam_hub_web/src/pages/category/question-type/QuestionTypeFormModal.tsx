@@ -59,7 +59,7 @@ export function QuestionTypeFormModal({open, record, onClose, onSave}: Props) {
                 }
             >
                 <Form.Item
-                    label="Mã (code)"
+                    label="Mã"
                     name="code"
                     rules={[{required: true, message: 'Vui lòng nhập mã'}]}
                 >
