@@ -22,6 +22,7 @@ public sealed class TokenClaimsResolver(
         if (roles.Contains("Student"))
             await AddStudentClaimsAsync(userId, claims, ct);
 
+        // Giáo viên vừa dạy vừa chủ nhiệm cùng 1 lớp/môn sẽ sinh ra claim trùng ở 2 nhánh trên.
         return claims.Distinct().ToList();
     }
 
@@ -54,6 +55,10 @@ public sealed class TokenClaimsResolver(
 
             if (member.Section is null) continue;
 
+            // CohortMember không lưu thẳng CohortClassId (lớp đổi theo năm học), nên suy ra bằng cách
+            // khớp Section ("A", "B"...) của học sinh với năm học hiện tại (currentYearIndex) trong khoá.
+            // Hệ quả: claim này chỉ đúng tại thời điểm đăng nhập — nếu học sinh đổi lớp sau đó, JWT cũ
+            // vẫn giữ CohortClassId cũ cho tới lần đăng nhập lại (JWT không tự làm mới theo thời gian thực).
             var today = DateOnly.FromDateTime(DateTime.UtcNow);
             var currentYearIndex = SchoolYearCalculator.GetCurrentYearIndex(cohort.StartYear, today);
             var classesInCohort = await cohortClassService.GetByCohortAsync(member.CohortId, ct);

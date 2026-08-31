@@ -1,5 +1,7 @@
 function decodePayload(token: string): Record<string, unknown> {
     try {
+        // JWT payload dùng base64url (- _ thay cho + /, không padding) — atob() chỉ hiểu base64
+        // chuẩn, nên phải đổi ký tự lại trước khi decode.
         const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')
         return JSON.parse(atob(base64)) as Record<string, unknown>
     } catch {

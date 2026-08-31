@@ -17,6 +17,9 @@ export interface ApiResponse<T> {
     total?: number
 }
 
+// Đọc thẳng từ localStorage (đúng key/shape mà zustand persist đã ghi ở authStore.ts) thay vì
+// import useAuthStore.getState() — requestService là module thuần, không phụ thuộc React/store để
+// tránh vòng phụ thuộc (authStore cũng import requestService để lấy statusCode).
 function getToken(): string | null {
     try {
         const stored = localStorage.getItem(globalConfig.storageKey.auth)
@@ -128,6 +131,8 @@ function createHttp(auth: boolean) {
                 body: body === undefined ? undefined : JSON.stringify(body),
             }).then(async res => {
                 if (res.status === 204) return {status: statusCode.Deleted, message: 'Xoá thành công'}
+                // 409 = backend từ chối xoá vì bản ghi đang được tham chiếu (vd. xoá môn học còn đề thi
+                // dùng nó) — map riêng sang statusCode.Conflict để UI hiển thị cảnh báo khác lỗi thường.
                 if (res.status === 409) {
                     const body = await handleResponse<T>(res)
                     return {...body, status: statusCode.Conflict}

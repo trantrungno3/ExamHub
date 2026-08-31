@@ -53,6 +53,8 @@ export const useAuthStore = create<AuthStore>()(
 
             async refresh() {
                 const { token, isRefreshing } = get()
+                // isRefreshing chặn nhiều request 401 cùng lúc gọi refresh() song song (race) —
+                // request đến sau thấy cờ đang bật thì bỏ qua thay vì gọi refresh-token 2 lần.
                 if (isRefreshing || !token?.refreshToken) return false
                 set({ isRefreshing: true })
                 try {
@@ -73,7 +75,11 @@ export const useAuthStore = create<AuthStore>()(
         }),
         {
             name: 'examhub_auth',
+            // Chỉ persist token/user — isAuthenticated và isRefreshing là state suy ra được (không phải
+            // nguồn sự thật), lưu xuống localStorage dễ lệch với token thật khi token hết hạn giữa 2 lần mở app.
             partialize: (state) => ({ token: state.token, user: state.user }),
+            // Sau khi rehydrate từ localStorage, suy lại isAuthenticated/user trực tiếp từ token đã lưu
+            // (thay vì tin state cũ) để tránh hiển thị "đã đăng nhập" với token đã hết hạn/bị sửa tay.
             onRehydrateStorage: () => (state) => {
                 if (state?.token) {
                     state.isAuthenticated = true
