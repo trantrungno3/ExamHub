@@ -21,6 +21,9 @@ public class SubjectController(ISubjectService service)
     protected override SubjectResponse ToResponse(Subject entity) => SubjectResponse.FromEntity(entity);
 
     /// <summary>Lấy theo khối lớp</summary>
+    /// <param name="gradeLevelId">Id khối lớp cần lọc.</param>
+    /// <param name="ct">Token huỷ yêu cầu.</param>
+    /// <returns>Danh sách môn học thuộc khối lớp.</returns>
     [HttpGet("by-grade/{gradeLevelId:int}")]
     [Authorize]
     public async Task<ActionResult<RequestResponse<IReadOnlyList<SubjectResponse>>>> GetByGradeLevel(int gradeLevelId, CancellationToken ct = default)
@@ -31,6 +34,9 @@ public class SubjectController(ISubjectService service)
     }
 
     /// <summary>Lấy kèm chủ đề</summary>
+    /// <param name="id">Id môn học cần lấy.</param>
+    /// <param name="ct">Token huỷ yêu cầu.</param>
+    /// <returns>Môn học kèm danh sách chủ đề; 404 nếu không tồn tại.</returns>
     [HttpGet("{id:int}/with-topics")]
     [Authorize]
     public async Task<ActionResult<RequestResponse<SubjectResponse>>> GetWithTopics(int id, CancellationToken ct = default)

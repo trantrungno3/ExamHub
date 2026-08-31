@@ -8,6 +8,13 @@ internal static class MenuRegistry
 {
     /// <summary>Một mục menu. <paramref name="Group"/> null = mục/nhóm gốc; khác null = con của nhóm cha có Key tương ứng.
     /// Nhóm cha có <paramref name="Path"/> null.</summary>
+    /// <param name="Key">Mã định danh duy nhất.</param>
+    /// <param name="Label">Nhãn hiển thị.</param>
+    /// <param name="Path">Route; null nếu là nhóm cha.</param>
+    /// <param name="Icon">Tên icon.</param>
+    /// <param name="Order">Thứ tự hiển thị.</param>
+    /// <param name="Roles">Danh sách role được phép thấy mục này.</param>
+    /// <param name="Group">Key của nhóm cha; null nếu là mục/nhóm gốc.</param>
     private record MenuItem(string Key, string Label, string? Path, string Icon, int Order, string[] Roles, string? Group = null);
 
     private static readonly MenuItem[] Items =
@@ -27,6 +34,8 @@ internal static class MenuRegistry
 
     /// <summary>Trả về cây menu mà ít nhất một trong <paramref name="userRoles"/> được phép thấy.
     /// Các mục có Group gộp thành Children của nhóm cha; nhóm cha chỉ hiện khi có ≥1 con hợp lệ.</summary>
+    /// <param name="userRoles">Danh sách role của người dùng hiện tại.</param>
+    /// <returns>Cây menu (nhóm cha kèm children) mà người dùng được phép thấy.</returns>
     public static IReadOnlyList<MenuItemResponse> GetForRoles(IEnumerable<string> userRoles)
     {
         var roleSet = new HashSet<string>(userRoles, StringComparer.OrdinalIgnoreCase);

@@ -19,15 +19,24 @@ public abstract class CategoryBaseController<TEntity, TKey, TRequest, TResponse>
     where TEntity : class
 {
     /// <summary>Map request DTO → entity (dùng cho Create)</summary>
+    /// <param name="request">DTO request nhận từ client.</param>
+    /// <returns>Entity mới tạo từ request, chưa lưu DB.</returns>
     protected abstract TEntity ToEntity(TRequest request);
 
     /// <summary>Map request DTO + id → entity (dùng cho Update)</summary>
+    /// <param name="id">Khoá chính của entity cần cập nhật.</param>
+    /// <param name="request">DTO request nhận từ client.</param>
+    /// <returns>Entity đã gán id, sẵn sàng truyền cho <c>UpdateAsync</c>.</returns>
     protected abstract TEntity ToEntityForUpdate(TKey id, TRequest request);
 
     /// <summary>Map entity → response DTO</summary>
+    /// <param name="entity">Entity lấy từ service/DB.</param>
+    /// <returns>DTO response trả về client.</returns>
     protected abstract TResponse ToResponse(TEntity entity);
 
     /// <summary>Lấy toàn bộ danh sách</summary>
+    /// <param name="ct">Token huỷ yêu cầu.</param>
+    /// <returns>Toàn bộ danh sách, không phân biệt trạng thái kích hoạt.</returns>
     [HttpGet("")]
     public virtual async Task<ActionResult<RequestResponse<IReadOnlyList<TResponse>>>> GetAll(CancellationToken ct = default)
     {
@@ -37,6 +46,8 @@ public abstract class CategoryBaseController<TEntity, TKey, TRequest, TResponse>
     }
 
     /// <summary>Lấy danh sách đang kích hoạt</summary>
+    /// <param name="ct">Token huỷ yêu cầu.</param>
+    /// <returns>Danh sách các bản ghi có <c>IsActive = true</c>.</returns>
     [HttpGet("active")]
     public virtual async Task<ActionResult<RequestResponse<IReadOnlyList<TResponse>>>> GetActive(CancellationToken ct = default)
     {
@@ -46,6 +57,9 @@ public abstract class CategoryBaseController<TEntity, TKey, TRequest, TResponse>
     }
 
     /// <summary>Lấy theo ID</summary>
+    /// <param name="id">Khoá chính cần tra cứu.</param>
+    /// <param name="ct">Token huỷ yêu cầu.</param>
+    /// <returns>Bản ghi tương ứng; 404 nếu không tồn tại.</returns>
     [HttpGet("{id}")]
     public virtual async Task<ActionResult<RequestResponse<TResponse>>> GetById(TKey id, CancellationToken ct = default)
     {
@@ -55,6 +69,9 @@ public abstract class CategoryBaseController<TEntity, TKey, TRequest, TResponse>
     }
 
     /// <summary>Tạo mới</summary>
+    /// <param name="request">DTO chứa dữ liệu bản ghi cần tạo.</param>
+    /// <param name="ct">Token huỷ yêu cầu.</param>
+    /// <returns>Bản ghi vừa tạo (HTTP 201).</returns>
     [HttpPost("")]
     public virtual async Task<ActionResult<RequestResponse<TResponse>>> Create([FromBody] TRequest request, CancellationToken ct = default)
     {
@@ -64,6 +81,10 @@ public abstract class CategoryBaseController<TEntity, TKey, TRequest, TResponse>
     }
 
     /// <summary>Cập nhật</summary>
+    /// <param name="id">Khoá chính của bản ghi cần cập nhật.</param>
+    /// <param name="request">DTO chứa dữ liệu mới.</param>
+    /// <param name="ct">Token huỷ yêu cầu.</param>
+    /// <returns>Bản ghi sau khi cập nhật; 404 nếu không tồn tại.</returns>
     [HttpPut("{id}")]
     public virtual async Task<ActionResult<RequestResponse<TResponse>>> Update(TKey id, [FromBody] TRequest request, CancellationToken ct = default)
     {
@@ -74,6 +95,9 @@ public abstract class CategoryBaseController<TEntity, TKey, TRequest, TResponse>
     }
 
     /// <summary>Xóa theo ID</summary>
+    /// <param name="id">Khoá chính của bản ghi cần xoá.</param>
+    /// <param name="ct">Token huỷ yêu cầu.</param>
+    /// <returns>204 nếu xoá thành công; 409 nếu bản ghi đang được tham chiếu ở nơi khác.</returns>
     [HttpDelete("{id}")]
     public virtual async Task<IActionResult> Delete(TKey id, CancellationToken ct = default)
     {
@@ -99,6 +123,10 @@ public abstract class CategoryBaseController<TEntity, TKey, TRequest, TResponse>
     }
 
     /// <summary>Bật/tắt kích hoạt</summary>
+    /// <param name="id">Khoá chính của bản ghi cần đổi trạng thái.</param>
+    /// <param name="isActive">Trạng thái kích hoạt mới.</param>
+    /// <param name="ct">Token huỷ yêu cầu.</param>
+    /// <returns>Trạng thái kích hoạt sau khi cập nhật.</returns>
     [HttpPatch("{id}/active")]
     public virtual async Task<ActionResult<RequestResponse<bool>>> SetActive(TKey id, [FromBody] bool isActive, CancellationToken ct = default)
     {

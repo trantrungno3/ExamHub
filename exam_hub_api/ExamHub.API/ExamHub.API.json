@@ -12,6 +12,7 @@
         ],
         "summary": "Đăng nhập và nhận JWT token",
         "requestBody": {
+          "description": "Tên đăng nhập và mật khẩu.",
           "content": {
             "application/json": {
               "schema": {
@@ -33,7 +34,7 @@
         },
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Access token + refresh token nếu đăng nhập thành công.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -67,6 +68,7 @@
         ],
         "summary": "Đăng ký tài khoản mới",
         "requestBody": {
+          "description": "Thông tin tài khoản cần đăng ký.",
           "content": {
             "application/json": {
               "schema": {
@@ -88,7 +90,7 @@
         },
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Kết quả đăng ký.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -139,7 +141,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Access token mới.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -174,7 +176,7 @@
         "summary": "Lấy thông tin tài khoản đang đăng nhập",
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Thông tin tài khoản hiện tại.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -208,6 +210,7 @@
         ],
         "summary": "Cập nhật thông tin cá nhân của tài khoản đang đăng nhập",
         "requestBody": {
+          "description": "Thông tin cá nhân mới.",
           "content": {
             "application/json": {
               "schema": {
@@ -229,7 +232,7 @@
         },
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Thông tin tài khoản sau khi cập nhật.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -263,6 +266,7 @@
         ],
         "summary": "Đổi mật khẩu của tài khoản đang đăng nhập",
         "requestBody": {
+          "description": "Mật khẩu cũ và mật khẩu mới.",
           "content": {
             "application/json": {
               "schema": {
@@ -284,7 +288,7 @@
         },
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Kết quả đổi mật khẩu.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -319,7 +323,7 @@
         "summary": "Lấy menu theo phân quyền của người dùng hiện tại",
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Cây menu đã lọc theo role của người dùng đang đăng nhập.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -354,7 +358,7 @@
         "summary": "Lấy danh sách toàn bộ người dùng",
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Danh sách toàn bộ người dùng.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -386,6 +390,7 @@
         ],
         "summary": "Tạo người dùng mới",
         "requestBody": {
+          "description": "Thông tin tài khoản cần tạo.",
           "content": {
             "application/json": {
               "schema": {
@@ -407,7 +412,7 @@
         },
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Người dùng vừa tạo (HTTP 201); 409 nếu tên đăng nhập đã tồn tại.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -444,6 +449,7 @@
           {
             "name": "id",
             "in": "path",
+            "description": "Id người dùng cần lấy.",
             "required": true,
             "schema": {
               "type": "string",
@@ -453,7 +459,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Bản ghi tương ứng; 404 nếu không tồn tại.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -488,6 +494,7 @@
           {
             "name": "id",
             "in": "path",
+            "description": "Id người dùng cần cập nhật.",
             "required": true,
             "schema": {
               "type": "string",
@@ -496,6 +503,7 @@
           }
         ],
         "requestBody": {
+          "description": "Thông tin mới.",
           "content": {
             "application/json": {
               "schema": {
@@ -517,7 +525,7 @@
         },
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Người dùng sau khi cập nhật; 404 nếu không tồn tại.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -552,6 +560,7 @@
           {
             "name": "id",
             "in": "path",
+            "description": "Id người dùng cần xoá.",
             "required": true,
             "schema": {
               "type": "string",
@@ -561,6 +570,7 @@
           {
             "name": "force",
             "in": "query",
+            "description": "True để xoá cưỡng bức kèm mọi bài nộp liên quan.",
             "schema": {
               "type": "boolean",
               "default": false
@@ -569,7 +579,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "204 khi xoá thành công; 404 nếu không tồn tại; 409 nếu còn dữ liệu liên quan và force = false."
           }
         },
         "security": [
@@ -586,6 +596,7 @@
         ],
         "summary": "Import người dùng hàng loạt từ file Excel (.xlsx)",
         "requestBody": {
+          "description": "Token huỷ yêu cầu.",
           "content": {
             "application/x-www-form-urlencoded": {
               "schema": {
@@ -605,7 +616,7 @@
         },
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Kết quả import kèm số dòng thành công/lỗi.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -640,7 +651,7 @@
         "summary": "Tải file Excel mẫu để import người dùng",
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "File .xlsx mẫu với đúng thứ tự cột mà `BulkImport` yêu cầu."
           }
         },
         "security": [
@@ -660,6 +671,7 @@
           {
             "name": "id",
             "in": "path",
+            "description": "Id người dùng cần đổi trạng thái khoá.",
             "required": true,
             "schema": {
               "type": "string",
@@ -668,6 +680,7 @@
           }
         ],
         "requestBody": {
+          "description": "True để khoá tài khoản, false để mở khoá.",
           "content": {
             "application/json": {
               "schema": {
@@ -689,7 +702,7 @@
         },
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Trạng thái khoá sau khi cập nhật; 404 nếu không tồn tại.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -726,6 +739,7 @@
           {
             "name": "id",
             "in": "path",
+            "description": "Id người dùng cần đặt lại mật khẩu.",
             "required": true,
             "schema": {
               "type": "string",
@@ -734,6 +748,7 @@
           }
         ],
         "requestBody": {
+          "description": "Mật khẩu mới.",
           "content": {
             "application/json": {
               "schema": {
@@ -755,7 +770,7 @@
         },
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Kết quả đặt lại mật khẩu; 404 nếu không tồn tại.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -792,6 +807,7 @@
           {
             "name": "id",
             "in": "path",
+            "description": "Id người dùng cần tra cứu.",
             "required": true,
             "schema": {
               "type": "string",
@@ -801,7 +817,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Danh sách role; 404 nếu không tồn tại.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -836,6 +852,7 @@
           {
             "name": "id",
             "in": "path",
+            "description": "Id người dùng cần cập nhật.",
             "required": true,
             "schema": {
               "type": "string",
@@ -844,6 +861,7 @@
           }
         ],
         "requestBody": {
+          "description": "Danh sách roles mới (thay thế toàn bộ roles cũ).",
           "content": {
             "application/json": {
               "schema": {
@@ -865,7 +883,7 @@
         },
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Danh sách roles sau khi cập nhật; 404 nếu không tồn tại.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -902,6 +920,7 @@
           {
             "name": "id",
             "in": "path",
+            "description": "Id người dùng cần thêm role.",
             "required": true,
             "schema": {
               "type": "string",
@@ -911,6 +930,7 @@
           {
             "name": "role",
             "in": "path",
+            "description": "Tên role cần thêm.",
             "required": true,
             "schema": {
               "type": "string"
@@ -919,7 +939,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Danh sách roles sau khi thêm; 404 nếu người dùng không tồn tại; 409 nếu đã có role này.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -954,6 +974,7 @@
           {
             "name": "id",
             "in": "path",
+            "description": "Id người dùng cần xoá role.",
             "required": true,
             "schema": {
               "type": "string",
@@ -963,6 +984,7 @@
           {
             "name": "role",
             "in": "path",
+            "description": "Tên role cần xoá.",
             "required": true,
             "schema": {
               "type": "string"
@@ -971,7 +993,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Danh sách roles sau khi xoá; 404 nếu người dùng không tồn tại hoặc không có role này.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -1008,6 +1030,7 @@
           {
             "name": "userId",
             "in": "path",
+            "description": "Id giáo viên cần tra cứu.",
             "required": true,
             "schema": {
               "type": "string",
@@ -1017,7 +1040,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Danh sách phân công môn học của giáo viên.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -1054,6 +1077,7 @@
           {
             "name": "userId",
             "in": "path",
+            "description": "Id giáo viên cần kiểm tra.",
             "required": true,
             "schema": {
               "type": "string",
@@ -1063,6 +1087,7 @@
           {
             "name": "subjectId",
             "in": "path",
+            "description": "Id môn học cần kiểm tra.",
             "required": true,
             "schema": {
               "pattern": "^-?(?:0|[1-9]\\d*)$",
@@ -1073,7 +1098,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "True nếu giáo viên phụ trách môn học này.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -1107,6 +1132,7 @@
         ],
         "summary": "Gán môn học cho giáo viên",
         "requestBody": {
+          "description": "Token huỷ yêu cầu.",
           "content": {
             "application/json": {
               "schema": {
@@ -1128,7 +1154,7 @@
         },
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "204 khi gán thành công."
           }
         },
         "security": [
@@ -1145,6 +1171,7 @@
         ],
         "summary": "Xóa phụ trách môn học",
         "requestBody": {
+          "description": "Token huỷ yêu cầu.",
           "content": {
             "application/json": {
               "schema": {
@@ -1166,7 +1193,7 @@
         },
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "204 khi xoá thành công."
           }
         },
         "security": [
@@ -1186,6 +1213,7 @@
           {
             "name": "id",
             "in": "path",
+            "description": "Id lớp học cần lấy.",
             "required": true,
             "schema": {
               "pattern": "^-?(?:0|[1-9]\\d*)$",
@@ -1196,7 +1224,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Bản ghi tương ứng; 404 nếu không tồn tại.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -1233,6 +1261,7 @@
           {
             "name": "cohortId",
             "in": "path",
+            "description": "Id khoá học cần lọc.",
             "required": true,
             "schema": {
               "pattern": "^-?(?:0|[1-9]\\d*)$",
@@ -1243,7 +1272,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Danh sách lớp học thuộc khoá.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -1280,6 +1309,7 @@
           {
             "name": "schoolYear",
             "in": "path",
+            "description": "Năm học cần lọc (vd. \"2025-2026\").",
             "required": true,
             "schema": {
               "type": "string"
@@ -1288,7 +1318,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Danh sách lớp học thuộc năm học.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -1325,6 +1355,7 @@
           {
             "name": "id",
             "in": "path",
+            "description": "Id lớp học cần cập nhật.",
             "required": true,
             "schema": {
               "pattern": "^-?(?:0|[1-9]\\d*)$",
@@ -1334,6 +1365,7 @@
           }
         ],
         "requestBody": {
+          "description": "Token huỷ yêu cầu.",
           "content": {
             "application/json": {
               "schema": {
@@ -1355,7 +1387,7 @@
         },
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Kết quả cập nhật.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -1392,6 +1424,7 @@
           {
             "name": "cohortClassId",
             "in": "path",
+            "description": "Id lớp học cần lọc.",
             "required": true,
             "schema": {
               "pattern": "^-?(?:0|[1-9]\\d*)$",
@@ -1402,7 +1435,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Danh sách phân công GV-môn của lớp.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -1439,6 +1472,7 @@
           {
             "name": "cohortClassId",
             "in": "query",
+            "description": "Id lớp học cần phân công.",
             "schema": {
               "pattern": "^-?(?:0|[1-9]\\d*)$",
               "type": [
@@ -1451,6 +1485,7 @@
           {
             "name": "subjectId",
             "in": "query",
+            "description": "Id môn học cần phân công.",
             "schema": {
               "pattern": "^-?(?:0|[1-9]\\d*)$",
               "type": [
@@ -1463,7 +1498,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Danh sách Id giáo viên đủ điều kiện (phụ trách môn, chưa được phân công trùng).",
             "content": {
               "text/plain": {
                 "schema": {
@@ -1497,6 +1532,7 @@
         ],
         "summary": "Phân công GV dạy môn cho lớp (validate + kiểm ràng buộc)",
         "requestBody": {
+          "description": "Token huỷ yêu cầu.",
           "content": {
             "application/json": {
               "schema": {
@@ -1518,7 +1554,7 @@
         },
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Bản ghi phân công vừa tạo.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -1555,6 +1591,7 @@
           {
             "name": "id",
             "in": "path",
+            "description": "Id bản ghi phân công cần xoá.",
             "required": true,
             "schema": {
               "pattern": "^-?(?:0|[1-9]\\d*)$",
@@ -1565,7 +1602,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Kết quả xoá.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -1602,6 +1639,7 @@
           {
             "name": "schoolId",
             "in": "path",
+            "description": "Id trường cần lọc.",
             "required": true,
             "schema": {
               "pattern": "^-?(?:0|[1-9]\\d*)$",
@@ -1612,7 +1650,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Danh sách khoá học thuộc trường.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -1649,6 +1687,7 @@
           {
             "name": "id",
             "in": "path",
+            "description": "Id khoá học cần lấy.",
             "required": true,
             "schema": {
               "pattern": "^-?(?:0|[1-9]\\d*)$",
@@ -1659,7 +1698,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Khoá học kèm danh sách lớp; 404 nếu không tồn tại.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -1696,6 +1735,7 @@
           {
             "name": "id",
             "in": "path",
+            "description": "Id khoá học cần lấy.",
             "required": true,
             "schema": {
               "pattern": "^-?(?:0|[1-9]\\d*)$",
@@ -1706,7 +1746,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Khoá học kèm danh sách học sinh; 404 nếu không tồn tại.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -1743,6 +1783,7 @@
           {
             "name": "id",
             "in": "path",
+            "description": "Id khoá học cần xoá cưỡng bức.",
             "required": true,
             "schema": {
               "pattern": "^-?(?:0|[1-9]\\d*)$",
@@ -1753,7 +1794,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "204 khi xoá thành công."
           }
         },
         "security": [
@@ -1771,7 +1812,7 @@
         "summary": "Lấy toàn bộ danh sách",
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Toàn bộ danh sách, không phân biệt trạng thái kích hoạt.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -1858,7 +1899,7 @@
         "summary": "Lấy danh sách đang kích hoạt",
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Danh sách các bản ghi có `IsActive = true`.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -2110,6 +2151,7 @@
           {
             "name": "id",
             "in": "path",
+            "description": "Id bản ghi thành viên khoá cần lấy.",
             "required": true,
             "schema": {
               "type": "string",
@@ -2119,7 +2161,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Bản ghi tương ứng; 404 nếu không tồn tại.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -2154,6 +2196,7 @@
           {
             "name": "id",
             "in": "path",
+            "description": "Id bản ghi thành viên khoá cần xoá.",
             "required": true,
             "schema": {
               "type": "string",
@@ -2163,7 +2206,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "204 khi xoá thành công."
           }
         },
         "security": [
@@ -2183,6 +2226,7 @@
           {
             "name": "cohortId",
             "in": "path",
+            "description": "Id khoá học cần lọc.",
             "required": true,
             "schema": {
               "pattern": "^-?(?:0|[1-9]\\d*)$",
@@ -2193,7 +2237,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Danh sách học sinh thuộc khoá.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -2230,6 +2274,7 @@
           {
             "name": "schoolId",
             "in": "path",
+            "description": "Id trường cần lọc.",
             "required": true,
             "schema": {
               "pattern": "^-?(?:0|[1-9]\\d*)$",
@@ -2240,7 +2285,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Danh sách học sinh thuộc trường, gộp mọi khoá học.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -2277,6 +2322,7 @@
           {
             "name": "studentId",
             "in": "path",
+            "description": "Id học sinh cần tra cứu.",
             "required": true,
             "schema": {
               "type": "string",
@@ -2286,7 +2332,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Danh sách bản ghi thành viên khoá của học sinh.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -2320,6 +2366,7 @@
         ],
         "summary": "Thêm học sinh vào khoá học",
         "requestBody": {
+          "description": "Token huỷ yêu cầu.",
           "content": {
             "application/json": {
               "schema": {
@@ -2341,7 +2388,7 @@
         },
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Bản ghi thành viên vừa thêm; 409 nếu học sinh đã thuộc khoá học đó.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -2378,6 +2425,7 @@
           {
             "name": "id",
             "in": "path",
+            "description": "Id bản ghi thành viên khoá cần đổi trạng thái.",
             "required": true,
             "schema": {
               "type": "string",
@@ -2386,6 +2434,7 @@
           }
         ],
         "requestBody": {
+          "description": "Token huỷ yêu cầu.",
           "content": {
             "application/json": {
               "schema": {
@@ -2407,7 +2456,7 @@
         },
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Trạng thái kích hoạt sau khi cập nhật.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -2444,6 +2493,7 @@
           {
             "name": "id",
             "in": "path",
+            "description": "Id bản ghi thành viên khoá cần đổi lớp.",
             "required": true,
             "schema": {
               "type": "string",
@@ -2452,6 +2502,7 @@
           }
         ],
         "requestBody": {
+          "description": "Token huỷ yêu cầu.",
           "content": {
             "application/json": {
               "schema": {
@@ -2493,7 +2544,7 @@
         },
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Kết quả cập nhật.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -2530,6 +2581,7 @@
           {
             "name": "code",
             "in": "path",
+            "description": "Mã trường cần tra cứu.",
             "required": true,
             "schema": {
               "type": "string"
@@ -2538,7 +2590,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Bản ghi tương ứng; 404 nếu không tồn tại.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -2575,6 +2627,7 @@
           {
             "name": "id",
             "in": "path",
+            "description": "Id trường cần lấy.",
             "required": true,
             "schema": {
               "pattern": "^-?(?:0|[1-9]\\d*)$",
@@ -2585,7 +2638,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Trường kèm danh sách khoá học; 404 nếu không tồn tại.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -2622,6 +2675,7 @@
           {
             "name": "id",
             "in": "path",
+            "description": "Id trường cần lấy.",
             "required": true,
             "schema": {
               "pattern": "^-?(?:0|[1-9]\\d*)$",
@@ -2632,7 +2686,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Trường kèm danh sách thành viên; 404 nếu không tồn tại.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -2669,6 +2723,7 @@
           {
             "name": "id",
             "in": "path",
+            "description": "Id trường cần xoá cưỡng bức.",
             "required": true,
             "schema": {
               "pattern": "^-?(?:0|[1-9]\\d*)$",
@@ -2679,7 +2734,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "204 khi xoá thành công."
           }
         },
         "security": [
@@ -2697,7 +2752,7 @@
         "summary": "Lấy toàn bộ danh sách",
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Toàn bộ danh sách, không phân biệt trạng thái kích hoạt.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -2784,7 +2839,7 @@
         "summary": "Lấy danh sách đang kích hoạt",
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Danh sách các bản ghi có `IsActive = true`.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -3036,6 +3091,7 @@
           {
             "name": "id",
             "in": "path",
+            "description": "Id thành viên cần lấy.",
             "required": true,
             "schema": {
               "type": "string",
@@ -3045,7 +3101,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Bản ghi tương ứng; 404 nếu không tồn tại.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -3080,6 +3136,7 @@
           {
             "name": "id",
             "in": "path",
+            "description": "Id thành viên cần cập nhật.",
             "required": true,
             "schema": {
               "type": "string",
@@ -3088,6 +3145,7 @@
           }
         ],
         "requestBody": {
+          "description": "Token huỷ yêu cầu.",
           "content": {
             "application/json": {
               "schema": {
@@ -3109,7 +3167,7 @@
         },
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Thành viên sau khi cập nhật.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -3144,6 +3202,7 @@
           {
             "name": "id",
             "in": "path",
+            "description": "Id thành viên cần xoá.",
             "required": true,
             "schema": {
               "type": "string",
@@ -3153,7 +3212,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "204 khi xoá thành công."
           }
         },
         "security": [
@@ -3173,6 +3232,7 @@
           {
             "name": "schoolId",
             "in": "path",
+            "description": "Id trường cần lọc.",
             "required": true,
             "schema": {
               "pattern": "^-?(?:0|[1-9]\\d*)$",
@@ -3183,7 +3243,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Danh sách thành viên thuộc trường.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -3220,6 +3280,7 @@
           {
             "name": "schoolId",
             "in": "path",
+            "description": "Id trường cần lọc.",
             "required": true,
             "schema": {
               "pattern": "^-?(?:0|[1-9]\\d*)$",
@@ -3230,6 +3291,7 @@
           {
             "name": "role",
             "in": "path",
+            "description": "Vai trò cần lọc.",
             "required": true,
             "schema": {
               "type": "string"
@@ -3238,7 +3300,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Danh sách thành viên thuộc trường và có vai trò tương ứng.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -3275,6 +3337,7 @@
           {
             "name": "userId",
             "in": "path",
+            "description": "Id người dùng cần tra cứu.",
             "required": true,
             "schema": {
               "type": "string",
@@ -3284,7 +3347,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Danh sách bản ghi thành viên của người dùng ở các trường.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -3318,6 +3381,7 @@
         ],
         "summary": "Thêm thành viên vào trường",
         "requestBody": {
+          "description": "Token huỷ yêu cầu.",
           "content": {
             "application/json": {
               "schema": {
@@ -3339,7 +3403,7 @@
         },
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Thành viên vừa thêm.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -3376,6 +3440,7 @@
           {
             "name": "id",
             "in": "path",
+            "description": "Id thành viên cần đổi trạng thái.",
             "required": true,
             "schema": {
               "type": "string",
@@ -3384,6 +3449,7 @@
           }
         ],
         "requestBody": {
+          "description": "Token huỷ yêu cầu.",
           "content": {
             "application/json": {
               "schema": {
@@ -3405,7 +3471,7 @@
         },
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Trạng thái kích hoạt sau khi cập nhật.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -3442,6 +3508,7 @@
           {
             "name": "id",
             "in": "path",
+            "description": "Id câu hỏi cần lấy.",
             "required": true,
             "schema": {
               "type": "string",
@@ -3451,7 +3518,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Câu hỏi kèm đáp án; 404 nếu không tồn tại.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -3486,6 +3553,7 @@
           {
             "name": "id",
             "in": "path",
+            "description": "Id câu hỏi cần cập nhật.",
             "required": true,
             "schema": {
               "type": "string",
@@ -3494,6 +3562,7 @@
           }
         ],
         "requestBody": {
+          "description": "Token huỷ yêu cầu.",
           "content": {
             "application/json": {
               "schema": {
@@ -3515,7 +3584,7 @@
         },
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Câu hỏi sau khi cập nhật; 404 nếu không tồn tại; 403 nếu không phụ trách môn học.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -3550,6 +3619,7 @@
           {
             "name": "id",
             "in": "path",
+            "description": "Id câu hỏi cần xoá.",
             "required": true,
             "schema": {
               "type": "string",
@@ -3559,7 +3629,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "204 khi xoá thành công; 404 nếu không tồn tại; 409 nếu đang được tham chiếu (đã dùng trong đề thi)."
           }
         },
         "security": [
@@ -3665,7 +3735,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Danh sách câu hỏi đã lọc kèm tổng số bản ghi.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -3697,6 +3767,7 @@
         ],
         "summary": "Tạo câu hỏi mới kèm đáp án",
         "requestBody": {
+          "description": "Token huỷ yêu cầu.",
           "content": {
             "application/json": {
               "schema": {
@@ -3718,7 +3789,7 @@
         },
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Câu hỏi vừa tạo (HTTP 201); 403 nếu không phụ trách môn học của chủ đề.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -3755,6 +3826,7 @@
           {
             "name": "topicId",
             "in": "path",
+            "description": "Id chủ đề cần lọc.",
             "required": true,
             "schema": {
               "pattern": "^-?(?:0|[1-9]\\d*)$",
@@ -3765,7 +3837,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Danh sách câu hỏi thuộc chủ đề.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -3799,6 +3871,7 @@
         ],
         "summary": "Import câu hỏi hàng loạt từ file Excel (.xlsx)",
         "requestBody": {
+          "description": "Token huỷ yêu cầu.",
           "content": {
             "application/x-www-form-urlencoded": {
               "schema": {
@@ -3839,7 +3912,7 @@
         },
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Kết quả import kèm số dòng thành công/lỗi.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -3873,6 +3946,7 @@
         ],
         "summary": "Tải tệp đính kèm (ảnh/PDF, ≤ 10 MB) lên MinIO → trả URL. KHÔNG ghi DB;\r\nURL chỉ được lưu khi Save câu hỏi (client gửi kèm `ImageUrl` trong QuestionRequest).\r\nCho phép upload trước cả khi câu hỏi được tạo (không cần id).",
         "requestBody": {
+          "description": "Token huỷ yêu cầu.",
           "content": {
             "multipart/form-data": {
               "schema": {
@@ -3889,7 +3963,7 @@
         },
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "URL của tệp trên MinIO.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -3923,6 +3997,7 @@
         ],
         "summary": "Tải tệp audio (≤ 10 MB) lên MinIO → trả URL. KHÔNG ghi DB;\r\nURL chỉ được lưu khi Save câu hỏi (client gửi kèm `AudioUrl` trong QuestionRequest).",
         "requestBody": {
+          "description": "Token huỷ yêu cầu.",
           "content": {
             "multipart/form-data": {
               "schema": {
@@ -3939,7 +4014,7 @@
         },
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "URL của tệp trên MinIO.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -3976,6 +4051,7 @@
           {
             "name": "id",
             "in": "path",
+            "description": "Id câu hỏi cần duyệt.",
             "required": true,
             "schema": {
               "type": "string",
@@ -3985,7 +4061,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "204 khi duyệt thành công; 404 nếu không tồn tại."
           }
         },
         "security": [
@@ -4005,6 +4081,7 @@
           {
             "name": "id",
             "in": "path",
+            "description": "Id câu hỏi cần bỏ duyệt.",
             "required": true,
             "schema": {
               "type": "string",
@@ -4014,7 +4091,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "204 khi thành công; 404 nếu không tồn tại."
           }
         },
         "security": [
@@ -4034,6 +4111,7 @@
           {
             "name": "id",
             "in": "path",
+            "description": "Id câu hỏi cần từ chối.",
             "required": true,
             "schema": {
               "type": "string",
@@ -4042,6 +4120,7 @@
           }
         ],
         "requestBody": {
+          "description": "Token huỷ yêu cầu.",
           "content": {
             "application/json": {
               "schema": {
@@ -4063,7 +4142,7 @@
         },
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "204 khi thành công; 400 nếu thiếu lý do; 404 nếu không tồn tại.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -4098,7 +4177,7 @@
         "summary": "Thống kê số câu hỏi theo trạng thái",
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Số lượng câu hỏi theo từng trạng thái duyệt.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -4135,6 +4214,7 @@
           {
             "name": "id",
             "in": "path",
+            "description": "Id đề thi cần lấy.",
             "required": true,
             "schema": {
               "type": "string",
@@ -4144,7 +4224,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Đề thi (không kèm danh sách câu hỏi); 404 nếu không tồn tại.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -4179,6 +4259,7 @@
           {
             "name": "id",
             "in": "path",
+            "description": "Id đề thi cần xoá.",
             "required": true,
             "schema": {
               "type": "string",
@@ -4188,7 +4269,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "204 khi xoá thành công; 404 nếu không tồn tại."
           }
         },
         "security": [
@@ -4208,6 +4289,7 @@
           {
             "name": "id",
             "in": "path",
+            "description": "Id đề thi cần lấy.",
             "required": true,
             "schema": {
               "type": "string",
@@ -4217,7 +4299,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Đề thi kèm danh sách câu hỏi snapshot; 404 nếu không tồn tại.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -4316,7 +4398,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Danh sách đề thi đã lọc kèm tổng số bản ghi.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -4348,6 +4430,7 @@
         ],
         "summary": "Tạo đề thi kèm câu hỏi snapshot",
         "requestBody": {
+          "description": "Token huỷ yêu cầu.",
           "content": {
             "application/json": {
               "schema": {
@@ -4369,7 +4452,7 @@
         },
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Đề thi vừa tạo (HTTP 201); 401 nếu không xác định được người dùng hiện tại.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -4406,6 +4489,7 @@
           {
             "name": "parentId",
             "in": "path",
+            "description": "Id đề thi gốc/lô cần lấy biến thể.",
             "required": true,
             "schema": {
               "type": "string",
@@ -4415,7 +4499,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Danh sách các biến thể cùng lô.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -4452,6 +4536,7 @@
           {
             "name": "id",
             "in": "path",
+            "description": "Id đề thi cần phát hành.",
             "required": true,
             "schema": {
               "type": "string",
@@ -4461,7 +4546,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Kết quả phát hành; 404 nếu không tồn tại.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -4498,6 +4583,7 @@
           {
             "name": "id",
             "in": "path",
+            "description": "Id đề thi cần lưu trữ.",
             "required": true,
             "schema": {
               "type": "string",
@@ -4507,7 +4593,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Kết quả lưu trữ; 404 nếu không tồn tại.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -4544,6 +4630,7 @@
           {
             "name": "id",
             "in": "path",
+            "description": "Id đề thi cần thống kê.",
             "required": true,
             "schema": {
               "type": "string",
@@ -4553,7 +4640,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Số liệu phân bổ câu hỏi theo mức nhận thức/độ khó/chủ đề; 404 nếu không tồn tại.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -4590,6 +4677,7 @@
           {
             "name": "id",
             "in": "path",
+            "description": "Id đề thi cần xuất.",
             "required": true,
             "schema": {
               "type": "string",
@@ -4599,6 +4687,7 @@
           {
             "name": "format",
             "in": "query",
+            "description": "Định dạng xuất: \"pdf\" hoặc \"docx\".",
             "schema": {
               "type": "string"
             }
@@ -4606,7 +4695,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "URL tệp đã xuất; 404 nếu đề thi không tồn tại; 400 nếu định dạng không hợp lệ.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -4640,6 +4729,7 @@
         ],
         "summary": "Sinh đề thi theo cấu hình phần thi và tỉ lệ độ khó",
         "requestBody": {
+          "description": "Token huỷ yêu cầu.",
           "content": {
             "application/json": {
               "schema": {
@@ -4661,7 +4751,7 @@
         },
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Id đề thi vừa sinh; 400 nếu ngân hàng câu hỏi không đủ.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -4695,6 +4785,7 @@
         ],
         "summary": "Sinh lô đề thi nhiều biến thể từ cùng ngân hàng câu hỏi",
         "requestBody": {
+          "description": "Token huỷ yêu cầu.",
           "content": {
             "application/json": {
               "schema": {
@@ -4716,7 +4807,7 @@
         },
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Id lô đề (batch) và danh sách biến thể vừa sinh; 400 nếu ngân hàng câu hỏi không đủ.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -4753,6 +4844,7 @@
           {
             "name": "page",
             "in": "query",
+            "description": "Số trang (bắt đầu từ 1).",
             "schema": {
               "pattern": "^-?(?:0|[1-9]\\d*)$",
               "type": [
@@ -4766,6 +4858,7 @@
           {
             "name": "pageSize",
             "in": "query",
+            "description": "Số bản ghi mỗi trang.",
             "schema": {
               "pattern": "^-?(?:0|[1-9]\\d*)$",
               "type": [
@@ -4779,6 +4872,7 @@
           {
             "name": "subjectId",
             "in": "query",
+            "description": "Lọc theo môn học (tuỳ chọn).",
             "schema": {
               "pattern": "^-?(?:0|[1-9]\\d*)$",
               "type": [
@@ -4791,6 +4885,7 @@
           {
             "name": "gradeLevelId",
             "in": "query",
+            "description": "Lọc theo khối lớp (tuỳ chọn).",
             "schema": {
               "pattern": "^-?(?:0|[1-9]\\d*)$",
               "type": [
@@ -4803,6 +4898,7 @@
           {
             "name": "status",
             "in": "query",
+            "description": "Lọc theo trạng thái kỳ thi (tuỳ chọn).",
             "schema": {
               "$ref": "#/components/schemas/ExamSessionStatusEnum"
             }
@@ -4810,6 +4906,7 @@
           {
             "name": "keyword",
             "in": "query",
+            "description": "Từ khoá tìm theo tên kỳ thi (tuỳ chọn).",
             "schema": {
               "type": "string"
             }
@@ -4817,7 +4914,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Danh sách kỳ thi đã lọc kèm tổng số bản ghi.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -4849,6 +4946,7 @@
         ],
         "summary": "Tạo kỳ thi.",
         "requestBody": {
+          "description": "Token huỷ yêu cầu.",
           "content": {
             "application/json": {
               "schema": {
@@ -4870,7 +4968,7 @@
         },
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Id kỳ thi vừa tạo (HTTP 201).",
             "content": {
               "text/plain": {
                 "schema": {
@@ -4907,6 +5005,7 @@
           {
             "name": "id",
             "in": "path",
+            "description": "Id kỳ thi cần lấy.",
             "required": true,
             "schema": {
               "type": "string",
@@ -4916,7 +5015,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Chi tiết kỳ thi; 404 nếu không tồn tại.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -4951,6 +5050,7 @@
           {
             "name": "id",
             "in": "path",
+            "description": "Id kỳ thi cần cập nhật.",
             "required": true,
             "schema": {
               "type": "string",
@@ -4959,6 +5059,7 @@
           }
         ],
         "requestBody": {
+          "description": "Token huỷ yêu cầu.",
           "content": {
             "application/json": {
               "schema": {
@@ -4980,7 +5081,7 @@
         },
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Kết quả cập nhật.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -5015,6 +5116,7 @@
           {
             "name": "id",
             "in": "path",
+            "description": "Id kỳ thi cần xoá.",
             "required": true,
             "schema": {
               "type": "string",
@@ -5024,7 +5126,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Kết quả xoá.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -5061,6 +5163,7 @@
           {
             "name": "id",
             "in": "path",
+            "description": "Id kỳ thi cần cập nhật pool.",
             "required": true,
             "schema": {
               "type": "string",
@@ -5069,6 +5172,7 @@
           }
         ],
         "requestBody": {
+          "description": "Token huỷ yêu cầu.",
           "content": {
             "application/json": {
               "schema": {
@@ -5090,7 +5194,7 @@
         },
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Kết quả cập nhật.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -5127,6 +5231,7 @@
           {
             "name": "id",
             "in": "path",
+            "description": "Id kỳ thi.",
             "required": true,
             "schema": {
               "type": "string",
@@ -5136,6 +5241,7 @@
           {
             "name": "examId",
             "in": "path",
+            "description": "Id đề thi cần gỡ khỏi pool.",
             "required": true,
             "schema": {
               "type": "string",
@@ -5145,7 +5251,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Kết quả gỡ đề.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -5182,6 +5288,7 @@
           {
             "name": "id",
             "in": "path",
+            "description": "Id kỳ thi cần giao.",
             "required": true,
             "schema": {
               "type": "string",
@@ -5190,6 +5297,7 @@
           }
         ],
         "requestBody": {
+          "description": "Token huỷ yêu cầu.",
           "content": {
             "application/json": {
               "schema": {
@@ -5211,7 +5319,7 @@
         },
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Id assignment vừa tạo (HTTP 201); 403 nếu không đủ quyền trên lớp/khoá.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -5248,6 +5356,7 @@
           {
             "name": "id",
             "in": "path",
+            "description": "Id kỳ thi.",
             "required": true,
             "schema": {
               "type": "string",
@@ -5257,6 +5366,7 @@
           {
             "name": "assignmentId",
             "in": "path",
+            "description": "Id assignment cần gỡ.",
             "required": true,
             "schema": {
               "type": "string",
@@ -5266,7 +5376,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Kết quả gỡ; 404 nếu assignment không tồn tại; 403 nếu không đủ quyền trên lớp/khoá.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -5303,6 +5413,7 @@
           {
             "name": "id",
             "in": "path",
+            "description": "Id kỳ thi cần phát hành.",
             "required": true,
             "schema": {
               "type": "string",
@@ -5312,7 +5423,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Kết quả phát hành.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -5349,6 +5460,7 @@
           {
             "name": "id",
             "in": "path",
+            "description": "Id kỳ thi cần đóng.",
             "required": true,
             "schema": {
               "type": "string",
@@ -5358,7 +5470,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Kết quả đóng kỳ thi.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -5393,7 +5505,7 @@
         "summary": "Danh sách kỳ thi được giao cho học sinh hiện tại.",
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Danh sách kỳ thi được giao; 401 nếu không xác định được người dùng hiện tại.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -5430,6 +5542,7 @@
           {
             "name": "id",
             "in": "path",
+            "description": "Id kỳ thi cần lấy pool đề.",
             "required": true,
             "schema": {
               "type": "string",
@@ -5439,7 +5552,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Danh sách đề trong pool kèm trạng thái làm bài; 401 nếu không xác định được người dùng hiện tại.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -5476,6 +5589,7 @@
           {
             "name": "id",
             "in": "path",
+            "description": "Id kỳ thi cần bắt đầu làm bài.",
             "required": true,
             "schema": {
               "type": "string",
@@ -5484,6 +5598,7 @@
           }
         ],
         "requestBody": {
+          "description": "Token huỷ yêu cầu.",
           "content": {
             "application/json": {
               "schema": {
@@ -5505,7 +5620,7 @@
         },
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Submission vừa tạo kèm đề thi; 401 nếu không xác định được người dùng hiện tại.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -5542,6 +5657,7 @@
           {
             "name": "id",
             "in": "path",
+            "description": "Id bài nộp cần lấy.",
             "required": true,
             "schema": {
               "type": "string",
@@ -5551,7 +5667,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Bài nộp kèm câu trả lời; 404 nếu không tồn tại.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -5588,6 +5704,7 @@
           {
             "name": "examId",
             "in": "path",
+            "description": "Id đề thi cần lọc.",
             "required": true,
             "schema": {
               "type": "string",
@@ -5597,7 +5714,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Danh sách bài nộp thuộc đề thi.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -5634,6 +5751,7 @@
           {
             "name": "studentId",
             "in": "path",
+            "description": "Id học sinh cần tra cứu.",
             "required": true,
             "schema": {
               "type": "string",
@@ -5643,7 +5761,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Danh sách bài nộp của học sinh.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -5680,6 +5798,7 @@
           {
             "name": "examId",
             "in": "path",
+            "description": "Id đề thi.",
             "required": true,
             "schema": {
               "type": "string",
@@ -5689,6 +5808,7 @@
           {
             "name": "studentId",
             "in": "path",
+            "description": "Id học sinh.",
             "required": true,
             "schema": {
               "type": "string",
@@ -5698,7 +5818,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Bài nộp tương ứng; 404 nếu không tồn tại.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -5735,6 +5855,7 @@
           {
             "name": "sessionId",
             "in": "path",
+            "description": "Id kỳ thi cần lọc.",
             "required": true,
             "schema": {
               "type": "string",
@@ -5744,7 +5865,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Danh sách bài nộp thuộc kỳ thi, kèm tên/lớp học sinh.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -5781,6 +5902,7 @@
           {
             "name": "sessionId",
             "in": "path",
+            "description": "Id kỳ thi.",
             "required": true,
             "schema": {
               "type": "string",
@@ -5790,6 +5912,7 @@
           {
             "name": "studentId",
             "in": "path",
+            "description": "Id học sinh.",
             "required": true,
             "schema": {
               "type": "string",
@@ -5799,7 +5922,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Danh sách các lần nộp bài của học sinh trong kỳ thi.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -5833,6 +5956,7 @@
         ],
         "summary": "Nộp bài thi kèm câu trả lời",
         "requestBody": {
+          "description": "Token huỷ yêu cầu.",
           "content": {
             "application/json": {
               "schema": {
@@ -5854,7 +5978,7 @@
         },
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Bài nộp vừa tạo (HTTP 201).",
             "content": {
               "text/plain": {
                 "schema": {
@@ -5891,6 +6015,7 @@
           {
             "name": "answerId",
             "in": "path",
+            "description": "Id câu trả lời cần chấm.",
             "required": true,
             "schema": {
               "type": "string",
@@ -5899,6 +6024,7 @@
           }
         ],
         "requestBody": {
+          "description": "Token huỷ yêu cầu.",
           "content": {
             "application/json": {
               "schema": {
@@ -5920,7 +6046,7 @@
         },
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "204 khi chấm thành công."
           }
         },
         "security": [
@@ -5940,6 +6066,7 @@
           {
             "name": "id",
             "in": "path",
+            "description": "Id bài nộp cần chốt điểm.",
             "required": true,
             "schema": {
               "type": "string",
@@ -5949,7 +6076,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Bài nộp sau khi chốt điểm.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -5986,6 +6113,7 @@
           {
             "name": "id",
             "in": "path",
+            "description": "Id bài nộp (InProgress) cần lưu tạm.",
             "required": true,
             "schema": {
               "type": "string",
@@ -5994,6 +6122,7 @@
           }
         ],
         "requestBody": {
+          "description": "Token huỷ yêu cầu.",
           "content": {
             "application/json": {
               "schema": {
@@ -6024,7 +6153,7 @@
         },
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Kết quả lưu tạm; 403 nếu không phải chủ bài nộp; 409 nếu bài nộp không còn ở trạng thái InProgress.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -6059,7 +6188,7 @@
         "summary": "Thống kê mẫu đề thi (stat card)",
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Số liệu thống kê tổng quan về mẫu đề thi.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -6096,6 +6225,7 @@
           {
             "name": "id",
             "in": "path",
+            "description": "Id mẫu đề thi cần lấy.",
             "required": true,
             "schema": {
               "type": "string",
@@ -6105,7 +6235,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Mẫu đề thi (không kèm phần thi); 404 nếu không tồn tại.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -6140,6 +6270,7 @@
           {
             "name": "id",
             "in": "path",
+            "description": "Id mẫu đề thi cần cập nhật.",
             "required": true,
             "schema": {
               "type": "string",
@@ -6148,6 +6279,7 @@
           }
         ],
         "requestBody": {
+          "description": "Token huỷ yêu cầu.",
           "content": {
             "application/json": {
               "schema": {
@@ -6169,7 +6301,7 @@
         },
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Mẫu đề thi sau khi cập nhật; 404 nếu không tồn tại.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -6204,6 +6336,7 @@
           {
             "name": "id",
             "in": "path",
+            "description": "Id mẫu đề thi cần xoá.",
             "required": true,
             "schema": {
               "type": "string",
@@ -6213,7 +6346,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "204 khi xoá thành công; 404 nếu không tồn tại."
           }
         },
         "security": [
@@ -6233,6 +6366,7 @@
           {
             "name": "id",
             "in": "path",
+            "description": "Id mẫu đề thi cần lấy.",
             "required": true,
             "schema": {
               "type": "string",
@@ -6242,7 +6376,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Mẫu đề thi kèm danh sách phần thi; 404 nếu không tồn tại.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -6279,6 +6413,7 @@
           {
             "name": "subjectId",
             "in": "path",
+            "description": "Id môn học cần lọc.",
             "required": true,
             "schema": {
               "pattern": "^-?(?:0|[1-9]\\d*)$",
@@ -6289,7 +6424,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Danh sách mẫu đề thi thuộc môn học.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -6326,6 +6461,7 @@
           {
             "name": "gradeLevelId",
             "in": "path",
+            "description": "Id khối lớp cần lọc.",
             "required": true,
             "schema": {
               "pattern": "^-?(?:0|[1-9]\\d*)$",
@@ -6336,7 +6472,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Danh sách mẫu đề thi thuộc khối lớp.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -6370,6 +6506,7 @@
         ],
         "summary": "Tạo mẫu đề thi kèm phần thi",
         "requestBody": {
+          "description": "Token huỷ yêu cầu.",
           "content": {
             "application/json": {
               "schema": {
@@ -6391,7 +6528,7 @@
         },
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Mẫu đề thi vừa tạo (HTTP 201).",
             "content": {
               "text/plain": {
                 "schema": {
@@ -6428,6 +6565,7 @@
           {
             "name": "code",
             "in": "path",
+            "description": "Mã mức độ nhận thức cần tra cứu.",
             "required": true,
             "schema": {
               "type": "string"
@@ -6436,7 +6574,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Bản ghi tương ứng; 404 nếu không tồn tại.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -6471,7 +6609,7 @@
         "summary": "Lấy toàn bộ danh sách",
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Toàn bộ danh sách, không phân biệt trạng thái kích hoạt.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -6558,7 +6696,7 @@
         "summary": "Lấy danh sách đang kích hoạt",
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Danh sách các bản ghi có `IsActive = true`.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -6810,6 +6948,7 @@
           {
             "name": "code",
             "in": "path",
+            "description": "Mã mức độ khó cần tra cứu.",
             "required": true,
             "schema": {
               "type": "string"
@@ -6818,7 +6957,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Bản ghi tương ứng; 404 nếu không tồn tại.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -6853,7 +6992,7 @@
         "summary": "Lấy toàn bộ danh sách",
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Toàn bộ danh sách, không phân biệt trạng thái kích hoạt.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -6940,7 +7079,7 @@
         "summary": "Lấy danh sách đang kích hoạt",
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Danh sách các bản ghi có `IsActive = true`.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -7192,6 +7331,7 @@
           {
             "name": "id",
             "in": "path",
+            "description": "Id khối lớp cần lấy.",
             "required": true,
             "schema": {
               "pattern": "^-?(?:0|[1-9]\\d*)$",
@@ -7202,7 +7342,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Khối lớp kèm danh sách môn học; 404 nếu không tồn tại.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -7237,7 +7377,7 @@
         "summary": "Lấy toàn bộ danh sách",
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Toàn bộ danh sách, không phân biệt trạng thái kích hoạt.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -7324,7 +7464,7 @@
         "summary": "Lấy danh sách đang kích hoạt",
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Danh sách các bản ghi có `IsActive = true`.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -7576,6 +7716,7 @@
           {
             "name": "code",
             "in": "path",
+            "description": "Mã loại câu hỏi cần tra cứu.",
             "required": true,
             "schema": {
               "type": "string"
@@ -7584,7 +7725,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Bản ghi tương ứng; 404 nếu không tồn tại.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -7619,7 +7760,7 @@
         "summary": "Lấy toàn bộ danh sách",
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Toàn bộ danh sách, không phân biệt trạng thái kích hoạt.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -7706,7 +7847,7 @@
         "summary": "Lấy danh sách đang kích hoạt",
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Danh sách các bản ghi có `IsActive = true`.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -7958,6 +8099,7 @@
           {
             "name": "gradeLevelId",
             "in": "path",
+            "description": "Id khối lớp cần lọc.",
             "required": true,
             "schema": {
               "pattern": "^-?(?:0|[1-9]\\d*)$",
@@ -7968,7 +8110,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Danh sách môn học thuộc khối lớp.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -8005,6 +8147,7 @@
           {
             "name": "id",
             "in": "path",
+            "description": "Id môn học cần lấy.",
             "required": true,
             "schema": {
               "pattern": "^-?(?:0|[1-9]\\d*)$",
@@ -8015,7 +8158,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Môn học kèm danh sách chủ đề; 404 nếu không tồn tại.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -8050,7 +8193,7 @@
         "summary": "Lấy toàn bộ danh sách",
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Toàn bộ danh sách, không phân biệt trạng thái kích hoạt.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -8137,7 +8280,7 @@
         "summary": "Lấy danh sách đang kích hoạt",
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Danh sách các bản ghi có `IsActive = true`.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -8389,6 +8532,7 @@
           {
             "name": "subjectId",
             "in": "path",
+            "description": "Id môn học cần lọc.",
             "required": true,
             "schema": {
               "pattern": "^-?(?:0|[1-9]\\d*)$",
@@ -8399,7 +8543,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Danh sách chủ đề thuộc môn học.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -8436,6 +8580,7 @@
           {
             "name": "subjectId",
             "in": "path",
+            "description": "Id môn học cần lọc.",
             "required": true,
             "schema": {
               "pattern": "^-?(?:0|[1-9]\\d*)$",
@@ -8446,7 +8591,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Danh sách chủ đề gốc (không có chủ đề cha) thuộc môn học.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -8483,6 +8628,7 @@
           {
             "name": "parentId",
             "in": "path",
+            "description": "Id chủ đề cha.",
             "required": true,
             "schema": {
               "pattern": "^-?(?:0|[1-9]\\d*)$",
@@ -8493,7 +8639,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Danh sách chủ đề con trực tiếp của chủ đề cha.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -8528,7 +8674,7 @@
         "summary": "Lấy toàn bộ danh sách",
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Toàn bộ danh sách, không phân biệt trạng thái kích hoạt.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -8615,7 +8761,7 @@
         "summary": "Lấy danh sách đang kích hoạt",
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Danh sách các bản ghi có `IsActive = true`.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -11427,19 +11573,23 @@
         "type": "object",
         "properties": {
           "key": {
-            "type": "string"
+            "type": "string",
+            "description": "Mã định danh duy nhất của mục menu."
           },
           "label": {
-            "type": "string"
+            "type": "string",
+            "description": "Nhãn hiển thị."
           },
           "path": {
             "type": [
               "null",
               "string"
-            ]
+            ],
+            "description": "Đường dẫn route; null nếu đây là nhóm cha không có trang riêng."
           },
           "icon": {
-            "type": "string"
+            "type": "string",
+            "description": "Tên icon hiển thị."
           },
           "order": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
@@ -11447,6 +11597,7 @@
               "integer",
               "string"
             ],
+            "description": "Thứ tự hiển thị trong menu/nhóm.",
             "format": "int32"
           },
           "children": {
@@ -11456,7 +11607,8 @@
             ],
             "items": {
               "$ref": "#/components/schemas/MenuItemResponse"
-            }
+            },
+            "description": "Danh sách mục con (nếu là nhóm cha); null nếu là mục lá."
           }
         },
         "description": "Một mục trong menu điều hướng, đã được lọc theo quyền của người dùng hiện tại.\r\n    Nhóm cha có string? MenuItemResponse.Path null và IReadOnlyList&lt;MenuItemResponse&gt;? MenuItemResponse.Children chứa các mục con."

@@ -12,6 +12,7 @@ namespace ExamHub.API.Controllers;
 public class MenuController : AuthorizeControllerBase
 {
     /// <summary>Lấy menu theo phân quyền của người dùng hiện tại</summary>
+    /// <returns>Cây menu đã lọc theo role của người dùng đang đăng nhập.</returns>
     [HttpGet]
     public ActionResult<RequestResponse<IReadOnlyList<MenuItemResponse>>> GetMenu()
     {

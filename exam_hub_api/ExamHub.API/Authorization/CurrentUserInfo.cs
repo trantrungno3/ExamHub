@@ -9,6 +9,7 @@ namespace ExamHub.API.Authorization;
 public sealed class CurrentUserInfo
 {
     /// <summary>Khởi tạo thông tin người dùng từ claim trong token</summary>
+    /// <param name="user">Principal đã xác thực (từ <c>HttpContext.User</c>); null thì mọi thuộc tính giữ giá trị mặc định.</param>
     public CurrentUserInfo(ClaimsPrincipal? user)
     {
         if (user == null) return;
@@ -41,6 +42,7 @@ public sealed class CurrentUserInfo
     /// <summary>Danh sách vai trò</summary>
     public IReadOnlyList<string>? Roles { get; set; }
 
+    /// <summary>Tag của người dùng (dùng để gán CreatedBy/UpdatedBy trên các bản ghi).</summary>
     public string? Tag { get; set; }
 
     /// <summary>Id các trường (Teacher: nhiều trường; Student: trường của khoá đang học)</summary>

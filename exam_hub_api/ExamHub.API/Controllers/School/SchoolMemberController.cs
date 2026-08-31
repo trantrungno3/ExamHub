@@ -12,6 +12,9 @@ namespace ExamHub.API.Controllers.School;
 public class SchoolMemberController(ISchoolMemberService service) : AuthorizeControllerBase
 {
     /// <summary>Lấy theo ID</summary>
+    /// <param name="id">Id thành viên cần lấy.</param>
+    /// <param name="ct">Token huỷ yêu cầu.</param>
+    /// <returns>Bản ghi tương ứng; 404 nếu không tồn tại.</returns>
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<RequestResponse<SchoolMemberResponse>>> GetById(Guid id, CancellationToken ct = default)
     {
@@ -21,6 +24,9 @@ public class SchoolMemberController(ISchoolMemberService service) : AuthorizeCon
     }
 
     /// <summary>Lấy danh sách thành viên theo trường</summary>
+    /// <param name="schoolId">Id trường cần lọc.</param>
+    /// <param name="ct">Token huỷ yêu cầu.</param>
+    /// <returns>Danh sách thành viên thuộc trường.</returns>
     [HttpGet("by-school/{schoolId:int}")]
     public async Task<ActionResult<RequestResponse<IReadOnlyList<SchoolMemberResponse>>>> GetBySchool(int schoolId, CancellationToken ct = default)
     {
@@ -30,6 +36,10 @@ public class SchoolMemberController(ISchoolMemberService service) : AuthorizeCon
     }
 
     /// <summary>Lấy danh sách thành viên theo trường và vai trò</summary>
+    /// <param name="schoolId">Id trường cần lọc.</param>
+    /// <param name="role">Vai trò cần lọc.</param>
+    /// <param name="ct">Token huỷ yêu cầu.</param>
+    /// <returns>Danh sách thành viên thuộc trường và có vai trò tương ứng.</returns>
     [HttpGet("by-school/{schoolId:int}/role/{role}")]
     public async Task<ActionResult<RequestResponse<IReadOnlyList<SchoolMemberResponse>>>> GetBySchoolAndRole(int schoolId, string role, CancellationToken ct = default)
     {
@@ -39,6 +49,9 @@ public class SchoolMemberController(ISchoolMemberService service) : AuthorizeCon
     }
 
     /// <summary>Lấy tất cả trường mà một người dùng thuộc vào</summary>
+    /// <param name="userId">Id người dùng cần tra cứu.</param>
+    /// <param name="ct">Token huỷ yêu cầu.</param>
+    /// <returns>Danh sách bản ghi thành viên của người dùng ở các trường.</returns>
     [HttpGet("by-user/{userId:guid}")]
     public async Task<ActionResult<RequestResponse<IReadOnlyList<SchoolMemberResponse>>>> GetByUser(Guid userId, CancellationToken ct = default)
     {
@@ -48,6 +61,9 @@ public class SchoolMemberController(ISchoolMemberService service) : AuthorizeCon
     }
 
     /// <summary>Thêm thành viên vào trường</summary>
+    /// <param name="request">Thông tin thành viên cần thêm.</param>
+    /// <param name="ct">Token huỷ yêu cầu.</param>
+    /// <returns>Thành viên vừa thêm.</returns>
     [HttpPost("")]
     public async Task<ActionResult<RequestResponse<SchoolMemberResponse>>> AddMember([FromBody] SchoolMemberRequest request, CancellationToken ct = default)
     {
@@ -57,6 +73,10 @@ public class SchoolMemberController(ISchoolMemberService service) : AuthorizeCon
     }
 
     /// <summary>Cập nhật vai trò thành viên</summary>
+    /// <param name="id">Id thành viên cần cập nhật.</param>
+    /// <param name="request">Dữ liệu cập nhật.</param>
+    /// <param name="ct">Token huỷ yêu cầu.</param>
+    /// <returns>Thành viên sau khi cập nhật.</returns>
     [HttpPut("{id:guid}")]
     public async Task<ActionResult<RequestResponse<SchoolMemberResponse>>> Update(Guid id, [FromBody] SchoolMemberRequest request, CancellationToken ct = default)
     {
@@ -67,6 +87,9 @@ public class SchoolMemberController(ISchoolMemberService service) : AuthorizeCon
     }
 
     /// <summary>Xóa thành viên khỏi trường</summary>
+    /// <param name="id">Id thành viên cần xoá.</param>
+    /// <param name="ct">Token huỷ yêu cầu.</param>
+    /// <returns>204 khi xoá thành công.</returns>
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> RemoveMember(Guid id, CancellationToken ct = default)
     {
@@ -75,6 +98,10 @@ public class SchoolMemberController(ISchoolMemberService service) : AuthorizeCon
     }
 
     /// <summary>Bật/tắt trạng thái thành viên</summary>
+    /// <param name="id">Id thành viên cần đổi trạng thái.</param>
+    /// <param name="isActive">Trạng thái kích hoạt mới.</param>
+    /// <param name="ct">Token huỷ yêu cầu.</param>
+    /// <returns>Trạng thái kích hoạt sau khi cập nhật.</returns>
     [HttpPatch("{id:guid}/active")]
     public async Task<ActionResult<RequestResponse<bool>>> SetActive(Guid id, [FromBody] bool isActive, CancellationToken ct = default)
     {

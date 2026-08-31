@@ -21,6 +21,9 @@ public class SchoolController(ISchoolService service)
     protected override SchoolResponse ToResponse(SchoolEntity entity) => SchoolResponse.FromEntity(entity);
 
     /// <summary>Lấy theo mã trường</summary>
+    /// <param name="code">Mã trường cần tra cứu.</param>
+    /// <param name="ct">Token huỷ yêu cầu.</param>
+    /// <returns>Bản ghi tương ứng; 404 nếu không tồn tại.</returns>
     [HttpGet("code/{code}")]
     [Authorize]
     public async Task<ActionResult<RequestResponse<SchoolResponse>>> GetByCode(string code, CancellationToken ct = default)
@@ -31,6 +34,9 @@ public class SchoolController(ISchoolService service)
     }
 
     /// <summary>Lấy trường kèm danh sách khoá học</summary>
+    /// <param name="id">Id trường cần lấy.</param>
+    /// <param name="ct">Token huỷ yêu cầu.</param>
+    /// <returns>Trường kèm danh sách khoá học; 404 nếu không tồn tại.</returns>
     [HttpGet("{id:int}/with-cohorts")]
     [Authorize]
     public async Task<ActionResult<RequestResponse<SchoolResponse>>> GetWithCohorts(int id, CancellationToken ct = default)
@@ -41,6 +47,9 @@ public class SchoolController(ISchoolService service)
     }
 
     /// <summary>Lấy trường kèm danh sách thành viên</summary>
+    /// <param name="id">Id trường cần lấy.</param>
+    /// <param name="ct">Token huỷ yêu cầu.</param>
+    /// <returns>Trường kèm danh sách thành viên; 404 nếu không tồn tại.</returns>
     [HttpGet("{id:int}/with-members")]
     [Authorize]
     public async Task<ActionResult<RequestResponse<SchoolResponse>>> GetWithMembers(int id, CancellationToken ct = default)
@@ -54,6 +63,9 @@ public class SchoolController(ISchoolService service)
     /// Xoá bắt buộc trường học kèm toàn bộ dữ liệu liên quan.
     /// Chỉ Admin: đây là thao tác cascade không hoàn tác được (khoá học, lớp, thành viên).
     /// </summary>
+    /// <param name="id">Id trường cần xoá cưỡng bức.</param>
+    /// <param name="ct">Token huỷ yêu cầu.</param>
+    /// <returns>204 khi xoá thành công.</returns>
     [HttpDelete("{id:int}/force")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> ForceDelete(int id, CancellationToken ct = default)

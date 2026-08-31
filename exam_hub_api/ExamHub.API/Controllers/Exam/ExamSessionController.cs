@@ -15,6 +15,14 @@ public class ExamSessionController(IExamSessionService service, IAuthorizationSe
 {
     // ── Quản lý (Admin/Teacher) ─────────────────────────────────────────
     /// <summary>Danh sách kỳ thi phân trang.</summary>
+    /// <param name="page">Số trang (bắt đầu từ 1).</param>
+    /// <param name="pageSize">Số bản ghi mỗi trang.</param>
+    /// <param name="subjectId">Lọc theo môn học (tuỳ chọn).</param>
+    /// <param name="gradeLevelId">Lọc theo khối lớp (tuỳ chọn).</param>
+    /// <param name="status">Lọc theo trạng thái kỳ thi (tuỳ chọn).</param>
+    /// <param name="keyword">Từ khoá tìm theo tên kỳ thi (tuỳ chọn).</param>
+    /// <param name="ct">Token huỷ yêu cầu.</param>
+    /// <returns>Danh sách kỳ thi đã lọc kèm tổng số bản ghi.</returns>
     [HttpGet, Authorize(Roles = "Admin,Teacher")]
     public async Task<ActionResult<RequestResponse<object>>> GetPaged(
         [FromQuery] int page = 1, [FromQuery] int pageSize = 20,
@@ -33,6 +41,9 @@ public class ExamSessionController(IExamSessionService service, IAuthorizationSe
     }
 
     /// <summary>Chi tiết kỳ thi kèm pool đề + assignments.</summary>
+    /// <param name="id">Id kỳ thi cần lấy.</param>
+    /// <param name="ct">Token huỷ yêu cầu.</param>
+    /// <returns>Chi tiết kỳ thi; 404 nếu không tồn tại.</returns>
     [HttpGet("{id:guid}"), Authorize(Roles = "Admin,Teacher")]
     public async Task<ActionResult<RequestResponse<ExamSessionDetailResponse>>> GetDetail(Guid id, CancellationToken ct)
     {
@@ -42,6 +53,9 @@ public class ExamSessionController(IExamSessionService service, IAuthorizationSe
     }
 
     /// <summary>Tạo kỳ thi.</summary>
+    /// <param name="request">Cấu hình kỳ thi cần tạo.</param>
+    /// <param name="ct">Token huỷ yêu cầu.</param>
+    /// <returns>Id kỳ thi vừa tạo (HTTP 201).</returns>
     [HttpPost, Authorize(Roles = "Admin,Teacher")]
     public async Task<ActionResult<RequestResponse<Guid>>> Create([FromBody] CreateExamSessionRequest request, CancellationToken ct)
     {
@@ -50,6 +64,10 @@ public class ExamSessionController(IExamSessionService service, IAuthorizationSe
     }
 
     /// <summary>Cập nhật kỳ thi.</summary>
+    /// <param name="id">Id kỳ thi cần cập nhật.</param>
+    /// <param name="request">Cấu hình kỳ thi mới.</param>
+    /// <param name="ct">Token huỷ yêu cầu.</param>
+    /// <returns>Kết quả cập nhật.</returns>
     [HttpPut("{id:guid}"), Authorize(Roles = "Admin,Teacher")]
     public async Task<ActionResult<RequestResponse<bool>>> Update(Guid id, [FromBody] UpdateExamSessionRequest request, CancellationToken ct)
     {
@@ -58,6 +76,9 @@ public class ExamSessionController(IExamSessionService service, IAuthorizationSe
     }
 
     /// <summary>Xoá kỳ thi.</summary>
+    /// <param name="id">Id kỳ thi cần xoá.</param>
+    /// <param name="ct">Token huỷ yêu cầu.</param>
+    /// <returns>Kết quả xoá.</returns>
     [HttpDelete("{id:guid}"), Authorize(Roles = "Admin,Teacher")]
     public async Task<ActionResult<RequestResponse<bool>>> Delete(Guid id, CancellationToken ct)
     {
@@ -66,6 +87,10 @@ public class ExamSessionController(IExamSessionService service, IAuthorizationSe
     }
 
     /// <summary>Đặt/thêm đề vào pool của kỳ thi.</summary>
+    /// <param name="id">Id kỳ thi cần cập nhật pool.</param>
+    /// <param name="request">Danh sách Id đề thi cần đặt vào pool.</param>
+    /// <param name="ct">Token huỷ yêu cầu.</param>
+    /// <returns>Kết quả cập nhật.</returns>
     [HttpPost("{id:guid}/exams"), Authorize(Roles = "Admin,Teacher")]
     public async Task<ActionResult<RequestResponse<bool>>> SetExams(Guid id, [FromBody] SetSessionExamsRequest request, CancellationToken ct)
     {
@@ -74,6 +99,10 @@ public class ExamSessionController(IExamSessionService service, IAuthorizationSe
     }
 
     /// <summary>Gỡ một đề khỏi pool.</summary>
+    /// <param name="id">Id kỳ thi.</param>
+    /// <param name="examId">Id đề thi cần gỡ khỏi pool.</param>
+    /// <param name="ct">Token huỷ yêu cầu.</param>
+    /// <returns>Kết quả gỡ đề.</returns>
     [HttpDelete("{id:guid}/exams/{examId:guid}"), Authorize(Roles = "Admin,Teacher")]
     public async Task<ActionResult<RequestResponse<bool>>> RemoveExam(Guid id, Guid examId, CancellationToken ct)
     {
@@ -82,6 +111,10 @@ public class ExamSessionController(IExamSessionService service, IAuthorizationSe
     }
 
     /// <summary>Giao kỳ thi cho một lớp/khoá.</summary>
+    /// <param name="id">Id kỳ thi cần giao.</param>
+    /// <param name="request">Lớp (CohortClassId) hoặc cả khoá cần giao; giao cả khoá chỉ Admin được phép.</param>
+    /// <param name="ct">Token huỷ yêu cầu.</param>
+    /// <returns>Id assignment vừa tạo (HTTP 201); 403 nếu không đủ quyền trên lớp/khoá.</returns>
     [HttpPost("{id:guid}/assignments"), Authorize(Roles = "Admin,Teacher")]
     public async Task<ActionResult<RequestResponse<Guid>>> AddAssignment(Guid id, [FromBody] CreateAssignmentRequest request, CancellationToken ct)
     {
@@ -101,6 +134,10 @@ public class ExamSessionController(IExamSessionService service, IAuthorizationSe
     }
 
     /// <summary>Gỡ giao lớp/khoá.</summary>
+    /// <param name="id">Id kỳ thi.</param>
+    /// <param name="assignmentId">Id assignment cần gỡ.</param>
+    /// <param name="ct">Token huỷ yêu cầu.</param>
+    /// <returns>Kết quả gỡ; 404 nếu assignment không tồn tại; 403 nếu không đủ quyền trên lớp/khoá.</returns>
     [HttpDelete("{id:guid}/assignments/{assignmentId:guid}"), Authorize(Roles = "Admin,Teacher")]
     public async Task<ActionResult<RequestResponse<bool>>> RemoveAssignment(Guid id, Guid assignmentId, CancellationToken ct)
     {
@@ -123,6 +160,9 @@ public class ExamSessionController(IExamSessionService service, IAuthorizationSe
     }
 
     /// <summary>Phát hành kỳ thi (Draft → Published).</summary>
+    /// <param name="id">Id kỳ thi cần phát hành.</param>
+    /// <param name="ct">Token huỷ yêu cầu.</param>
+    /// <returns>Kết quả phát hành.</returns>
     [HttpPost("{id:guid}/publish"), Authorize(Roles = "Admin,Teacher")]
     public async Task<ActionResult<RequestResponse<bool>>> Publish(Guid id, CancellationToken ct)
     {
@@ -131,6 +171,9 @@ public class ExamSessionController(IExamSessionService service, IAuthorizationSe
     }
 
     /// <summary>Đóng kỳ thi.</summary>
+    /// <param name="id">Id kỳ thi cần đóng.</param>
+    /// <param name="ct">Token huỷ yêu cầu.</param>
+    /// <returns>Kết quả đóng kỳ thi.</returns>
     [HttpPost("{id:guid}/close"), Authorize(Roles = "Admin,Teacher")]
     public async Task<ActionResult<RequestResponse<bool>>> Close(Guid id, CancellationToken ct)
     {
@@ -140,6 +183,8 @@ public class ExamSessionController(IExamSessionService service, IAuthorizationSe
 
     // ── Học sinh ────────────────────────────────────────────────────────
     /// <summary>Danh sách kỳ thi được giao cho học sinh hiện tại.</summary>
+    /// <param name="ct">Token huỷ yêu cầu.</param>
+    /// <returns>Danh sách kỳ thi được giao; 401 nếu không xác định được người dùng hiện tại.</returns>
     [HttpGet("my")]
     public async Task<ActionResult<RequestResponse<IReadOnlyList<MySessionResponse>>>> GetMy(CancellationToken ct)
     {
@@ -150,6 +195,9 @@ public class ExamSessionController(IExamSessionService service, IAuthorizationSe
     }
 
     /// <summary>Pool đề của kỳ thi kèm trạng thái làm bài của học sinh hiện tại.</summary>
+    /// <param name="id">Id kỳ thi cần lấy pool đề.</param>
+    /// <param name="ct">Token huỷ yêu cầu.</param>
+    /// <returns>Danh sách đề trong pool kèm trạng thái làm bài; 401 nếu không xác định được người dùng hiện tại.</returns>
     [HttpGet("{id:guid}/pool")]
     public async Task<ActionResult<RequestResponse<IReadOnlyList<SessionPoolItemResponse>>>> GetPool(Guid id, CancellationToken ct)
     {
@@ -160,6 +208,10 @@ public class ExamSessionController(IExamSessionService service, IAuthorizationSe
     }
 
     /// <summary>Vào thi: bốc/khoá đề (Random) hoặc chọn đề (StudentChoice), trả submission + đề.</summary>
+    /// <param name="id">Id kỳ thi cần bắt đầu làm bài.</param>
+    /// <param name="request">Đề thi được chọn (chỉ dùng khi PickMode=StudentChoice).</param>
+    /// <param name="ct">Token huỷ yêu cầu.</param>
+    /// <returns>Submission vừa tạo kèm đề thi; 401 nếu không xác định được người dùng hiện tại.</returns>
     [HttpPost("{id:guid}/start")]
     public async Task<ActionResult<RequestResponse<StartSessionResponse>>> Start(Guid id, [FromBody] StartSessionRequest request, CancellationToken ct)
     {

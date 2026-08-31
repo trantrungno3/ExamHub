@@ -12,6 +12,8 @@ namespace ExamHub.API.Controllers.Exam;
 public class ExamTemplateController(IExamTemplateService service) : AuthorizeControllerBase
 {
     /// <summary>Thống kê mẫu đề thi (stat card)</summary>
+    /// <param name="ct">Token huỷ yêu cầu.</param>
+    /// <returns>Số liệu thống kê tổng quan về mẫu đề thi.</returns>
     [HttpGet("stats")]
     public async Task<ActionResult<RequestResponse<ExamTemplateStatsResponse>>> GetStats(CancellationToken ct)
     {
@@ -20,6 +22,9 @@ public class ExamTemplateController(IExamTemplateService service) : AuthorizeCon
     }
 
     /// <summary>Lấy mẫu đề thi theo ID</summary>
+    /// <param name="id">Id mẫu đề thi cần lấy.</param>
+    /// <param name="ct">Token huỷ yêu cầu.</param>
+    /// <returns>Mẫu đề thi (không kèm phần thi); 404 nếu không tồn tại.</returns>
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<RequestResponse<ExamTemplateResponse>>> GetById(Guid id, CancellationToken ct)
     {
@@ -29,6 +34,9 @@ public class ExamTemplateController(IExamTemplateService service) : AuthorizeCon
     }
 
     /// <summary>Lấy mẫu đề thi kèm phần thi</summary>
+    /// <param name="id">Id mẫu đề thi cần lấy.</param>
+    /// <param name="ct">Token huỷ yêu cầu.</param>
+    /// <returns>Mẫu đề thi kèm danh sách phần thi; 404 nếu không tồn tại.</returns>
     [HttpGet("{id:guid}/with-sections")]
     public async Task<ActionResult<RequestResponse<ExamTemplateResponse>>> GetWithSections(Guid id, CancellationToken ct)
     {
@@ -38,6 +46,9 @@ public class ExamTemplateController(IExamTemplateService service) : AuthorizeCon
     }
 
     /// <summary>Lấy danh sách mẫu đề thi theo môn học</summary>
+    /// <param name="subjectId">Id môn học cần lọc.</param>
+    /// <param name="ct">Token huỷ yêu cầu.</param>
+    /// <returns>Danh sách mẫu đề thi thuộc môn học.</returns>
     [HttpGet("by-subject/{subjectId:int}")]
     public async Task<ActionResult<RequestResponse<IReadOnlyList<ExamTemplateResponse>>>> GetBySubject(int subjectId, CancellationToken ct)
     {
@@ -47,6 +58,9 @@ public class ExamTemplateController(IExamTemplateService service) : AuthorizeCon
     }
 
     /// <summary>Lấy danh sách mẫu đề thi theo lớp học</summary>
+    /// <param name="gradeLevelId">Id khối lớp cần lọc.</param>
+    /// <param name="ct">Token huỷ yêu cầu.</param>
+    /// <returns>Danh sách mẫu đề thi thuộc khối lớp.</returns>
     [HttpGet("by-grade/{gradeLevelId:int}")]
     public async Task<ActionResult<RequestResponse<IReadOnlyList<ExamTemplateResponse>>>> GetByGradeLevel(int gradeLevelId, CancellationToken ct)
     {
@@ -56,6 +70,9 @@ public class ExamTemplateController(IExamTemplateService service) : AuthorizeCon
     }
 
     /// <summary>Tạo mẫu đề thi kèm phần thi</summary>
+    /// <param name="request">Thông tin mẫu đề thi và danh sách phần thi.</param>
+    /// <param name="ct">Token huỷ yêu cầu.</param>
+    /// <returns>Mẫu đề thi vừa tạo (HTTP 201).</returns>
     [HttpPost]
     public async Task<ActionResult<RequestResponse<ExamTemplateResponse>>> Create(
         [FromBody] ExamTemplateRequest request,
@@ -68,6 +85,10 @@ public class ExamTemplateController(IExamTemplateService service) : AuthorizeCon
     }
 
     /// <summary>Cập nhật mẫu đề thi (tuỳ chọn kèm phần thi mới)</summary>
+    /// <param name="id">Id mẫu đề thi cần cập nhật.</param>
+    /// <param name="request">Thông tin mẫu đề thi mới và danh sách phần thi.</param>
+    /// <param name="ct">Token huỷ yêu cầu.</param>
+    /// <returns>Mẫu đề thi sau khi cập nhật; 404 nếu không tồn tại.</returns>
     [HttpPut("{id:guid}")]
     public async Task<ActionResult<RequestResponse<ExamTemplateResponse>>> Update(
         Guid id,
@@ -85,6 +106,9 @@ public class ExamTemplateController(IExamTemplateService service) : AuthorizeCon
     }
 
     /// <summary>Xóa mẫu đề thi</summary>
+    /// <param name="id">Id mẫu đề thi cần xoá.</param>
+    /// <param name="ct">Token huỷ yêu cầu.</param>
+    /// <returns>204 khi xoá thành công; 404 nếu không tồn tại.</returns>
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
     {

@@ -17,6 +17,8 @@ namespace ExamHub.API.Controllers;
 public class AuthController(IAuthService service) : ControllerBase
 {
     /// <summary>Đăng nhập và nhận JWT token</summary>
+    /// <param name="dto">Tên đăng nhập và mật khẩu.</param>
+    /// <returns>Access token + refresh token nếu đăng nhập thành công.</returns>
     [AllowAnonymous]
     [HttpPost("login")]
     public async Task<ActionResult<RequestResponse<TokenModel>>> Login([FromBody] LoginDto dto)
@@ -25,6 +27,8 @@ public class AuthController(IAuthService service) : ControllerBase
     }
 
     /// <summary>Đăng ký tài khoản mới</summary>
+    /// <param name="dto">Thông tin tài khoản cần đăng ký.</param>
+    /// <returns>Kết quả đăng ký.</returns>
     [AllowAnonymous]
     [HttpPost("register")]
     public async Task<ActionResult<RequestResponse<object>>> Register([FromBody] RegisterDto dto)
@@ -33,6 +37,8 @@ public class AuthController(IAuthService service) : ControllerBase
     }
 
     /// <summary>Làm mới access token bằng refresh token</summary>
+    /// <param name="dto">Access token + refresh token hiện tại.</param>
+    /// <returns>Access token mới.</returns>
     [AllowAnonymous]
     [HttpGet("refresh-token")]
     public async Task<ActionResult<RequestResponse<string>>> RefreshToken([FromQuery] TokenModel dto)
@@ -41,6 +47,7 @@ public class AuthController(IAuthService service) : ControllerBase
     }
 
     /// <summary>Lấy thông tin tài khoản đang đăng nhập</summary>
+    /// <returns>Thông tin tài khoản hiện tại.</returns>
     [HttpGet("info")]
     [Authorize]
     public async Task<ActionResult<RequestResponse<UserInfo>>> GetInfo()
@@ -49,6 +56,8 @@ public class AuthController(IAuthService service) : ControllerBase
     }
 
     /// <summary>Cập nhật thông tin cá nhân của tài khoản đang đăng nhập</summary>
+    /// <param name="dto">Thông tin cá nhân mới.</param>
+    /// <returns>Thông tin tài khoản sau khi cập nhật.</returns>
     [HttpPut("profile")]
     [Authorize]
     public async Task<ActionResult<RequestResponse<UserInfo>>> UpdateProfile([FromBody] UpdateProfileDto dto)
@@ -57,6 +66,8 @@ public class AuthController(IAuthService service) : ControllerBase
     }
 
     /// <summary>Đổi mật khẩu của tài khoản đang đăng nhập</summary>
+    /// <param name="dto">Mật khẩu cũ và mật khẩu mới.</param>
+    /// <returns>Kết quả đổi mật khẩu.</returns>
     [HttpPost("change-password")]
     [Authorize]
     public async Task<ActionResult<RequestResponse<bool>>> ChangePassword([FromBody] ChangePasswordDto dto)

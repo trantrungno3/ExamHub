@@ -12,6 +12,11 @@ namespace ExamHub.API.Authorization;
 public sealed class TeacherOwnsSubjectHandler(ITeacherSubjectRepository teacherSubjectRepo)
     : AuthorizationHandler<TeacherOwnsSubjectRequirement, int>
 {
+    /// <summary>Evaluates the requirement against the current user's claims and the TeacherSubject table.</summary>
+    /// <param name="context">Authorization context; <see cref="AuthorizationHandlerContext.Succeed"/> is called on success.</param>
+    /// <param name="requirement">The requirement instance being evaluated.</param>
+    /// <param name="subjectId">Id of the subject the caller must teach (or be Admin) to access.</param>
+    /// <returns>A task that completes once the outcome has been reported via <paramref name="context"/>.</returns>
     protected override async Task HandleRequirementAsync(
         AuthorizationHandlerContext context,
         TeacherOwnsSubjectRequirement requirement,
@@ -30,6 +35,9 @@ public sealed class TeacherOwnsSubjectHandler(ITeacherSubjectRepository teacherS
             context.Succeed(requirement);
     }
 
+    /// <summary>Extracts the caller's user id from the standard user-id claim.</summary>
+    /// <param name="user">Principal to read the claim from.</param>
+    /// <returns>The parsed user id, or <see cref="Guid.Empty"/> if the claim is missing or invalid.</returns>
     private static Guid GetUserId(ClaimsPrincipal user)
     {
         var claim = user.FindFirst(ConstClaim.UserId);

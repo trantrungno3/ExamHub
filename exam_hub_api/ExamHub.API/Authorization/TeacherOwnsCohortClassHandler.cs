@@ -11,6 +11,11 @@ namespace ExamHub.API.Authorization;
 /// </summary>
 public sealed class TeacherOwnsCohortClassHandler : AuthorizationHandler<TeacherOwnsCohortClassRequirement, int>
 {
+    /// <summary>Evaluates the requirement against the current user's claims.</summary>
+    /// <param name="context">Authorization context; <see cref="AuthorizationHandlerContext.Succeed"/> is called on success.</param>
+    /// <param name="requirement">The requirement instance being evaluated.</param>
+    /// <param name="cohortClassId">Id of the cohort class the caller must own (or be Admin) to access.</param>
+    /// <returns>A completed task; the outcome is reported via <paramref name="context"/>.</returns>
     protected override Task HandleRequirementAsync(
         AuthorizationHandlerContext context,
         TeacherOwnsCohortClassRequirement requirement,
