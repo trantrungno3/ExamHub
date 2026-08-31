@@ -224,8 +224,16 @@ export default function GeneratePage() {
                                     <Form.Item label="Trộn đáp án" name="shuffleAnswers" valuePropName="checked" className="!mb-0">
                                         <Switch/>
                                     </Form.Item>
-                                    <Form.Item label="Chống trùng câu hỏi" name="preventDuplicate" valuePropName="checked" className="!mb-0">
-                                        <Switch/>
+                                    <Form.Item
+                                        label="Chống trùng câu hỏi"
+                                        name="preventDuplicate"
+                                        valuePropName="checked"
+                                        className="!mb-0"
+                                        help={batchMode
+                                            ? 'Bật: mỗi mã đề trong lô có bộ câu hỏi khác nhau. Tắt: mọi mã đề dùng chung 1 bộ câu hỏi.'
+                                            : 'Không áp dụng khi chỉ sinh 1 đề — hệ thống luôn tự chống trùng câu hỏi giữa các phần thi.'}
+                                    >
+                                        <Switch disabled={!batchMode}/>
                                     </Form.Item>
                                 </div>
                             </div>
