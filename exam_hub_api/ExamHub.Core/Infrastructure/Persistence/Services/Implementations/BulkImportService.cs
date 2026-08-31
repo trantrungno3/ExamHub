@@ -49,6 +49,10 @@ public class BulkImportService(IQuestionService questionService) : IBulkImportSe
         return new BulkImportQuestionResponse(success, errors.Count, errors);
     }
 
+    // Cột Excel cố định theo template mẫu (không đọc header động):
+    // 1=Content, 2=QuestionTypeId, 3=DifficultyLevelId, 4=TopicId, 5=CognitiveLevelId, 6=Explanation,
+    // 7-10=Đáp án A/B/C/D (cột trống = không có đáp án đó), 11=CorrectAnswers (vd "A,C").
+    // Đổi thứ tự cột trong template Excel thì phải sửa số cột ở đây theo, không có validation tên cột.
     private static (Question, List<QuestionAnswer>) ParseRow(
         IXLWorksheet sheet, int row, BulkImportQuestionRequest request, string createdBy)
     {

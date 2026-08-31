@@ -3,6 +3,13 @@ import {message} from 'antd'
 import type {CategoryServiceBase} from '../services/categoryServiceBase'
 import {statusCode} from '../services/requestService'
 
+/**
+ * State + hành vi CRUD dùng chung cho các trang quản lý danh mục dạng bảng (Môn học, Chủ đề, Khối
+ * lớp, Dạng câu hỏi...): tự fetch danh sách khi mount, mở/đóng modal thêm-sửa, lưu (create hoặc
+ * update tuỳ có `editing` hay không), xoá kèm cập nhật lạc quan (bỏ item khỏi `data` ngay khi xoá
+ * thành công thay vì fetch lại). Mỗi trang chỉ cần truyền `service` (implement CategoryServiceBase)
+ * và nhãn tiếng Việt của entity để hiện trong toast lỗi/thành công.
+ */
 export function useCategoryTab<TEntity extends { id: number }, TBody>(
     service: CategoryServiceBase<TEntity, TBody>,
     entityLabel: string,
