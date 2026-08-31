@@ -77,9 +77,13 @@ public class ExamGeneratorService(
             request.CreatedBy, request.Sections);
         var sections = await ResolveSectionsAsync(baseRequest, ct);
 
-        // Pick questions ONCE — all variants share the same question set
-        var usedIds  = new HashSet<Guid>();
-        var basePool = await PickQuestionsAsync(sections, request.SubjectId, usedIds, ct);
+        var usedIds = new HashSet<Guid>();
+        // PreventDuplicate=false (mặc định cũ): pick 1 lần, mọi variant dùng chung bộ câu hỏi — rẻ hơn.
+        // PreventDuplicate=true: mỗi variant tự pick riêng, dùng CHUNG usedIds nên KHÔNG variant nào
+        // trùng câu với variant trước — PickQuestionsAsync giờ luôn loại trừ usedIds (xem PickQuestionsAsync).
+        List<(int SectionIndex, PickedQuestion Question)>? sharedPool = request.PreventDuplicate
+            ? null
+            : await PickQuestionsAsync(sections, request.SubjectId, usedIds, ct);
 
         var batchId    = Guid.NewGuid();
         var now        = DateTime.UtcNow;
@@ -87,10 +91,11 @@ public class ExamGeneratorService(
             ? request.TotalScore
             : sections.Sum(s => s.QuestionCount * s.ScorePerQuestion);
         var baseCode   = batchId.ToString("N")[..6].ToUpper();
+        var questionsPerVariant = sections.Sum(s => s.QuestionCount);
 
         Guid firstExamId = Guid.Empty;
         var exams        = new List<Exam>(request.VariantCount);
-        var allQuestions = new List<ExamQuestion>(basePool.Count * request.VariantCount);
+        var allQuestions = new List<ExamQuestion>(questionsPerVariant * request.VariantCount);
 
         for (int i = 0; i < request.VariantCount; i++)
         {
@@ -105,7 +110,7 @@ public class ExamGeneratorService(
                 GradeLevelId    = request.GradeLevelId,
                 SubjectId       = request.SubjectId,
                 CreatedBy       = request.CreatedBy,
-                Title           = request.Title,
+                Title           = $"{request.Title} - Đề {variantCode}",
                 ExamCode        = $"{baseCode}-{variantCode}",
                 DurationMinutes = request.DurationMinutes,
                 TotalScore      = totalScore,
@@ -117,7 +122,9 @@ public class ExamGeneratorService(
                 Modified       = now
             });
 
-            var variantSelections = basePool.ToList();
+            var variantSelections = sharedPool is not null
+                ? sharedPool.ToList()
+                : await PickQuestionsAsync(sections, request.SubjectId, usedIds, ct);
             if (request.ShuffleQuestions) FisherYatesShuffle(variantSelections);
 
             allQuestions.AddRange(variantSelections.Select((s, idx) =>
