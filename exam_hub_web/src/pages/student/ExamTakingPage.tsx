@@ -156,9 +156,10 @@ function ExamRunner({exam, studentId, studentName, sessionId, submissionId}: {
         return n
     })
     const cellClass = (q: {id: string}, idx: number) => {
-        if (idx === activeIdx) return 'take-cell take-cell--current'
+        const answered = hasAnswer(values[q.id])
+        if (idx === activeIdx) return `take-cell take-cell--current${answered ? ' take-cell--current-answered' : ''}`
         if (flagged.has(q.id)) return 'take-cell take-cell--flagged'
-        if (hasAnswer(values[q.id])) return 'take-cell take-cell--answered'
+        if (answered) return 'take-cell take-cell--answered'
         return 'take-cell'
     }
     const avatarChar = (studentName ?? 'A').charAt(0).toUpperCase()

@@ -729,6 +729,7 @@ body {
 .take-cell--answered { background: #dcfce7; border-color: #86efac; color: #15803d; }
 .take-cell--flagged { background: #fef3c7; border-color: #fcd34d; color: #b45309; }
 .take-cell--current { background: #3a74f5; border-color: #3a74f5; color: #fff; }
+.take-cell--current-answered { background: #3a74f5; border-color: #22c55e; box-shadow: inset 0 0 0 2px #22c55e; color: #fff; }
 
 /* ─── Rich Text Editor ───────────────────────────── */
 .rich-editor {
