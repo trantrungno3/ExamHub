@@ -76,7 +76,7 @@ function ExamRunner({exam, studentId, studentName, sessionId, submissionId}: {
                 }
             }
             // Merge: existing in-progress values win over restored ones
-            const merged = { ...restored, ...form.getFieldsValue() }
+            const merged = { ...restored, ...form.getFieldsValue(true) }
             form.setFieldsValue(merged)
             setValues(prev => ({ ...restored, ...prev }))
         }).catch(() => {})
@@ -87,7 +87,7 @@ function ExamRunner({exam, studentId, studentName, sessionId, submissionId}: {
     useEffect(() => {
         if (!submissionId) return
         const id = setInterval(() => {
-            const vals = form.getFieldsValue()
+            const vals = form.getFieldsValue(true)
             submissionService.saveProgress(submissionId, toAnswerPayload(vals)).catch(() => {})
         }, 20000)
         return () => clearInterval(id)
@@ -113,7 +113,7 @@ function ExamRunner({exam, studentId, studentName, sessionId, submissionId}: {
 
     const buildAndSubmit = async () => {
         if (!studentId) { message.error('Không xác định được học sinh đang đăng nhập'); return }
-        const vals = form.getFieldsValue()
+        const vals = form.getFieldsValue(true)
         const body: ExamSubmissionBody = {
             examId: exam.id,
             studentId,
@@ -183,7 +183,7 @@ function ExamRunner({exam, studentId, studentName, sessionId, submissionId}: {
                 </div>
             </div>
 
-            <Form form={form} component={false} onValuesChange={() => setValues(form.getFieldsValue())}>
+            <Form form={form} component={false} onValuesChange={() => setValues(form.getFieldsValue(true))}>
                 <div className="take-body">
                     {/* Khu câu hỏi (tối) */}
                     <div className="take-main">
