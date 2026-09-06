@@ -37,9 +37,12 @@ const EMPTY_SECTION: ExamTemplateSectionBody = {
     pctVeryHard: 10,
 }
 
-const EMPTY: ExamTemplateBody = {
-    gradeLevelId: 0,
-    subjectId: 0,
+type ExamTemplateFormValues = Omit<ExamTemplateBody, 'gradeLevelId' | 'subjectId'> & {
+    gradeLevelId?: number
+    subjectId?: number
+}
+
+const EMPTY: ExamTemplateFormValues = {
     title: '',
     durationMinutes: 45,
     totalScore: 10,
@@ -54,7 +57,7 @@ export default function CreateExamTemplatePage() {
     const navigate = useNavigate()
     const {id} = useParams<{ id: string }>()
     const isEdit = !!id
-    const [form] = Form.useForm<ExamTemplateBody>()
+    const [form] = Form.useForm<ExamTemplateFormValues>()
     const qc = useQueryClient()
 
     const grades = useGradeLevelsListQuery()
@@ -68,6 +71,14 @@ export default function CreateExamTemplatePage() {
     const watchedGradeId = Form.useWatch('gradeLevelId', form)
     const watchedSubjectId = Form.useWatch('subjectId', form)
     const watchedSections = Form.useWatch('sections', form)
+
+    // Môn học lọc theo lớp đã chọn.
+    const subjectOptions = useMemo(
+        () => (subjects.data ?? [])
+            .filter(s => s.gradeLevelId === watchedGradeId)
+            .map(s => ({value: s.id, label: s.name})),
+        [subjects.data, watchedGradeId],
+    )
 
     // Chủ đề lọc theo lớp + môn đã chọn ở phần thông tin mẫu đề.
     const topicOptions = useMemo(() => {
@@ -140,7 +151,7 @@ export default function CreateExamTemplatePage() {
 
     const submit = async (generateAfter: boolean) => {
         const v = await form.validateFields()
-        const res = await saveMutation.mutateAsync(v)
+        const res = await saveMutation.mutateAsync({...v, gradeLevelId: v.gradeLevelId!, subjectId: v.subjectId!})
         if (res.status === statusCode.Error || !res.data) return
         if (generateAfter && res.data.id) navigate(`/app/generate?templateId=${res.data.id}`)
         else navigate('/app/exams')
@@ -166,6 +177,13 @@ export default function CreateExamTemplatePage() {
                     layout="vertical"
                     initialValues={EMPTY}
                     onValuesChange={changed => {
+                        // Đổi lớp -> bỏ môn đã chọn nếu môn đó không thuộc lớp mới.
+                        if ('gradeLevelId' in changed) {
+                            const currentSubjectId = form.getFieldValue('subjectId')
+                            const subj = (subjects.data ?? []).find(s => s.id === currentSubjectId)
+                            if (subj && subj.gradeLevelId !== changed.gradeLevelId)
+                                form.setFieldValue('subjectId', undefined)
+                        }
                         // Đổi lớp / môn -> bỏ chủ đề đã chọn ở các phần vì không còn hợp lệ.
                         if ('gradeLevelId' in changed || 'subjectId' in changed) {
                             const sections = (form.getFieldValue('sections') ?? []) as ExamTemplateSectionBody[]
@@ -196,10 +214,7 @@ export default function CreateExamTemplatePage() {
                                     <Form.Item label="Môn học" name="subjectId"
                                                rules={[{required: true, message: 'Chọn môn'}]}>
                                         <Select placeholder="Chọn môn" showSearch optionFilterProp="label"
-                                                options={(subjects.data ?? []).map(s => ({
-                                                    value: s.id,
-                                                    label: s.name
-                                                }))}/>
+                                                disabled={!watchedGradeId} options={subjectOptions}/>
                                     </Form.Item>
                                 </div>
                                 <div className="grid grid-cols-3 gap-4">
@@ -225,7 +240,7 @@ export default function CreateExamTemplatePage() {
 
                             <div className="form-section">
                                 <p className="form-section-title">Cấu hình sinh đề</p>
-                                <div className="flex flex-col gap-2">
+                                <div className="grid grid-cols-2 gap-x-4 gap-y-2">
                                     <Form.Item label="Trộn câu hỏi" name="shuffleQuestions" valuePropName="checked"
                                                className="!mb-0">
                                         <Switch/>

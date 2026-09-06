@@ -46,7 +46,8 @@ public class QuestionController(
         var (items, total) = await service.GetPagedAsync(
             request.Page, request.PageSize,
             request.TopicId, request.QuestionTypeId, request.DifficultyLevelId,
-            request.CognitiveLevelId, request.Keyword, request.ReviewStatus, ct);
+            request.CognitiveLevelId, request.Keyword, request.ReviewStatus,
+            request.SubjectId, request.GradeLevelId, ct);
 
         return Ok(RequestResponse<object>.Success("Lấy danh sách thành công!", new
         {

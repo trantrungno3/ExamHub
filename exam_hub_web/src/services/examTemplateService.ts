@@ -15,6 +15,10 @@ class ExamTemplateService {
         return AuthHttp.get<ExamTemplate>(`/${this.basePath}/${id}/with-sections`)
     }
 
+    getAll() {
+        return AuthHttp.get<ExamTemplate[]>(`/${this.basePath}`)
+    }
+
     getBySubject(subjectId: number) {
         return AuthHttp.get<ExamTemplate[]>(`/${this.basePath}/by-subject/${subjectId}`)
     }

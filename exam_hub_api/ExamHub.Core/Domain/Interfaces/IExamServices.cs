@@ -18,7 +18,7 @@ public interface IQuestionService
     Task<IReadOnlyList<Question>> GetByTopicAsync(int topicId, CancellationToken ct = default);
 
     /// <summary>Lấy câu hỏi phân trang với bộ lọc</summary>
-    Task<(IReadOnlyList<Question> Items, int Total)> GetPagedAsync(int page, int pageSize, int? topicId = null, int? questionTypeId = null, int? difficultyLevelId = null, int? cognitiveLevelId = null, string? keyword = null, string? reviewStatus = null, CancellationToken ct = default);
+    Task<(IReadOnlyList<Question> Items, int Total)> GetPagedAsync(int page, int pageSize, int? topicId = null, int? questionTypeId = null, int? difficultyLevelId = null, int? cognitiveLevelId = null, string? keyword = null, string? reviewStatus = null, int? subjectId = null, int? gradeLevelId = null, CancellationToken ct = default);
 
     /// <summary>Tạo câu hỏi kèm đáp án</summary>
     Task<Question> CreateAsync(Question entity, IEnumerable<QuestionAnswer> answers, CancellationToken ct = default);
@@ -62,6 +62,9 @@ public interface ITeacherSubjectService
 
     /// <summary>Xóa phụ trách môn học</summary>
     Task RemoveSubjectAsync(Guid userId, int subjectId, CancellationToken ct = default);
+
+    /// <summary>Đặt lại toàn bộ danh sách môn học phụ trách của giáo viên</summary>
+    Task SetSubjectsAsync(Guid userId, IReadOnlyList<int> subjectIds, CancellationToken ct = default);
 }
 
 /// <summary>Service interface cho ExamTemplate</summary>
@@ -72,6 +75,9 @@ public interface IExamTemplateService
 
     /// <summary>Lấy template kèm phần thi</summary>
     Task<ExamTemplate?> GetWithSectionsAsync(Guid id, CancellationToken ct = default);
+
+    /// <summary>Lấy toàn bộ mẫu đề thi (không lọc)</summary>
+    Task<IReadOnlyList<ExamTemplate>> GetAllAsync(CancellationToken ct = default);
 
     /// <summary>Lấy danh sách template theo môn học</summary>
     Task<IReadOnlyList<ExamTemplate>> GetBySubjectAsync(int subjectId, CancellationToken ct = default);

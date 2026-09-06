@@ -34,6 +34,12 @@ export default function ExamSessionListPage() {
         () => ({page, pageSize, gradeLevelId, subjectId, status, keyword}),
         [page, pageSize, gradeLevelId, subjectId, status, keyword],
     )
+    const subjectOptions = useMemo(
+        () => (subjects.data ?? [])
+            .filter(s => s.gradeLevelId === gradeLevelId)
+            .map(s => ({value: s.id, label: s.name})),
+        [subjects.data, gradeLevelId],
+    )
     const {data, isLoading} = useExamSessionsQuery(query)
     const publish = usePublishSessionMutation()
     const close = useCloseSessionMutation()
@@ -105,15 +111,17 @@ export default function ExamSessionListPage() {
                     <Select placeholder="Cấp lớp" allowClear style={{width: 130}} value={gradeLevelId}
                             onChange={v => {
                                 setGradeLevelId(v)
+                                setSubjectId(undefined)
                                 setPage(1)
                             }}
                             options={(grades.data ?? []).map(g => ({value: g.id, label: g.name}))}/>
                     <Select placeholder="Môn" allowClear showSearch optionFilterProp="label" style={{width: 160}}
+                            disabled={!gradeLevelId}
                             value={subjectId} onChange={v => {
                                 setSubjectId(v)
                                 setPage(1)
                             }}
-                            options={(subjects.data ?? []).map(s => ({value: s.id, label: s.name}))}/>
+                            options={subjectOptions}/>
                     <Select placeholder="Trạng thái" allowClear style={{width: 150}} value={status}
                             onChange={v => {
                                 setStatus(v)

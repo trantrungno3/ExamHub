@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { extractUserFromToken, getTokenExpiresAt } from '../utils/jwt'
+import { extractUserFromToken, getTokenExpiresAt, isTokenExpired } from '../utils/jwt'
 import { authService } from '../services/authService'
 import { statusCode } from '../services/requestService'
 
@@ -80,10 +80,17 @@ export const useAuthStore = create<AuthStore>()(
             partialize: (state) => ({ token: state.token, user: state.user }),
             // Sau khi rehydrate từ localStorage, suy lại isAuthenticated/user trực tiếp từ token đã lưu
             // (thay vì tin state cũ) để tránh hiển thị "đã đăng nhập" với token đã hết hạn/bị sửa tay.
+            // Phải check hết hạn NGAY ĐÂY (đồng bộ, trước render đầu) — nếu chỉ set isAuthenticated=true
+            // rồi để AppLayout tự phát hiện hết hạn sau trong useEffect thì ProtectedRoute/StudentLayout/
+            // LoginPage đều đã kịp điều hướng theo cờ sai, gây nhảy qua lại login/trang cũ vài nhịp.
             onRehydrateStorage: () => (state) => {
-                if (state?.token) {
+                if (state?.token && !isTokenExpired(state.token.refreshExpiresAt)) {
                     state.isAuthenticated = true
                     state.user = extractUserFromToken(state.token.accessToken)
+                } else if (state) {
+                    state.token = null
+                    state.user = null
+                    state.isAuthenticated = false
                 }
             },
         }

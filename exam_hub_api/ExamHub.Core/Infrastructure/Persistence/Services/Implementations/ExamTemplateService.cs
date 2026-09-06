@@ -28,6 +28,9 @@ public class ExamTemplateService : IExamTemplateService
     public Task<ExamTemplate?> GetWithSectionsAsync(Guid id, CancellationToken ct = default)
         => _templateRepo.GetWithSectionsAsync(id, ct);
 
+    public Task<IReadOnlyList<ExamTemplate>> GetAllAsync(CancellationToken ct = default)
+        => _templateRepo.GetAllAsync(ct);
+
     public Task<IReadOnlyList<ExamTemplate>> GetBySubjectAsync(int subjectId, CancellationToken ct = default)
         => _templateRepo.GetBySubjectAsync(subjectId, ct);
 

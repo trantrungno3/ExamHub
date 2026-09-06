@@ -87,6 +87,14 @@ export default function GeneratePage() {
             form.setFieldValue('totalQuestions', sectionsTotal)
     }, [sectionsTotal, form])
 
+    // Môn học lọc theo lớp đã chọn.
+    const subjectOptions = useMemo(
+        () => (subjects.data ?? [])
+            .filter(s => s.gradeLevelId === watchedGradeId)
+            .map(s => ({value: s.id, label: s.name})),
+        [subjects.data, watchedGradeId],
+    )
+
     // Chủ đề lọc theo lớp + môn đã chọn ở phần thông tin đề thi.
     const topicOptions = useMemo(() => {
         const subjectById = new Map((subjects.data ?? []).map(s => [s.id, s]))
@@ -177,6 +185,13 @@ export default function GeneratePage() {
                     layout="vertical"
                     initialValues={EMPTY}
                     onValuesChange={changed => {
+                        // Đổi lớp -> bỏ môn đã chọn nếu môn đó không thuộc lớp mới.
+                        if ('gradeLevelId' in changed) {
+                            const currentSubjectId = form.getFieldValue('subjectId')
+                            const subj = (subjects.data ?? []).find(s => s.id === currentSubjectId)
+                            if (subj && subj.gradeLevelId !== changed.gradeLevelId)
+                                form.setFieldValue('subjectId', undefined)
+                        }
                         // Đổi lớp / môn -> bỏ chủ đề đã chọn ở các phần vì không còn hợp lệ.
                         if ('gradeLevelId' in changed || 'subjectId' in changed) {
                             const sections = (form.getFieldValue('sections') ?? []) as SectionConfig[]
@@ -199,7 +214,7 @@ export default function GeneratePage() {
                                     </Form.Item>
                                     <Form.Item label="Môn học" name="subjectId" rules={[{required: true, message: 'Chọn môn'}]}>
                                         <Select placeholder="Chọn môn" showSearch optionFilterProp="label"
-                                                options={(subjects.data ?? []).map(s => ({value: s.id, label: s.name}))}/>
+                                                disabled={!watchedGradeId} options={subjectOptions}/>
                                     </Form.Item>
                                 </div>
                                 <div className="grid grid-cols-3 gap-4">

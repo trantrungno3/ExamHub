@@ -21,8 +21,9 @@ export function useExamTemplateStatsQuery() {
 export function useExamTemplatesByGradeQuery(gradeLevelId?: number) {
     return useQuery({
         queryKey: EXAM_TEMPLATE_KEYS.byGrade(gradeLevelId),
-        queryFn: async () => (await examTemplateService.getByGrade(gradeLevelId!)).data ?? [],
-        enabled: !!gradeLevelId,
+        queryFn: async () => (gradeLevelId
+            ? (await examTemplateService.getByGrade(gradeLevelId)).data
+            : (await examTemplateService.getAll()).data) ?? [],
     })
 }
 

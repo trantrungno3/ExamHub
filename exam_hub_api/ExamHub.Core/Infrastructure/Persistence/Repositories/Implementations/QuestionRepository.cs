@@ -87,6 +87,8 @@ public class QuestionRepository : BaseRepository<Question, Guid>, IQuestionRepos
         int? cognitiveLevelId = null,
         string? keyword = null,
         string? reviewStatus = null,
+        int? subjectId = null,
+        int? gradeLevelId = null,
         CancellationToken ct = default)
     {
         var query = Set.AsNoTracking()
@@ -98,6 +100,12 @@ public class QuestionRepository : BaseRepository<Question, Guid>, IQuestionRepos
 
         if (topicId.HasValue)
             query = query.Where(x => x.TopicId == topicId.Value);
+
+        if (subjectId.HasValue)
+            query = query.Where(x => x.Topic!.SubjectId == subjectId.Value);
+
+        if (gradeLevelId.HasValue)
+            query = query.Where(x => x.Topic!.Subject!.GradeLevelId == gradeLevelId.Value);
 
         if (questionTypeId.HasValue)
             query = query.Where(x => x.QuestionTypeId == questionTypeId.Value);

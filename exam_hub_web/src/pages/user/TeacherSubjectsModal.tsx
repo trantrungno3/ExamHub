@@ -98,10 +98,7 @@ export function TeacherSubjectsModal({open, userId, userName, onClose}: Readonly
 
         setSaving(true)
         try {
-            await Promise.all([
-                ...toAdd.map(id => teacherSubjectService.assign(userId, id)),
-                ...toRemove.map(id => teacherSubjectService.remove(userId, id)),
-            ])
+            await teacherSubjectService.setSubjects(userId, selected)
             message.success('Cập nhật môn học phụ trách thành công')
             onClose()
         } catch {

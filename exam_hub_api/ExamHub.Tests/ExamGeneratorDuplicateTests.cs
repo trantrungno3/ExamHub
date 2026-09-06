@@ -26,7 +26,7 @@ file sealed class FakeQuestionPoolRepository(List<Guid> pool) : IQuestionReposit
     public Task<Question?> GetWithAnswersAsync(Guid id, CancellationToken ct = default) => throw new NotSupportedException();
     public Task<IReadOnlyList<Question>> GetByTopicAsync(int topicId, bool activeOnly = true, CancellationToken ct = default) => throw new NotSupportedException();
     public Task<IReadOnlyList<Question>> GetPoolAsync(int? topicId, int? questionTypeId, int? difficultyLevelId, IEnumerable<Guid>? excludeIds = null, CancellationToken ct = default) => throw new NotSupportedException();
-    public Task<(IReadOnlyList<Question> Items, int Total)> GetPagedAsync(int page, int pageSize, int? topicId = null, int? questionTypeId = null, int? difficultyLevelId = null, int? cognitiveLevelId = null, string? keyword = null, string? reviewStatus = null, CancellationToken ct = default) => throw new NotSupportedException();
+    public Task<(IReadOnlyList<Question> Items, int Total)> GetPagedAsync(int page, int pageSize, int? topicId = null, int? questionTypeId = null, int? difficultyLevelId = null, int? cognitiveLevelId = null, string? keyword = null, string? reviewStatus = null, int? subjectId = null, int? gradeLevelId = null, CancellationToken ct = default) => throw new NotSupportedException();
     public Task IncrementUsageCountAsync(IEnumerable<Guid> questionIds, CancellationToken ct = default) => throw new NotSupportedException();
     public Task VerifyAsync(Guid id, Guid verifiedBy, CancellationToken ct = default) => throw new NotSupportedException();
     public Task UnverifyAsync(Guid id, CancellationToken ct = default) => throw new NotSupportedException();

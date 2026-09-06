@@ -20,6 +20,14 @@ public class ExamTemplateRepository : BaseRepository<ExamTemplate, Guid>, IExamT
             .FirstOrDefaultAsync(x => x.Id == id, ct);
 
     /// <inheritdoc/>
+    public override async Task<IReadOnlyList<ExamTemplate>> GetAllAsync(CancellationToken ct = default)
+        => await Set.AsNoTracking()
+            .Include(x => x.GradeLevel)
+            .Include(x => x.Subject)
+            .OrderByDescending(x => x.Created)
+            .ToListAsync(ct);
+
+    /// <inheritdoc/>
     public async Task<IReadOnlyList<ExamTemplate>> GetBySubjectAsync(int subjectId, CancellationToken ct = default)
         => await Set.AsNoTracking()
             .Include(x => x.GradeLevel)

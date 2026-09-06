@@ -39,8 +39,9 @@ public class QuestionService : IQuestionService
         int? topicId = null, int? questionTypeId = null,
         int? difficultyLevelId = null, int? cognitiveLevelId = null,
         string? keyword = null,
-        string? reviewStatus = null, CancellationToken ct = default)
-        => _questionRepo.GetPagedAsync(page, pageSize, topicId, questionTypeId, difficultyLevelId, cognitiveLevelId, keyword, reviewStatus, ct);
+        string? reviewStatus = null,
+        int? subjectId = null, int? gradeLevelId = null, CancellationToken ct = default)
+        => _questionRepo.GetPagedAsync(page, pageSize, topicId, questionTypeId, difficultyLevelId, cognitiveLevelId, keyword, reviewStatus, subjectId, gradeLevelId, ct);
 
     public async Task<Question> CreateAsync(Question entity, IEnumerable<QuestionAnswer> answers, CancellationToken ct = default)
     {

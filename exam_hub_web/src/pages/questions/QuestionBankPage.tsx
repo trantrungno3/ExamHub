@@ -1,13 +1,14 @@
 import {useMemo, useState} from 'react'
 import {useNavigate} from 'react-router-dom'
 import type {TableColumnsType} from 'antd'
-import {Button, Input, Modal, Popconfirm, Select, Table, Tooltip, message} from 'antd'
+import {Badge, Button, Form, Input, Modal, Popconfirm, Select, Table, Tooltip, message} from 'antd'
 import {
     CheckCircleFilled,
     CheckOutlined,
     ClockCircleFilled,
     CloseCircleFilled,
     DatabaseOutlined,
+    FilterOutlined,
     PlusOutlined,
     SearchOutlined,
     StopOutlined,
@@ -26,7 +27,9 @@ import {
 import {
     useCognitiveLevelsQuery,
     useDifficultyLevelsQuery,
+    useGradeLevelsListQuery,
     useQuestionTypesQuery,
+    useSubjectsQuery,
     useTopicsQuery,
 } from '../../hooks/queries/useCategoryLists'
 import {questionService} from '../../services/questionService'
@@ -34,6 +37,16 @@ import {statusCode} from '../../services/requestService'
 import {StatusTag} from '../../components/StatusTag'
 import {BulkImportModal} from './BulkImportModal'
 import {BLOOM_CHIP, BLOOM_NUM, DEFAULT_PAGE, DEFAULT_PAGE_SIZE, DIFF_CHIP, NEUTRAL_CHIP, TYPE_CHIP, type ChipColor} from '../../constants'
+
+interface FilterFormValues {
+    gradeLevelId?: number
+    subjectId?: number
+    topicId?: number
+    difficultyLevelId?: number
+    questionTypeId?: number
+    cognitiveLevelId?: number
+    reviewStatus?: string
+}
 
 type ReviewState = 'approved' | 'rejected' | 'pending'
 const reviewState = (q: Question): ReviewState => (q.status as ReviewState) ?? 'pending'
@@ -73,25 +86,51 @@ export default function QuestionBankPage() {
     const [page, setPage] = useState(DEFAULT_PAGE)
     const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE)
     const [keyword, setKeyword] = useState('')
-    const [topicId, setTopicId] = useState<number>()
-    const [questionTypeId, setQuestionTypeId] = useState<number>()
-    const [difficultyLevelId, setDifficultyLevelId] = useState<number>()
-    const [cognitiveLevelId, setCognitiveLevelId] = useState<number>()
-    const [reviewStatus, setReviewStatus] = useState<string>()
     const [importOpen, setImportOpen] = useState(false)
+    const [filterOpen, setFilterOpen] = useState(false)
     const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([])
 
+    const [filterForm] = Form.useForm<FilterFormValues>()
+    // Giá trị đang chỉnh trong modal — chỉ dùng để tính option lồng nhau (lớp/môn/chủ đề), chưa áp dụng vào query.
+    const draft = Form.useWatch([], filterForm) ?? {}
+    const [appliedFilters, setAppliedFilters] = useState<FilterFormValues>({})
+    const {topicId, questionTypeId, difficultyLevelId, cognitiveLevelId, reviewStatus, subjectId, gradeLevelId} = appliedFilters
+
+    const activeFilterCount = Object.values(appliedFilters).filter(v => v !== undefined).length
+    const openFilters = () => { filterForm.setFieldsValue(appliedFilters); setFilterOpen(true) }
+    const applyFilters = () => { setAppliedFilters(filterForm.getFieldsValue()); setPage(1); setFilterOpen(false) }
+    const resetFilters = () => filterForm.resetFields()
+
     const query: QuestionPagedQuery = useMemo(
-        () => ({page, pageSize, keyword, topicId, questionTypeId, difficultyLevelId, cognitiveLevelId, reviewStatus}),
-        [page, pageSize, keyword, topicId, questionTypeId, difficultyLevelId, cognitiveLevelId, reviewStatus],
+        () => ({page, pageSize, keyword, topicId, questionTypeId, difficultyLevelId, cognitiveLevelId, reviewStatus, subjectId, gradeLevelId}),
+        [page, pageSize, keyword, topicId, questionTypeId, difficultyLevelId, cognitiveLevelId, reviewStatus, subjectId, gradeLevelId],
     )
 
     const {data, isLoading} = useQuestionsQuery(query)
     const stats = useQuestionStatsQuery()
+    const grades = useGradeLevelsListQuery()
+    const subjects = useSubjectsQuery()
     const topics = useTopicsQuery()
     const questionTypes = useQuestionTypesQuery()
     const difficulties = useDifficultyLevelsQuery()
     const cognitives = useCognitiveLevelsQuery()
+
+    const subjectOptions = useMemo(
+        () => (subjects.data ?? [])
+            .filter(s => s.gradeLevelId === draft.gradeLevelId)
+            .map(s => ({value: s.id, label: s.name})),
+        [subjects.data, draft.gradeLevelId],
+    )
+    const subjectIdsInGrade = useMemo(
+        () => new Set((subjects.data ?? []).filter(s => s.gradeLevelId === draft.gradeLevelId).map(s => s.id)),
+        [subjects.data, draft.gradeLevelId],
+    )
+    const topicOptions = useMemo(
+        () => (topics.data ?? [])
+            .filter(t => draft.subjectId ? t.subjectId === draft.subjectId : !draft.gradeLevelId || subjectIdsInGrade.has(t.subjectId))
+            .map(t => ({value: t.id, label: t.name})),
+        [topics.data, draft.subjectId, draft.gradeLevelId, subjectIdsInGrade],
+    )
 
     const deleteMutation = useDeleteQuestionMutation()
     const verifyMutation = useVerifyQuestionMutation()
@@ -244,25 +283,9 @@ export default function QuestionBankPage() {
                     <Input prefix={<SearchOutlined className="text-gray-400"/>} placeholder="Tìm nội dung câu hỏi..."
                            style={{width: 220}} allowClear value={keyword}
                            onChange={e => { setKeyword(e.target.value); setPage(1) }}/>
-                    <Select placeholder="Chủ đề" allowClear showSearch optionFilterProp="label" style={{width: 160}}
-                            value={topicId} onChange={v => { setTopicId(v); setPage(1) }}
-                            options={(topics.data ?? []).map(t => ({value: t.id, label: t.name}))}/>
-                    <Select placeholder="Độ khó" allowClear style={{width: 130}}
-                            value={difficultyLevelId} onChange={v => { setDifficultyLevelId(v); setPage(1) }}
-                            options={(difficulties.data ?? []).map(d => ({value: d.id, label: d.name}))}/>
-                    <Select placeholder="Loại câu hỏi" allowClear style={{width: 160}}
-                            value={questionTypeId} onChange={v => { setQuestionTypeId(v); setPage(1) }}
-                            options={(questionTypes.data ?? []).map(t => ({value: t.id, label: t.name}))}/>
-                    <Select placeholder="Bloom" allowClear style={{width: 140}}
-                            value={cognitiveLevelId} onChange={v => { setCognitiveLevelId(v); setPage(1) }}
-                            options={(cognitives.data ?? []).map(c => ({value: c.id, label: c.name}))}/>
-                    <Select placeholder="Trạng thái" allowClear style={{width: 140}}
-                            value={reviewStatus} onChange={v => { setReviewStatus(v); setPage(1) }}
-                            options={[
-                                {value: 'approved', label: 'Đã duyệt'},
-                                {value: 'pending', label: 'Chờ duyệt'},
-                                {value: 'rejected', label: 'Bị từ chối'},
-                            ]}/>
+                    <Badge count={activeFilterCount} size="small">
+                        <Button icon={<FilterOutlined/>} onClick={openFilters}>Bộ lọc</Button>
+                    </Badge>
                     <div className="flex gap-2 ml-auto">
                         <Button icon={<UploadOutlined/>} onClick={() => setImportOpen(true)}>Nhập Excel</Button>
                         <Button type="primary" icon={<PlusOutlined/>} onClick={() => navigate('/app/questions/add')}>
@@ -314,6 +337,62 @@ export default function QuestionBankPage() {
                     />
                 </div>
             </div>
+
+            <Modal
+                title="Bộ lọc câu hỏi"
+                open={filterOpen}
+                onCancel={() => setFilterOpen(false)}
+                footer={[
+                    <Button key="reset" onClick={resetFilters}>Xóa lọc</Button>,
+                    <Button key="apply" type="primary" onClick={applyFilters}>Xong</Button>,
+                ]}
+            >
+                <Form
+                    form={filterForm}
+                    layout="vertical"
+                    onValuesChange={changed => {
+                        // Đổi lớp -> bỏ môn/chủ đề đã chọn nếu không còn thuộc lớp mới.
+                        if ('gradeLevelId' in changed)
+                            filterForm.setFieldsValue({subjectId: undefined, topicId: undefined})
+                        else if ('subjectId' in changed)
+                            filterForm.setFieldValue('topicId', undefined)
+                    }}
+                >
+                    <div className="grid grid-cols-2 gap-3">
+                        <Form.Item name="gradeLevelId" label="Lớp">
+                            <Select placeholder="Lớp" allowClear
+                                    options={(grades.data ?? []).map(g => ({value: g.id, label: g.name}))}/>
+                        </Form.Item>
+                        <Form.Item name="subjectId" label="Môn học">
+                            <Select placeholder="Môn học" allowClear showSearch optionFilterProp="label"
+                                    disabled={!draft.gradeLevelId} options={subjectOptions}/>
+                        </Form.Item>
+                        <Form.Item name="topicId" label="Chủ đề">
+                            <Select placeholder="Chủ đề" allowClear showSearch optionFilterProp="label" options={topicOptions}/>
+                        </Form.Item>
+                        <Form.Item name="difficultyLevelId" label="Độ khó">
+                            <Select placeholder="Độ khó" allowClear
+                                    options={(difficulties.data ?? []).map(d => ({value: d.id, label: d.name}))}/>
+                        </Form.Item>
+                        <Form.Item name="questionTypeId" label="Loại câu hỏi">
+                            <Select placeholder="Loại câu hỏi" allowClear
+                                    options={(questionTypes.data ?? []).map(t => ({value: t.id, label: t.name}))}/>
+                        </Form.Item>
+                        <Form.Item name="cognitiveLevelId" label="Bloom">
+                            <Select placeholder="Bloom" allowClear
+                                    options={(cognitives.data ?? []).map(c => ({value: c.id, label: c.name}))}/>
+                        </Form.Item>
+                        <Form.Item name="reviewStatus" label="Trạng thái">
+                            <Select placeholder="Trạng thái" allowClear
+                                    options={[
+                                        {value: 'approved', label: 'Đã duyệt'},
+                                        {value: 'pending', label: 'Chờ duyệt'},
+                                        {value: 'rejected', label: 'Bị từ chối'},
+                                    ]}/>
+                        </Form.Item>
+                    </div>
+                </Form>
+            </Modal>
 
             <Modal
                 title="Từ chối câu hỏi"

@@ -53,6 +53,13 @@ export default function ExamSessionEditPage() {
     const publish = usePublishSessionMutation()
 
     const [form] = Form.useForm<ExamSessionFormValues>()
+    const watchedGradeId = Form.useWatch('gradeLevelId', form)
+    const subjectOptions = useMemo(
+        () => (subjects.data ?? [])
+            .filter(s => s.gradeLevelId === watchedGradeId)
+            .map(s => ({value: s.id, label: s.name})),
+        [subjects.data, watchedGradeId],
+    )
 
     useEffect(() => {
         if (!detail) return
@@ -130,7 +137,16 @@ export default function ExamSessionEditPage() {
                         <div className="bg-white rounded-xl border border-[#eceef2] p-5">
                         <Form form={form} layout="vertical"
                             initialValues={{maxAttempts: 1, pickMode: 'Random'}}
-                            className="session-info-form">
+                            className="session-info-form"
+                            onValuesChange={changed => {
+                                // Đổi lớp -> bỏ môn đã chọn nếu môn đó không thuộc lớp mới.
+                                if ('gradeLevelId' in changed) {
+                                    const currentSubjectId = form.getFieldValue('subjectId')
+                                    const subj = (subjects.data ?? []).find(s => s.id === currentSubjectId)
+                                    if (subj && subj.gradeLevelId !== changed.gradeLevelId)
+                                        form.setFieldValue('subjectId', undefined)
+                                }
+                            }}>
                             <h3 className="text-[15px] font-semibold text-[#191d27] mb-4">Thông tin kỳ thi</h3>
                             <Form.Item label="Tiêu đề" name="title" rules={[{required: true, message: 'Nhập tiêu đề kỳ thi'}]}>
                                 <Input placeholder="VD: Kiểm tra giữa kỳ 1"/>
@@ -140,8 +156,8 @@ export default function ExamSessionEditPage() {
                             </Form.Item>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
                                 <Form.Item label="Môn" name="subjectId" rules={[{required: true, message: 'Chọn môn'}]}>
-                                    <Select showSearch optionFilterProp="label" disabled={isPublished}
-                                        options={(subjects.data ?? []).map(s => ({value: s.id, label: s.name}))}/>
+                                    <Select showSearch optionFilterProp="label" disabled={isPublished || !watchedGradeId}
+                                        options={subjectOptions}/>
                                 </Form.Item>
                                 <Form.Item label="Cấp lớp" name="gradeLevelId" rules={[{required: true, message: 'Chọn cấp lớp'}]}>
                                     <Select disabled={isPublished}

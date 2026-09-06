@@ -52,19 +52,13 @@ export function TopicTab() {
         return data.filter(t => parentIds.has(t.id))
     }, [data])
 
-    // Tên môn lặp giữa các cấp lớp -> lọc theo cấp lớp đang chọn,
-    // khi chưa chọn cấp lớp thì gắn thêm tên cấp lớp để phân biệt.
-    const subjectOptions = useMemo(() => {
-        const list = filterGrade === undefined
-            ? subjects
-            : subjects.filter(s => s.gradeLevelId === filterGrade)
-        return list.map(s => ({
-            value: s.id,
-            label: filterGrade === undefined
-                ? `${s.name} · ${gradeMap.get(s.gradeLevelId) ?? ''}`.trim()
-                : s.name,
-        }))
-    }, [subjects, filterGrade, gradeMap])
+    // Môn học lọc theo cấp lớp đang chọn.
+    const subjectOptions = useMemo(
+        () => subjects
+            .filter(s => s.gradeLevelId === filterGrade)
+            .map(s => ({value: s.id, label: s.name})),
+        [subjects, filterGrade],
+    )
 
     const filtered = useMemo(
         () => data.filter(t => {
@@ -173,6 +167,7 @@ export function TopicTab() {
                         showSearch
                         optionFilterProp="label"
                         style={{width: 180}}
+                        disabled={!filterGrade}
                         value={filterSubject}
                         onChange={setFilterSubject}
                         options={subjectOptions}

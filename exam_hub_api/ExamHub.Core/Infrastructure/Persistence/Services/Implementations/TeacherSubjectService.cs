@@ -20,4 +20,7 @@ public class TeacherSubjectService : ITeacherSubjectService
 
     public Task RemoveSubjectAsync(Guid userId, int subjectId, CancellationToken ct = default)
         => _repo.RemoveSubjectAsync(userId, subjectId, ct);
+
+    public Task SetSubjectsAsync(Guid userId, IReadOnlyList<int> subjectIds, CancellationToken ct = default)
+        => _repo.SetSubjectsAsync(userId, subjectIds, ct);
 }

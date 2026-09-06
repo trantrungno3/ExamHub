@@ -45,6 +45,17 @@ public class ExamTemplateController(IExamTemplateService service) : AuthorizeCon
         return Ok(RequestResponse<ExamTemplateResponse>.Success("Lấy dữ liệu thành công!", ExamTemplateResponse.FromEntity(result, includeSections: true), 1));
     }
 
+    /// <summary>Lấy toàn bộ mẫu đề thi (không lọc theo lớp/môn)</summary>
+    /// <param name="ct">Token huỷ yêu cầu.</param>
+    /// <returns>Danh sách toàn bộ mẫu đề thi.</returns>
+    [HttpGet]
+    public async Task<ActionResult<RequestResponse<IReadOnlyList<ExamTemplateResponse>>>> GetAll(CancellationToken ct)
+    {
+        var result = await service.GetAllAsync(ct);
+        var list = result.Select(t => ExamTemplateResponse.FromEntity(t)).ToList();
+        return Ok(RequestResponse<IReadOnlyList<ExamTemplateResponse>>.Success("Lấy danh sách thành công!", list, list.Count));
+    }
+
     /// <summary>Lấy danh sách mẫu đề thi theo môn học</summary>
     /// <param name="subjectId">Id môn học cần lọc.</param>
     /// <param name="ct">Token huỷ yêu cầu.</param>

@@ -55,10 +55,17 @@ export default function ExamTemplatePage() {
     const [subjectId, setSubjectId] = useState<number>()
     const [search, setSearch] = useState('')
 
-    const effectiveGradeId = gradeId ?? grades.data?.[0]?.id
+    const effectiveGradeId = gradeId
 
     const {data: templates, isLoading} = useExamTemplatesByGradeQuery(effectiveGradeId)
     const deleteMutation = useDeleteExamTemplateMutation()
+
+    const subjectOptions = useMemo(
+        () => (subjects.data ?? [])
+            .filter(s => s.gradeLevelId === effectiveGradeId)
+            .map(s => ({value: s.id, label: s.name})),
+        [subjects.data, effectiveGradeId],
+    )
 
     const filtered = useMemo(
         () => (templates ?? []).filter(t => {
@@ -143,12 +150,16 @@ export default function ExamTemplatePage() {
                 <div className="flex items-center gap-2 flex-wrap">
                     <Input prefix={<SearchOutlined className="text-gray-400"/>} placeholder="Tìm mẫu đề..."
                            style={{width: 220}} allowClear value={search} onChange={e => setSearch(e.target.value)}/>
-                    <Select placeholder="Chọn cấp lớp" style={{width: 150}}
-                            value={effectiveGradeId} onChange={setGradeId}
+                    <Select placeholder="Chọn cấp lớp" allowClear style={{width: 150}}
+                            value={effectiveGradeId} onChange={v => {
+                                setGradeId(v)
+                                setSubjectId(undefined)
+                            }}
                             options={(grades.data ?? []).map(g => ({value: g.id, label: g.name}))}/>
                     <Select placeholder="Môn học" allowClear showSearch optionFilterProp="label" style={{width: 170}}
+                            disabled={!effectiveGradeId}
                             value={subjectId} onChange={setSubjectId}
-                            options={(subjects.data ?? []).map(s => ({value: s.id, label: s.name}))}/>
+                            options={subjectOptions}/>
                     <Button type="primary" icon={<PlusOutlined/>} className="ml-auto"
                             onClick={() => navigate('/app/exams/create')}>
                         Tạo mẫu đề thi
@@ -162,7 +173,11 @@ export default function ExamTemplatePage() {
                         rowKey="id"
                         loading={isLoading}
                         scroll={{x: 900}}
-                        locale={{emptyText: <Empty description="Chưa có mẫu đề cho cấp lớp này"/>}}
+                        locale={{
+                            emptyText: <Empty description={effectiveGradeId
+                                ? 'Chưa có mẫu đề cho cấp lớp này'
+                                : 'Chưa có mẫu đề nào'}/>,
+                        }}
                         pagination={{pageSize: 10, showTotal: total => `Hiển thị ${filtered.length} trong tổng số ${total} mẫu đề`}}
                     />
                 </div>

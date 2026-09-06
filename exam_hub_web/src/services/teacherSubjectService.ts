@@ -12,6 +12,10 @@ class TeacherSubjectService {
     remove(userId: string, subjectId: number) {
         return AuthHttp.delete<void>('/teacher-subjects/remove', {userId, subjectId})
     }
+
+    setSubjects(userId: string, subjectIds: number[]) {
+        return AuthHttp.put<void>(`/teacher-subjects/teacher/${userId}/subjects`, {subjectIds})
+    }
 }
 
 export const teacherSubjectService = new TeacherSubjectService()

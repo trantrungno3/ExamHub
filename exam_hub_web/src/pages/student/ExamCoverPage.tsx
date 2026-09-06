@@ -7,6 +7,7 @@ import {
     QuestionCircleOutlined, WarningOutlined,
 } from '@ant-design/icons'
 import {useExamWithQuestionsQuery} from '../../hooks/queries/useExams'
+import {useCohortClassQuery} from '../../hooks/queries/useCohortClasses'
 import {useAuth} from '../../AuthProvider'
 
 export default function ExamCoverPage() {
@@ -18,6 +19,9 @@ export default function ExamCoverPage() {
     const sessionId = params.get('sessionId') ?? undefined
     const submissionId = params.get('submissionId') ?? undefined
     const {data: exam, isLoading} = useExamWithQuestionsQuery(examId)
+    // Lớp / năm học của học sinh — không lấy từ exam.className/schoolYear vì luồng sinh đề
+    // không set 2 trường này. Lớp hiện tại suy ra từ CohortClassId trong JWT (đúng tại thời điểm đăng nhập).
+    const {data: cohortClass} = useCohortClassQuery(user?.cohortClassIds[0])
 
     const startTaking = () => {
         if (!agreed || !exam) return
@@ -45,8 +49,8 @@ export default function ExamCoverPage() {
     const info: [string, string][] = [
         ['Môn học', exam.subjectName ?? '—'],
         ['Thí sinh', user?.displayName ?? user?.userName ?? '—'],
-        ['Lớp', exam.className ?? '—'],
-        ['Năm học', exam.schoolYear ?? '—'],
+        ['Lớp', cohortClass?.className ?? '—'],
+        ['Năm học', cohortClass?.schoolYear ?? '—'],
     ]
 
     return (
@@ -55,8 +59,8 @@ export default function ExamCoverPage() {
             <div className="px-4 pt-10 pb-24 text-center text-white" style={{background: '#3a74f5'}}>
                 <h1 className="text-[30px] font-bold leading-tight">{exam.title}</h1>
                 <p className="mt-1.5 text-[14px]" style={{color: '#cdd9fb'}}>
-                    {exam.schoolYear ? `Năm học ${exam.schoolYear} · ` : ''}
-                    {exam.className ? `Lớp ${exam.className}` : 'ExamHub'}
+                    {cohortClass?.schoolYear ? `Năm học ${cohortClass.schoolYear} · ` : ''}
+                    {cohortClass?.className ? `Lớp ${cohortClass.className}` : 'ExamHub'}
                 </p>
                 <div className="max-w-4xl mx-auto mt-7 grid grid-cols-2 sm:grid-cols-4 gap-4">
                     {stats.map(s => (

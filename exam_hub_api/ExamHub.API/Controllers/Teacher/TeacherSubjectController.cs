@@ -61,7 +61,25 @@ public class TeacherSubjectController(ITeacherSubjectService service) : Authoriz
         await service.RemoveSubjectAsync(request.UserId, request.SubjectId, ct);
         return NoContent();
     }
+
+    /// <summary>Đặt lại toàn bộ danh sách môn học phụ trách của giáo viên (gán/gỡ nhiều môn 1 lần)</summary>
+    /// <param name="userId">Id giáo viên cần cập nhật.</param>
+    /// <param name="request">Danh sách id môn học cuối cùng giáo viên phụ trách.</param>
+    /// <param name="ct">Token huỷ yêu cầu.</param>
+    /// <returns>204 khi cập nhật thành công.</returns>
+    [HttpPut("teacher/{userId:guid}/subjects")]
+    public async Task<IActionResult> SetSubjects(
+        Guid userId,
+        [FromBody] SetTeacherSubjectsRequest request,
+        CancellationToken ct)
+    {
+        await service.SetSubjectsAsync(userId, request.SubjectIds, ct);
+        return NoContent();
+    }
 }
 
 /// <summary>Request DTO gán / xóa môn học giáo viên</summary>
 public record TeacherSubjectAssignRequest(Guid UserId, int SubjectId);
+
+/// <summary>Request DTO đặt lại toàn bộ danh sách môn học phụ trách của giáo viên</summary>
+public record SetTeacherSubjectsRequest(int[] SubjectIds);

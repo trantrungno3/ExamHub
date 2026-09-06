@@ -1203,6 +1203,57 @@
         ]
       }
     },
+    "/api/teacher-subjects/teacher/{userId}/subjects": {
+      "put": {
+        "tags": [
+          "TeacherSubject"
+        ],
+        "summary": "Đặt lại toàn bộ danh sách môn học phụ trách của giáo viên (gán/gỡ nhiều môn 1 lần)",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "description": "Id giáo viên cần cập nhật.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Token huỷ yêu cầu.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetTeacherSubjectsRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetTeacherSubjectsRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetTeacherSubjectsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "204 khi cập nhật thành công."
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
     "/api/CohortClass/{id}": {
       "get": {
         "tags": [
@@ -3730,6 +3781,30 @@
             "in": "query",
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "SubjectId",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "GradeLevelId",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
             }
           }
         ],
@@ -6403,6 +6478,95 @@
         ]
       }
     },
+    "/api/exam-templates": {
+      "get": {
+        "tags": [
+          "ExamTemplate"
+        ],
+        "summary": "Lấy toàn bộ mẫu đề thi (không lọc theo lớp/môn)",
+        "responses": {
+          "200": {
+            "description": "Danh sách toàn bộ mẫu đề thi.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfExamTemplateResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfExamTemplateResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfExamTemplateResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "ExamTemplate"
+        ],
+        "summary": "Tạo mẫu đề thi kèm phần thi",
+        "requestBody": {
+          "description": "Token huỷ yêu cầu.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExamTemplateRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExamTemplateRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExamTemplateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Mẫu đề thi vừa tạo (HTTP 201).",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfExamTemplateResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfExamTemplateResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestResponseOfExamTemplateResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
     "/api/exam-templates/by-subject/{subjectId}": {
       "get": {
         "tags": [
@@ -6487,62 +6651,6 @@
               "text/json": {
                 "schema": {
                   "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfExamTemplateResponse"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "Bearer": [ ]
-          }
-        ]
-      }
-    },
-    "/api/exam-templates": {
-      "post": {
-        "tags": [
-          "ExamTemplate"
-        ],
-        "summary": "Tạo mẫu đề thi kèm phần thi",
-        "requestBody": {
-          "description": "Token huỷ yêu cầu.",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ExamTemplateRequest"
-              }
-            },
-            "text/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ExamTemplateRequest"
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "$ref": "#/components/schemas/ExamTemplateRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Mẫu đề thi vừa tạo (HTTP 201).",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/RequestResponseOfExamTemplateResponse"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RequestResponseOfExamTemplateResponse"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RequestResponseOfExamTemplateResponse"
                 }
               }
             }
@@ -14587,6 +14695,26 @@
             }
           }
         }
+      },
+      "SetTeacherSubjectsRequest": {
+        "required": [
+          "subjectIds"
+        ],
+        "type": "object",
+        "properties": {
+          "subjectIds": {
+            "type": "array",
+            "items": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        },
+        "description": "Request DTO đặt lại toàn bộ danh sách môn học phụ trách của giáo viên"
       },
       "StartSessionRequest": {
         "required": [
