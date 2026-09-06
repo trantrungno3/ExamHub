@@ -5,7 +5,7 @@ import {examTemplateService} from '../../services/examTemplateService'
 export const EXAM_TEMPLATE_KEYS = {
     all: ['examTemplates'] as const,
     stats: ['examTemplateStats'] as const,
-    byGrade: (gradeLevelId?: number) => ['examTemplates', 'byGrade', gradeLevelId] as const,
+    list: (filter: {subjectId?: number; gradeLevelId?: number}) => ['examTemplates', 'list', filter] as const,
     detail: (id: string) => ['examTemplates', 'detail', id] as const,
 }
 
@@ -18,12 +18,10 @@ export function useExamTemplateStatsQuery() {
     })
 }
 
-export function useExamTemplatesByGradeQuery(gradeLevelId?: number) {
+export function useExamTemplatesQuery(filter: {subjectId?: number; gradeLevelId?: number} = {}) {
     return useQuery({
-        queryKey: EXAM_TEMPLATE_KEYS.byGrade(gradeLevelId),
-        queryFn: async () => (gradeLevelId
-            ? (await examTemplateService.getByGrade(gradeLevelId)).data
-            : (await examTemplateService.getAll()).data) ?? [],
+        queryKey: EXAM_TEMPLATE_KEYS.list(filter),
+        queryFn: async () => (await examTemplateService.getList(filter)).data ?? [],
     })
 }
 

@@ -1,4 +1,4 @@
-import {AuthHttp} from './requestService'
+import {AuthHttp, cleanParams} from './requestService'
 
 class ExamTemplateService {
     private readonly basePath = 'exam-templates'
@@ -15,16 +15,8 @@ class ExamTemplateService {
         return AuthHttp.get<ExamTemplate>(`/${this.basePath}/${id}/with-sections`)
     }
 
-    getAll() {
-        return AuthHttp.get<ExamTemplate[]>(`/${this.basePath}`)
-    }
-
-    getBySubject(subjectId: number) {
-        return AuthHttp.get<ExamTemplate[]>(`/${this.basePath}/by-subject/${subjectId}`)
-    }
-
-    getByGrade(gradeLevelId: number) {
-        return AuthHttp.get<ExamTemplate[]>(`/${this.basePath}/by-grade/${gradeLevelId}`)
+    getList(filter: {subjectId?: number; gradeLevelId?: number} = {}) {
+        return AuthHttp.get<ExamTemplate[]>(`/${this.basePath}`, cleanParams({...filter}))
     }
 
     create(body: ExamTemplateBody) {

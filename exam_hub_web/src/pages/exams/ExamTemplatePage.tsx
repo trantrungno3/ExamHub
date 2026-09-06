@@ -15,7 +15,7 @@ import {
 } from '@ant-design/icons'
 import {
     useDeleteExamTemplateMutation,
-    useExamTemplatesByGradeQuery,
+    useExamTemplatesQuery,
     useExamTemplateStatsQuery,
 } from '../../hooks/queries/useExamTemplates'
 import {useGradeLevelsListQuery, useSubjectsQuery} from '../../hooks/queries/useCategoryLists'
@@ -57,7 +57,7 @@ export default function ExamTemplatePage() {
 
     const effectiveGradeId = gradeId
 
-    const {data: templates, isLoading} = useExamTemplatesByGradeQuery(effectiveGradeId)
+    const {data: templates, isLoading} = useExamTemplatesQuery({subjectId, gradeLevelId: effectiveGradeId})
     const deleteMutation = useDeleteExamTemplateMutation()
 
     const subjectOptions = useMemo(
@@ -68,12 +68,8 @@ export default function ExamTemplatePage() {
     )
 
     const filtered = useMemo(
-        () => (templates ?? []).filter(t => {
-            const matchSubject = subjectId === undefined || t.subjectId === subjectId
-            const matchSearch = t.title.toLowerCase().includes(search.toLowerCase())
-            return matchSubject && matchSearch
-        }),
-        [templates, subjectId, search],
+        () => (templates ?? []).filter(t => t.title.toLowerCase().includes(search.toLowerCase())),
+        [templates, search],
     )
 
     const columns: TableColumnsType<ExamTemplate> = [
