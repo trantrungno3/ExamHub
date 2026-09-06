@@ -6483,10 +6483,36 @@
         "tags": [
           "ExamTemplate"
         ],
-        "summary": "Lấy toàn bộ mẫu đề thi (không lọc theo lớp/môn)",
+        "summary": "Lấy danh sách mẫu đề thi (lọc theo môn và/hoặc lớp, tùy chọn)",
+        "parameters": [
+          {
+            "name": "SubjectId",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "GradeLevelId",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Danh sách toàn bộ mẫu đề thi.",
+            "description": "Danh sách mẫu đề thi khớp bộ lọc.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -6555,102 +6581,6 @@
               "text/json": {
                 "schema": {
                   "$ref": "#/components/schemas/RequestResponseOfExamTemplateResponse"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "Bearer": [ ]
-          }
-        ]
-      }
-    },
-    "/api/exam-templates/by-subject/{subjectId}": {
-      "get": {
-        "tags": [
-          "ExamTemplate"
-        ],
-        "summary": "Lấy danh sách mẫu đề thi theo môn học",
-        "parameters": [
-          {
-            "name": "subjectId",
-            "in": "path",
-            "description": "Id môn học cần lọc.",
-            "required": true,
-            "schema": {
-              "pattern": "^-?(?:0|[1-9]\\d*)$",
-              "type": "integer",
-              "format": "int32"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Danh sách mẫu đề thi thuộc môn học.",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfExamTemplateResponse"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfExamTemplateResponse"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfExamTemplateResponse"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "Bearer": [ ]
-          }
-        ]
-      }
-    },
-    "/api/exam-templates/by-grade/{gradeLevelId}": {
-      "get": {
-        "tags": [
-          "ExamTemplate"
-        ],
-        "summary": "Lấy danh sách mẫu đề thi theo lớp học",
-        "parameters": [
-          {
-            "name": "gradeLevelId",
-            "in": "path",
-            "description": "Id khối lớp cần lọc.",
-            "required": true,
-            "schema": {
-              "pattern": "^-?(?:0|[1-9]\\d*)$",
-              "type": "integer",
-              "format": "int32"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Danh sách mẫu đề thi thuộc khối lớp.",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfExamTemplateResponse"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfExamTemplateResponse"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RequestResponseOfIReadOnlyListOfExamTemplateResponse"
                 }
               }
             }
