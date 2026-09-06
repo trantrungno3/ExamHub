@@ -45,37 +45,15 @@ public class ExamTemplateController(IExamTemplateService service) : AuthorizeCon
         return Ok(RequestResponse<ExamTemplateResponse>.Success("Lấy dữ liệu thành công!", ExamTemplateResponse.FromEntity(result, includeSections: true), 1));
     }
 
-    /// <summary>Lấy toàn bộ mẫu đề thi (không lọc theo lớp/môn)</summary>
+    /// <summary>Lấy danh sách mẫu đề thi (lọc theo môn và/hoặc lớp, tùy chọn)</summary>
+    /// <param name="request">Bộ lọc môn học / khối lớp (tùy chọn, bỏ trống để lấy toàn bộ).</param>
     /// <param name="ct">Token huỷ yêu cầu.</param>
-    /// <returns>Danh sách toàn bộ mẫu đề thi.</returns>
+    /// <returns>Danh sách mẫu đề thi khớp bộ lọc.</returns>
     [HttpGet]
-    public async Task<ActionResult<RequestResponse<IReadOnlyList<ExamTemplateResponse>>>> GetAll(CancellationToken ct)
+    public async Task<ActionResult<RequestResponse<IReadOnlyList<ExamTemplateResponse>>>> GetList(
+        [FromQuery] ExamTemplateFilterRequest request, CancellationToken ct)
     {
-        var result = await service.GetAllAsync(ct);
-        var list = result.Select(t => ExamTemplateResponse.FromEntity(t)).ToList();
-        return Ok(RequestResponse<IReadOnlyList<ExamTemplateResponse>>.Success("Lấy danh sách thành công!", list, list.Count));
-    }
-
-    /// <summary>Lấy danh sách mẫu đề thi theo môn học</summary>
-    /// <param name="subjectId">Id môn học cần lọc.</param>
-    /// <param name="ct">Token huỷ yêu cầu.</param>
-    /// <returns>Danh sách mẫu đề thi thuộc môn học.</returns>
-    [HttpGet("by-subject/{subjectId:int}")]
-    public async Task<ActionResult<RequestResponse<IReadOnlyList<ExamTemplateResponse>>>> GetBySubject(int subjectId, CancellationToken ct)
-    {
-        var result = await service.GetBySubjectAsync(subjectId, ct);
-        var list = result.Select(t => ExamTemplateResponse.FromEntity(t)).ToList();
-        return Ok(RequestResponse<IReadOnlyList<ExamTemplateResponse>>.Success("Lấy danh sách thành công!", list, list.Count));
-    }
-
-    /// <summary>Lấy danh sách mẫu đề thi theo lớp học</summary>
-    /// <param name="gradeLevelId">Id khối lớp cần lọc.</param>
-    /// <param name="ct">Token huỷ yêu cầu.</param>
-    /// <returns>Danh sách mẫu đề thi thuộc khối lớp.</returns>
-    [HttpGet("by-grade/{gradeLevelId:int}")]
-    public async Task<ActionResult<RequestResponse<IReadOnlyList<ExamTemplateResponse>>>> GetByGradeLevel(int gradeLevelId, CancellationToken ct)
-    {
-        var result = await service.GetByGradeLevelAsync(gradeLevelId, ct);
+        var result = await service.GetFilteredAsync(request.SubjectId, request.GradeLevelId, ct);
         var list = result.Select(t => ExamTemplateResponse.FromEntity(t)).ToList();
         return Ok(RequestResponse<IReadOnlyList<ExamTemplateResponse>>.Success("Lấy danh sách thành công!", list, list.Count));
     }

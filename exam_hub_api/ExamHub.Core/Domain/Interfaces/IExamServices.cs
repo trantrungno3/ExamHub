@@ -76,14 +76,8 @@ public interface IExamTemplateService
     /// <summary>Lấy template kèm phần thi</summary>
     Task<ExamTemplate?> GetWithSectionsAsync(Guid id, CancellationToken ct = default);
 
-    /// <summary>Lấy toàn bộ mẫu đề thi (không lọc)</summary>
-    Task<IReadOnlyList<ExamTemplate>> GetAllAsync(CancellationToken ct = default);
-
-    /// <summary>Lấy danh sách template theo môn học</summary>
-    Task<IReadOnlyList<ExamTemplate>> GetBySubjectAsync(int subjectId, CancellationToken ct = default);
-
-    /// <summary>Lấy danh sách template theo lớp</summary>
-    Task<IReadOnlyList<ExamTemplate>> GetByGradeLevelAsync(int gradeLevelId, CancellationToken ct = default);
+    /// <summary>Lấy danh sách template theo bộ lọc (môn học và/hoặc lớp)</summary>
+    Task<IReadOnlyList<ExamTemplate>> GetFilteredAsync(int? subjectId, int? gradeLevelId, CancellationToken ct = default);
 
     /// <summary>Tạo template kèm phần thi</summary>
     Task<ExamTemplate> CreateAsync(ExamTemplate entity, IEnumerable<ExamTemplateSection> sections, CancellationToken ct = default);
