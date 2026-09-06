@@ -73,8 +73,7 @@ file sealed class FakeExamGeneratorRepository : IExamGeneratorRepository
 file sealed class FakeExamTemplateRepository : IExamTemplateRepository
 {
     public Task<ExamTemplate?> GetWithSectionsAsync(Guid id, CancellationToken ct = default) => throw new NotSupportedException();
-    public Task<IReadOnlyList<ExamTemplate>> GetBySubjectAsync(int subjectId, CancellationToken ct = default) => throw new NotSupportedException();
-    public Task<IReadOnlyList<ExamTemplate>> GetByGradeLevelAsync(int gradeLevelId, CancellationToken ct = default) => throw new NotSupportedException();
+    public Task<IReadOnlyList<ExamTemplate>> GetFilteredAsync(int? subjectId, int? gradeLevelId, CancellationToken ct = default) => throw new NotSupportedException();
     public Task<ExamTemplate?> GetByIdAsync(Guid id, CancellationToken ct = default) => throw new NotSupportedException();
     public Task<IReadOnlyList<ExamTemplate>> GetAllAsync(CancellationToken ct = default) => throw new NotSupportedException();
     public Task<IReadOnlyList<ExamTemplate>> GetAsync(Expression<Func<ExamTemplate, bool>> predicate, CancellationToken ct = default) => throw new NotSupportedException();

@@ -50,6 +50,7 @@ file sealed class FakeTeacherSubjectService : ITeacherSubjectService
     public Task<bool> IsTeacherOfSubjectAsync(Guid userId, int subjectId, CancellationToken ct = default) => throw new NotSupportedException();
     public Task AssignSubjectAsync(Guid userId, int subjectId, CancellationToken ct = default) => throw new NotSupportedException();
     public Task RemoveSubjectAsync(Guid userId, int subjectId, CancellationToken ct = default) => throw new NotSupportedException();
+    public Task SetSubjectsAsync(Guid userId, IReadOnlyList<int> subjectIds, CancellationToken ct = default) => throw new NotSupportedException();
 }
 
 file sealed class FakeCohortMemberService : ICohortMemberService
