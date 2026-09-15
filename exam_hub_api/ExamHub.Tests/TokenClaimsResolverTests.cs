@@ -24,7 +24,7 @@ file sealed class FakeCohortClassTeacherService : ICohortClassTeacherService
     public List<CohortClassTeacher> Assignments { get; } = [];
     public Task<IReadOnlyList<CohortClassTeacher>> GetByClassAsync(int cohortClassId, CancellationToken ct = default) => throw new NotSupportedException();
     public Task<IReadOnlyList<Guid>> GetEligibleTeacherIdsAsync(int cohortClassId, int subjectId, CancellationToken ct = default) => throw new NotSupportedException();
-    public Task<CohortClassTeacher> AssignAsync(int cohortClassId, int subjectId, Guid teacherId, CancellationToken ct = default) => throw new NotSupportedException();
+    public Task<TVT.Core.RequestResponse<CohortClassTeacher>> AssignAsync(int cohortClassId, int subjectId, Guid teacherId, CancellationToken ct = default) => throw new NotSupportedException();
     public Task RemoveAsync(int id, CancellationToken ct = default) => throw new NotSupportedException();
     public Task<IReadOnlyList<CohortClassTeacher>> GetByTeacherAsync(Guid teacherId, CancellationToken ct = default)
         => Task.FromResult<IReadOnlyList<CohortClassTeacher>>(Assignments.Where(x => x.TeacherId == teacherId).ToList());

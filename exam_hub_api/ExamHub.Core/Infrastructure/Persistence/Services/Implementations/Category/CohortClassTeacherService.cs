@@ -1,5 +1,6 @@
 using ExamHub.Core.Domain.Entities;
 using ExamHub.Core.Domain.Interfaces;
+using TVT.Core;
 
 namespace ExamHub.Core.Infrastructure.Persistence.Services.Implementations;
 
@@ -22,26 +23,27 @@ public class CohortClassTeacherService : ICohortClassTeacherService
         => _repo.GetEligibleTeacherIdsAsync(cohortClassId, subjectId, ct);
 
     /// <inheritdoc/>
-    public async Task<CohortClassTeacher> AssignAsync(int cohortClassId, int subjectId, Guid teacherId, CancellationToken ct = default)
+    public async Task<RequestResponse<CohortClassTeacher>> AssignAsync(int cohortClassId, int subjectId, Guid teacherId, CancellationToken ct = default)
     {
         // 1) Validate dữ liệu đầu vào
         if (cohortClassId <= 0 || subjectId <= 0 || teacherId == Guid.Empty)
-            throw new InvalidOperationException("Dữ liệu phân công không hợp lệ.");
+            return RequestResponse<CohortClassTeacher>.Error("Dữ liệu phân công không hợp lệ.");
 
         // 2) Ràng buộc: GV phải hợp lệ (thành viên trường role Teacher + dạy đúng môn)
         var eligible = await _repo.GetEligibleTeacherIdsAsync(cohortClassId, subjectId, ct);
         if (!eligible.Contains(teacherId))
-            throw new InvalidOperationException("Giáo viên không hợp lệ cho môn học / trường này.");
+            return RequestResponse<CohortClassTeacher>.Error("Giáo viên không hợp lệ cho môn học / trường này.");
 
         // 3) Ràng buộc: 1 môn/lớp = 1 GV
         var duplicated = await _repo.ExistsAsync(
             x => x.CohortClassId == cohortClassId && x.SubjectId == subjectId, ct);
         if (duplicated)
-            throw new InvalidOperationException("Môn học đã được phân công cho giáo viên khác trong lớp này.");
+            return RequestResponse<CohortClassTeacher>.Error("Môn học đã được phân công cho giáo viên khác trong lớp này.");
 
         // 4) Hợp lệ → ghi DB
-        return await _repo.AddAsync(
+        var added = await _repo.AddAsync(
             new CohortClassTeacher { CohortClassId = cohortClassId, SubjectId = subjectId, TeacherId = teacherId }, ct);
+        return RequestResponse<CohortClassTeacher>.Success("Phân công giáo viên thành công!", added, 1);
     }
 
     /// <inheritdoc/>

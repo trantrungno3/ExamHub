@@ -48,9 +48,12 @@ public class CohortClassTeacherController(ICohortClassTeacherService service) : 
     [Authorize]
     public async Task<ActionResult<RequestResponse<CohortClassTeacherResponse>>> Assign([FromBody] AssignTeacherRequest request, CancellationToken ct = default)
     {
-        var e = await service.AssignAsync(request.CohortClassId, request.SubjectId, request.TeacherId, ct);
+        var result = await service.AssignAsync(request.CohortClassId, request.SubjectId, request.TeacherId, ct);
+        if (result.Status == TVT.Core.Enums.RequestResponseStatus.Error)
+            return Ok(RequestResponse<CohortClassTeacherResponse>.Error(result.Message!));
+        var e = result.Data!;
         var dto = new CohortClassTeacherResponse(e.Id, e.CohortClassId, e.SubjectId, e.TeacherId);
-        return Ok(RequestResponse<CohortClassTeacherResponse>.Success("Phân công giáo viên thành công!", dto, 1));
+        return Ok(RequestResponse<CohortClassTeacherResponse>.Success(result.Message!, dto, 1));
     }
 
     /// <summary>Xoá một phân công theo Id</summary>
