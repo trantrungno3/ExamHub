@@ -4,6 +4,7 @@ using ExamHub.Core.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TVT.Core;
+using TVT.Core.Enums;
 using TVT.Core.Extensions;
 
 namespace ExamHub.API.Controllers.Exam;
@@ -59,8 +60,8 @@ public class ExamSessionController(IExamSessionService service, IAuthorizationSe
     [HttpPost, Authorize(Roles = "Admin,Teacher")]
     public async Task<ActionResult<RequestResponse<Guid>>> Create([FromBody] CreateExamSessionRequest request, CancellationToken ct)
     {
-        var id = await service.CreateAsync(request, User.GetTag(), ct);
-        return StatusCode(201, RequestResponse<Guid>.Success("Tạo kỳ thi thành công!", id, 1));
+        var result = await service.CreateAsync(request, User.GetTag(), ct);
+        return result.Status == RequestResponseStatus.Success ? StatusCode(201, result) : Ok(result);
     }
 
     /// <summary>Cập nhật kỳ thi.</summary>
@@ -71,8 +72,7 @@ public class ExamSessionController(IExamSessionService service, IAuthorizationSe
     [HttpPut("{id:guid}"), Authorize(Roles = "Admin,Teacher")]
     public async Task<ActionResult<RequestResponse<bool>>> Update(Guid id, [FromBody] UpdateExamSessionRequest request, CancellationToken ct)
     {
-        await service.UpdateAsync(id, request, User.GetTag(), ct);
-        return Ok(RequestResponse<bool>.Success("Cập nhật kỳ thi thành công!", true, 1));
+        return Ok(await service.UpdateAsync(id, request, User.GetTag(), ct));
     }
 
     /// <summary>Xoá kỳ thi.</summary>
@@ -94,8 +94,7 @@ public class ExamSessionController(IExamSessionService service, IAuthorizationSe
     [HttpPost("{id:guid}/exams"), Authorize(Roles = "Admin,Teacher")]
     public async Task<ActionResult<RequestResponse<bool>>> SetExams(Guid id, [FromBody] SetSessionExamsRequest request, CancellationToken ct)
     {
-        await service.SetExamsAsync(id, request.ExamIds, User.GetTag(), ct);
-        return Ok(RequestResponse<bool>.Success("Cập nhật đề thi thành công!", true, 1));
+        return Ok(await service.SetExamsAsync(id, request.ExamIds, User.GetTag(), ct));
     }
 
     /// <summary>Gỡ một đề khỏi pool.</summary>
@@ -129,8 +128,8 @@ public class ExamSessionController(IExamSessionService service, IAuthorizationSe
             return StatusCode(403, RequestResponse<object>.Error("Chỉ Quản trị viên được giao kỳ thi cho cả khoá."));
         }
 
-        var assignmentId = await service.AddAssignmentAsync(id, request, ct);
-        return StatusCode(201, RequestResponse<Guid>.Success("Giao kỳ thi thành công!", assignmentId, 1));
+        var result = await service.AddAssignmentAsync(id, request, ct);
+        return result.Status == RequestResponseStatus.Success ? StatusCode(201, result) : Ok(result);
     }
 
     /// <summary>Gỡ giao lớp/khoá.</summary>
@@ -166,8 +165,7 @@ public class ExamSessionController(IExamSessionService service, IAuthorizationSe
     [HttpPost("{id:guid}/publish"), Authorize(Roles = "Admin,Teacher")]
     public async Task<ActionResult<RequestResponse<bool>>> Publish(Guid id, CancellationToken ct)
     {
-        await service.PublishAsync(id, ct);
-        return Ok(RequestResponse<bool>.Success("Phát hành kỳ thi thành công!", true, 1));
+        return Ok(await service.PublishAsync(id, ct));
     }
 
     /// <summary>Đóng kỳ thi.</summary>

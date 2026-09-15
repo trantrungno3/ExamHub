@@ -3,6 +3,7 @@ using ExamHub.Core.DataTransferObjects.ExamSession;
 using ExamHub.Core.Domain.Entities;
 using ExamHub.Core.Domain.Enums;
 using ExamHub.Core.Domain.Interfaces;
+using TVT.Core;
 
 namespace ExamHub.Core.Infrastructure.Persistence.Services.Implementations;
 
@@ -11,28 +12,28 @@ public class ExamSessionService(IExamSessionRepository _repo, IExamRepository _e
 {
     // ── Quản lý ─────────────────────────────────────────────────────────
     /// <inheritdoc/>
-    public async Task<Guid> CreateAsync(CreateExamSessionRequest req, string by, CancellationToken ct = default)
+    public async Task<RequestResponse<Guid>> CreateAsync(CreateExamSessionRequest req, string by, CancellationToken ct = default)
     {
         if (req.CloseAt.ToUniversalTime() <= req.OpenAt.ToUniversalTime())
-            throw new InvalidOperationException("Thời điểm đóng phải sau thời điểm mở.");
+            return RequestResponse<Guid>.Error("Thời điểm đóng phải sau thời điểm mở.");
         var entity = req.ToEntity();
         entity.CreatedBy = by;
         entity.ModifiedBy = by;
         entity.Created = DateTime.UtcNow;
         entity.Modified = DateTime.UtcNow;
         await _repo.AddAsync(entity, ct);
-        return entity.Id;
+        return RequestResponse<Guid>.Success("Tạo kỳ thi thành công!", entity.Id, 1);
     }
 
     /// <inheritdoc/>
-    public async Task UpdateAsync(Guid id, UpdateExamSessionRequest req, string by, CancellationToken ct = default)
+    public async Task<RequestResponse<bool>> UpdateAsync(Guid id, UpdateExamSessionRequest req, string by, CancellationToken ct = default)
     {
-        var entity = await _repo.GetByIdAsync(id, ct)
-            ?? throw new InvalidOperationException("Không tìm thấy kỳ thi.");
+        var entity = await _repo.GetByIdAsync(id, ct);
+        if (entity is null) return RequestResponse<bool>.Error("Không tìm thấy kỳ thi.");
         if (entity.Status == ExamSessionStatusEnum.Closed)
-            throw new InvalidOperationException("Kỳ thi đã đóng, không thể sửa.");
+            return RequestResponse<bool>.Error("Kỳ thi đã đóng, không thể sửa.");
         if (req.CloseAt.ToUniversalTime() <= req.OpenAt.ToUniversalTime())
-            throw new InvalidOperationException("Thời điểm đóng phải sau thời điểm mở.");
+            return RequestResponse<bool>.Error("Thời điểm đóng phải sau thời điểm mở.");
 
         entity.Title = req.Title;
         entity.Description = req.Description;
@@ -45,6 +46,7 @@ public class ExamSessionService(IExamSessionRepository _repo, IExamRepository _e
         entity.ModifiedBy = by;
         entity.Modified = DateTime.UtcNow;
         await _repo.UpdateAsync(entity, ct);
+        return RequestResponse<bool>.Success("Cập nhật kỳ thi thành công!", true, 1);
     }
 
     /// <inheritdoc/>
@@ -89,17 +91,18 @@ public class ExamSessionService(IExamSessionRepository _repo, IExamRepository _e
     }
 
     /// <inheritdoc/>
-    public async Task PublishAsync(Guid id, CancellationToken ct = default)
+    public async Task<RequestResponse<bool>> PublishAsync(Guid id, CancellationToken ct = default)
     {
-        var s = await _repo.GetDetailAsync(id, ct)
-            ?? throw new InvalidOperationException("Không tìm thấy kỳ thi.");
+        var s = await _repo.GetDetailAsync(id, ct);
+        if (s is null) return RequestResponse<bool>.Error("Không tìm thấy kỳ thi.");
         if (s.Exams.Count == 0)
-            throw new InvalidOperationException("Kỳ thi chưa có đề trong pool.");
+            return RequestResponse<bool>.Error("Kỳ thi chưa có đề trong pool.");
         if (s.Assignments.Count == 0)
-            throw new InvalidOperationException("Kỳ thi chưa được giao cho lớp/khoá nào.");
+            return RequestResponse<bool>.Error("Kỳ thi chưa được giao cho lớp/khoá nào.");
         if (s.CloseAt <= DateTime.UtcNow)
-            throw new InvalidOperationException("Thời điểm đóng phải ở tương lai.");
+            return RequestResponse<bool>.Error("Thời điểm đóng phải ở tương lai.");
         await _repo.SetStatusAsync(id, ExamSessionStatusEnum.Published, ct);
+        return RequestResponse<bool>.Success("Phát hành kỳ thi thành công!", true, 1);
     }
 
     /// <inheritdoc/>
@@ -108,20 +111,21 @@ public class ExamSessionService(IExamSessionRepository _repo, IExamRepository _e
 
     // ── Pool đề ─────────────────────────────────────────────────────────
     /// <inheritdoc/>
-    public async Task SetExamsAsync(Guid sessionId, IReadOnlyList<Guid> examIds, string by, CancellationToken ct = default)
+    public async Task<RequestResponse<bool>> SetExamsAsync(Guid sessionId, IReadOnlyList<Guid> examIds, string by, CancellationToken ct = default)
     {
-        var session = await _repo.GetByIdAsync(sessionId, ct)
-            ?? throw new InvalidOperationException("Không tìm thấy kỳ thi.");
+        var session = await _repo.GetByIdAsync(sessionId, ct);
+        if (session is null) return RequestResponse<bool>.Error("Không tìm thấy kỳ thi.");
         foreach (var examId in examIds.Distinct())
         {
-            var exam = await _examRepo.GetByIdAsync(examId, ct)
-                ?? throw new InvalidOperationException($"Không tìm thấy đề {examId}.");
+            var exam = await _examRepo.GetByIdAsync(examId, ct);
+            if (exam is null) return RequestResponse<bool>.Error($"Không tìm thấy đề {examId}.");
             if (exam.Status != ExamStatusEnum.Published)
-                throw new InvalidOperationException($"Đề '{exam.Title}' chưa phát hành.");
+                return RequestResponse<bool>.Error($"Đề '{exam.Title}' chưa phát hành.");
             if (exam.SubjectId != session.SubjectId || exam.GradeLevelId != session.GradeLevelId)
-                throw new InvalidOperationException($"Đề '{exam.Title}' không cùng môn/cấp lớp với kỳ thi.");
+                return RequestResponse<bool>.Error($"Đề '{exam.Title}' không cùng môn/cấp lớp với kỳ thi.");
         }
         await _repo.AddExamsAsync(sessionId, examIds, ct);
+        return RequestResponse<bool>.Success("Cập nhật đề thi thành công!", true, 1);
     }
 
     /// <inheritdoc/>
@@ -130,14 +134,14 @@ public class ExamSessionService(IExamSessionRepository _repo, IExamRepository _e
 
     // ── Assignment ──────────────────────────────────────────────────────
     /// <inheritdoc/>
-    public async Task<Guid> AddAssignmentAsync(Guid sessionId, CreateAssignmentRequest req, CancellationToken ct = default)
+    public async Task<RequestResponse<Guid>> AddAssignmentAsync(Guid sessionId, CreateAssignmentRequest req, CancellationToken ct = default)
     {
-        _ = await _repo.GetByIdAsync(sessionId, ct)
-            ?? throw new InvalidOperationException("Không tìm thấy kỳ thi.");
+        var session = await _repo.GetByIdAsync(sessionId, ct);
+        if (session is null) return RequestResponse<Guid>.Error("Không tìm thấy kỳ thi.");
         var hasCohort = req.CohortId is not null;
         var hasClass = req.CohortClassId is not null;
         if (hasCohort == hasClass)
-            throw new InvalidOperationException("Chọn đúng một trong hai: khoá hoặc lớp.");
+            return RequestResponse<Guid>.Error("Chọn đúng một trong hai: khoá hoặc lớp.");
         var assignment = new ExamSessionAssignment
         {
             SessionId = sessionId,
@@ -145,7 +149,7 @@ public class ExamSessionService(IExamSessionRepository _repo, IExamRepository _e
             CohortClassId = req.CohortClassId
         };
         await _repo.AddAssignmentAsync(assignment, ct);
-        return assignment.Id;
+        return RequestResponse<Guid>.Success("Giao kỳ thi thành công!", assignment.Id, 1);
     }
 
     /// <inheritdoc/>
