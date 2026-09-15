@@ -61,10 +61,10 @@ file sealed class FakeCohortMemberService : ICohortMemberService
     public Task<IReadOnlyList<CohortMember>> GetByStudentAsync(Guid studentId, CancellationToken ct = default)
         => Task.FromResult<IReadOnlyList<CohortMember>>(Memberships.Where(x => x.StudentId == studentId).ToList());
     public Task<CohortMember?> GetByIdAsync(Guid id, CancellationToken ct = default) => throw new NotSupportedException();
-    public Task<CohortMember> AddStudentAsync(CohortMember entity, CancellationToken ct = default) => throw new NotSupportedException();
+    public Task<TVT.Core.RequestResponse<CohortMember>> AddStudentAsync(CohortMember entity, CancellationToken ct = default) => throw new NotSupportedException();
     public Task RemoveStudentAsync(Guid id, CancellationToken ct = default) => throw new NotSupportedException();
     public Task<bool> SetActiveAsync(Guid id, bool isActive, CancellationToken ct = default) => throw new NotSupportedException();
-    public Task<bool> SetSectionAsync(Guid id, string? section, CancellationToken ct = default) => throw new NotSupportedException();
+    public Task<TVT.Core.RequestResponse<bool>> SetSectionAsync(Guid id, string? section, CancellationToken ct = default) => throw new NotSupportedException();
 }
 
 file sealed class FakeCohortService : ICohortService

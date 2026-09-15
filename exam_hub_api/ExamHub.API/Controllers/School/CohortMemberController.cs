@@ -67,16 +67,11 @@ public class CohortMemberController(ICohortMemberService service) : AuthorizeCon
     [HttpPost("")]
     public async Task<ActionResult<RequestResponse<CohortMemberResponse>>> AddStudent([FromBody] CohortMemberRequest request, CancellationToken ct = default)
     {
-        try
-        {
-            var entity = request.ToEntity();
-            var result = await service.AddStudentAsync(entity, ct);
-            return Ok(RequestResponse<CohortMemberResponse>.Success("Thêm học sinh thành công!", CohortMemberResponse.FromEntity(result), 1));
-        }
-        catch (InvalidOperationException ex)
-        {
-            return Conflict(RequestResponse<object>.Error(ex.Message));
-        }
+        var entity = request.ToEntity();
+        var result = await service.AddStudentAsync(entity, ct);
+        if (result.Status == TVT.Core.Enums.RequestResponseStatus.Error)
+            return Ok(RequestResponse<CohortMemberResponse>.Error(result.Message!));
+        return Ok(RequestResponse<CohortMemberResponse>.Success(result.Message!, CohortMemberResponse.FromEntity(result.Data!), 1));
     }
 
     /// <summary>Xóa học sinh khỏi khoá học</summary>
@@ -110,7 +105,6 @@ public class CohortMemberController(ICohortMemberService service) : AuthorizeCon
     [HttpPatch("{id:guid}/section")]
     public async Task<ActionResult<RequestResponse<bool>>> SetSection(Guid id, [FromBody] string? section, CancellationToken ct = default)
     {
-        var result = await service.SetSectionAsync(id, section, ct);
-        return Ok(RequestResponse<bool>.Success("Cập nhật lớp thành công!", result, 1));
+        return Ok(await service.SetSectionAsync(id, section, ct));
     }
 }

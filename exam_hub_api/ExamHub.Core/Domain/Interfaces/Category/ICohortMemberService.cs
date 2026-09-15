@@ -1,4 +1,5 @@
 using ExamHub.Core.Domain.Entities;
+using TVT.Core;
 
 namespace ExamHub.Core.Domain.Interfaces;
 
@@ -14,11 +15,11 @@ public interface ICohortMemberService
     /// <summary>Lấy theo ID</summary>
     Task<CohortMember?> GetByIdAsync(Guid id, CancellationToken ct = default);
     /// <summary>Thêm học sinh vào khoá học</summary>
-    Task<CohortMember> AddStudentAsync(CohortMember entity, CancellationToken ct = default);
+    Task<RequestResponse<CohortMember>> AddStudentAsync(CohortMember entity, CancellationToken ct = default);
     /// <summary>Xóa học sinh khỏi khoá học</summary>
     Task RemoveStudentAsync(Guid id, CancellationToken ct = default);
     /// <summary>Bật/tắt trạng thái học sinh trong khoá</summary>
     Task<bool> SetActiveAsync(Guid id, bool isActive, CancellationToken ct = default);
     /// <summary>Đổi lớp (section) của học sinh; validate thuộc dải lớp của khoá</summary>
-    Task<bool> SetSectionAsync(Guid id, string? section, CancellationToken ct = default);
+    Task<RequestResponse<bool>> SetSectionAsync(Guid id, string? section, CancellationToken ct = default);
 }
