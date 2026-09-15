@@ -1,6 +1,6 @@
 import {useState} from 'react'
 import {useNavigate} from 'react-router-dom'
-import {Button, Empty, Spin, message} from 'antd'
+import {Button, Empty, message, Spin} from 'antd'
 import {ArrowRightOutlined, CalendarOutlined, ReadOutlined} from '@ant-design/icons'
 import {useMySessionsQuery, useStartSessionMutation} from '../../hooks/queries/useExamSessions'
 import {statusCode} from '../../services/requestService'
@@ -14,7 +14,7 @@ const AVAILABILITY: Record<ExamSessionAvailability, string> = {
 }
 
 /** Badge pill phẳng theo trạng thái khả dụng (khớp Figma 07A). */
-const BADGE: Record<ExamSessionAvailability, {bg: string; color: string}> = {
+const BADGE: Record<ExamSessionAvailability, { bg: string; color: string }> = {
     open: {bg: '#e3f4ec', color: '#1ea375'},
     upcoming: {bg: '#e8ebfb', color: '#5b6ee0'},
     closed: {bg: '#eef0f3', color: '#8a93a5'},
@@ -42,7 +42,7 @@ export default function StudentSessionListPage() {
     const {user} = useAuth()
     const {data: sessions = [], isLoading} = useMySessionsQuery()
     const start = useStartSessionMutation()
-    const [results, setResults] = useState<{id: string; title: string}>()
+    const [results, setResults] = useState<{ id: string; title: string }>()
 
     const startAndGo = async (s: MySession) => {
         const res = await start.mutateAsync({id: s.id})
@@ -58,12 +58,13 @@ export default function StudentSessionListPage() {
     // Nút hành động full-width dưới card. Khi kỳ thi đóng/hết lượt nhưng đã có
     // bài nộp → tái dụng ô nút để "Xem kết quả" (giữ layout 1 nút như Figma).
     const renderAction = (s: MySession) => {
-        const remaining = s.maxAttempts - s.usedAttempts
+        const remaining = s.maxAttempts - s.usedAttempts;
         if (s.inProgressSubmissionId && s.inProgressExamId) {
             return (
                 <Button type="primary" block loading={start.isPending}
                         icon={<ArrowRightOutlined/>} iconPosition="end"
-                        onClick={() => navigate(takeUrl(s.inProgressExamId!, s.id, s.inProgressSubmissionId!))}>
+                        onClick={() => navigate(takeUrl(s.inProgressExamId!, s.id, s.inProgressSubmissionId!))}
+                        disabled={s.availability === "closed"}>
                     Tiếp tục
                 </Button>
             )
@@ -112,11 +113,16 @@ export default function StudentSessionListPage() {
                 ) : (
                     <div className="grid gap-4 md:grid-cols-2">
                         {sessions.map(s => (
-                            <div key={s.id} className="bg-white rounded-xl border border-[#eceef2] p-5 flex flex-col gap-2.5">
+                            <div key={s.id}
+                                 className="bg-white rounded-xl border border-[#eceef2] p-5 flex flex-col gap-2.5">
                                 <div className="flex items-start justify-between gap-3">
-                                    <h3 className="text-[17px] font-semibold leading-snug" style={{color: '#191d27'}}>{s.title}</h3>
+                                    <h3 className="text-[17px] font-semibold leading-snug"
+                                        style={{color: '#191d27'}}>{s.title}</h3>
                                     <span className="shrink-0 text-[12px] font-medium px-2.5 py-0.5 rounded-full"
-                                          style={{background: BADGE[s.availability].bg, color: BADGE[s.availability].color}}>
+                                          style={{
+                                              background: BADGE[s.availability].bg,
+                                              color: BADGE[s.availability].color
+                                          }}>
                                         {AVAILABILITY[s.availability]}
                                     </span>
                                 </div>

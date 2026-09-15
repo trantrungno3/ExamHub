@@ -1,14 +1,10 @@
 import {useMemo, useState} from 'react'
 import {useNavigate} from 'react-router-dom'
-import {Dropdown, Input, Popconfirm, Select, Table, message} from 'antd'
 import type {TableColumnsType} from 'antd'
+import {Dropdown, Input, message, Popconfirm, Select, Table} from 'antd'
 import {BarChartOutlined, DownloadOutlined, EyeOutlined, SearchOutlined} from '@ant-design/icons'
 import {AnalyticsDrawer} from './AnalyticsDrawer'
-import {
-    useDeleteExamMutation,
-    useExamsQuery,
-    usePublishExamMutation,
-} from '../../hooks/queries/useExams'
+import {useDeleteExamMutation, useExamsQuery, usePublishExamMutation,} from '../../hooks/queries/useExams'
 import {useGradeLevelsListQuery, useSubjectsQuery} from '../../hooks/queries/useCategoryLists'
 import {examService} from '../../services/examService'
 import {StatusTag} from '../../components/StatusTag'
@@ -57,8 +53,13 @@ export default function ExamListPage() {
     }
 
     const columns: TableColumnsType<Exam> = [
-        {title: 'Tiêu đề', dataIndex: 'title', key: 'title', render: v => <span className="font-medium text-gray-800">{v}</span>},
-        {title: 'Mã đề', dataIndex: 'examCode', key: 'examCode', width: 100, render: v => v ?? '—'},
+        {
+            title: 'Tiêu đề',
+            dataIndex: 'title',
+            key: 'title',
+            render: v => <span className="font-medium text-gray-800">{v}</span>
+        },
+        {title: 'Mã đề', dataIndex: 'examCode', key: 'examCode', width: 150, render: v => v ?? '—'},
         {title: 'Lớp', dataIndex: 'gradeLevelName', key: 'gradeLevelName', width: 90, render: v => v ?? '—'},
         {title: 'Môn', dataIndex: 'subjectName', key: 'subjectName', width: 120, render: v => v ?? '—'},
         {title: 'Điểm', dataIndex: 'totalScore', key: 'totalScore', width: 70},
@@ -132,16 +133,19 @@ export default function ExamListPage() {
                     <Select placeholder="Môn" allowClear showSearch optionFilterProp="label" style={{width: 160}}
                             disabled={!gradeLevelId}
                             value={subjectId} onChange={v => {
-                                setSubjectId(v)
-                                setPage(1)
-                            }}
+                        setSubjectId(v)
+                        setPage(1)
+                    }}
                             options={subjectOptions}/>
                     <Select placeholder="Trạng thái" allowClear style={{width: 150}} value={status}
                             onChange={v => {
                                 setStatus(v)
                                 setPage(1)
                             }}
-                            options={(['Draft', 'Published', 'Archived'] as ExamStatus[]).map(s => ({value: s, label: EXAM_STATUS_LABEL[s]}))}/>
+                            options={(['Draft', 'Published', 'Archived'] as ExamStatus[]).map(s => ({
+                                value: s,
+                                label: EXAM_STATUS_LABEL[s]
+                            }))}/>
                 </div>
 
                 <div className="section-card shrink-0">

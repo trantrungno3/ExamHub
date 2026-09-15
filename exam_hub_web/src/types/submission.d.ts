@@ -35,6 +35,8 @@ interface ExamSubmission {
     studentName?: string
     /** Tên lớp của học sinh — chỉ enrich ở danh sách theo kỳ thi (by-session). */
     studentClassName?: string
+    /** Kỳ thi (nếu nộp bài trong luồng kỳ thi). */
+    sessionId?: string
 }
 
 interface ExamSubmissionBody {

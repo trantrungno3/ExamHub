@@ -67,7 +67,7 @@
       RABBITMQ_DEFAULT_PASS: rabbit@123
 
   minio:
-    image: minio/minio:RELEASE.2025-03-12T18-04-18Z-cpuv1
+    image: quay.io/minio/minio:RELEASE.2025-03-12T18-04-18Z-cpuv1
     container_name: minio
     restart: unless-stopped
     ports:

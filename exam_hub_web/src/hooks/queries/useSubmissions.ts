@@ -55,8 +55,13 @@ export function useMySubmissionsQuery(studentId?: string) {
 }
 
 export function useSubmitExamMutation() {
+    const qc = useQueryClient()
     return useMutation({
         mutationFn: (body: ExamSubmissionBody) => submissionService.submit(body),
+        onSuccess: () => {
+            void qc.invalidateQueries({queryKey: ['exam-sessions']})
+            void qc.invalidateQueries({queryKey: SUBMISSION_KEYS.all})
+        },
     })
 }
 

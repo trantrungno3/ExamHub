@@ -1,9 +1,16 @@
 import {useState} from 'react'
 import {useNavigate, useSearchParams} from 'react-router-dom'
-import {Button, Empty, Spin} from 'antd'
+import {Button, Empty, message, Spin} from 'antd'
 import {CheckCircleOutlined, CheckOutlined, CloseCircleOutlined} from '@ant-design/icons'
 import {useSubmissionQuery} from '../../hooks/queries/useSubmissions'
+import {useMySessionsQuery, useStartSessionMutation} from '../../hooks/queries/useExamSessions'
+import {statusCode} from '../../services/requestService'
 import {SUBMISSION_STATUS_LABEL_STUDENT} from '../../constants'
+
+function takeUrl(examId: string, sessionId: string, submissionId: string): string {
+    const p = new URLSearchParams({examId, sessionId, submissionId})
+    return `/student/exam?${p.toString()}`
+}
 
 function fmtDuration(sec: number): string {
     const m = Math.floor(sec / 60)
@@ -31,10 +38,34 @@ export default function ExamResultPage() {
     const [params] = useSearchParams()
     const submissionId = params.get('submissionId') ?? undefined
     const {data: sub, isLoading} = useSubmissionQuery(submissionId)
+    const {data: sessions = []} = useMySessionsQuery()
+    const start = useStartSessionMutation()
     const [showDetail, setShowDetail] = useState(false)
 
     if (isLoading) return <div className="exam-desk flex justify-center py-24"><Spin size="large"/></div>
     if (!sub) return <div className="exam-desk flex justify-center py-24"><Empty description="Không tìm thấy bài nộp"/></div>
+
+    // Kỳ thi tương ứng (nếu bài nộp thuộc luồng kỳ thi) — dùng để cho phép "Làm lại" khi còn lượt.
+    const mySession = sessions.find(s => s.id === sub.sessionId)
+    const canRetake = !!mySession && mySession.availability === 'open'
+        && !mySession.inProgressSubmissionId
+        && mySession.maxAttempts - mySession.usedAttempts > 0
+
+    const retake = async () => {
+        if (!mySession) return
+        if (mySession.pickMode === 'StudentChoice') {
+            navigate(`/student/session/${mySession.id}/pool`, {
+                state: {title: mySession.title, subjectName: mySession.subjectName, gradeLevelName: mySession.gradeLevelName},
+            })
+            return
+        }
+        const res = await start.mutateAsync({id: mySession.id})
+        if (res.status === statusCode.Error || !res.data) {
+            message.error(res.message || 'Không thể vào thi')
+            return
+        }
+        navigate(takeUrl(res.data.examId, mySession.id, res.data.submissionId))
+    }
 
     const graded = sub.status === 'Graded'
     const answers = sub.answers ?? []
@@ -110,6 +141,12 @@ export default function ExamResultPage() {
                             Về danh sách kỳ thi
                         </Button>
                     </div>
+                    {canRetake && (
+                        <Button block className="!h-11 !font-semibold mt-3" loading={start.isPending}
+                                onClick={retake}>
+                            Làm lại
+                        </Button>
+                    )}
                 </div>
             </div>
         </div>

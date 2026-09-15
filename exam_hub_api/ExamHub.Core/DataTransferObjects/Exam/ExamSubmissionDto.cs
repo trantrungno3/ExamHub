@@ -89,7 +89,9 @@ public record ExamSubmissionResponse(
     /// <summary>Tên hiển thị của học sinh (enrich cho màn chấm bài). Null nếu không tra được.</summary>
     string? StudentName = null,
     /// <summary>Tên lớp của học sinh (enrich cho màn chấm bài). Null nếu không tra được.</summary>
-    string? StudentClassName = null
+    string? StudentClassName = null,
+    /// <summary>Kỳ thi (nếu nộp bài trong luồng kỳ thi) — dùng để FE gọi lại "làm lại".</summary>
+    Guid? SessionId = null
 )
 {
     /// <summary>Map từ entity</summary>
@@ -110,7 +112,8 @@ public record ExamSubmissionResponse(
             e.Created.ToTimestamp(),
             includeAnswers ? e.Answers.Select(SubmissionAnswerResponse.FromEntity).ToList() : null,
             studentName,
-            studentClassName
+            studentClassName,
+            e.SessionId
         );
 }
 

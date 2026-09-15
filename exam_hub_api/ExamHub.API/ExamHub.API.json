@@ -10767,6 +10767,13 @@
               "null",
               "string"
             ]
+          },
+          "sessionId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         },
         "description": "Response DTO cho bài nộp"
