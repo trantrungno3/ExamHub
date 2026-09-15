@@ -135,16 +135,16 @@ public class ExamController(IExamService service, IExportService exportService) 
         if (existing is null) return NotFound();
 
         var fmt = (format ?? "pdf").Trim().ToLowerInvariant();
-        var url = fmt switch
+        var result = fmt switch
         {
             "pdf"  => await exportService.ExportPdfAsync(id, ct),
             "docx" => await exportService.ExportDocxAsync(id, ct),
-            _      => null
+            _      => RequestResponse<string>.Error("Định dạng không hợp lệ. Chỉ hỗ trợ 'pdf' hoặc 'docx'.")
         };
-        if (url is null)
-            return BadRequest(RequestResponse<object>.Error("Định dạng không hợp lệ. Chỉ hỗ trợ 'pdf' hoặc 'docx'."));
+        if (result.Status == TVT.Core.Enums.RequestResponseStatus.Error)
+            return Ok(RequestResponse<object>.Error(result.Message!));
 
-        return Ok(RequestResponse<object>.Success("Xuất đề thi thành công!", new { Url = url, Format = fmt }, 1));
+        return Ok(RequestResponse<object>.Success("Xuất đề thi thành công!", new { Url = result.Data, Format = fmt }, 1));
     }
 
     /// <summary>Xóa đề thi</summary>
