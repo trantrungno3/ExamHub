@@ -374,3 +374,4 @@ exam_hub_api/storage
 docs/
 image/
 .codegraph/
+.worktrees/
