@@ -311,3 +311,112 @@ public class ExamSessionServiceManagementTests
         Assert.Single(repo.Assignments);
     }
 }
+
+public class ExamSessionServiceStartTests
+{
+    private static ExamSession OpenSession(Guid id, short maxAttempts = 1, ExamSessionPickModeEnum pickMode = ExamSessionPickModeEnum.Random) => new()
+    {
+        Id = id, Title = "s", SubjectId = 1, GradeLevelId = 1,
+        OpenAt = DateTime.UtcNow.AddHours(-1), CloseAt = DateTime.UtcNow.AddHours(1),
+        MaxAttempts = maxAttempts, PickMode = pickMode, Status = ExamSessionStatusEnum.Published,
+    };
+
+    [Fact]
+    public async Task StartAsync_StudentNotAssigned_ReturnsError()
+    {
+        var repo = new FakeExamSessionRepository();
+        var sessionId = Guid.NewGuid();
+        repo.Sessions.Add(OpenSession(sessionId));
+        repo.PoolExams.Add(new ExamSessionExam { SessionId = sessionId, ExamId = Guid.NewGuid(), Exam = new Exam { Id = Guid.NewGuid(), Title = "de", SubjectId = 1, GradeLevelId = 1 } });
+        var service = new ExamSessionService(repo, new FakeExamRepository());
+
+        var result = await service.StartAsync(sessionId, Guid.NewGuid(), null, "student1");
+
+        Assert.Equal(RequestResponseStatus.Error, result.Status);
+        Assert.Equal("Bạn không được giao kỳ thi này.", result.Message);
+    }
+
+    [Fact]
+    public async Task StartAsync_NoAttemptsLeft_ReturnsError()
+    {
+        var repo = new FakeExamSessionRepository();
+        var sessionId = Guid.NewGuid();
+        var studentId = Guid.NewGuid();
+        repo.Sessions.Add(OpenSession(sessionId, maxAttempts: 1));
+        repo.AssignedStudentIds.Add(studentId);
+        repo.Submissions.Add(new ExamSubmission
+        {
+            Id = Guid.NewGuid(), SessionId = sessionId, ExamId = Guid.NewGuid(), StudentId = studentId,
+            Status = SubmissionStatusEnum.Submitted, AttemptNo = 1, StartedAt = DateTime.UtcNow.AddMinutes(-30),
+        });
+        var service = new ExamSessionService(repo, new FakeExamRepository());
+
+        var result = await service.StartAsync(sessionId, studentId, null, "student1");
+
+        Assert.Equal(RequestResponseStatus.Error, result.Status);
+        Assert.Equal("Bạn đã hết lượt làm bài.", result.Message);
+    }
+
+    [Fact]
+    public async Task StartAsync_InProgressExists_ResumesWithoutCreatingNewSubmission()
+    {
+        var repo = new FakeExamSessionRepository();
+        var sessionId = Guid.NewGuid();
+        var studentId = Guid.NewGuid();
+        var examId = Guid.NewGuid();
+        var submissionId = Guid.NewGuid();
+        repo.Sessions.Add(OpenSession(sessionId));
+        repo.AssignedStudentIds.Add(studentId);
+        repo.Submissions.Add(new ExamSubmission
+        {
+            Id = submissionId, SessionId = sessionId, ExamId = examId, StudentId = studentId,
+            Status = SubmissionStatusEnum.InProgress, AttemptNo = 1, StartedAt = DateTime.UtcNow.AddMinutes(-5),
+        });
+        var service = new ExamSessionService(repo, new FakeExamRepository());
+
+        var result = await service.StartAsync(sessionId, studentId, null, "student1");
+
+        Assert.Equal(RequestResponseStatus.Success, result.Status);
+        Assert.Equal(submissionId, result.Data!.SubmissionId);
+        Assert.Equal(examId, result.Data!.ExamId);
+        Assert.Single(repo.Submissions);
+    }
+
+    [Fact]
+    public async Task StartAsync_StudentChoiceWithoutChosenExam_ReturnsError()
+    {
+        var repo = new FakeExamSessionRepository();
+        var sessionId = Guid.NewGuid();
+        var studentId = Guid.NewGuid();
+        repo.Sessions.Add(OpenSession(sessionId, pickMode: ExamSessionPickModeEnum.StudentChoice));
+        repo.AssignedStudentIds.Add(studentId);
+        var examId = Guid.NewGuid();
+        repo.PoolExams.Add(new ExamSessionExam { SessionId = sessionId, ExamId = examId, Exam = new Exam { Id = examId, Title = "de", SubjectId = 1, GradeLevelId = 1 } });
+        var service = new ExamSessionService(repo, new FakeExamRepository());
+
+        var result = await service.StartAsync(sessionId, studentId, null, "student1");
+
+        Assert.Equal(RequestResponseStatus.Error, result.Status);
+        Assert.Equal("Vui lòng chọn đề.", result.Message);
+    }
+
+    [Fact]
+    public async Task StartAsync_RandomPickValidRequest_CreatesSubmissionAndReturnsSuccess()
+    {
+        var repo = new FakeExamSessionRepository();
+        var sessionId = Guid.NewGuid();
+        var studentId = Guid.NewGuid();
+        repo.Sessions.Add(OpenSession(sessionId));
+        repo.AssignedStudentIds.Add(studentId);
+        var examId = Guid.NewGuid();
+        repo.PoolExams.Add(new ExamSessionExam { SessionId = sessionId, ExamId = examId, Exam = new Exam { Id = examId, Title = "de", SubjectId = 1, GradeLevelId = 1 } });
+        var service = new ExamSessionService(repo, new FakeExamRepository());
+
+        var result = await service.StartAsync(sessionId, studentId, null, "student1");
+
+        Assert.Equal(RequestResponseStatus.Success, result.Status);
+        Assert.Equal(examId, result.Data!.ExamId);
+        Assert.Single(repo.Submissions);
+        Assert.Equal(SubmissionStatusEnum.InProgress, repo.Submissions.Single().Status);
+    }
+}

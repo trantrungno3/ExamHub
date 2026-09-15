@@ -215,7 +215,6 @@ public class ExamSessionController(IExamSessionService service, IAuthorizationSe
     {
         if (CurrentUser.UserId.IsNullOrEmpty())
             return StatusCode(401, RequestResponse<StartSessionResponse>.Error("Không xác định được danh tính người dùng. Vui lòng đăng nhập lại."));
-        var result = await service.StartAsync(id, CurrentUser.UserId!.Value, request.ExamId, User.GetTag(), ct);
-        return Ok(RequestResponse<StartSessionResponse>.Success("Vào thi thành công!", result, 1));
+        return Ok(await service.StartAsync(id, CurrentUser.UserId!.Value, request.ExamId, User.GetTag(), ct));
     }
 }

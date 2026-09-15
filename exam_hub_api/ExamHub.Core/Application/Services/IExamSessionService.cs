@@ -63,5 +63,5 @@ public interface IExamSessionService
     /// được giao. <paramref name="chosenExamId"/> chỉ dùng khi PickMode=StudentChoice; PickMode=Random
     /// thì hệ thống tự bốc đề trong pool, tham số này bị bỏ qua.
     /// </summary>
-    Task<StartSessionResponse> StartAsync(Guid sessionId, Guid studentId, Guid? chosenExamId, string by, CancellationToken ct = default);
+    Task<RequestResponse<StartSessionResponse>> StartAsync(Guid sessionId, Guid studentId, Guid? chosenExamId, string by, CancellationToken ct = default);
 }

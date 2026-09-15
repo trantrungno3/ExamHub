@@ -198,40 +198,41 @@ public class ExamSessionService(IExamSessionRepository _repo, IExamRepository _e
     }
 
     /// <inheritdoc/>
-    public async Task<StartSessionResponse> StartAsync(
+    public async Task<RequestResponse<StartSessionResponse>> StartAsync(
         Guid sessionId, Guid studentId, Guid? chosenExamId, string by, CancellationToken ct = default)
     {
-        var session = await _repo.GetByIdAsync(sessionId, ct)
-            ?? throw new InvalidOperationException("Không tìm thấy kỳ thi.");
+        var session = await _repo.GetByIdAsync(sessionId, ct);
+        if (session is null) return RequestResponse<StartSessionResponse>.Error("Không tìm thấy kỳ thi.");
         if (session.Status != ExamSessionStatusEnum.Published)
-            throw new InvalidOperationException("Kỳ thi chưa mở.");
+            return RequestResponse<StartSessionResponse>.Error("Kỳ thi chưa mở.");
         var now = DateTime.UtcNow;
-        if (now < session.OpenAt) throw new InvalidOperationException("Kỳ thi chưa đến giờ mở.");
-        if (now > session.CloseAt) throw new InvalidOperationException("Kỳ thi đã đóng.");
+        if (now < session.OpenAt) return RequestResponse<StartSessionResponse>.Error("Kỳ thi chưa đến giờ mở.");
+        if (now > session.CloseAt) return RequestResponse<StartSessionResponse>.Error("Kỳ thi đã đóng.");
         if (!await _repo.IsStudentAssignedAsync(sessionId, studentId, ct))
-            throw new InvalidOperationException("Bạn không được giao kỳ thi này.");
+            return RequestResponse<StartSessionResponse>.Error("Bạn không được giao kỳ thi này.");
 
         // Đang có lượt dở → trả lại đúng đề đó (Tiếp tục)
         var inProgress = await _repo.GetInProgressAsync(sessionId, studentId, ct);
         if (inProgress is not null)
-            return new StartSessionResponse(inProgress.Id, inProgress.ExamId);
+            return RequestResponse<StartSessionResponse>.Success(
+                "Vào thi thành công!", new StartSessionResponse(inProgress.Id, inProgress.ExamId), 1);
 
         var used = await _repo.CountSubmittedAttemptsAsync(sessionId, studentId, ct);
         if (used >= session.MaxAttempts)
-            throw new InvalidOperationException("Bạn đã hết lượt làm bài.");
+            return RequestResponse<StartSessionResponse>.Error("Bạn đã hết lượt làm bài.");
 
         var pool = await _repo.GetPoolExamsAsync(sessionId, ct);
-        if (pool.Count == 0) throw new InvalidOperationException("Kỳ thi chưa có đề.");
+        if (pool.Count == 0) return RequestResponse<StartSessionResponse>.Error("Kỳ thi chưa có đề.");
 
         Guid examId;
         if (session.PickMode == ExamSessionPickModeEnum.StudentChoice)
         {
-            if (chosenExamId is null) throw new InvalidOperationException("Vui lòng chọn đề.");
+            if (chosenExamId is null) return RequestResponse<StartSessionResponse>.Error("Vui lòng chọn đề.");
             if (pool.All(e => e.Id != chosenExamId.Value))
-                throw new InvalidOperationException("Đề không thuộc kỳ thi.");
+                return RequestResponse<StartSessionResponse>.Error("Đề không thuộc kỳ thi.");
             var done = await _repo.GetStudentSubmissionsAsync(sessionId, studentId, ct);
             if (done.Any(s => s.ExamId == chosenExamId.Value && s.Status != SubmissionStatusEnum.InProgress))
-                throw new InvalidOperationException("Bạn đã làm đề này rồi.");
+                return RequestResponse<StartSessionResponse>.Error("Bạn đã làm đề này rồi.");
             examId = chosenExamId.Value;
         }
         else
@@ -253,7 +254,8 @@ public class ExamSessionService(IExamSessionRepository _repo, IExamRepository _e
             Modified = DateTime.UtcNow
         };
         await _repo.CreateSubmissionAsync(submission, ct);
-        return new StartSessionResponse(submission.Id, examId);
+        return RequestResponse<StartSessionResponse>.Success(
+            "Vào thi thành công!", new StartSessionResponse(submission.Id, examId), 1);
     }
 
     // ── Helpers ─────────────────────────────────────────────────────────
