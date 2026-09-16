@@ -41,6 +41,7 @@ public class ExamSessionService(IExamSessionRepository _repo, IExamRepository _e
         entity.GradeLevelId = req.GradeLevelId;
         entity.OpenAt = req.OpenAt.ToUniversalTime();
         entity.CloseAt = req.CloseAt.ToUniversalTime();
+        entity.DurationMinutes = req.DurationMinutes;
         entity.MaxAttempts = req.MaxAttempts;
         entity.PickMode = Enum.Parse<ExamSessionPickModeEnum>(req.PickMode);
         entity.ModifiedBy = by;
@@ -77,7 +78,7 @@ public class ExamSessionService(IExamSessionRepository _repo, IExamRepository _e
         return new ExamSessionDetailResponse(
             s.Id, s.Title, s.Description, s.SubjectId, s.Subject?.Name,
             s.GradeLevelId, s.GradeLevel?.Name, ToMs(s.OpenAt), ToMs(s.CloseAt),
-            s.MaxAttempts, s.PickMode.ToString(), s.Status.ToString().ToLower(),
+            s.DurationMinutes, s.MaxAttempts, s.PickMode.ToString(), s.Status.ToString().ToLower(),
             exams, assignments);
     }
 
@@ -175,7 +176,7 @@ public class ExamSessionService(IExamSessionRepository _repo, IExamRepository _e
                 s.Id, s.Title, s.Subject?.Name, s.GradeLevel?.Name,
                 ToMs(s.OpenAt), ToMs(s.CloseAt), s.PickMode.ToString(),
                 Availability(now, s.Status, s.OpenAt, s.CloseAt),
-                s.MaxAttempts, used,
+                s.DurationMinutes, s.MaxAttempts, used,
                 inProgress?.Id, inProgress?.ExamId));
         }
         return result;
@@ -222,7 +223,8 @@ public class ExamSessionService(IExamSessionRepository _repo, IExamRepository _e
         var inProgress = await _repo.GetInProgressAsync(sessionId, studentId, ct);
         if (inProgress is not null)
             return RequestResponse<StartSessionResponse>.Success(
-                "Vào thi thành công!", new StartSessionResponse(inProgress.Id, inProgress.ExamId), 1);
+                "Vào thi thành công!", new StartSessionResponse(
+                    inProgress.Id, inProgress.ExamId, ToMs(session.DeadlineFor(inProgress.StartedAt))), 1);
 
         var used = await _repo.CountSubmittedAttemptsAsync(sessionId, studentId, ct);
         if (used >= session.MaxAttempts)
@@ -262,7 +264,8 @@ public class ExamSessionService(IExamSessionRepository _repo, IExamRepository _e
         };
         await _repo.CreateSubmissionAsync(submission, ct);
         return RequestResponse<StartSessionResponse>.Success(
-            "Vào thi thành công!", new StartSessionResponse(submission.Id, examId), 1);
+            "Vào thi thành công!", new StartSessionResponse(
+                submission.Id, examId, ToMs(session.DeadlineFor(submission.StartedAt))), 1);
     }
 
     // ── Helpers ─────────────────────────────────────────────────────────

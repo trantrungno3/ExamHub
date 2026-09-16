@@ -33,8 +33,8 @@ function fmtRange(openAt: number, closeAt: number): string {
         : `${dShort(o)} ${t(o)} → ${dShort(c)} ${t(c)}`
 }
 
-function takeUrl(examId: string, sessionId: string, submissionId: string): string {
-    const p = new URLSearchParams({examId, sessionId, submissionId})
+function takeUrl(examId: string, sessionId: string, submissionId: string, deadlineAt: number): string {
+    const p = new URLSearchParams({examId, sessionId, submissionId, deadlineAt: String(deadlineAt)})
     return `/student/exam?${p.toString()}`
 }
 
@@ -51,7 +51,7 @@ export default function StudentSessionListPage() {
             message.error(res.message || 'Không thể vào thi')
             return
         }
-        navigate(takeUrl(res.data.examId, s.id, res.data.submissionId))
+        navigate(takeUrl(res.data.examId, s.id, res.data.submissionId, res.data.deadlineAt))
     }
 
     const openResults = (s: MySession) => setResults({id: s.id, title: s.title})
@@ -132,6 +132,7 @@ export default function StudentSessionListPage() {
                                     <CalendarOutlined style={{color: '#9aa2b1'}}/>
                                     <span>{fmtRange(s.openAt, s.closeAt)}</span>
                                 </div>
+                                <div className="text-[13px]" style={{color: '#6f7788'}}>Thời gian làm bài: {s.durationMinutes} phút</div>
                                 <div className="pt-3 mt-1 border-t border-[#eceef2]">{renderAction(s)}</div>
                             </div>
                         ))}

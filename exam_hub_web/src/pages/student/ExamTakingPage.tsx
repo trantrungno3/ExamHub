@@ -10,6 +10,7 @@ import {useAuth} from '../../AuthProvider'
 import {parseAnswers, stripHtml} from '../../utils/snapshot'
 import QuestionMedia from '../../components/QuestionMedia'
 import {submissionService} from '../../services/submissionService'
+import {secondsUntil} from './examTimer'
 
 const letter = (i: number) => String.fromCharCode(65 + i)
 const hasAnswer = (v: unknown) => (typeof v === 'string' ? v.trim().length > 0 : v != null)
@@ -19,6 +20,8 @@ export default function ExamTakingPage() {
     const examId = params.get('examId') ?? undefined
     const sessionId = params.get('sessionId') ?? undefined
     const submissionId = params.get('submissionId') ?? undefined
+    const rawDeadlineAt = Number(params.get('deadlineAt'))
+    const deadlineAt = Number.isFinite(rawDeadlineAt) && rawDeadlineAt > 0 ? rawDeadlineAt : undefined
     const {data: exam, isLoading} = useExamWithQuestionsQuery(examId)
     const {user} = useAuth()
 
@@ -26,11 +29,11 @@ export default function ExamTakingPage() {
     if (!exam) return <div className="take-shell flex items-center justify-center"><Empty description="Không tìm thấy đề thi"/></div>
 
     return <ExamRunner exam={exam} studentId={user?.id} studentName={user?.displayName ?? user?.userName}
-        sessionId={sessionId} submissionId={submissionId}/>
+        sessionId={sessionId} submissionId={submissionId} deadlineAt={deadlineAt}/>
 }
 
-function ExamRunner({exam, studentId, studentName, sessionId, submissionId}: {
-    exam: Exam; studentId?: string; studentName?: string; sessionId?: string; submissionId?: string
+function ExamRunner({exam, studentId, studentName, sessionId, submissionId, deadlineAt}: {
+    exam: Exam; studentId?: string; studentName?: string; sessionId?: string; submissionId?: string; deadlineAt?: number
 }) {
     const className = exam.className
     const navigate = useNavigate()
@@ -46,7 +49,9 @@ function ExamRunner({exam, studentId, studentName, sessionId, submissionId}: {
     const [values, setValues] = useState<Record<string, unknown>>({})
     const [activeIdx, setActiveIdx] = useState(0)
     const [flagged, setFlagged] = useState<Set<string>>(new Set())
-    const [timeLeft, setTimeLeft] = useState(() => exam.durationMinutes * 60)
+    const fallbackDeadline = useRef(Date.now() + exam.durationMinutes * 60_000)
+    const effectiveDeadline = deadlineAt ?? fallbackDeadline.current
+    const [timeLeft, setTimeLeft] = useState(() => secondsUntil(effectiveDeadline))
     const autoSubmitted = useRef(false)
 
     // Hàm chuyển state đáp án sang payload (tái dùng logic của buildAndSubmit)
@@ -105,11 +110,13 @@ function ExamRunner({exam, studentId, studentName, sessionId, submissionId}: {
     const activeOpts = parsed[activeIdx] ?? []
     const isEssay = activeOpts.length === 0
 
-    // Đồng hồ đếm ngược
+    // Đồng hồ đếm ngược theo deadline tuyệt đối để reload/tab sleep không cộng lại thời gian.
     useEffect(() => {
-        const id = setInterval(() => setTimeLeft(t => (t > 0 ? t - 1 : 0)), 1000)
+        const tick = () => setTimeLeft(secondsUntil(effectiveDeadline))
+        tick()
+        const id = setInterval(tick, 1000)
         return () => clearInterval(id)
-    }, [])
+    }, [effectiveDeadline])
 
     const buildAndSubmit = async () => {
         if (!studentId) { message.error('Không xác định được học sinh đang đăng nhập'); return }

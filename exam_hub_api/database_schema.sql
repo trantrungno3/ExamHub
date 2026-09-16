@@ -504,6 +504,8 @@ CREATE TABLE public.exam_sessions
     grade_level_id INT NOT NULL REFERENCES grade_levels (id),
     open_at        TIMESTAMPTZ NOT NULL,
     close_at       TIMESTAMPTZ NOT NULL,
+    duration_minutes INT NOT NULL DEFAULT 45
+                     CHECK (duration_minutes BETWEEN 1 AND 1440),
     max_attempts   SMALLINT NOT NULL DEFAULT 1 CHECK (max_attempts >= 1),
     pick_mode      VARCHAR(20) NOT NULL DEFAULT 'Random'
                    CHECK (pick_mode IN ('Random', 'StudentChoice')),
@@ -1214,3 +1216,10 @@ END $$;
 -- ALTER TABLE public.cohort_classes ADD UNIQUE (cohort_id, year_index, section);
 -- ALTER TABLE public.cohort_members ADD COLUMN section VARCHAR(10);
 -- (sau đó CREATE OR REPLACE FUNCTION generate_cohort_classes bản mới ở trên)
+
+-- MIGRATION [2026-09-16]: thời gian làm bài của kỳ thi
+-- ALTER TABLE public.exam_sessions
+--     ADD COLUMN duration_minutes INT NOT NULL DEFAULT 45;
+-- ALTER TABLE public.exam_sessions
+--     ADD CONSTRAINT chk_exam_sessions_duration_minutes
+--     CHECK (duration_minutes BETWEEN 1 AND 1440);

@@ -49,6 +49,7 @@ type ExamSessionFormValues = {
     gradeLevelId: number
     openLocal: Dayjs
     closeLocal: Dayjs
+    durationMinutes: number
     maxAttempts: number
     pickMode: ExamSessionPickMode
 }
@@ -84,6 +85,7 @@ export default function ExamSessionEditPage() {
             gradeLevelId: detail.gradeLevelId,
             openLocal: dayjs(detail.openAt),
             closeLocal: dayjs(detail.closeAt),
+            durationMinutes: detail.durationMinutes,
             maxAttempts: detail.maxAttempts,
             pickMode: detail.pickMode,
         })
@@ -103,6 +105,7 @@ export default function ExamSessionEditPage() {
             gradeLevelId: v.gradeLevelId,
             openAt: v.openLocal.toISOString(),
             closeAt: v.closeLocal.toISOString(),
+            durationMinutes: v.durationMinutes,
             maxAttempts: v.maxAttempts ?? 1,
             pickMode: v.pickMode,
         }
@@ -151,7 +154,7 @@ export default function ExamSessionEditPage() {
                             {/* ── Cấu hình ── */}
                             <div className="bg-white rounded-xl border border-[#eceef2] p-5">
                                 <Form form={form} layout="vertical"
-                                      initialValues={{maxAttempts: 1, pickMode: 'Random'}}
+                                      initialValues={{durationMinutes: 45, maxAttempts: 1, pickMode: 'Random'}}
                                       className="session-info-form"
                                       onValuesChange={changed => {
                                           // Đổi lớp -> bỏ môn đã chọn nếu môn đó không thuộc lớp mới.
@@ -194,6 +197,10 @@ export default function ExamSessionEditPage() {
                                                    rules={[{required: true, message: 'Chọn thời điểm đóng'}]}>
                                             <DatePicker className="w-full" showTime format="DD/MM/YYYY HH:mm"
                                                         placeholder="Chọn ngày giờ đóng"/>
+                                        </Form.Item>
+                                        <Form.Item label="Thời gian làm bài (phút)" name="durationMinutes"
+                                                   rules={[{required: true, message: 'Nhập thời gian làm bài'}]}>
+                                            <InputNumber className="w-full" min={1} max={1440} precision={0}/>
                                         </Form.Item>
                                         <Form.Item label="Số lượt tối đa" name="maxAttempts">
                                             <InputNumber className="w-full" min={1} max={100}/>

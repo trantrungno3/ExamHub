@@ -573,6 +573,7 @@ public class AppDbContext : DbContext
                 .HasConversion<string>()
                 .HasMaxLength(20)
                 .HasDefaultValue(ExamSessionPickModeEnum.Random);
+            e.Property(x => x.DurationMinutes).HasDefaultValue(45);
             e.Property(x => x.MaxAttempts).HasDefaultValue((short)1);
             e.Property(x => x.CreatedBy).HasMaxLength(150).HasColumnName(ModifyFieldsTable.CreatedBy);
             e.Property(x => x.Created).HasColumnName(ModifyFieldsTable.Created);

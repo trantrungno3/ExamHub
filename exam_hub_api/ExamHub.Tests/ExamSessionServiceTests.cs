@@ -143,7 +143,7 @@ public class ExamSessionServiceManagementTests
     {
         Title = "Kiểm tra giữa kỳ", SubjectId = 1, GradeLevelId = 1,
         OpenAt = DateTime.UtcNow.AddDays(1), CloseAt = DateTime.UtcNow.AddDays(2),
-        MaxAttempts = 1, PickMode = "Random",
+        DurationMinutes = 45, MaxAttempts = 1, PickMode = "Random",
     };
 
     [Fact]
@@ -169,6 +169,17 @@ public class ExamSessionServiceManagementTests
         Assert.Equal(RequestResponseStatus.Success, result.Status);
         Assert.NotEqual(Guid.Empty, result.Data);
         Assert.Single(repo.Sessions);
+    }
+
+    [Fact]
+    public async Task CreateAsync_PersistsDurationMinutes()
+    {
+        var repo = new FakeExamSessionRepository();
+        var service = new ExamSessionService(repo, new FakeExamRepository());
+
+        await service.CreateAsync(ValidCreateRequest() with { DurationMinutes = 60 }, "teacher1");
+
+        Assert.Equal(60, Assert.Single(repo.Sessions).DurationMinutes);
     }
 
     [Fact]
@@ -388,7 +399,8 @@ public class ExamSessionServiceStartTests
     {
         var repo = new FakeExamSessionRepository();
         var sessionId = Guid.NewGuid();
-        repo.Sessions.Add(OpenSession(sessionId));
+        var session = OpenSession(sessionId);
+        repo.Sessions.Add(session);
         repo.PoolExams.Add(new ExamSessionExam { SessionId = sessionId, ExamId = Guid.NewGuid(), Exam = new Exam { Id = Guid.NewGuid(), Title = "de", SubjectId = 1, GradeLevelId = 1 } });
         var service = new ExamSessionService(repo, new FakeExamRepository());
 
@@ -427,7 +439,8 @@ public class ExamSessionServiceStartTests
         var studentId = Guid.NewGuid();
         var examId = Guid.NewGuid();
         var submissionId = Guid.NewGuid();
-        repo.Sessions.Add(OpenSession(sessionId));
+        var session = OpenSession(sessionId);
+        repo.Sessions.Add(session);
         repo.AssignedStudentIds.Add(studentId);
         repo.Submissions.Add(new ExamSubmission
         {
@@ -441,6 +454,10 @@ public class ExamSessionServiceStartTests
         Assert.Equal(RequestResponseStatus.Success, result.Status);
         Assert.Equal(submissionId, result.Data!.SubmissionId);
         Assert.Equal(examId, result.Data!.ExamId);
+        var submission = Assert.Single(repo.Submissions);
+        Assert.Equal(
+            new DateTimeOffset(session.DeadlineFor(submission.StartedAt)).ToUnixTimeMilliseconds(),
+            result.Data.DeadlineAt);
         Assert.Single(repo.Submissions);
     }
 

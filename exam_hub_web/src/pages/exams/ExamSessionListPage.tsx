@@ -53,6 +53,7 @@ export default function ExamSessionListPage() {
             title: 'Khung giờ', key: 'time', width: 260,
             render: (_, s) => <span className="text-sm text-gray-600">{fmt(s.openAt)} → {fmt(s.closeAt)}</span>,
         },
+        {title: 'Thời gian', dataIndex: 'durationMinutes', key: 'durationMinutes', width: 100, render: v => `${v} phút`},
         {title: 'Cách chọn', dataIndex: 'pickMode', key: 'pickMode', width: 110, render: (v: ExamSessionPickMode) => PICK_MODE_LABEL[v]},
         {title: 'Số đề', dataIndex: 'examCount', key: 'examCount', width: 70, align: 'center'},
         {title: 'Lớp/khoá', dataIndex: 'assignmentCount', key: 'assignmentCount', width: 90, align: 'center'},

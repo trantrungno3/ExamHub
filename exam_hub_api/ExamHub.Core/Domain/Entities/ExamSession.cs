@@ -47,6 +47,10 @@ public class ExamSession : ModifyModelBase, IModelBaseSql<Guid>
     [SqlBuilderProperty(ExamSessionTable.CloseAt, Insert = true, Update = true)]
     public DateTime CloseAt { get; set; }
 
+    [Column(ExamSessionTable.DurationMinutes)]
+    [SqlBuilderProperty(ExamSessionTable.DurationMinutes, Insert = true, Update = true)]
+    public int DurationMinutes { get; set; } = 45;
+
     /// <summary>Số lượt làm bài tối đa mỗi học sinh (đếm bằng submission không ở trạng thái InProgress).</summary>
     [Column(ExamSessionTable.MaxAttempts)]
     [SqlBuilderProperty(ExamSessionTable.MaxAttempts, Insert = true, Update = true)]
@@ -68,11 +72,17 @@ public class ExamSession : ModifyModelBase, IModelBaseSql<Guid>
     public List<ExamSessionExam> Exams { get; set; } = [];
     public List<ExamSessionAssignment> Assignments { get; set; } = [];
 
+    public DateTime DeadlineFor(DateTime startedAt)
+    {
+        var durationEnd = startedAt.AddMinutes(DurationMinutes);
+        return durationEnd < CloseAt ? durationEnd : CloseAt;
+    }
+
     public object ToInsertObject() => new
     {
         id = Id, title = Title, description = Description,
         subject_id = SubjectId, grade_level_id = GradeLevelId,
-        open_at = OpenAt, close_at = CloseAt, max_attempts = MaxAttempts,
+        open_at = OpenAt, close_at = CloseAt, duration_minutes = DurationMinutes, max_attempts = MaxAttempts,
         pick_mode = PickMode.ToString(), status = Status.ToString().ToLower(),
         created = Created, created_by = CreatedBy, modified = Modified, modified_by = ModifiedBy
     };
@@ -81,7 +91,7 @@ public class ExamSession : ModifyModelBase, IModelBaseSql<Guid>
     {
         id = Id, title = Title, description = Description,
         subject_id = SubjectId, grade_level_id = GradeLevelId,
-        open_at = OpenAt, close_at = CloseAt, max_attempts = MaxAttempts,
+        open_at = OpenAt, close_at = CloseAt, duration_minutes = DurationMinutes, max_attempts = MaxAttempts,
         pick_mode = PickMode.ToString(), status = Status.ToString().ToLower(),
         modified = DateTime.UtcNow, modified_by = ModifiedBy
     };

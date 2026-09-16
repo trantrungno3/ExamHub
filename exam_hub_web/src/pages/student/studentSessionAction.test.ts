@@ -6,6 +6,7 @@ const session = (overrides: Partial<MySession> = {}): MySession => ({
     title: 'Kỳ thi',
     openAt: 1,
     closeAt: 2,
+    durationMinutes: 45,
     pickMode: 'Random',
     availability: 'open',
     maxAttempts: 1,

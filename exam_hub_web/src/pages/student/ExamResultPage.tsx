@@ -7,8 +7,8 @@ import {useMySessionsQuery, useStartSessionMutation} from '../../hooks/queries/u
 import {statusCode} from '../../services/requestService'
 import {SUBMISSION_STATUS_LABEL_STUDENT} from '../../constants'
 
-function takeUrl(examId: string, sessionId: string, submissionId: string): string {
-    const p = new URLSearchParams({examId, sessionId, submissionId})
+function takeUrl(examId: string, sessionId: string, submissionId: string, deadlineAt: number): string {
+    const p = new URLSearchParams({examId, sessionId, submissionId, deadlineAt: String(deadlineAt)})
     return `/student/exam?${p.toString()}`
 }
 
@@ -64,7 +64,7 @@ export default function ExamResultPage() {
             message.error(res.message || 'Không thể vào thi')
             return
         }
-        navigate(takeUrl(res.data.examId, mySession.id, res.data.submissionId))
+        navigate(takeUrl(res.data.examId, mySession.id, res.data.submissionId, res.data.deadlineAt))
     }
 
     const graded = sub.status === 'Graded'
