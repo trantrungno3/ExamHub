@@ -6,6 +6,7 @@ import {useMySessionsQuery, useStartSessionMutation} from '../../hooks/queries/u
 import {statusCode} from '../../services/requestService'
 import {useAuth} from '../../AuthProvider'
 import {SessionResultsModal} from './SessionResultsModal'
+import {getStudentSessionAction} from './studentSessionAction'
 
 const AVAILABILITY: Record<ExamSessionAvailability, string> = {
     upcoming: 'Sắp mở',
@@ -58,26 +59,23 @@ export default function StudentSessionListPage() {
     // Nút hành động full-width dưới card. Khi kỳ thi đóng/hết lượt nhưng đã có
     // bài nộp → tái dụng ô nút để "Xem kết quả" (giữ layout 1 nút như Figma).
     const renderAction = (s: MySession) => {
-        const remaining = s.maxAttempts - s.usedAttempts;
-        if (s.inProgressSubmissionId && s.inProgressExamId) {
+        const action = getStudentSessionAction(s)
+
+        if (action.kind === 'unavailable')
+            return <Button block disabled>{action.label}</Button>
+        if (action.kind === 'results')
+            return <Button block onClick={() => openResults(s)}>Xem kết quả</Button>
+        if (action.kind === 'resume') {
             return (
                 <Button type="primary" block loading={start.isPending}
                         icon={<ArrowRightOutlined/>} iconPosition="end"
-                        onClick={() => navigate(takeUrl(s.inProgressExamId!, s.id, s.inProgressSubmissionId!))}
-                        disabled={s.availability === "closed"}>
+                        onClick={() => startAndGo(s)}>
                     Tiếp tục
                 </Button>
             )
         }
-        if (s.availability !== 'open') {
-            if (s.usedAttempts > 0) return <Button block onClick={() => openResults(s)}>Xem kết quả</Button>
-            return <Button block disabled>{s.availability === 'upcoming' ? 'Chưa mở' : 'Đã đóng'}</Button>
-        }
-        if (remaining <= 0) {
-            if (s.usedAttempts > 0) return <Button block onClick={() => openResults(s)}>Xem kết quả</Button>
-            return <Button block disabled>Hết lượt</Button>
-        }
-        if (s.pickMode === 'StudentChoice') {
+
+        if (action.kind === 'pick') {
             return (
                 <Button type="primary" block icon={<ArrowRightOutlined/>} iconPosition="end"
                         onClick={() => navigate(`/student/session/${s.id}/pool`, {

@@ -22,16 +22,15 @@ export default function StudentSessionPoolPage() {
     const {id} = useParams<{id: string}>()
     const navigate = useNavigate()
     const nav = (useLocation().state ?? {}) as PoolNavState
-    const {data: pool = [], isLoading} = useSessionPoolQuery(id)
+    const {data: pool = [], isLoading, error} = useSessionPoolQuery(id)
     const start = useStartSessionMutation()
 
     const choose = async (item: SessionPoolItem) => {
         if (!id) return
-        if (item.studentState === 'inProgress' && item.submissionId) {
-            navigate(takeUrl(item.examId, id, item.submissionId))
-            return
-        }
-        const res = await start.mutateAsync({id, examId: item.examId})
+        const res = await start.mutateAsync({
+            id,
+            examId: item.studentState === 'inProgress' ? undefined : item.examId,
+        })
         if (res.status === statusCode.Error || !res.data) {
             message.error(res.message || 'Không thể vào thi')
             return
@@ -57,6 +56,10 @@ export default function StudentSessionPoolPage() {
 
                 {isLoading ? (
                     <div className="flex justify-center py-16"><Spin size="large"/></div>
+                ) : error ? (
+                    <div className="bg-white/60 rounded-xl border border-stone-200 py-16">
+                        <Empty description={error instanceof Error ? error.message : 'Không thể truy cập danh sách đề'}/>
+                    </div>
                 ) : pool.length === 0 ? (
                     <div className="bg-white/60 rounded-xl border border-stone-200 py-16">
                         <Empty description="Kỳ thi chưa có đề"/>
