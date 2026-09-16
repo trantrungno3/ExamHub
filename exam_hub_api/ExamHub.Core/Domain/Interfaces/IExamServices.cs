@@ -158,7 +158,11 @@ public interface IExamSubmissionService
         IReadOnlyCollection<Guid> studentIds, CancellationToken ct = default);
 
     /// <summary>Nộp bài kèm câu trả lời</summary>
-    Task<ExamSubmission> SubmitAsync(ExamSubmission submission, IEnumerable<SubmissionAnswer> answers, CancellationToken ct = default);
+    Task<ExamSubmission> SubmitAsync(
+        ExamSubmission submission,
+        IEnumerable<SubmissionAnswer> answers,
+        Guid currentUserId,
+        CancellationToken ct = default);
 
     /// <summary>Chấm điểm một câu trả lời tự luận</summary>
     Task GradeAnswerAsync(Guid submissionAnswerId, decimal scoreEarned, bool isCorrect, string? feedback, Guid gradedBy, CancellationToken ct = default);

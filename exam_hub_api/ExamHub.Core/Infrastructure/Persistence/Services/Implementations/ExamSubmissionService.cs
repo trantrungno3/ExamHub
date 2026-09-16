@@ -14,17 +14,20 @@ public class ExamSubmissionService : IExamSubmissionService
     private readonly ISubmissionAnswerRepository _answerRepo;
     private readonly IExamQuestionRepository _examQuestionRepo;
     private readonly IUserManagementService _userService;
+    private readonly IExamSessionRepository _sessionRepo;
 
     public ExamSubmissionService(
         IExamSubmissionRepository submissionRepo,
         ISubmissionAnswerRepository answerRepo,
         IExamQuestionRepository examQuestionRepo,
-        IUserManagementService userService)
+        IUserManagementService userService,
+        IExamSessionRepository sessionRepo)
     {
         _submissionRepo   = submissionRepo;
         _answerRepo       = answerRepo;
         _examQuestionRepo = examQuestionRepo;
         _userService      = userService;
+        _sessionRepo      = sessionRepo;
     }
 
     /// <inheritdoc/>
@@ -72,17 +75,24 @@ public class ExamSubmissionService : IExamSubmissionService
     public async Task<ExamSubmission> SubmitAsync(
         ExamSubmission submission,
         IEnumerable<SubmissionAnswer> answers,
+        Guid currentUserId,
         CancellationToken ct = default)
     {
-        // Luồng kỳ thi: có sẵn bản in_progress (đã bốc/khoá đề) → cập nhật thay vì tạo mới.
         if (submission.Id != Guid.Empty)
         {
-            var existing = await _submissionRepo.GetByIdAsync(submission.Id, ct);
-            if (existing is not null && existing.Status == SubmissionStatusEnum.InProgress)
-                return await SubmitInProgressAsync(existing, answers, ct);
+            var existing = await _submissionRepo.GetByIdAsync(submission.Id, ct)
+                ?? throw new InvalidOperationException("Không tìm thấy bài làm.");
+            if (existing.StudentId != currentUserId)
+                throw new UnauthorizedAccessException("Bạn không có quyền nộp bài làm này.");
+            if (existing.Status != SubmissionStatusEnum.InProgress)
+                throw new InvalidOperationException("Bài làm đã được nộp.");
+            await EnsureSessionOpenAsync(existing, ct);
+            return await SubmitInProgressAsync(existing, answers, ct);
         }
 
         // Luồng đề trực tiếp (giữ nguyên): tạo bản nộp mới.
+        submission.StudentId = currentUserId;
+        await EnsureSessionOpenAsync(submission, ct);
         submission.Id          = Guid.NewGuid();
         submission.SubmittedAt = DateTime.UtcNow;
         submission.Status      = SubmissionStatusEnum.Submitted;
@@ -197,6 +207,7 @@ public class ExamSubmissionService : IExamSubmissionService
             throw new UnauthorizedAccessException("Bạn không có quyền lưu bài làm này.");
         if (existing.Status != SubmissionStatusEnum.InProgress)
             throw new InvalidOperationException("Bài làm đã nộp, không thể lưu tạm.");
+        await EnsureSessionOpenAsync(existing, ct);
 
         var list = answers.Select(a =>
         {
@@ -207,6 +218,21 @@ public class ExamSubmissionService : IExamSubmissionService
         }).ToList();
 
         await _answerRepo.ReplaceForSubmissionAsync(submissionId, list, ct);
+    }
+
+    private async Task EnsureSessionOpenAsync(ExamSubmission submission, CancellationToken ct)
+    {
+        if (submission.SessionId is null) return;
+
+        var session = await _sessionRepo.GetByIdAsync(submission.SessionId.Value, ct)
+            ?? throw new InvalidOperationException("Không tìm thấy kỳ thi.");
+        var now = DateTime.UtcNow;
+        if (session.Status == ExamSessionStatusEnum.Closed || now > session.CloseAt)
+            throw new InvalidOperationException("Kỳ thi đã đóng.");
+        if (session.Status != ExamSessionStatusEnum.Published)
+            throw new InvalidOperationException("Kỳ thi chưa mở.");
+        if (now < session.OpenAt)
+            throw new InvalidOperationException("Kỳ thi chưa đến giờ mở.");
     }
 
     public async Task GradeAnswerAsync(

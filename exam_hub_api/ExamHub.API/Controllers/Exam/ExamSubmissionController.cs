@@ -108,11 +108,28 @@ public class ExamSubmissionController(IExamSubmissionService service) : Authoriz
         [FromBody] ExamSubmissionRequest request,
         CancellationToken ct)
     {
-        var submission = request.ToEntity();
-        var answers    = request.ToAnswers();
-        submission.CreatedBy = User.GetTag();
-        var result     = await service.SubmitAsync(submission, answers, ct);
-        return StatusCode(201, RequestResponse<ExamSubmissionResponse>.Success("Nộp bài thành công!", ExamSubmissionResponse.FromEntity(result), 1));
+        if (CurrentUser.UserId.IsNullOrEmpty())
+            return StatusCode(401, RequestResponse<ExamSubmissionResponse>.Error(
+                "Không xác định được danh tính người dùng. Vui lòng đăng nhập lại."));
+
+        try
+        {
+            var submission = request.ToEntity();
+            submission.StudentId = CurrentUser.UserId!.Value;
+            submission.CreatedBy = User.GetTag();
+            var result = await service.SubmitAsync(
+                submission, request.ToAnswers(), CurrentUser.UserId.Value, ct);
+            return StatusCode(201, RequestResponse<ExamSubmissionResponse>.Success(
+                "Nộp bài thành công!", ExamSubmissionResponse.FromEntity(result), 1));
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return StatusCode(403, RequestResponse<ExamSubmissionResponse>.Error(ex.Message));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(RequestResponse<ExamSubmissionResponse>.Error(ex.Message));
+        }
     }
 
     /// <summary>Chấm điểm câu tự luận</summary>

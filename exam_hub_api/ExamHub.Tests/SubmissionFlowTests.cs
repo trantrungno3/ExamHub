@@ -347,6 +347,26 @@ public class ExamSubmissionServiceTests
         StartedAt = DateTime.UtcNow.AddMinutes(-10)
     };
 
+    private static FakeExamSessionRepository SessionRepoFor(
+        ExamSubmission submission,
+        bool closedByStatus = false,
+        bool expired = false,
+        bool upcoming = false)
+    {
+        var repo = new FakeExamSessionRepository();
+        repo.Sessions.Add(new ExamSession
+        {
+            Id = submission.SessionId!.Value,
+            Title = "Kỳ thi",
+            SubjectId = 1,
+            GradeLevelId = 1,
+            Status = closedByStatus ? ExamSessionStatusEnum.Closed : ExamSessionStatusEnum.Published,
+            OpenAt = upcoming ? DateTime.UtcNow.AddHours(1) : DateTime.UtcNow.AddHours(-1),
+            CloseAt = expired ? DateTime.UtcNow.AddMinutes(-1) : DateTime.UtcNow.AddHours(1)
+        });
+        return repo;
+    }
+
     [Fact]
     public async Task Submit_after_autosave_does_not_duplicate_answer_rows()
     {
@@ -357,11 +377,11 @@ public class ExamSubmissionServiceTests
         var answerRepo = new FakeAnswerRepository([]);
         var questions = new FakeExamQuestionRepository();
         questions.Questions.AddRange([q1, q2]);
-        var service = new ExamSubmissionService(submissions, answerRepo, questions, null!);
-
         var student = Guid.NewGuid();
         var existing = InProgress(student);
         submissions.Submissions.Add(existing);
+        var service = new ExamSubmissionService(
+            submissions, answerRepo, questions, null!, SessionRepoFor(existing));
 
         // Autosave hai vòng (mô phỏng chu kỳ ~20s của frontend).
         await service.SaveProgressAsync(existing.Id, student,
@@ -373,7 +393,8 @@ public class ExamSubmissionServiceTests
         // Nộp bài trên chính bản in_progress đó.
         await service.SubmitAsync(
             new ExamSubmission { Id = existing.Id, ExamId = ExamId, StudentId = student },
-            [Answer(q1.Id, [correct]), Answer(q2.Id, essay: "bài làm cuối")]);
+            [Answer(q1.Id, [correct]), Answer(q2.Id, essay: "bài làm cuối")],
+            student);
 
         // Đúng một dòng cho mỗi câu — không nhân đôi.
         Assert.Equal(2, answerRepo.Answers.Count);
@@ -395,17 +416,17 @@ public class ExamSubmissionServiceTests
         var answerRepo = new FakeAnswerRepository([]);
         var questions = new FakeExamQuestionRepository();
         questions.Questions.Add(q1);
-        var service = new ExamSubmissionService(submissions, answerRepo, questions, null!);
-
         var student = Guid.NewGuid();
         var existing = InProgress(student);
         submissions.Submissions.Add(existing);
+        var service = new ExamSubmissionService(
+            submissions, answerRepo, questions, null!, SessionRepoFor(existing));
 
         await service.SaveProgressAsync(existing.Id, student, [Answer(q1.Id, [Guid.NewGuid()])]);
         Assert.Single(answerRepo.Answers);
 
         await service.SubmitAsync(
-            new ExamSubmission { Id = existing.Id, ExamId = ExamId, StudentId = student }, []);
+            new ExamSubmission { Id = existing.Id, ExamId = ExamId, StudentId = student }, [], student);
 
         Assert.Empty(answerRepo.Answers);
         Assert.Equal(0m, submissions.Submissions.Single().TotalScore);
@@ -419,11 +440,11 @@ public class ExamSubmissionServiceTests
         var answerRepo = new FakeAnswerRepository([]);
         var questions = new FakeExamQuestionRepository();
         questions.Questions.Add(q1);
-        var service = new ExamSubmissionService(submissions, answerRepo, questions, null!);
-
         var owner = Guid.NewGuid();
         var existing = InProgress(owner);
         submissions.Submissions.Add(existing);
+        var service = new ExamSubmissionService(
+            submissions, answerRepo, questions, null!, SessionRepoFor(existing));
         await service.SaveProgressAsync(existing.Id, owner, [Answer(q1.Id, [Guid.NewGuid()])]);
 
         var attacker = Guid.NewGuid();
@@ -444,16 +465,79 @@ public class ExamSubmissionServiceTests
         var answerRepo = new FakeAnswerRepository([]);
         var questions = new FakeExamQuestionRepository();
         questions.Questions.Add(q1);
-        var service = new ExamSubmissionService(submissions, answerRepo, questions, null!);
-
         var student = Guid.NewGuid();
         var existing = InProgress(student);
         existing.Status = SubmissionStatusEnum.PendingManualGrade;
         submissions.Submissions.Add(existing);
+        var service = new ExamSubmissionService(
+            submissions, answerRepo, questions, null!, SessionRepoFor(existing));
 
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(
             () => service.SaveProgressAsync(existing.Id, student, [Answer(q1.Id, [Guid.NewGuid()])]));
 
         Assert.Equal("Bài làm đã nộp, không thể lưu tạm.", ex.Message);
+    }
+
+    [Theory]
+    [InlineData(true, false, false, "Kỳ thi đã đóng.")]
+    [InlineData(false, true, false, "Kỳ thi đã đóng.")]
+    [InlineData(false, false, true, "Kỳ thi chưa đến giờ mở.")]
+    public async Task SaveProgress_rejects_unavailable_session(
+        bool closedByStatus, bool expired, bool upcoming, string expectedMessage)
+    {
+        var student = Guid.NewGuid();
+        var existing = InProgress(student);
+        var submissions = new FakeSubmissionRepository();
+        submissions.Submissions.Add(existing);
+        var answers = new FakeAnswerRepository([]);
+        var service = new ExamSubmissionService(
+            submissions, answers, new FakeExamQuestionRepository(), null!,
+            SessionRepoFor(existing, closedByStatus, expired, upcoming));
+
+        var error = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => service.SaveProgressAsync(existing.Id, student, []));
+
+        Assert.Equal(expectedMessage, error.Message);
+        Assert.Empty(answers.Answers);
+    }
+
+    [Theory]
+    [InlineData(true, false, false, "Kỳ thi đã đóng.")]
+    [InlineData(false, true, false, "Kỳ thi đã đóng.")]
+    [InlineData(false, false, true, "Kỳ thi chưa đến giờ mở.")]
+    public async Task SubmitAsync_rejects_unavailable_session_without_mutating_submission(
+        bool closedByStatus, bool expired, bool upcoming, string expectedMessage)
+    {
+        var student = Guid.NewGuid();
+        var existing = InProgress(student);
+        var submissions = new FakeSubmissionRepository();
+        submissions.Submissions.Add(existing);
+        var answers = new FakeAnswerRepository([]);
+        var service = new ExamSubmissionService(
+            submissions, answers, new FakeExamQuestionRepository(), null!,
+            SessionRepoFor(existing, closedByStatus, expired, upcoming));
+
+        var error = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            service.SubmitAsync(new ExamSubmission { Id = existing.Id }, [], student));
+
+        Assert.Equal(expectedMessage, error.Message);
+        Assert.Equal(SubmissionStatusEnum.InProgress, existing.Status);
+        Assert.Null(existing.SubmittedAt);
+        Assert.Empty(answers.Answers);
+    }
+
+    [Fact]
+    public async Task SubmitAsync_rejects_user_who_does_not_own_in_progress_submission()
+    {
+        var owner = Guid.NewGuid();
+        var existing = InProgress(owner);
+        var submissions = new FakeSubmissionRepository();
+        submissions.Submissions.Add(existing);
+        var service = new ExamSubmissionService(
+            submissions, new FakeAnswerRepository([]), new FakeExamQuestionRepository(), null!,
+            SessionRepoFor(existing));
+
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
+            service.SubmitAsync(new ExamSubmission { Id = existing.Id }, [], Guid.NewGuid()));
     }
 }
