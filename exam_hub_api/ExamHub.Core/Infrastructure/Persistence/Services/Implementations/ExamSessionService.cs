@@ -174,7 +174,7 @@ public class ExamSessionService(IExamSessionRepository _repo, IExamRepository _e
             result.Add(new MySessionResponse(
                 s.Id, s.Title, s.Subject?.Name, s.GradeLevel?.Name,
                 ToMs(s.OpenAt), ToMs(s.CloseAt), s.PickMode.ToString(),
-                Availability(now, s.OpenAt, s.CloseAt),
+                Availability(now, s.Status, s.OpenAt, s.CloseAt),
                 s.MaxAttempts, used,
                 inProgress?.Id, inProgress?.ExamId));
         }
@@ -182,12 +182,20 @@ public class ExamSessionService(IExamSessionRepository _repo, IExamRepository _e
     }
 
     /// <inheritdoc/>
-    public async Task<IReadOnlyList<SessionPoolItemResponse>> GetPoolForStudentAsync(
+    public async Task<RequestResponse<IReadOnlyList<SessionPoolItemResponse>>> GetPoolForStudentAsync(
         Guid sessionId, Guid studentId, CancellationToken ct = default)
     {
+        var session = await _repo.GetByIdAsync(sessionId, ct);
+        if (session is null)
+            return RequestResponse<IReadOnlyList<SessionPoolItemResponse>>.Error("Không tìm thấy kỳ thi.");
+
+        var accessError = await StudentAccessErrorAsync(session, studentId, DateTime.UtcNow, ct);
+        if (accessError is not null)
+            return RequestResponse<IReadOnlyList<SessionPoolItemResponse>>.Error(accessError);
+
         var pool = await _repo.GetPoolExamsAsync(sessionId, ct);
         var submissions = await _repo.GetStudentSubmissionsAsync(sessionId, studentId, ct);
-        return pool.Select(e =>
+        IReadOnlyList<SessionPoolItemResponse> result = pool.Select(e =>
         {
             var sub = submissions.FirstOrDefault(x => x.ExamId == e.Id);
             var state = sub is null
@@ -195,6 +203,8 @@ public class ExamSessionService(IExamSessionRepository _repo, IExamRepository _e
                 : sub.Status == SubmissionStatusEnum.InProgress ? "inProgress" : "completed";
             return new SessionPoolItemResponse(e.Id, e.Title, e.ExamCode, e.TotalScore, state, sub?.Id);
         }).ToList();
+        return RequestResponse<IReadOnlyList<SessionPoolItemResponse>>.Success(
+            "Lấy danh sách thành công!", result, result.Count);
     }
 
     /// <inheritdoc/>
@@ -203,13 +213,10 @@ public class ExamSessionService(IExamSessionRepository _repo, IExamRepository _e
     {
         var session = await _repo.GetByIdAsync(sessionId, ct);
         if (session is null) return RequestResponse<StartSessionResponse>.Error("Không tìm thấy kỳ thi.");
-        if (session.Status != ExamSessionStatusEnum.Published)
-            return RequestResponse<StartSessionResponse>.Error("Kỳ thi chưa mở.");
         var now = DateTime.UtcNow;
-        if (now < session.OpenAt) return RequestResponse<StartSessionResponse>.Error("Kỳ thi chưa đến giờ mở.");
-        if (now > session.CloseAt) return RequestResponse<StartSessionResponse>.Error("Kỳ thi đã đóng.");
-        if (!await _repo.IsStudentAssignedAsync(sessionId, studentId, ct))
-            return RequestResponse<StartSessionResponse>.Error("Bạn không được giao kỳ thi này.");
+        var accessError = await StudentAccessErrorAsync(session, studentId, now, ct);
+        if (accessError is not null)
+            return RequestResponse<StartSessionResponse>.Error(accessError);
 
         // Đang có lượt dở → trả lại đúng đề đó (Tiếp tục)
         var inProgress = await _repo.GetInProgressAsync(sessionId, studentId, ct);
@@ -262,6 +269,25 @@ public class ExamSessionService(IExamSessionRepository _repo, IExamRepository _e
     private static long ToMs(DateTime dt)
         => new DateTimeOffset(DateTime.SpecifyKind(dt, DateTimeKind.Utc), TimeSpan.Zero).ToUnixTimeMilliseconds();
 
-    private static string Availability(DateTime now, DateTime openAt, DateTime closeAt)
-        => now < openAt ? "upcoming" : now > closeAt ? "closed" : "open";
+    private async Task<string?> StudentAccessErrorAsync(
+        ExamSession session, Guid studentId, DateTime now, CancellationToken ct)
+    {
+        if (session.Status == ExamSessionStatusEnum.Closed || now > session.CloseAt)
+            return "Kỳ thi đã đóng.";
+        if (session.Status != ExamSessionStatusEnum.Published)
+            return "Kỳ thi chưa mở.";
+        if (now < session.OpenAt)
+            return "Kỳ thi chưa đến giờ mở.";
+        if (!await _repo.IsStudentAssignedAsync(session.Id, studentId, ct))
+            return "Bạn không được giao kỳ thi này.";
+        return null;
+    }
+
+    private static string Availability(
+        DateTime now, ExamSessionStatusEnum status, DateTime openAt, DateTime closeAt)
+    {
+        if (status == ExamSessionStatusEnum.Closed || now > closeAt) return "closed";
+        if (status != ExamSessionStatusEnum.Published || now < openAt) return "upcoming";
+        return "open";
+    }
 }

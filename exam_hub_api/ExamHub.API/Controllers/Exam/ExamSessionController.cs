@@ -202,7 +202,7 @@ public class ExamSessionController(IExamSessionService service, IAuthorizationSe
         if (CurrentUser.UserId.IsNullOrEmpty())
             return StatusCode(401, RequestResponse<IReadOnlyList<SessionPoolItemResponse>>.Error("Không xác định được danh tính người dùng. Vui lòng đăng nhập lại."));
         var result = await service.GetPoolForStudentAsync(id, CurrentUser.UserId!.Value, ct);
-        return Ok(RequestResponse<IReadOnlyList<SessionPoolItemResponse>>.Success("Lấy danh sách thành công!", result, result.Count));
+        return Ok(result);
     }
 
     /// <summary>Vào thi: bốc/khoá đề (Random) hoặc chọn đề (StudentChoice), trả submission + đề.</summary>

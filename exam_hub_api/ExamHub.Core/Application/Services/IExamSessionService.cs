@@ -56,7 +56,8 @@ public interface IExamSessionService
     Task<IReadOnlyList<MySessionResponse>> GetMySessionsAsync(Guid studentId, CancellationToken ct = default);
 
     /// <summary>Danh sách đề trong pool của kỳ thi mà học sinh có thể xem/chọn trước khi bắt đầu.</summary>
-    Task<IReadOnlyList<SessionPoolItemResponse>> GetPoolForStudentAsync(Guid sessionId, Guid studentId, CancellationToken ct = default);
+    Task<RequestResponse<IReadOnlyList<SessionPoolItemResponse>>> GetPoolForStudentAsync(
+        Guid sessionId, Guid studentId, CancellationToken ct = default);
 
     /// <summary>
     /// Bắt đầu làm bài — kiểm tra kỳ thi đã Published, còn trong khung OpenAt/CloseAt, học sinh đã

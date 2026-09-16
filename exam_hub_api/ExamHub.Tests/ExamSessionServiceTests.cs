@@ -12,7 +12,7 @@ namespace ExamHub.Tests;
 
 /// <summary>Fake IExamSessionRepository backed by in-memory lists. Shared by Task 1 (management
 /// methods) and Task 2 (StartAsync) tests in this file.</summary>
-file sealed class FakeExamSessionRepository : IExamSessionRepository
+internal sealed class FakeExamSessionRepository : IExamSessionRepository
 {
     public List<ExamSession> Sessions { get; } = [];
     public List<ExamSessionExam> PoolExams { get; } = [];
@@ -82,7 +82,9 @@ file sealed class FakeExamSessionRepository : IExamSessionRepository
 
     public Task<int> CountStudentsForAssignmentAsync(ExamSessionAssignment a, CancellationToken ct = default) => throw new NotSupportedException();
 
-    public Task<IReadOnlyList<ExamSession>> GetAssignedToStudentAsync(Guid studentId, CancellationToken ct = default) => throw new NotSupportedException();
+    public Task<IReadOnlyList<ExamSession>> GetAssignedToStudentAsync(Guid studentId, CancellationToken ct = default)
+        => Task.FromResult<IReadOnlyList<ExamSession>>(
+            AssignedStudentIds.Contains(studentId) ? Sessions.ToList() : []);
 
     public Task<bool> IsStudentAssignedAsync(Guid sessionId, Guid studentId, CancellationToken ct = default)
         => Task.FromResult(AssignedStudentIds.Contains(studentId));
@@ -312,6 +314,66 @@ public class ExamSessionServiceManagementTests
     }
 }
 
+public class ExamSessionServiceStudentListTests
+{
+    [Fact]
+    public async Task GetMySessionsAsync_ClosedStatusWithinWindow_ReturnsClosedAvailability()
+    {
+        var repo = new FakeExamSessionRepository();
+        var studentId = Guid.NewGuid();
+        repo.AssignedStudentIds.Add(studentId);
+        repo.Sessions.Add(new ExamSession
+        {
+            Id = Guid.NewGuid(), Title = "Đã đóng sớm", SubjectId = 1, GradeLevelId = 1,
+            OpenAt = DateTime.UtcNow.AddHours(-1), CloseAt = DateTime.UtcNow.AddHours(1),
+            Status = ExamSessionStatusEnum.Closed, MaxAttempts = 1
+        });
+        var service = new ExamSessionService(repo, new FakeExamRepository());
+
+        var result = await service.GetMySessionsAsync(studentId);
+
+        Assert.Equal("closed", Assert.Single(result).Availability);
+    }
+
+    [Fact]
+    public async Task GetMySessionsAsync_DraftWithinWindow_DoesNotReturnOpen()
+    {
+        var repo = new FakeExamSessionRepository();
+        var studentId = Guid.NewGuid();
+        repo.AssignedStudentIds.Add(studentId);
+        repo.Sessions.Add(new ExamSession
+        {
+            Id = Guid.NewGuid(), Title = "Chưa phát hành", SubjectId = 1, GradeLevelId = 1,
+            OpenAt = DateTime.UtcNow.AddHours(-1), CloseAt = DateTime.UtcNow.AddHours(1),
+            Status = ExamSessionStatusEnum.Draft, MaxAttempts = 1
+        });
+        var service = new ExamSessionService(repo, new FakeExamRepository());
+
+        var result = await service.GetMySessionsAsync(studentId);
+
+        Assert.Equal("upcoming", Assert.Single(result).Availability);
+    }
+
+    [Fact]
+    public async Task GetMySessionsAsync_PublishedBeforeOpenAt_ReturnsUpcoming()
+    {
+        var repo = new FakeExamSessionRepository();
+        var studentId = Guid.NewGuid();
+        repo.AssignedStudentIds.Add(studentId);
+        repo.Sessions.Add(new ExamSession
+        {
+            Id = Guid.NewGuid(), Title = "Chưa đến giờ", SubjectId = 1, GradeLevelId = 1,
+            OpenAt = DateTime.UtcNow.AddHours(1), CloseAt = DateTime.UtcNow.AddHours(2),
+            Status = ExamSessionStatusEnum.Published, MaxAttempts = 1
+        });
+        var service = new ExamSessionService(repo, new FakeExamRepository());
+
+        var result = await service.GetMySessionsAsync(studentId);
+
+        Assert.Equal("upcoming", Assert.Single(result).Availability);
+    }
+}
+
 public class ExamSessionServiceStartTests
 {
     private static ExamSession OpenSession(Guid id, short maxAttempts = 1, ExamSessionPickModeEnum pickMode = ExamSessionPickModeEnum.Random) => new()
@@ -418,5 +480,75 @@ public class ExamSessionServiceStartTests
         Assert.Equal(examId, result.Data!.ExamId);
         Assert.Single(repo.Submissions);
         Assert.Equal(SubmissionStatusEnum.InProgress, repo.Submissions.Single().Status);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task StartAsync_InProgressButSessionClosed_ReturnsError(bool closedByStatus)
+    {
+        var repo = new FakeExamSessionRepository();
+        var sessionId = Guid.NewGuid();
+        var studentId = Guid.NewGuid();
+        var session = OpenSession(sessionId);
+        if (closedByStatus) session.Status = ExamSessionStatusEnum.Closed;
+        else session.CloseAt = DateTime.UtcNow.AddMinutes(-1);
+        repo.Sessions.Add(session);
+        repo.AssignedStudentIds.Add(studentId);
+        repo.Submissions.Add(new ExamSubmission
+        {
+            Id = Guid.NewGuid(), SessionId = sessionId, ExamId = Guid.NewGuid(), StudentId = studentId,
+            Status = SubmissionStatusEnum.InProgress, StartedAt = DateTime.UtcNow.AddMinutes(-10)
+        });
+        var service = new ExamSessionService(repo, new FakeExamRepository());
+
+        var result = await service.StartAsync(sessionId, studentId, null, "student1");
+
+        Assert.Equal(RequestResponseStatus.Error, result.Status);
+        Assert.Equal("Kỳ thi đã đóng.", result.Message);
+    }
+
+    [Fact]
+    public async Task StartAsync_InProgressBeforeOpenAt_ReturnsError()
+    {
+        var repo = new FakeExamSessionRepository();
+        var sessionId = Guid.NewGuid();
+        var studentId = Guid.NewGuid();
+        var session = OpenSession(sessionId);
+        session.OpenAt = DateTime.UtcNow.AddHours(1);
+        session.CloseAt = DateTime.UtcNow.AddHours(2);
+        repo.Sessions.Add(session);
+        repo.AssignedStudentIds.Add(studentId);
+        repo.Submissions.Add(new ExamSubmission
+        {
+            Id = Guid.NewGuid(), SessionId = sessionId, ExamId = Guid.NewGuid(), StudentId = studentId,
+            Status = SubmissionStatusEnum.InProgress, StartedAt = DateTime.UtcNow.AddMinutes(-10)
+        });
+        var service = new ExamSessionService(repo, new FakeExamRepository());
+
+        var result = await service.StartAsync(sessionId, studentId, null, "student1");
+
+        Assert.Equal(RequestResponseStatus.Error, result.Status);
+        Assert.Equal("Kỳ thi chưa đến giờ mở.", result.Message);
+    }
+
+    [Fact]
+    public async Task GetPoolForStudentAsync_BeforeOpenAt_ReturnsError()
+    {
+        var repo = new FakeExamSessionRepository();
+        var sessionId = Guid.NewGuid();
+        var studentId = Guid.NewGuid();
+        var session = OpenSession(sessionId);
+        session.OpenAt = DateTime.UtcNow.AddHours(1);
+        session.CloseAt = DateTime.UtcNow.AddHours(2);
+        repo.Sessions.Add(session);
+        repo.AssignedStudentIds.Add(studentId);
+        var service = new ExamSessionService(repo, new FakeExamRepository());
+
+        var result = await service.GetPoolForStudentAsync(sessionId, studentId);
+
+        Assert.Equal(RequestResponseStatus.Error, result.Status);
+        Assert.Equal("Kỳ thi chưa đến giờ mở.", result.Message);
+        Assert.Null(result.Data);
     }
 }
