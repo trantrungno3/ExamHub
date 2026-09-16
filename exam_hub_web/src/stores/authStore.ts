@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { extractUserFromToken, getTokenExpiresAt, isTokenExpired } from '../utils/jwt'
 import { authService } from '../services/authService'
-import { statusCode } from '../services/requestService'
+import { setUnauthorizedHandler, statusCode } from '../services/requestService'
 
 interface AuthState {
     token: TokenModel | null
@@ -111,3 +111,5 @@ export const useAuthStore = create<AuthStore>()(
         }
     )
 )
+
+setUnauthorizedHandler(() => useAuthStore.getState().refresh())

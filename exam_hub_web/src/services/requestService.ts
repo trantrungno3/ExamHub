@@ -17,6 +17,14 @@ export interface ApiResponse<T> {
     total?: number
 }
 
+type UnauthorizedHandler = () => Promise<boolean>
+
+let unauthorizedHandler: UnauthorizedHandler | null = null
+
+export function setUnauthorizedHandler(handler: UnauthorizedHandler | null): void {
+    unauthorizedHandler = handler
+}
+
 // Đọc thẳng từ localStorage (đúng key/shape mà zustand persist đã ghi ở authStore.ts) thay vì
 // import useAuthStore.getState() — requestService là module thuần, không phụ thuộc React/store để
 // tránh vòng phụ thuộc (authStore cũng import requestService để lấy statusCode).
@@ -54,6 +62,22 @@ async function fetchWithTimeout(input: string, init: RequestInit): Promise<Respo
     } finally {
         clearTimeout(timer)
     }
+}
+
+async function fetchWithUnauthorizedRetry(
+    request: () => Promise<Response>,
+    auth: boolean,
+    retried = false,
+): Promise<Response> {
+    const response = await request()
+    if (!auth || retried || response.status !== 401 || !unauthorizedHandler) {
+        return response
+    }
+
+    const refreshed = await unauthorizedHandler()
+    return refreshed
+        ? fetchWithUnauthorizedRetry(request, auth, true)
+        : response
 }
 
 async function wrapNetworkError<T>(promise: Promise<ApiResponse<T>>): Promise<ApiResponse<T>> {
@@ -105,56 +129,72 @@ export function cleanParams(
 }
 
 function createHttp(auth: boolean) {
-    return {
-        get<T>(path: string, params?: Record<string, string | number | boolean>): Promise<ApiResponse<T>> {
-            return wrapNetworkError(fetchWithTimeout(buildUrl(path, params), {
-                method: 'GET',
-                headers: buildHeaders(auth)
-            }).then(handleResponse<T>))
-        },
-        post<T>(path: string, body?: unknown): Promise<ApiResponse<T>> {
-            return wrapNetworkError(fetchWithTimeout(buildUrl(path), {
-                method: 'POST', headers: buildHeaders(auth),
-                body: body === undefined ? undefined : JSON.stringify(body),
-            }).then(handleResponse<T>))
-        },
-        put<T>(path: string, body?: unknown): Promise<ApiResponse<T>> {
-            return wrapNetworkError(fetchWithTimeout(buildUrl(path), {
-                method: 'PUT', headers: buildHeaders(auth),
-                body: body === undefined ? undefined : JSON.stringify(body),
-            }).then(handleResponse<T>))
-        },
-        async delete<T>(path: string, body?: unknown): Promise<ApiResponse<T>> {
-            return wrapNetworkError(fetchWithTimeout(buildUrl(path), {
-                method: 'DELETE',
+    const requestJson = <T>(
+        method: string,
+        path: string,
+        body?: unknown,
+        params?: Record<string, string | number | boolean>,
+    ): Promise<ApiResponse<T>> => wrapNetworkError(
+        fetchWithUnauthorizedRetry(
+            () => fetchWithTimeout(buildUrl(path, params), {
+                method,
                 headers: buildHeaders(auth),
                 body: body === undefined ? undefined : JSON.stringify(body),
-            }).then(async res => {
+            }),
+            auth,
+        ).then(handleResponse<T>),
+    )
+
+    return {
+        get<T>(path: string, params?: Record<string, string | number | boolean>): Promise<ApiResponse<T>> {
+            return requestJson<T>('GET', path, undefined, params)
+        },
+        post<T>(path: string, body?: unknown): Promise<ApiResponse<T>> {
+            return requestJson<T>('POST', path, body)
+        },
+        put<T>(path: string, body?: unknown): Promise<ApiResponse<T>> {
+            return requestJson<T>('PUT', path, body)
+        },
+        delete<T>(path: string, body?: unknown): Promise<ApiResponse<T>> {
+            return wrapNetworkError(fetchWithUnauthorizedRetry(
+                () => fetchWithTimeout(buildUrl(path), {
+                    method: 'DELETE',
+                    headers: buildHeaders(auth),
+                    body: body === undefined ? undefined : JSON.stringify(body),
+                }),
+                auth,
+            ).then(async res => {
                 if (res.status === 204) return {status: statusCode.Deleted, message: 'Xoá thành công'}
                 // 409 = backend từ chối xoá vì bản ghi đang được tham chiếu (vd. xoá môn học còn đề thi
                 // dùng nó) — map riêng sang statusCode.Conflict để UI hiển thị cảnh báo khác lỗi thường.
                 if (res.status === 409) {
-                    const body = await handleResponse<T>(res)
-                    return {...body, status: statusCode.Conflict}
+                    const responseBody = await handleResponse<T>(res)
+                    return {...responseBody, status: statusCode.Conflict}
                 }
                 return handleResponse<T>(res)
             }))
         },
         patch<T>(path: string, body?: unknown): Promise<ApiResponse<T>> {
-            return wrapNetworkError(fetchWithTimeout(buildUrl(path), {
-                method: 'PATCH', headers: buildHeaders(auth),
-                body: body === undefined ? undefined : JSON.stringify(body),
-            }).then(handleResponse<T>))
+            return requestJson<T>('PATCH', path, body)
         },
         postForm<T>(path: string, form: FormData): Promise<ApiResponse<T>> {
-            return wrapNetworkError(fetchWithTimeout(buildUrl(path), {
-                method: 'POST', headers: buildFormHeaders(auth), body: form,
-            }).then(handleResponse<T>))
+            return wrapNetworkError(fetchWithUnauthorizedRetry(
+                () => fetchWithTimeout(buildUrl(path), {
+                    method: 'POST',
+                    headers: buildFormHeaders(auth),
+                    body: form,
+                }),
+                auth,
+            ).then(handleResponse<T>))
         },
         async getBlob(path: string): Promise<Blob> {
-            const res = await fetchWithTimeout(buildUrl(path), {
-                method: 'GET', headers: buildFormHeaders(auth),
-            })
+            const res = await fetchWithUnauthorizedRetry(
+                () => fetchWithTimeout(buildUrl(path), {
+                    method: 'GET',
+                    headers: buildFormHeaders(auth),
+                }),
+                auth,
+            )
             if (!res.ok) throw new Error('Không thể tải file từ máy chủ.')
             return res.blob()
         },
