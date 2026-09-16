@@ -1,7 +1,7 @@
 import {AuthHttp, Http} from './requestService'
 
 export const authService = {
-    login: (values: LoginFormValues) => Http.post('/Auth/login', values),
+    login: (values: LoginFormValues) => Http.post<TokenPair>('/Auth/login', values),
     register: (values: RegisterFormValues) => Http.post('/Auth/register', values),
     refresh: (tokens: TokenPair) => Http.post<TokenPair>('/Auth/refresh-token', tokens),
 
