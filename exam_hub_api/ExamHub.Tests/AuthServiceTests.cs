@@ -1,7 +1,13 @@
+using System.Reflection;
+using System.Security.Claims;
+using ExamHub.API.Controllers;
 using ExamHub.Core;
 using ExamHub.Core.Application.Services;
 using ExamHub.Core.DataAccessObjects;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using TVT.Core.Db.PostgreSql.Services;
+using TVT.Core.Enums;
 using TVT.Core.Extensions;
 using TVT.Core.IdentityUser.PostgreSql.Models;
 using TVT.Core.Models;
@@ -25,6 +31,8 @@ file sealed class FakeUserServiceForLogin : IUserService
 {
     public UserAdmin? UserToReturn { get; set; }
     public List<KeyValuePair<string, string>>? CapturedCustomData { get; private set; }
+    public string AccessTokenToReturn { get; set; } = "new-access-token";
+    public string RefreshTokenToReturn { get; set; } = "new-refresh-token";
 
     public IEnumerable<UserAdmin> GetList() => throw new NotSupportedException();
     public Task<UserAdmin?> CreateAsync(UserAdmin user) => throw new NotSupportedException();
@@ -45,7 +53,7 @@ file sealed class FakeUserServiceForLogin : IUserService
         List<KeyValuePair<string, string>> customData, TimeSpan expireTime)
     {
         CapturedCustomData = customData;
-        return Task.FromResult(("fake-access-token", "fake-refresh-token"));
+        return Task.FromResult((AccessTokenToReturn, RefreshTokenToReturn));
     }
 
     public string CreateTokenJwt(ConfigAudience audienceConfig, UserAdmin user, TimeSpan expireTime) => throw new NotSupportedException();
@@ -83,5 +91,93 @@ public class AuthServiceLoginClaimsTests
         Assert.Equal(userService.UserToReturn.Id, resolver.Calls[0].userId);
         Assert.Equal(["Teacher"], resolver.Calls[0].roles);
         Assert.Equal(resolver.ClaimsToReturn, userService.CapturedCustomData);
+    }
+}
+
+public class AuthControllerRefreshContractTests
+{
+    [Fact]
+    public void RefreshToken_UsesPostBodyAndReturnsTokenModel()
+    {
+        var action = typeof(AuthController).GetMethod(nameof(AuthController.RefreshToken))!;
+
+        var post = Assert.Single(action.GetCustomAttributes<HttpPostAttribute>());
+        Assert.Equal("refresh-token", post.Template);
+        Assert.Empty(action.GetCustomAttributes<HttpGetAttribute>());
+
+        var parameter = Assert.Single(action.GetParameters());
+        Assert.NotNull(parameter.GetCustomAttribute<FromBodyAttribute>());
+
+        // Verify return type is Task<ActionResult<RequestResponse<TokenModel>>>
+        Assert.True(action.ReturnType.IsGenericType);
+        Assert.Equal("Task`1", action.ReturnType.Name);
+        var actionResultType = action.ReturnType.GetGenericArguments()[0];
+        Assert.Equal("ActionResult`1", actionResultType.Name);
+        var responseType = actionResultType.GetGenericArguments()[0];
+        Assert.Equal("RequestResponse`1", responseType.Name);
+        Assert.Equal("TokenModel", responseType.GetGenericArguments()[0].Name);
+    }
+}
+
+public class AuthServiceRefreshTests
+{
+    private static void ConfigureTestAudiences()
+    {
+        var values = new Dictionary<string, string?>
+        {
+            ["Audience:Aud"] = "exam-hub-test",
+            ["Audience:Iss"] = "exam-hub-test",
+            ["Audience:Secret"] = "exam-hub-test-access-secret-32-bytes",
+            ["Refresh:Aud"] = "exam-hub-refresh-test",
+            ["Refresh:Iss"] = "exam-hub-refresh-test",
+            ["Refresh:Secret"] = "exam-hub-test-refresh-secret-32-bytes",
+        };
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(values)
+            .Build();
+        configuration.GetSection("Audience").Bind(AppCommon.Audience);
+        configuration.GetSection("Refresh").Bind(AppCommon.AudienceRefresh);
+    }
+
+    [Fact]
+    public async Task RefreshToken_ValidPair_ReturnsRotatedPairWithResolvedClaims()
+    {
+        ConfigureTestAudiences();
+        var user = new UserAdmin
+        {
+            Id = Guid.NewGuid(),
+            UserName = "teacher1",
+            DisplayName = "Teacher One",
+        };
+        user.AddRole("Teacher");
+
+        var accessToken = AppCommon.Audience.EncodedJwt(
+            [new Claim("UserName", user.UserName)],
+            TimeSpan.FromMinutes(5));
+        var refreshToken = AppCommon.AudienceRefresh.EncodedJwt(
+            [new Claim("UserName", user.UserName)],
+            TimeSpan.FromMinutes(30));
+        user.RefreshToken = refreshToken;
+
+        var userService = new FakeUserServiceForLogin
+        {
+            UserToReturn = user,
+            AccessTokenToReturn = "rotated-access-token",
+            RefreshTokenToReturn = "rotated-refresh-token",
+        };
+        var resolver = new FakeTokenClaimsResolver
+        {
+            ClaimsToReturn = [new("SchoolId", "5"), new("SubjectId", "9")],
+        };
+        var service = new AuthService(userService, resolver);
+
+        var result = await service.RefreshToken(new TokenModel(accessToken, refreshToken));
+
+        Assert.Equal(RequestResponseStatus.Success, result.Status);
+        Assert.NotNull(result.Data);
+        Assert.Equal("rotated-access-token", result.Data.AccessToken);
+        Assert.Equal("rotated-refresh-token", result.Data.RefreshToken);
+        Assert.Equal(resolver.ClaimsToReturn, userService.CapturedCustomData);
+        Assert.Single(resolver.Calls);
     }
 }

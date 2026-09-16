@@ -26,7 +26,7 @@ public interface IAuthService
     /// </summary>
     /// <param name="dto">Thông tin token</param>
     /// <returns></returns>
-    Task<RequestResponse<string>> RefreshToken(TokenModel dto);
+    Task<RequestResponse<TokenModel>> RefreshToken(TokenModel dto);
 
     /// <summary>
     ///     Lấy thông tin người dùng

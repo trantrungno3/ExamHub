@@ -118,44 +118,49 @@
       }
     },
     "/api/Auth/refresh-token": {
-      "get": {
+      "post": {
         "tags": [
           "Auth"
         ],
-        "summary": "Làm mới access token bằng refresh token",
-        "parameters": [
-          {
-            "name": "AccessToken",
-            "in": "query",
-            "schema": {
-              "type": "string"
+        "summary": "Làm mới access token và rotate refresh token",
+        "requestBody": {
+          "description": "Access token + refresh token hiện tại.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TokenModel"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TokenModel"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/TokenModel"
+              }
             }
           },
-          {
-            "name": "RefreshToken",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
+          "required": true
+        },
         "responses": {
           "200": {
-            "description": "Access token mới.",
+            "description": "Access token + refresh token mới.",
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/RequestResponseOfstring"
+                  "$ref": "#/components/schemas/RequestResponseOfTokenModel"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/RequestResponseOfstring"
+                  "$ref": "#/components/schemas/RequestResponseOfTokenModel"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/RequestResponseOfstring"
+                  "$ref": "#/components/schemas/RequestResponseOfTokenModel"
                 }
               }
             }
@@ -13982,39 +13987,6 @@
                 "$ref": "#/components/schemas/StartSessionResponse"
               }
             ]
-          },
-          "totalRecord": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "integer",
-              "string"
-            ],
-            "description": "Tổng số bản ghi",
-            "format": "int64"
-          }
-        },
-        "description": ""
-      },
-      "RequestResponseOfstring": {
-        "type": "object",
-        "properties": {
-          "status": {
-            "description": "Trạng thái",
-            "$ref": "#/components/schemas/RequestResponseStatus"
-          },
-          "message": {
-            "type": [
-              "null",
-              "string"
-            ],
-            "description": "Message"
-          },
-          "data": {
-            "type": [
-              "null",
-              "string"
-            ],
-            "description": "Dữ liệu"
           },
           "totalRecord": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",

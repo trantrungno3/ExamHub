@@ -55,23 +55,35 @@ public sealed class AuthService(IUserService userService, ITokenClaimsResolver t
     /// </summary>
     /// <param name="dto">Thông tin token</param>
     /// <returns></returns>
-    public async Task<RequestResponse<string>> RefreshToken(TokenModel dto)
+    public async Task<RequestResponse<TokenModel>> RefreshToken(TokenModel dto)
     {
         if (string.IsNullOrEmpty(dto.AccessToken) || string.IsNullOrEmpty(dto.RefreshToken))
-            return RequestResponse<string>.Error("Không được để trống thông tin!");
+            return RequestResponse<TokenModel>.Error("Không được để trống thông tin!");
+
         var claims = AuthExtension.GetPrincipalFromExpiredToken(dto.AccessToken, AppCommon.Audience);
         if (claims == null)
-            return RequestResponse<string>.Error("Token không được để trống!");
-        var userName = claims.GetUserName();
-        var userInfo = await userService.FindByNameAsync(userName!);
-        if (userInfo == null || userInfo.RefreshToken != dto.RefreshToken)
-            return RequestResponse<string>.Error("Token không hợp lệ!");
+            return RequestResponse<TokenModel>.Error("Token không hợp lệ!");
 
-        var isRefreshValid = AuthExtension.ValidRefreshToken(dto.RefreshToken, AppCommon.AudienceRefresh);
-        return isRefreshValid
-            ? RequestResponse<string>.Success("Lấy token thành công!",
-                userService.CreateTokenJwt(AppCommon.Audience, userInfo, TimeSpan.FromHours(8)), 1)
-            : RequestResponse<string>.Error("Token đã hết hạn!");
+        var userName = claims.GetUserName();
+        var userInfo = await userService.FindByNameAsync(userName);
+        if (userInfo == null || userInfo.RefreshToken != dto.RefreshToken)
+            return RequestResponse<TokenModel>.Error("Token không hợp lệ!");
+
+        if (!AuthExtension.ValidRefreshToken(dto.RefreshToken, AppCommon.AudienceRefresh))
+            return RequestResponse<TokenModel>.Error("Token đã hết hạn!");
+
+        var customClaims = await tokenClaimsResolver.ResolveAsync(userInfo.Id, userInfo.Roles);
+        var tokens = await userService.CreateTokenJwt(
+            AppCommon.Audience,
+            AppCommon.AudienceRefresh,
+            userInfo,
+            customClaims,
+            TimeSpan.FromHours(8));
+
+        return RequestResponse<TokenModel>.Success(
+            "Lấy token thành công!",
+            new TokenModel(tokens.Item1, tokens.Item2),
+            1);
     }
 
     /// <summary>

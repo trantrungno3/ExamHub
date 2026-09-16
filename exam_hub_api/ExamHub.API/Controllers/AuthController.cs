@@ -36,12 +36,12 @@ public class AuthController(IAuthService service) : ControllerBase
         return Ok(await service.Register(dto));
     }
 
-    /// <summary>Làm mới access token bằng refresh token</summary>
+    /// <summary>Làm mới access token và rotate refresh token</summary>
     /// <param name="dto">Access token + refresh token hiện tại.</param>
-    /// <returns>Access token mới.</returns>
+    /// <returns>Access token + refresh token mới.</returns>
     [AllowAnonymous]
-    [HttpGet("refresh-token")]
-    public async Task<ActionResult<RequestResponse<string>>> RefreshToken([FromQuery] TokenModel dto)
+    [HttpPost("refresh-token")]
+    public async Task<ActionResult<RequestResponse<TokenModel>>> RefreshToken([FromBody] TokenModel dto)
     {
         return Ok(await service.RefreshToken(dto));
     }
