@@ -14,11 +14,13 @@ interface AuthState {
 interface AuthActions {
     login: (userName: string, password: string, isRemember?: boolean) => Promise<string | null>
     logout: () => void
-    setTokens: (raw: { accessToken: string; refreshToken: string }) => void
+    setTokens: (raw: TokenPair) => void
     refresh: () => Promise<boolean>
 }
 
 export type AuthStore = AuthState & AuthActions
+
+let refreshPromise: Promise<boolean> | null = null
 
 export const useAuthStore = create<AuthStore>()(
     persist(
@@ -40,7 +42,7 @@ export const useAuthStore = create<AuthStore>()(
                 try {
                     const res = await authService.login({ userName, password, isRemember })
                     if (res.status === statusCode.Error || !res.data) return res.message ?? 'Đăng nhập thất bại!'
-                    get().setTokens(res.data as { accessToken: string; refreshToken: string })
+                    get().setTokens(res.data)
                     return null
                 } catch {
                     return 'Không thể kết nối đến máy chủ!'
@@ -51,26 +53,39 @@ export const useAuthStore = create<AuthStore>()(
                 set({ token: null, user: null, isAuthenticated: false })
             },
 
-            async refresh() {
-                const { token, isRefreshing } = get()
-                // isRefreshing chặn nhiều request 401 cùng lúc gọi refresh() song song (race) —
-                // request đến sau thấy cờ đang bật thì bỏ qua thay vì gọi refresh-token 2 lần.
-                if (isRefreshing || !token?.refreshToken) return false
+            refresh() {
+                if (refreshPromise) return refreshPromise
+
+                const { token } = get()
+                if (!token?.refreshToken) return Promise.resolve(false)
+
+                const currentPair: TokenPair = {
+                    accessToken: token.accessToken,
+                    refreshToken: token.refreshToken,
+                }
                 set({ isRefreshing: true })
-                try {
-                    const res = await authService.refresh(token.refreshToken)
-                    if (res.status === statusCode.Error || !res.data) {
+
+                // ponytail: single-flight qua module-level promise — chặn nhiều request 401 song song
+                // gọi refresh-token nhiều lần; caller đến sau nhận chung promise thay vì bị bỏ qua.
+                refreshPromise = (async () => {
+                    try {
+                        const res = await authService.refresh(currentPair)
+                        if (res.status === statusCode.Error || !res.data) {
+                            get().logout()
+                            return false
+                        }
+                        get().setTokens(res.data)
+                        return true
+                    } catch {
                         get().logout()
                         return false
+                    } finally {
+                        set({ isRefreshing: false })
+                        refreshPromise = null
                     }
-                    get().setTokens(res.data as { accessToken: string; refreshToken: string })
-                    return true
-                } catch {
-                    get().logout()
-                    return false
-                } finally {
-                    set({ isRefreshing: false })
-                }
+                })()
+
+                return refreshPromise
             },
         }),
         {
