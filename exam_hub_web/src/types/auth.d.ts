@@ -12,9 +12,12 @@ interface RegisterFormValues {
     displayName: string
 }
 
-interface TokenModel {
+interface TokenPair {
     accessToken: string
     refreshToken: string
+}
+
+interface TokenModel extends TokenPair {
     expiresAt: number
     refreshExpiresAt: number
 }
