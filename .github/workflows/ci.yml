@@ -1,0 +1,58 @@
+name: ci
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: ExamHub
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ vars.TVT_CORE_REPOSITORY }}
+          ref: ${{ vars.TVT_CORE_REF }}
+          token: ${{ secrets.TVT_CORE_READ_TOKEN }}
+          path: trungtv_core
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.400'
+      - name: Restore
+        working-directory: ExamHub
+        run: dotnet restore exam_hub_api/ExamHub.API/ExamHub.API.csproj
+      - name: Build
+        working-directory: ExamHub
+        run: dotnet build exam_hub_api/ExamHub.API/ExamHub.API.csproj --no-restore -v q
+      - name: Test
+        working-directory: ExamHub
+        run: dotnet test exam_hub_api/ExamHub.Tests/ExamHub.Tests.csproj --no-build -v q
+      - name: Vulnerability audit
+        working-directory: ExamHub
+        shell: pwsh
+        run: |
+          dotnet list exam_hub_api/ExamHub.API/ExamHub.API.csproj package --vulnerable --include-transitive --no-restore | Tee-Object audit.txt
+          if (Select-String -Path audit.txt -Pattern 'High|Moderate|Critical') { exit 1 }
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: corepack enable
+      - run: corepack prepare pnpm@11.25.0 --activate
+      - name: Install
+        working-directory: exam_hub_web
+        run: pnpm install --frozen-lockfile
+      - name: Lint
+        working-directory: exam_hub_web
+        run: pnpm lint
+      - name: Build
+        working-directory: exam_hub_web
+        run: pnpm build
