@@ -1,0 +1,17 @@
+title = "ExamHub gitleaks configuration"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Generated and dependency output"
+paths = [
+  '''(^|/)bin/''',
+  '''(^|/)obj/''',
+  '''(^|/)dist/''',
+  '''(^|/)node_modules/''',
+  # Local-only, git-ignored credential files (never committed; not seen by the
+  # git-aware CI scan, which only inspects tracked content/history).
+  '''(^|/)credentials.*\.json$''',
+  '''(^|/)\.env$'''
+]

@@ -375,3 +375,9 @@ docs/
 image/
 .codegraph/
 .worktrees/
+
+# Local credentials and environment overrides
+credentials*.json
+**/.env
+**/.env.*
+!**/.env.example
