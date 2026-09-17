@@ -82,4 +82,4 @@ public sealed record SessionPoolItemResponse(
     Guid ExamId, string Title, string? ExamCode, decimal TotalScore,
     string StudentState, Guid? SubmissionId);
 
-public sealed record StartSessionResponse(Guid SubmissionId, Guid ExamId, long DeadlineAt);
+public sealed record StartSessionResponse(Guid SubmissionId, Guid ExamId, long DeadlineAt, int DurationMinutes);

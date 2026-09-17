@@ -13,8 +13,8 @@ const STATE_TAG: Record<SessionPoolItemState, {label: string; color: string}> = 
 
 type PoolNavState = {title?: string; subjectName?: string; gradeLevelName?: string}
 
-function takeUrl(examId: string, sessionId: string, submissionId: string, deadlineAt: number): string {
-    const p = new URLSearchParams({examId, sessionId, submissionId, deadlineAt: String(deadlineAt)})
+function takeUrl(examId: string, sessionId: string, submissionId: string, deadlineAt: number, durationMinutes: number): string {
+    const p = new URLSearchParams({examId, sessionId, submissionId, deadlineAt: String(deadlineAt), durationMinutes: String(durationMinutes)})
     return `/student/exam?${p.toString()}`
 }
 
@@ -35,7 +35,7 @@ export default function StudentSessionPoolPage() {
             message.error(res.message || 'Không thể vào thi')
             return
         }
-        navigate(takeUrl(res.data.examId, id, res.data.submissionId, res.data.deadlineAt))
+        navigate(takeUrl(res.data.examId, id, res.data.submissionId, res.data.deadlineAt, res.data.durationMinutes))
     }
 
     const subtitle = nav.title

@@ -2,6 +2,7 @@ using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using ExamHub.Core.Application.Submissions;
+using ExamHub.Core.DataTransferObjects.Exam;
 using ExamHub.Core.Domain.Entities;
 using ExamHub.Core.Domain.Enums;
 using ExamHub.Core.Domain.Interfaces;
@@ -66,6 +67,40 @@ file sealed class FakeSubmissionRepository : IExamSubmissionRepository
         => throw new NotSupportedException();
     public Task<int> SaveChangesAsync(CancellationToken ct = default)
         => throw new NotSupportedException();
+}
+
+public class ExamSubmissionResponseTests
+{
+    [Fact]
+    public void InProgress_uses_elapsed_seconds_at_response_time()
+    {
+        var now = new DateTime(2026, 9, 17, 12, 0, 0, DateTimeKind.Utc);
+        var submission = new ExamSubmission
+        {
+            Id = Guid.NewGuid(), ExamId = Guid.NewGuid(), StudentId = Guid.NewGuid(),
+            Status = SubmissionStatusEnum.InProgress, StartedAt = now.AddSeconds(-125)
+        };
+
+        var response = ExamSubmissionResponse.FromEntity(submission, now: now);
+
+        Assert.Equal(125, response.DurationSeconds);
+    }
+
+    [Fact]
+    public void Finished_submission_keeps_persisted_duration_seconds()
+    {
+        var now = new DateTime(2026, 9, 17, 12, 0, 0, DateTimeKind.Utc);
+        var submission = new ExamSubmission
+        {
+            Id = Guid.NewGuid(), ExamId = Guid.NewGuid(), StudentId = Guid.NewGuid(),
+            Status = SubmissionStatusEnum.Submitted,
+            StartedAt = now.AddMinutes(-20), DurationSeconds = 321
+        };
+
+        var response = ExamSubmissionResponse.FromEntity(submission, now: now);
+
+        Assert.Equal(321, response.DurationSeconds);
+    }
 }
 
 /// <summary>

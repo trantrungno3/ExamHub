@@ -116,6 +116,7 @@ interface StartSessionResult {
     submissionId: string
     examId: string
     deadlineAt: number
+    durationMinutes: number
 }
 
 interface ExamSessionPagedQuery {

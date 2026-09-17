@@ -454,6 +454,7 @@ public class ExamSessionServiceStartTests
         Assert.Equal(RequestResponseStatus.Success, result.Status);
         Assert.Equal(submissionId, result.Data!.SubmissionId);
         Assert.Equal(examId, result.Data!.ExamId);
+        Assert.Equal(session.DurationMinutes, result.Data.DurationMinutes);
         var submission = Assert.Single(repo.Submissions);
         Assert.Equal(
             new DateTimeOffset(session.DeadlineFor(submission.StartedAt)).ToUnixTimeMilliseconds(),
@@ -485,7 +486,8 @@ public class ExamSessionServiceStartTests
         var repo = new FakeExamSessionRepository();
         var sessionId = Guid.NewGuid();
         var studentId = Guid.NewGuid();
-        repo.Sessions.Add(OpenSession(sessionId));
+        var session = OpenSession(sessionId);
+        repo.Sessions.Add(session);
         repo.AssignedStudentIds.Add(studentId);
         var examId = Guid.NewGuid();
         repo.PoolExams.Add(new ExamSessionExam { SessionId = sessionId, ExamId = examId, Exam = new Exam { Id = examId, Title = "de", SubjectId = 1, GradeLevelId = 1 } });
@@ -495,6 +497,7 @@ public class ExamSessionServiceStartTests
 
         Assert.Equal(RequestResponseStatus.Success, result.Status);
         Assert.Equal(examId, result.Data!.ExamId);
+        Assert.Equal(session.DurationMinutes, result.Data.DurationMinutes);
         Assert.Single(repo.Submissions);
         Assert.Equal(SubmissionStatusEnum.InProgress, repo.Submissions.Single().Status);
     }

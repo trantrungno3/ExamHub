@@ -224,7 +224,7 @@ public class ExamSessionService(IExamSessionRepository _repo, IExamRepository _e
         if (inProgress is not null)
             return RequestResponse<StartSessionResponse>.Success(
                 "Vào thi thành công!", new StartSessionResponse(
-                    inProgress.Id, inProgress.ExamId, ToMs(session.DeadlineFor(inProgress.StartedAt))), 1);
+                    inProgress.Id, inProgress.ExamId, ToMs(session.DeadlineFor(inProgress.StartedAt)), session.DurationMinutes), 1);
 
         var used = await _repo.CountSubmittedAttemptsAsync(sessionId, studentId, ct);
         if (used >= session.MaxAttempts)
@@ -265,7 +265,7 @@ public class ExamSessionService(IExamSessionRepository _repo, IExamRepository _e
         await _repo.CreateSubmissionAsync(submission, ct);
         return RequestResponse<StartSessionResponse>.Success(
             "Vào thi thành công!", new StartSessionResponse(
-                submission.Id, examId, ToMs(session.DeadlineFor(submission.StartedAt))), 1);
+                submission.Id, examId, ToMs(session.DeadlineFor(submission.StartedAt)), session.DurationMinutes), 1);
     }
 
     // ── Helpers ─────────────────────────────────────────────────────────

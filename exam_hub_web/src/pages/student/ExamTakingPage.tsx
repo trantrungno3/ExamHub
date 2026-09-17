@@ -10,7 +10,7 @@ import {useAuth} from '../../AuthProvider'
 import {parseAnswers, stripHtml} from '../../utils/snapshot'
 import QuestionMedia from '../../components/QuestionMedia'
 import {submissionService} from '../../services/submissionService'
-import {secondsUntil} from './examTimer'
+import {remainingSeconds, secondsUntil} from './examTimer'
 
 const letter = (i: number) => String.fromCharCode(65 + i)
 const hasAnswer = (v: unknown) => (typeof v === 'string' ? v.trim().length > 0 : v != null)
@@ -22,6 +22,8 @@ export default function ExamTakingPage() {
     const submissionId = params.get('submissionId') ?? undefined
     const rawDeadlineAt = Number(params.get('deadlineAt'))
     const deadlineAt = Number.isFinite(rawDeadlineAt) && rawDeadlineAt > 0 ? rawDeadlineAt : undefined
+    const rawDurationMinutes = Number(params.get('durationMinutes'))
+    const durationMinutes = Number.isFinite(rawDurationMinutes) && rawDurationMinutes > 0 ? rawDurationMinutes : undefined
     const {data: exam, isLoading} = useExamWithQuestionsQuery(examId)
     const {user} = useAuth()
 
@@ -29,11 +31,11 @@ export default function ExamTakingPage() {
     if (!exam) return <div className="take-shell flex items-center justify-center"><Empty description="Không tìm thấy đề thi"/></div>
 
     return <ExamRunner exam={exam} studentId={user?.id} studentName={user?.displayName ?? user?.userName}
-        sessionId={sessionId} submissionId={submissionId} deadlineAt={deadlineAt}/>
+        sessionId={sessionId} submissionId={submissionId} deadlineAt={deadlineAt} durationMinutes={durationMinutes}/>
 }
 
-function ExamRunner({exam, studentId, studentName, sessionId, submissionId, deadlineAt}: {
-    exam: Exam; studentId?: string; studentName?: string; sessionId?: string; submissionId?: string; deadlineAt?: number
+function ExamRunner({exam, studentId, studentName, sessionId, submissionId, deadlineAt, durationMinutes}: {
+    exam: Exam; studentId?: string; studentName?: string; sessionId?: string; submissionId?: string; deadlineAt?: number; durationMinutes?: number
 }) {
     const className = exam.className
     const navigate = useNavigate()
@@ -50,9 +52,10 @@ function ExamRunner({exam, studentId, studentName, sessionId, submissionId, dead
     const [activeIdx, setActiveIdx] = useState(0)
     const [flagged, setFlagged] = useState<Set<string>>(new Set())
     const fallbackDeadline = useRef(Date.now() + exam.durationMinutes * 60_000)
-    const effectiveDeadline = deadlineAt ?? fallbackDeadline.current
+    const [effectiveDeadline, setEffectiveDeadline] = useState(deadlineAt ?? fallbackDeadline.current)
     const [timeLeft, setTimeLeft] = useState(() => secondsUntil(effectiveDeadline))
     const autoSubmitted = useRef(false)
+    const timerSyncSubmission = useRef<string | undefined>(undefined)
 
     // Hàm chuyển state đáp án sang payload (tái dùng logic của buildAndSubmit)
     const toAnswerPayload = useCallback((vals: Record<string, unknown>): SubmissionAnswerBody[] =>
@@ -69,8 +72,16 @@ function ExamRunner({exam, studentId, studentName, sessionId, submissionId, dead
     // Khôi phục đáp án đã lưu khi vào lại (chỉ luồng kỳ thi có submissionId InProgress)
     useEffect(() => {
         if (!submissionId) return
+        if (timerSyncSubmission.current === submissionId) return
+        timerSyncSubmission.current = submissionId
         submissionService.getById(submissionId).then(res => {
-            const saved = res.data?.answers
+            const submission = res.data
+            if (!submission) return
+            if (durationMinutes != null && submission.durationSeconds != null) {
+                const fromDuration = Date.now() + remainingSeconds(durationMinutes, submission.durationSeconds) * 1000
+                setEffectiveDeadline(deadlineAt == null ? fromDuration : Math.min(fromDuration, deadlineAt))
+            }
+            const saved = submission.answers
             if (!saved || saved.length === 0) return
             const restored: Record<string, unknown> = {}
             for (const a of saved) {
@@ -86,7 +97,7 @@ function ExamRunner({exam, studentId, studentName, sessionId, submissionId, dead
             setValues(prev => ({ ...restored, ...prev }))
         }).catch(() => {})
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [submissionId])
+    }, [submissionId, durationMinutes, deadlineAt])
 
     // Autosave định kỳ mỗi 20 giây (chỉ luồng kỳ thi có submissionId InProgress)
     useEffect(() => {

@@ -1,4 +1,5 @@
 using ExamHub.Core.Domain.Entities;
+using ExamHub.Core.Domain.Enums;
 using TVT.Core.Extensions;
 
 namespace ExamHub.Core.DataTransferObjects.Exam;
@@ -95,17 +96,23 @@ public record ExamSubmissionResponse(
 )
 {
     /// <summary>Map từ entity</summary>
-    public static ExamSubmissionResponse FromEntity(ExamSubmission e, bool includeAnswers = false) =>
-        FromEntity(e, null, null, includeAnswers);
+    public static ExamSubmissionResponse FromEntity(ExamSubmission e, bool includeAnswers = false, DateTime? now = null) =>
+        FromEntity(e, null, null, includeAnswers, now);
 
     /// <summary>Map từ entity kèm thông tin học sinh (tên + lớp).</summary>
     public static ExamSubmissionResponse FromEntity(
-        ExamSubmission e, string? studentName, string? studentClassName, bool includeAnswers = false) =>
-        new(
+        ExamSubmission e, string? studentName, string? studentClassName,
+        bool includeAnswers = false, DateTime? now = null)
+    {
+        var durationSeconds = e.Status == SubmissionStatusEnum.InProgress
+            ? (int)Math.Max(0, ((now ?? DateTime.UtcNow) - e.StartedAt).TotalSeconds)
+            : e.DurationSeconds;
+
+        return new(
             e.Id, e.ExamId, e.StudentId,
             e.StartedAt.ToTimestamp(),
             e.SubmittedAt?.ToTimestamp(),
-            e.DurationSeconds,
+            durationSeconds,
             e.TotalScore,
             e.IsPassed,
             e.Status.ToString(),
@@ -115,6 +122,7 @@ public record ExamSubmissionResponse(
             studentClassName,
             e.SessionId
         );
+    }
 }
 
 /// <summary>Thông tin danh bạ học sinh dùng để enrich bài nộp (tên + lớp).</summary>
