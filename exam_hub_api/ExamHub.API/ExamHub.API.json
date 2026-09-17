@@ -9879,6 +9879,16 @@
             "type": "string",
             "format": "date-time"
           },
+          "durationMinutes": {
+            "maximum": 1440,
+            "minimum": 1,
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
           "maxAttempts": {
             "maximum": 100,
             "minimum": 1,
@@ -10533,6 +10543,7 @@
           "gradeLevelName",
           "openAt",
           "closeAt",
+          "durationMinutes",
           "maxAttempts",
           "pickMode",
           "status",
@@ -10597,6 +10608,14 @@
               "string"
             ],
             "format": "int64"
+          },
+          "durationMinutes": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
           },
           "maxAttempts": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
@@ -11673,6 +11692,7 @@
           "closeAt",
           "pickMode",
           "availability",
+          "durationMinutes",
           "maxAttempts",
           "usedAttempts",
           "inProgressSubmissionId",
@@ -11720,6 +11740,14 @@
           },
           "availability": {
             "type": "string"
+          },
+          "durationMinutes": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
           },
           "maxAttempts": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
@@ -14643,7 +14671,9 @@
       "StartSessionResponse": {
         "required": [
           "submissionId",
-          "examId"
+          "examId",
+          "deadlineAt",
+          "durationMinutes"
         ],
         "type": "object",
         "properties": {
@@ -14654,6 +14684,22 @@
           "examId": {
             "type": "string",
             "format": "uuid"
+          },
+          "deadlineAt": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "durationMinutes": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
           }
         }
       },
@@ -15340,6 +15386,16 @@
           "closeAt": {
             "type": "string",
             "format": "date-time"
+          },
+          "durationMinutes": {
+            "maximum": 1440,
+            "minimum": 1,
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
           },
           "maxAttempts": {
             "maximum": 100,
