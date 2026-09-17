@@ -8,7 +8,7 @@ import {
 } from '@ant-design/icons'
 import {useExamWithQuestionsQuery} from '../../hooks/queries/useExams'
 import {useCohortClassQuery} from '../../hooks/queries/useCohortClasses'
-import {useAuth} from '../../AuthProvider'
+import {useAuth} from '../../hooks/useAuth'
 
 export default function ExamCoverPage() {
     const [agreed, setAgreed] = useState(false)

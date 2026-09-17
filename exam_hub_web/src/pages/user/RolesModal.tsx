@@ -1,22 +1,17 @@
-import {useEffect, useState} from 'react'
+import {useState} from 'react'
 import {Checkbox, Modal, Space} from 'antd'
 import {AVAILABLE_ROLES} from '../../services/userService'
 
 type Props = {
-    open: boolean
     userName: string | null
     currentRoles: string[]
     onClose: () => void
     onSave: (body: SetRolesRequest) => Promise<boolean>
 }
 
-export function RolesModal({open, userName, currentRoles, onClose, onSave}: Readonly<Props>) {
-    const [selected, setSelected] = useState<string[]>([])
+export function RolesModal({userName, currentRoles, onClose, onSave}: Readonly<Props>) {
+    const [selected, setSelected] = useState<string[]>(() => [...currentRoles])
     const [saving, setSaving] = useState(false)
-
-    useEffect(() => {
-        if (open) setSelected([...currentRoles])
-    }, [open, currentRoles])
 
     const handleOk = async () => {
         setSaving(true)
@@ -28,7 +23,7 @@ export function RolesModal({open, userName, currentRoles, onClose, onSave}: Read
     return (
         <Modal
             title={`Phân quyền — ${userName ?? ''}`}
-            open={open}
+            open
             onOk={handleOk}
             onCancel={onClose}
             okText="Lưu"

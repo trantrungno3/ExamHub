@@ -4,7 +4,7 @@ import {Button, Empty, message, Spin} from 'antd'
 import {ArrowRightOutlined, CalendarOutlined, ReadOutlined} from '@ant-design/icons'
 import {useMySessionsQuery, useStartSessionMutation} from '../../hooks/queries/useExamSessions'
 import {statusCode} from '../../services/requestService'
-import {useAuth} from '../../AuthProvider'
+import {useAuth} from '../../hooks/useAuth'
 import {SessionResultsModal} from './SessionResultsModal'
 import {getStudentSessionAction} from './studentSessionAction'
 

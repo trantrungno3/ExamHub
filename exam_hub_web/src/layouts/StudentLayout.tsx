@@ -1,7 +1,7 @@
 import {Navigate, Outlet, useNavigate} from 'react-router-dom'
 import {Button} from 'antd'
 import {LogoutOutlined} from '@ant-design/icons'
-import {useAuth} from '../AuthProvider'
+import {useAuth} from '../hooks/useAuth'
 
 export default function StudentLayout() {
     const navigate = useNavigate()

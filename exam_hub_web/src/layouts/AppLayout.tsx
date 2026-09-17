@@ -16,7 +16,7 @@ import {
     RightOutlined,
 } from '@ant-design/icons'
 import type {ReactNode} from 'react'
-import {useAuth} from '../AuthProvider'
+import {useAuth} from '../hooks/useAuth'
 import {isTokenExpired} from '../utils/jwt'
 import {useMenuQuery} from '../hooks/queries/useMenu'
 

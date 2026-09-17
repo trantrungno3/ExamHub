@@ -1,6 +1,6 @@
 import {useMemo} from 'react'
 import {ProfileCard} from './ProfileCard'
-import {useAuth} from '../../AuthProvider'
+import {useAuth} from '../../hooks/useAuth'
 import {useMySubmissionsQuery} from '../../hooks/queries/useSubmissions'
 
 function StatBox({label, value, tone}: {label: string; value: string | number; tone: 'blue' | 'green'}) {

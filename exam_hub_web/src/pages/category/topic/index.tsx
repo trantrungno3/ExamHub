@@ -1,4 +1,4 @@
-import {useEffect, useMemo, useState} from 'react'
+import {useCallback, useEffect, useMemo, useState} from 'react'
 import {Button, Input, message, Popconfirm, Select, Table, Tag} from 'antd'
 import type {TableColumnsType} from 'antd'
 import {PlusOutlined, SearchOutlined} from '@ant-design/icons'
@@ -44,7 +44,10 @@ export function TopicTab() {
     )
 
     // Cấp lớp của chủ đề suy ra từ môn học (topic → subject → gradeLevel).
-    const gradeIdOfTopic = (t: Topic) => subjectById.get(t.subjectId)?.gradeLevelId
+    const gradeIdOfTopic = useCallback(
+        (t: Topic) => subjectById.get(t.subjectId)?.gradeLevelId,
+        [subjectById],
+    )
 
     // Chỉ liệt kê các chủ đề đang là cha của ít nhất một chủ đề khác.
     const parentOptions = useMemo(() => {
@@ -68,7 +71,7 @@ export function TopicTab() {
             const matchGrade = filterGrade === undefined || gradeIdOfTopic(t) === filterGrade
             return matchSearch && matchSubject && matchParent && matchGrade
         }),
-        [data, search, filterSubject, filterParent, filterGrade, subjectById],
+        [data, search, filterSubject, filterParent, filterGrade, gradeIdOfTopic],
     )
 
     const columns: TableColumnsType<Topic> = [

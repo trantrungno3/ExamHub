@@ -1,5 +1,5 @@
 import { lazy } from 'react'
-import { createBrowserRouter, Navigate } from 'react-router-dom'
+import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom'
 import LoginPage from '../pages/auth/LoginPage'
 import RegisterPage from '../pages/auth/RegisterPage'
 import AppLayout from '../layouts/AppLayout'
@@ -36,9 +36,7 @@ const AddQuestionPage = lazy(() => import('../pages/questions/AddQuestionPage'))
 const GeneratePage = lazy(() => import('../pages/exams/GeneratePage'))
 const CreateExamTemplatePage = lazy(() => import('../pages/exams/CreateExamTemplatePage'))
 
-export { ROUTES }
-
-export const router = createBrowserRouter([
+const router = createBrowserRouter([
     {
         errorElement: <RouteError />,
         children: [
@@ -101,3 +99,7 @@ export const router = createBrowserRouter([
         ],
     },
 ])
+
+export function AppRouter() {
+    return <RouterProvider router={router} />
+}

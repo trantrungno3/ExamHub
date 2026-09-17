@@ -1,6 +1,6 @@
 import {Button, Result} from 'antd'
 import {useNavigate} from 'react-router-dom'
-import {useAuth} from '../../AuthProvider'
+import {useAuth} from '../../hooks/useAuth'
 import {ROUTES} from '../../routes/paths'
 
 export default function NoRolePage() {

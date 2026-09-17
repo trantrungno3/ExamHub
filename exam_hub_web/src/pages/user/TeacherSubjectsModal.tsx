@@ -6,27 +6,21 @@ import {useGradeLevelsListQuery, useSubjectsQuery} from '../../hooks/queries/use
 import {teacherSubjectService} from '../../services/teacherSubjectService'
 
 type Props = {
-    open: boolean
-    userId: string | null
+    userId: string
     userName: string | null
     onClose: () => void
 }
 
-export function TeacherSubjectsModal({open, userId, userName, onClose}: Readonly<Props>) {
+export function TeacherSubjectsModal({userId, userName, onClose}: Readonly<Props>) {
     const subjects = useSubjectsQuery()
     const grades = useGradeLevelsListQuery()
     const [original, setOriginal] = useState<number[]>([])
     const [selected, setSelected] = useState<number[]>([])
     const [search, setSearch] = useState('')
-    const [loading, setLoading] = useState(false)
+    const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
 
     useEffect(() => {
-        if (!open || !userId) return
-        setSearch('')
-        setOriginal([])
-        setSelected([])
-        setLoading(true)
         void teacherSubjectService.getByTeacher(userId)
             .then(res => {
                 const ids = (res.data ?? []).map(t => t.subjectId)
@@ -35,7 +29,7 @@ export function TeacherSubjectsModal({open, userId, userName, onClose}: Readonly
             })
             .catch(() => message.error('Không thể tải môn học của giáo viên'))
             .finally(() => setLoading(false))
-    }, [open, userId])
+    }, [userId])
 
     const gradeName = (s: Subject) =>
         s.gradeLevel?.name ?? grades.data?.find(g => g.id === s.gradeLevelId)?.name ?? `Cấp #${s.gradeLevelId}`
@@ -88,7 +82,6 @@ export function TeacherSubjectsModal({open, userId, userName, onClose}: Readonly
     ]
 
     const handleOk = async () => {
-        if (!userId) return
         const toAdd = selected.filter(id => !original.includes(id))
         const toRemove = original.filter(id => !selected.includes(id))
         if (toAdd.length === 0 && toRemove.length === 0) {
@@ -111,7 +104,7 @@ export function TeacherSubjectsModal({open, userId, userName, onClose}: Readonly
     return (
         <Modal
             title={`Phân công môn học — ${userName ?? ''}`}
-            open={open}
+            open
             onOk={handleOk}
             onCancel={onClose}
             okText="Lưu"

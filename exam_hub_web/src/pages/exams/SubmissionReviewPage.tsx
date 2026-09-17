@@ -2,7 +2,7 @@ import {useState} from 'react'
 import {useLocation, useNavigate, useParams} from 'react-router-dom'
 import {Button, Empty, InputNumber, Spin, message} from 'antd'
 import {ArrowLeftOutlined} from '@ant-design/icons'
-import {useAuth} from '../../AuthProvider'
+import {useAuth} from '../../hooks/useAuth'
 import {
     useFinalizeSubmissionMutation,
     useGradeAnswerMutation,

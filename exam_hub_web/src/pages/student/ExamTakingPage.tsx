@@ -6,7 +6,7 @@ import {
 } from '@ant-design/icons'
 import {useExamWithQuestionsQuery} from '../../hooks/queries/useExams'
 import {useSubmitExamMutation} from '../../hooks/queries/useSubmissions'
-import {useAuth} from '../../AuthProvider'
+import {useAuth} from '../../hooks/useAuth'
 import {parseAnswers, stripHtml} from '../../utils/snapshot'
 import QuestionMedia from '../../components/QuestionMedia'
 import {submissionService} from '../../services/submissionService'
@@ -108,7 +108,7 @@ function ExamRunner({exam, studentId, studentName, sessionId, submissionId, dead
             submissionService.saveProgress(submissionId, toAnswerPayload(vals)).catch(() => {})
         }, 20000)
         return () => clearInterval(id)
-    }, [submissionId, toAnswerPayload])
+    }, [submissionId, toAnswerPayload, form])
 
     const total = questions.length
     const answeredCount = questions.reduce((n, q) => n + (answered.has(q.id) ? 1 : 0), 0)

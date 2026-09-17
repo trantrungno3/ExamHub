@@ -46,9 +46,12 @@ export function TopicFormModal({open, record, subjects, onClose, onSave}: Readon
                         isActive: true
                     }
             )
-            if (record?.subjectId) void loadParentOptions(record.subjectId, record.id)
         }
-    }, [form, open, record, loadParentOptions])
+    }, [form, open, record])
+
+    const onAfterOpenChange = (opened: boolean) => {
+        if (opened && record?.subjectId) void loadParentOptions(record.subjectId, record.id)
+    }
 
     const onSubjectChange = (subjectId: number) => {
         form.setFieldValue('parentId', undefined)
@@ -72,6 +75,7 @@ export function TopicFormModal({open, record, subjects, onClose, onSave}: Readon
         <Modal
             title={isEdit ? 'Sửa chủ đề' : 'Thêm chủ đề'}
             open={open}
+            afterOpenChange={onAfterOpenChange}
             onOk={handleOk}
             onCancel={() => {
                 form.resetFields();

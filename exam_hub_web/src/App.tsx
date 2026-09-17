@@ -1,6 +1,5 @@
 import { ConfigProvider } from 'antd'
-import { RouterProvider } from 'react-router-dom'
-import { router } from './routes'
+import { AppRouter } from './routes'
 import { AuthProvider } from './AuthProvider'
 import { BRAND } from './constants/theme'
 
@@ -26,7 +25,7 @@ export default function App() {
   return (
     <ConfigProvider theme={theme}>
       <AuthProvider>
-        <RouterProvider router={router} />
+        <AppRouter />
       </AuthProvider>
     </ConfigProvider>
   )
