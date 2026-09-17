@@ -93,7 +93,7 @@
     volumes:
       - ./database_schema.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
-      test: "pg_isready -U admin --dbname=examhub"
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} --dbname=$${POSTGRES_DB}"]
       interval: 10s
       timeout: 5s
       retries: 5

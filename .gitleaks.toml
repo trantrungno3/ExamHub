@@ -4,14 +4,13 @@ title = "ExamHub gitleaks configuration"
 useDefault = true
 
 [allowlist]
-description = "Generated and dependency output"
+description = "Generated output and owner-approved local appsettings exception"
 paths = [
   '''(^|/)bin/''',
   '''(^|/)obj/''',
   '''(^|/)dist/''',
   '''(^|/)node_modules/''',
-  # Local-only, git-ignored credential files (never committed; not seen by the
-  # git-aware CI scan, which only inspects tracked content/history).
-  '''(^|/)credentials.*\.json$''',
-  '''(^|/)\.env$'''
+  # Owner override: this local-only project deliberately versions backend
+  # appsettings so the same development configuration works on several PCs.
+  '''^exam_hub_api/ExamHub\.API/appsettings(?:\.Development)?\.json$'''
 ]
