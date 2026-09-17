@@ -10,7 +10,7 @@ import {useAuth} from '../../AuthProvider'
 import {parseAnswers, stripHtml} from '../../utils/snapshot'
 import QuestionMedia from '../../components/QuestionMedia'
 import {submissionService} from '../../services/submissionService'
-import {remainingSeconds, secondsUntil} from './examTimer'
+import {deadlineFromDuration, secondsUntil} from './examTimer'
 
 const letter = (i: number) => String.fromCharCode(65 + i)
 const hasAnswer = (v: unknown) => (typeof v === 'string' ? v.trim().length > 0 : v != null)
@@ -78,7 +78,7 @@ function ExamRunner({exam, studentId, studentName, sessionId, submissionId, dead
             const submission = res.data
             if (!submission) return
             if (durationMinutes != null && submission.durationSeconds != null) {
-                const fromDuration = Date.now() + remainingSeconds(durationMinutes, submission.durationSeconds) * 1000
+                const fromDuration = deadlineFromDuration(durationMinutes, submission.durationSeconds)
                 setEffectiveDeadline(deadlineAt == null ? fromDuration : Math.min(fromDuration, deadlineAt))
             }
             const saved = submission.answers
