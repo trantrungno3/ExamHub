@@ -7,7 +7,8 @@ type Props = {
 }
 
 export function ProtectedRoute({allowedRoles}: Readonly<Props>) {
-    const {isAuthenticated, user} = useAuthStore()
+    const isAuthenticated = useAuthStore(s => s.isAuthenticated)
+    const user = useAuthStore(s => s.user)
 
     if (!isAuthenticated) return <Navigate to={ROUTES.LOGIN} replace/>
 
