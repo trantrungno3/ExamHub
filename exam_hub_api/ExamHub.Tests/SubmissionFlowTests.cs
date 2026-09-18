@@ -35,6 +35,44 @@ file sealed class FakeSubmissionRepository : IExamSubmissionRepository
         return Task.CompletedTask;
     }
 
+    /// <summary>Gọi khi transaction mở; trả về action hoàn tác để chạy nếu operation ném.</summary>
+    public Func<Action>? OnBeginTransaction { get; set; }
+
+    /// <summary>Chụp danh sách và các field service mutate in-place; trả action phục hồi.</summary>
+    public Action Snapshot()
+    {
+        var rows = Submissions
+            .Select(s => (Entity: s, s.Status, s.SubmittedAt, s.TotalScore, s.DurationSeconds))
+            .ToList();
+        return () =>
+        {
+            foreach (var row in rows)
+            {
+                row.Entity.Status          = row.Status;
+                row.Entity.SubmittedAt     = row.SubmittedAt;
+                row.Entity.TotalScore      = row.TotalScore;
+                row.Entity.DurationSeconds = row.DurationSeconds;
+            }
+            Submissions.Clear();
+            Submissions.AddRange(rows.Select(r => r.Entity));
+        };
+    }
+
+    public async Task<T> ExecuteInTransactionAsync<T>(
+        Func<CancellationToken, Task<T>> operation, CancellationToken ct = default)
+    {
+        var rollback = OnBeginTransaction?.Invoke();
+        try
+        {
+            return await operation(ct);
+        }
+        catch
+        {
+            rollback?.Invoke();
+            throw;
+        }
+    }
+
     public Task<ExamSubmission?> GetWithAnswersAsync(Guid id, CancellationToken ct = default)
         => throw new NotSupportedException();
     public Task<IReadOnlyList<ExamSubmission>> GetByExamAsync(Guid examId, CancellationToken ct = default)
@@ -133,10 +171,26 @@ file sealed class FakeAnswerRepository(List<string> callLog) : ISubmissionAnswer
         return Task.CompletedTask;
     }
 
+    /// <summary>Nếu set, ghi đáp án sẽ ném — với replace là ném SAU khi đã xoá bản cũ, đúng như
+    /// delete-then-insert thật lỗi ở bước insert.</summary>
+    public Exception? FailOnWrite { get; set; }
+
+    /// <summary>Chụp danh sách đáp án; trả action phục hồi.</summary>
+    public Action Snapshot()
+    {
+        var rows = Answers.ToList();
+        return () =>
+        {
+            Answers.Clear();
+            Answers.AddRange(rows);
+        };
+    }
+
     public Task ReplaceForSubmissionAsync(Guid submissionId, IReadOnlyList<SubmissionAnswer> answers, CancellationToken ct = default)
     {
         callLog.Add($"answers-replace:{submissionId}:{answers.Count}");
         Answers.RemoveAll(a => a.SubmissionId == submissionId);
+        if (FailOnWrite is { } ex) throw ex;
         foreach (var a in answers) a.SubmissionId = submissionId;
         AddRespectingUnique(answers);
         return Task.CompletedTask;
@@ -400,6 +454,75 @@ public class ExamSubmissionServiceTests
             CloseAt = expired ? DateTime.UtcNow.AddMinutes(-1) : DateTime.UtcNow.AddHours(1)
         });
         return repo;
+    }
+
+    [Fact]
+    public async Task Submit_rolls_back_and_keeps_autosaved_answers_when_answer_write_fails()
+    {
+        var correct = Guid.NewGuid();
+        var q1 = Mcq(correct);
+        var submissions = new FakeSubmissionRepository();
+        var answerRepo = new FakeAnswerRepository([]);
+        var questions = new FakeExamQuestionRepository();
+        questions.Questions.Add(q1);
+        var student = Guid.NewGuid();
+        var existing = InProgress(student);
+        submissions.Submissions.Add(existing);
+        var service = new ExamSubmissionService(
+            submissions, answerRepo, questions, null!, SessionRepoFor(existing));
+
+        await service.SaveProgressAsync(existing.Id, student, [Answer(q1.Id, [correct])]);
+        Assert.Single(answerRepo.Answers);
+
+        // Fake transaction runner: chụp trạng thái khi mở, phục hồi nếu operation ném.
+        submissions.OnBeginTransaction = () =>
+        {
+            var restoreAnswers = answerRepo.Snapshot();
+            var restoreSubmissions = submissions.Snapshot();
+            return () => { restoreSubmissions(); restoreAnswers(); };
+        };
+        answerRepo.FailOnWrite = new InvalidOperationException("insert đáp án lỗi");
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.SubmitAsync(
+            new ExamSubmission { Id = existing.Id, ExamId = ExamId, StudentId = student },
+            [Answer(q1.Id, [correct])],
+            student));
+
+        // Đáp án autosave không được mất, và bài vẫn đang làm dở (chưa bị đánh dấu đã nộp).
+        Assert.Single(answerRepo.Answers);
+        Assert.Equal(SubmissionStatusEnum.InProgress, submissions.Submissions.Single().Status);
+        Assert.Null(submissions.Submissions.Single().SubmittedAt);
+    }
+
+    [Fact]
+    public async Task SaveProgress_rolls_back_and_keeps_previous_answers_when_write_fails()
+    {
+        var q1 = Mcq(Guid.NewGuid());
+        var submissions = new FakeSubmissionRepository();
+        var answerRepo = new FakeAnswerRepository([]);
+        var questions = new FakeExamQuestionRepository();
+        questions.Questions.Add(q1);
+        var student = Guid.NewGuid();
+        var existing = InProgress(student);
+        submissions.Submissions.Add(existing);
+        var service = new ExamSubmissionService(
+            submissions, answerRepo, questions, null!, SessionRepoFor(existing));
+
+        await service.SaveProgressAsync(existing.Id, student, [Answer(q1.Id, [Guid.NewGuid()], essay: "nháp")]);
+        var savedAnswerId = answerRepo.Answers.Single().Id;
+
+        submissions.OnBeginTransaction = () =>
+        {
+            var restoreAnswers = answerRepo.Snapshot();
+            var restoreSubmissions = submissions.Snapshot();
+            return () => { restoreSubmissions(); restoreAnswers(); };
+        };
+        answerRepo.FailOnWrite = new InvalidOperationException("insert đáp án lỗi");
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            service.SaveProgressAsync(existing.Id, student, [Answer(q1.Id, [Guid.NewGuid()])]));
+
+        Assert.Equal(savedAnswerId, answerRepo.Answers.Single().Id);
     }
 
     [Fact]

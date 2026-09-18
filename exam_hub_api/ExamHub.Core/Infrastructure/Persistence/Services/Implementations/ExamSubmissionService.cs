@@ -99,8 +99,6 @@ public class ExamSubmissionService : IExamSubmissionService
         submission.Created   = DateTime.UtcNow;
         submission.Modified   =  DateTime.UtcNow;
 
-        await _submissionRepo.AddAsync(submission, ct);
-
         var answerList = answers.Select(a =>
         {
             a.Id           = Guid.NewGuid();
@@ -113,12 +111,17 @@ public class ExamSubmissionService : IExamSubmissionService
         ApplyAutoGrade(examQuestions, answerList);
         submission.TotalScore = answerList.Sum(a => a.ScoreEarned);
         submission.Status     = SubmissionGrading.DecideStatus(examQuestions);
-        await _submissionRepo.UpdateAsync(submission, ct);
 
-        if (answerList.Count > 0)
-            await _answerRepo.AddRangeAsync(answerList, ct);
-
-        return submission;
+        // Insert submission + insert đáp án là một đơn vị: nếu ghi đáp án lỗi thì bản nộp rỗng
+        // cũng không được tồn tại.
+        return await _submissionRepo.ExecuteInTransactionAsync(async token =>
+        {
+            // Điểm/trạng thái đã tính xong trước khi insert, nên không cần UPDATE ngay sau ADD.
+            await _submissionRepo.AddAsync(submission, token);
+            if (answerList.Count > 0)
+                await _answerRepo.AddRangeAsync(answerList, token);
+            return submission;
+        }, ct);
     }
 
     /// <summary>
@@ -130,12 +133,6 @@ public class ExamSubmissionService : IExamSubmissionService
         IEnumerable<SubmissionAnswer> answers,
         CancellationToken ct)
     {
-        var now = DateTime.UtcNow;
-        existing.SubmittedAt     = now;
-        existing.Status          = SubmissionStatusEnum.Submitted;
-        existing.DurationSeconds = (int)Math.Max(0, (now - existing.StartedAt).TotalSeconds);
-        existing.Modified        = now;
-
         var answerList = answers.Select(a =>
         {
             a.Id           = Guid.NewGuid();
@@ -143,23 +140,34 @@ public class ExamSubmissionService : IExamSubmissionService
             return a;
         }).ToList();
 
-        // Chấm theo đề đã khoá của bản nộp, không theo ExamId gửi lên.
-        var examQuestions = await _examQuestionRepo.GetByExamAsync(existing.ExamId, ct);
-        ApplyAutoGrade(examQuestions, answerList);
-        existing.TotalScore = answerList.Sum(a => a.ScoreEarned);
-        existing.Status     = SubmissionGrading.DecideStatus(examQuestions);
+        // Đổi trạng thái sang Submitted và thay đáp án phải cùng sống hoặc cùng chết: nếu chỉ
+        // ReplaceForSubmissionAsync lỗi, bài sẽ bị đánh dấu đã nộp mà đáp án đã bị xoá trắng.
+        // Việc mutate entity cũng nằm trong transaction để rollback trả bài về đúng in_progress.
+        return await _submissionRepo.ExecuteInTransactionAsync(async token =>
+        {
+            var now = DateTime.UtcNow;
+            existing.SubmittedAt     = now;
+            existing.Status          = SubmissionStatusEnum.Submitted;
+            existing.DurationSeconds = (int)Math.Max(0, (now - existing.StartedAt).TotalSeconds);
+            existing.Modified        = now;
 
-        await _submissionRepo.UpdateAsync(existing, ct);
+            // Chấm theo đề đã khoá của bản nộp, không theo ExamId gửi lên.
+            var examQuestions = await _examQuestionRepo.GetByExamAsync(existing.ExamId, token);
+            ApplyAutoGrade(examQuestions, answerList);
+            existing.TotalScore = answerList.Sum(a => a.ScoreEarned);
+            existing.Status     = SubmissionGrading.DecideStatus(examQuestions);
 
-        // Bản in_progress CÓ THỂ đã có sẵn đáp án do autosave (SaveProgressAsync) ghi trước đó.
-        // Vì vậy phải xoá sạch rồi ghi lại (ReplaceForSubmissionAsync = delete-then-insert, cùng
-        // ngữ nghĩa autosave đang dùng) — nếu chỉ AddRange sẽ sinh bản ghi trùng cho mỗi câu:
-        // vi phạm UNIQUE (submission_id, exam_question_id), và nếu lọt qua thì màn chấm hiện
-        // mỗi câu hai lần còn FinalizeAsync cộng điểm sai. Gọi cả khi danh sách rỗng để không
-        // sót lại đáp án autosave cũ.
-        await _answerRepo.ReplaceForSubmissionAsync(existing.Id, answerList, ct);
+            await _submissionRepo.UpdateAsync(existing, token);
 
-        return existing;
+            // Bản in_progress CÓ THỂ đã có sẵn đáp án do autosave (SaveProgressAsync) ghi trước
+            // đó. Vì vậy phải xoá sạch rồi ghi lại (ReplaceForSubmissionAsync = delete-then-
+            // insert, cùng ngữ nghĩa autosave đang dùng) — nếu chỉ AddRange sẽ sinh bản ghi trùng
+            // cho mỗi câu: vi phạm UNIQUE (submission_id, exam_question_id), và nếu lọt qua thì
+            // màn chấm hiện mỗi câu hai lần còn FinalizeAsync cộng điểm sai. Gọi cả khi danh sách
+            // rỗng để không sót lại đáp án autosave cũ.
+            await _answerRepo.ReplaceForSubmissionAsync(existing.Id, answerList, token);
+            return existing;
+        }, ct);
     }
 
     /// <summary>Chấm tự động câu trắc nghiệm dựa trên danh sách examQuestions đã nạp.</summary>
@@ -217,7 +225,13 @@ public class ExamSubmissionService : IExamSubmissionService
             return a;
         }).ToList();
 
-        await _answerRepo.ReplaceForSubmissionAsync(submissionId, list, ct);
+        // ReplaceForSubmissionAsync xoá trước rồi mới insert: không có transaction thì insert lỗi
+        // sẽ để học sinh mất trắng đáp án đã lưu.
+        await _submissionRepo.ExecuteInTransactionAsync<object?>(async token =>
+        {
+            await _answerRepo.ReplaceForSubmissionAsync(submissionId, list, token);
+            return null;
+        }, ct);
     }
 
     private async Task EnsureSessionOpenAsync(ExamSubmission submission, CancellationToken ct)

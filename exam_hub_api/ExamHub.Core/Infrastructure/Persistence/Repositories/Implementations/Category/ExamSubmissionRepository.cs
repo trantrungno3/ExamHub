@@ -12,6 +12,29 @@ public class ExamSubmissionRepository : BaseRepository<ExamSubmission, Guid>, IE
     public ExamSubmissionRepository(AppDbContext db) : base(db) { }
 
     /// <inheritdoc/>
+    public Task<T> ExecuteInTransactionAsync<T>(
+        Func<CancellationToken, Task<T>> operation, CancellationToken ct = default)
+    {
+        // ExecutionStrategy có thể chạy lại operation, nên transaction phải nằm BÊN TRONG nó.
+        var strategy = Db.Database.CreateExecutionStrategy();
+        return strategy.ExecuteAsync(async () =>
+        {
+            await using var transaction = await Db.Database.BeginTransactionAsync(ct);
+            try
+            {
+                var result = await operation(ct);
+                await transaction.CommitAsync(ct);
+                return result;
+            }
+            catch
+            {
+                await transaction.RollbackAsync(ct);
+                throw;
+            }
+        });
+    }
+
+    /// <inheritdoc/>
     public async Task<ExamSubmission?> GetWithAnswersAsync(Guid id, CancellationToken ct = default)
         => await Set
             .Include(x => x.Answers)

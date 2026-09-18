@@ -100,6 +100,14 @@ public interface IExamSubmissionRepository : IBaseRepository<ExamSubmission, Gui
     /// </summary>
     Task<IReadOnlyDictionary<Guid, string>> GetStudentClassNamesAsync(
         IReadOnlyCollection<Guid> studentIds, CancellationToken ct = default);
+
+    /// <summary>
+    /// Chạy <paramref name="operation"/> trong một transaction trên cùng scoped DbContext:
+    /// commit khi xong, rollback khi ném. Cần cho nộp bài/lưu tạm vì đó là nhiều lệnh ghi
+    /// (update submission + delete-then-insert đáp án) phải thành công hoặc huỷ trọn gói.
+    /// </summary>
+    Task<T> ExecuteInTransactionAsync<T>(
+        Func<CancellationToken, Task<T>> operation, CancellationToken ct = default);
 }
 
 /// <summary>Interface repository cho SubmissionAnswer</summary>

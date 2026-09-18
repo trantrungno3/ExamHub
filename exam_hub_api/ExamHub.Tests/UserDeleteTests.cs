@@ -28,6 +28,10 @@ file sealed class FakeExamSubmissionRepository(List<string> callLog) : IExamSubm
     public Task<IReadOnlyList<ExamSubmission>> GetByStudentAsync(Guid studentId, CancellationToken ct = default)
         => Task.FromResult<IReadOnlyList<ExamSubmission>>(Submissions.Where(s => s.StudentId == studentId).ToList());
 
+    public Task<T> ExecuteInTransactionAsync<T>(
+        Func<CancellationToken, Task<T>> operation, CancellationToken ct = default)
+        => operation(ct);
+
     public Task<ExamSubmission?> GetWithAnswersAsync(Guid id, CancellationToken ct = default)
         => throw new NotSupportedException();
 
