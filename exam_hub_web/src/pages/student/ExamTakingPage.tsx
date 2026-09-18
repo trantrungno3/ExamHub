@@ -10,7 +10,8 @@ import {useAuth} from '../../AuthProvider'
 import {parseAnswers, stripHtml} from '../../utils/snapshot'
 import QuestionMedia from '../../components/QuestionMedia'
 import {submissionService} from '../../services/submissionService'
-import {deadlineFromDuration, secondsUntil} from './examTimer'
+import {deadlineFromDuration} from './examTimer'
+import {ExamCountdown} from './ExamCountdown'
 
 const letter = (i: number) => String.fromCharCode(65 + i)
 const hasAnswer = (v: unknown) => (typeof v === 'string' ? v.trim().length > 0 : v != null)
@@ -53,8 +54,6 @@ function ExamRunner({exam, studentId, studentName, sessionId, submissionId, dead
     const [flagged, setFlagged] = useState<Set<string>>(new Set())
     const fallbackDeadline = useRef(Date.now() + exam.durationMinutes * 60_000)
     const [effectiveDeadline, setEffectiveDeadline] = useState(deadlineAt ?? fallbackDeadline.current)
-    const [timeLeft, setTimeLeft] = useState(() => secondsUntil(effectiveDeadline))
-    const autoSubmitted = useRef(false)
     const timerSyncSubmission = useRef<string | undefined>(undefined)
 
     // Hàm chuyển state đáp án sang payload (tái dùng logic của buildAndSubmit)
@@ -113,21 +112,10 @@ function ExamRunner({exam, studentId, studentName, sessionId, submissionId, dead
     const answeredCount = questions.filter(q => hasAnswer(values[q.id])).length
     const unanswered = total - answeredCount
     const progress = total ? Math.round((answeredCount / total) * 100) : 0
-    const mm = String(Math.floor(timeLeft / 60)).padStart(2, '0')
-    const ss = String(timeLeft % 60).padStart(2, '0')
-    const danger = timeLeft <= 300
 
     const activeQ = questions[activeIdx]
     const activeOpts = parsed[activeIdx] ?? []
     const isEssay = activeOpts.length === 0
-
-    // Đồng hồ đếm ngược theo deadline tuyệt đối để reload/tab sleep không cộng lại thời gian.
-    useEffect(() => {
-        const tick = () => setTimeLeft(secondsUntil(effectiveDeadline))
-        tick()
-        const id = setInterval(tick, 1000)
-        return () => clearInterval(id)
-    }, [effectiveDeadline])
 
     const buildAndSubmit = async () => {
         if (!studentId) { message.error('Không xác định được học sinh đang đăng nhập'); return }
@@ -148,15 +136,12 @@ function ExamRunner({exam, studentId, studentName, sessionId, submissionId, dead
         }
     }
 
-    // Hết giờ → tự động nộp bài
-    useEffect(() => {
-        if (timeLeft === 0 && !autoSubmitted.current && studentId) {
-            autoSubmitted.current = true
-            message.warning('Đã hết giờ làm bài. Hệ thống tự động nộp bài.')
-            void buildAndSubmit()
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [timeLeft])
+    // Hết giờ → tự động nộp bài (ExamCountdown đảm bảo chỉ gọi một lần)
+    const handleExpire = () => {
+        if (!studentId) return
+        message.warning('Đã hết giờ làm bài. Hệ thống tự động nộp bài.')
+        void buildAndSubmit()
+    }
 
     const confirmSubmit = () => {
         Modal.confirm({
@@ -196,9 +181,7 @@ function ExamRunner({exam, studentId, studentName, sessionId, submissionId, dead
                         </p>
                     </div>
                 </div>
-                <div className={`take-timer ${danger ? 'take-timer--danger' : ''}`}>
-                    <span className="take-timer-dot"/>{mm}:{ss}
-                </div>
+                <ExamCountdown deadlineAt={effectiveDeadline} onExpire={handleExpire}/>
             </div>
 
             <Form form={form} component={false} onValuesChange={() => setValues(form.getFieldsValue(true))}>
