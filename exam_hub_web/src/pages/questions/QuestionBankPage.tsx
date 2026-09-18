@@ -39,6 +39,7 @@ import {BulkImportModal} from './BulkImportModal'
 import {BLOOM_CHIP, BLOOM_NUM, DEFAULT_PAGE, DEFAULT_PAGE_SIZE, DIFF_CHIP, NEUTRAL_CHIP, TYPE_CHIP, type ChipColor} from '../../constants'
 import PageHeader from '../../components/PageHeader'
 import {stripHtml} from '../../utils/snapshot'
+import {toOptions} from '../../utils/options'
 
 interface FilterFormValues {
     gradeLevelId?: number
@@ -358,7 +359,7 @@ export default function QuestionBankPage() {
                     <div className="grid grid-cols-2 gap-3">
                         <Form.Item name="gradeLevelId" label="Lớp">
                             <Select placeholder="Lớp" allowClear
-                                    options={(grades.data ?? []).map(g => ({value: g.id, label: g.name}))}/>
+                                    options={toOptions(grades.data)}/>
                         </Form.Item>
                         <Form.Item name="subjectId" label="Môn học">
                             <Select placeholder="Môn học" allowClear showSearch optionFilterProp="label"
@@ -369,15 +370,15 @@ export default function QuestionBankPage() {
                         </Form.Item>
                         <Form.Item name="difficultyLevelId" label="Độ khó">
                             <Select placeholder="Độ khó" allowClear
-                                    options={(difficulties.data ?? []).map(d => ({value: d.id, label: d.name}))}/>
+                                    options={toOptions(difficulties.data)}/>
                         </Form.Item>
                         <Form.Item name="questionTypeId" label="Loại câu hỏi">
                             <Select placeholder="Loại câu hỏi" allowClear
-                                    options={(questionTypes.data ?? []).map(t => ({value: t.id, label: t.name}))}/>
+                                    options={toOptions(questionTypes.data)}/>
                         </Form.Item>
                         <Form.Item name="cognitiveLevelId" label="Bloom">
                             <Select placeholder="Bloom" allowClear
-                                    options={(cognitives.data ?? []).map(c => ({value: c.id, label: c.name}))}/>
+                                    options={toOptions(cognitives.data)}/>
                         </Form.Item>
                         <Form.Item name="reviewStatus" label="Trạng thái">
                             <Select placeholder="Trạng thái" allowClear

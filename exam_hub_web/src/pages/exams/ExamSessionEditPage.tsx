@@ -37,6 +37,7 @@ import {statusCode} from '../../services/requestService'
 import {ROUTES} from '../../routes/paths'
 import {AnalyticsDrawer} from './AnalyticsDrawer'
 import PageHeader from '../../components/PageHeader'
+import {toOptions, toOptionsBy} from '../../utils/options'
 
 const PICK_MODE_OPTIONS = [
     {value: 'Random', label: 'Ngẫu nhiên (hệ thống bốc đề)'},
@@ -170,11 +171,7 @@ export default function ExamSessionEditPage() {
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
                                         <Form.Item label="Cấp lớp" name="gradeLevelId"
                                                    rules={[{required: true, message: 'Chọn cấp lớp'}]}>
-                                            <Select disabled={isPublished}
-                                                    options={(grades.data ?? []).map(g => ({
-                                                        value: g.id,
-                                                        label: g.name
-                                                    }))}/>
+                                            <Select disabled={isPublished} options={toOptions(grades.data)}/>
                                         </Form.Item>
                                         <Form.Item label="Môn" name="subjectId"
                                                    rules={[{required: true, message: 'Chọn môn'}]}>
@@ -383,7 +380,7 @@ function AssignmentSection({sessionId, assignments}: { sessionId: string; assign
                                 setCohortId(undefined)
                                 setCohortClassId(undefined)
                             }}
-                            options={(schools.data ?? []).map(s => ({value: s.id, label: s.name}))}/>
+                            options={toOptions(schools.data)}/>
                 </div>
                 <div>
                     <label className="block text-xs text-gray-500 mb-1">Khoá</label>
@@ -392,13 +389,13 @@ function AssignmentSection({sessionId, assignments}: { sessionId: string; assign
                                 setCohortId(v)
                                 setCohortClassId(undefined)
                             }}
-                            options={(cohorts.data ?? []).map(c => ({value: c.id, label: c.name}))}/>
+                            options={toOptions(cohorts.data)}/>
                 </div>
                 <div>
                     <label className="block text-xs text-gray-500 mb-1">Lớp (tuỳ chọn)</label>
                     <Select className="w-48" placeholder="Cả khoá" allowClear value={cohortClassId} disabled={!cohortId}
                             onChange={v => setCohortClassId(v)}
-                            options={(classes.data ?? []).map(c => ({value: c.id, label: c.className}))}/>
+                            options={toOptionsBy(classes.data, c => c.id, c => c.className)}/>
                 </div>
                 <Button type="primary" loading={addAssignment.isPending} onClick={handleAdd}>Giao</Button>
             </div>
