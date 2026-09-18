@@ -282,9 +282,11 @@ function ExamRunner({exam, studentId, studentName, sessionId, submissionId, dead
 
                         <div className="px-4 py-3 flex-1 overflow-auto">
                             <p className="text-[12px] font-semibold text-stone-600 mb-2">Bảng câu hỏi</p>
-                            <div className="take-grid">
+                            <div className="take-grid" role="group" aria-label="Bảng câu hỏi">
                                 {questions.map((q, idx) => (
                                     <button key={q.id} type="button" className={cellClass(q, idx)}
+                                            aria-current={idx === activeIdx ? 'true' : undefined}
+                                            aria-label={`Câu ${idx + 1}${answered.has(q.id) ? ', đã trả lời' : ', chưa trả lời'}${flagged.has(q.id) ? ', đã đánh dấu' : ''}`}
                                             onClick={() => go(idx)}>
                                         {idx + 1}
                                     </button>
