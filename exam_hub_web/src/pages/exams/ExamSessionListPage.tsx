@@ -14,6 +14,7 @@ import {ROUTES} from '../../routes/paths'
 import {StatusTag} from '../../components/StatusTag'
 import {DEFAULT_PAGE, DEFAULT_PAGE_SIZE, PICK_MODE_LABEL, SESSION_STATUS_LABEL, SESSION_STATUS_VARIANT} from '../../constants'
 import PageHeader from '../../components/PageHeader'
+import {useDebounced} from '../../hooks/useDebounced'
 
 function fmt(ms: number): string {
     return new Date(ms).toLocaleString('vi-VN', {day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'})
@@ -31,9 +32,10 @@ export default function ExamSessionListPage() {
     const [status, setStatus] = useState<ExamSessionStatus>()
     const [keyword, setKeyword] = useState('')
 
+    const debouncedKeyword = useDebounced(keyword)
     const query: ExamSessionPagedQuery = useMemo(
-        () => ({page, pageSize, gradeLevelId, subjectId, status, keyword}),
-        [page, pageSize, gradeLevelId, subjectId, status, keyword],
+        () => ({page, pageSize, gradeLevelId, subjectId, status, keyword: debouncedKeyword}),
+        [page, pageSize, gradeLevelId, subjectId, status, debouncedKeyword],
     )
     const subjectOptions = useMemo(
         () => (subjects.data ?? [])

@@ -11,6 +11,7 @@ import {StatusTag} from '../../components/StatusTag'
 import {DEFAULT_PAGE, DEFAULT_PAGE_SIZE, EXAM_STATUS_LABEL, EXAM_STATUS_VARIANT} from '../../constants'
 import {ROUTES} from '../../routes/paths'
 import PageHeader from '../../components/PageHeader'
+import {useDebounced} from '../../hooks/useDebounced'
 
 export default function ExamListPage() {
     const navigate = useNavigate()
@@ -26,9 +27,10 @@ export default function ExamListPage() {
     const [analyticsExamId, setAnalyticsExamId] = useState<string>()
     const [exporting, setExporting] = useState<string>()
 
+    const debouncedKeyword = useDebounced(keyword)
     const query: ExamPagedQuery = useMemo(
-        () => ({page, pageSize, gradeLevelId, subjectId, status, keyword}),
-        [page, pageSize, gradeLevelId, subjectId, status, keyword],
+        () => ({page, pageSize, gradeLevelId, subjectId, status, keyword: debouncedKeyword}),
+        [page, pageSize, gradeLevelId, subjectId, status, debouncedKeyword],
     )
     const subjectOptions = useMemo(
         () => (subjects.data ?? [])

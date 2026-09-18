@@ -8,6 +8,7 @@ import {useMySubmissionsQuery} from '../../hooks/queries/useSubmissions'
 import {useGradeLevelsListQuery, useSubjectsQuery} from '../../hooks/queries/useCategoryLists'
 import {useAuth} from '../../AuthProvider'
 import {SUBMISSION_STATUS_LABEL_STUDENT, SUBMISSION_STATUS_TAG_COLOR} from '../../constants'
+import {useDebounced} from '../../hooks/useDebounced'
 
 /**
  * Trạng thái làm bài nhìn từ phía học sinh = mọi SubmissionStatus + 'NotStarted' (chưa có bài nộp).
@@ -45,9 +46,10 @@ export default function StudentExamListPage() {
     const [keyword, setKeyword] = useState('')
 
     // Load đề đã phát hành (pageSize lớn — lọc/phân trang client-side để gộp trạng thái làm bài)
+    const debouncedKeyword = useDebounced(keyword)
     const examsQuery: ExamPagedQuery = useMemo(
-        () => ({page: 1, pageSize: 100, status: 'Published', gradeLevelId, subjectId, keyword}),
-        [gradeLevelId, subjectId, keyword],
+        () => ({page: 1, pageSize: 100, status: 'Published', gradeLevelId, subjectId, keyword: debouncedKeyword}),
+        [gradeLevelId, subjectId, debouncedKeyword],
     )
     const {data: examPage, isLoading: examsLoading} = useExamsQuery(examsQuery)
     const {data: submissions = [], isLoading: subsLoading} = useMySubmissionsQuery(user?.id)

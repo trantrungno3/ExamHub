@@ -40,6 +40,7 @@ import {BLOOM_CHIP, BLOOM_NUM, DEFAULT_PAGE, DEFAULT_PAGE_SIZE, DIFF_CHIP, NEUTR
 import PageHeader from '../../components/PageHeader'
 import {stripHtml} from '../../utils/snapshot'
 import {toOptions} from '../../utils/options'
+import {useDebounced} from '../../hooks/useDebounced'
 
 interface FilterFormValues {
     gradeLevelId?: number
@@ -104,9 +105,10 @@ export default function QuestionBankPage() {
     const applyFilters = () => { setAppliedFilters(filterForm.getFieldsValue()); setPage(1); setFilterOpen(false) }
     const resetFilters = () => filterForm.resetFields()
 
+    const debouncedKeyword = useDebounced(keyword)
     const query: QuestionPagedQuery = useMemo(
-        () => ({page, pageSize, keyword, topicId, questionTypeId, difficultyLevelId, cognitiveLevelId, reviewStatus, subjectId, gradeLevelId}),
-        [page, pageSize, keyword, topicId, questionTypeId, difficultyLevelId, cognitiveLevelId, reviewStatus, subjectId, gradeLevelId],
+        () => ({page, pageSize, keyword: debouncedKeyword, topicId, questionTypeId, difficultyLevelId, cognitiveLevelId, reviewStatus, subjectId, gradeLevelId}),
+        [page, pageSize, debouncedKeyword, topicId, questionTypeId, difficultyLevelId, cognitiveLevelId, reviewStatus, subjectId, gradeLevelId],
     )
 
     const {data, isLoading} = useQuestionsQuery(query)
