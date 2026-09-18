@@ -52,8 +52,9 @@ function ExamRunner({exam, studentId, studentName, sessionId, submissionId, dead
     const [answered, setAnswered] = useState<Set<string>>(new Set())
     const [activeIdx, setActiveIdx] = useState(0)
     const [flagged, setFlagged] = useState<Set<string>>(new Set())
-    const fallbackDeadline = useRef(Date.now() + exam.durationMinutes * 60_000)
-    const [effectiveDeadline, setEffectiveDeadline] = useState(deadlineAt ?? fallbackDeadline.current)
+    const [effectiveDeadline, setEffectiveDeadline] = useState(
+        () => deadlineAt ?? Date.now() + exam.durationMinutes * 60_000,
+    )
     const timerSyncSubmission = useRef<string | undefined>(undefined)
 
     // Hàm chuyển state đáp án sang payload (tái dùng logic của buildAndSubmit)

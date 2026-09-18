@@ -160,6 +160,9 @@ export default function QuestionBankPage() {
     const cogCodeById = useMemo(
         () => Object.fromEntries((cognitives.data ?? []).map(c => [c.id, c.code])),
         [cognitives.data])
+    const bloomLegend = useMemo(
+        () => (cognitives.data ?? []).toSorted((a, b) => a.levelOrder - b.levelOrder),
+        [cognitives.data])
 
     const invalidate = () => {
         void qc.invalidateQueries({queryKey: QUESTION_KEYS.all})
@@ -297,7 +300,7 @@ export default function QuestionBankPage() {
                 {/* Bloom legend */}
                 <div className="flex items-center gap-2 flex-wrap text-[12px]">
                     <span style={{color: '#6f7788'}}>Bloom:</span>
-                    {[...(cognitives.data ?? [])].sort((a, b) => a.levelOrder - b.levelOrder).map(c => (
+                    {bloomLegend.map(c => (
                         <Chip key={c.id} label={`${c.levelOrder}.${c.name}`} color={BLOOM_CHIP[c.code] ?? NEUTRAL_CHIP}/>
                     ))}
                 </div>
