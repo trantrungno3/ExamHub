@@ -9,6 +9,7 @@ import {useGradeLevelsListQuery, useSubjectsQuery} from '../../hooks/queries/use
 import {useAuth} from '../../AuthProvider'
 import {SUBMISSION_STATUS_LABEL_STUDENT, SUBMISSION_STATUS_TAG_COLOR} from '../../constants'
 import {useDebounced} from '../../hooks/useDebounced'
+import {ROUTES} from '../../routes/paths'
 
 /**
  * Trạng thái làm bài nhìn từ phía học sinh = mọi SubmissionStatus + 'NotStarted' (chưa có bài nộp).
@@ -112,7 +113,7 @@ export default function StudentExamListPage() {
                     )
                 }
                 return (
-                    <Button size="small" onClick={() => navigate(`/student/exam/result?submissionId=${r.submissionId}`)}>
+                    <Button size="small" onClick={() => navigate(`${ROUTES.STUDENT_EXAM_RESULT}?submissionId=${r.submissionId}`)}>
                         Xem kết quả
                     </Button>
                 )

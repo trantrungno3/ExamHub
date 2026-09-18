@@ -59,7 +59,7 @@ export const router = createBrowserRouter([
             /* ── Student exam-taking flow (full screen, no header) ── */
             { path: ROUTES.STUDENT_EXAM,      element: <ExamCoverPage /> },
             { path: ROUTES.STUDENT_EXAM_TAKE, element: <ExamTakingPage /> },
-            { path: '/student/exam/result',   element: <ExamResultPage /> },
+            { path: ROUTES.STUDENT_EXAM_RESULT, element: <ExamResultPage /> },
 
             { path: ROUTES.FORBIDDEN, element: <Placeholder title="403 — Không có quyền truy cập" /> },
             { path: ROUTES.NO_ROLE,   element: <NoRolePage /> },

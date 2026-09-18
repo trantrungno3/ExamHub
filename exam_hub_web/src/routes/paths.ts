@@ -28,4 +28,5 @@ export const ROUTES = {
     STUDENT_PROFILE: '/student/profile',
     STUDENT_EXAM: '/student/exam',
     STUDENT_EXAM_TAKE: '/student/exam/take',
+    STUDENT_EXAM_RESULT: '/student/exam/result',
 } as const

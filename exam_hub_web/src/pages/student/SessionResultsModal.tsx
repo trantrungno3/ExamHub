@@ -3,6 +3,7 @@ import {Empty, List, Modal, Spin, Tag} from 'antd'
 import {useMySessionSubmissionsQuery} from '../../hooks/queries/useSubmissions'
 import {formatTimestamp} from '../../utils/datetime'
 import {SUBMISSION_STATUS_LABEL_STUDENT, SUBMISSION_STATUS_TAG_COLOR} from '../../constants'
+import {ROUTES} from '../../routes/paths'
 
 type Props = {sessionId?: string; studentId?: string; title?: string; onClose: () => void}
 
@@ -20,7 +21,7 @@ export function SessionResultsModal({sessionId, studentId, title, onClose}: Prop
                     renderItem={(s, i) => (
                         <List.Item
                             className="cursor-pointer hover:bg-stone-50 !px-2 rounded"
-                            onClick={() => navigate(`/student/exam/result?submissionId=${s.id}`)}>
+                            onClick={() => navigate(`${ROUTES.STUDENT_EXAM_RESULT}?submissionId=${s.id}`)}>
                             <div className="flex items-center justify-between w-full gap-3">
                                 <span className="text-sm text-stone-700">
                                     Lần {(submissions?.length ?? 0) - i} · {formatTimestamp(s.submittedAt ?? s.createdAt)}

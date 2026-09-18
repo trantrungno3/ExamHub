@@ -13,6 +13,7 @@ import {submissionService} from '../../services/submissionService'
 import {deadlineFromDuration} from './examTimer'
 import {ExamCountdown} from './ExamCountdown'
 import {answeredIds, sameSet} from './answerState'
+import {ROUTES} from '../../routes/paths'
 
 const letter = (i: number) => String.fromCharCode(65 + i)
 
@@ -131,7 +132,7 @@ function ExamRunner({exam, studentId, studentName, sessionId, submissionId, dead
         const res = await submit.mutateAsync(body)
         if (res.data) {
             message.success('Nộp bài thành công')
-            navigate(`/student/exam/result?submissionId=${res.data.id}`)
+            navigate(`${ROUTES.STUDENT_EXAM_RESULT}?submissionId=${res.data.id}`)
         } else {
             message.error(res.message || 'Nộp bài thất bại')
         }
