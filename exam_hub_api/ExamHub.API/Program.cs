@@ -1,4 +1,6 @@
 using ExamHub.Core;
+using ExamHub.Core.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 using TVT.Core.Extensions;
 using TVT.Core.Filters;
@@ -33,6 +35,13 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+// Bootstrap schema bằng migration — opt-in để production không bao giờ tự migrate khi khởi động.
+if (builder.Configuration.GetValue<bool>("Database:ApplyMigrationsOnStartup"))
+{
+    await using var migrationScope = app.Services.CreateAsyncScope();
+    await migrationScope.ServiceProvider.GetRequiredService<AppDbContext>().Database.MigrateAsync();
+}
 
 if (app.Environment.IsDevelopment())
 {

@@ -1,13 +1,13 @@
 using System.Linq.Expressions;
-using System.Runtime.CompilerServices;
-using System.Text.RegularExpressions;
 using ExamHub.Core.Application.Submissions;
 using ExamHub.Core.DataTransferObjects.Exam;
 using ExamHub.Core.Domain.Entities;
 using ExamHub.Core.Domain.Enums;
 using ExamHub.Core.Domain.Interfaces;
+using ExamHub.Core.Infrastructure.Persistence;
 using ExamHub.Core.Infrastructure.Persistence.Converters;
 using ExamHub.Core.Infrastructure.Persistence.Services.Implementations;
+using Microsoft.EntityFrameworkCore;
 using Xunit;
 
 namespace ExamHub.Tests;
@@ -271,58 +271,40 @@ file sealed class FakeExamQuestionRepository : IExamQuestionRepository
 // ── C1: trạng thái mới phải hợp lệ với schema Postgres thật ─────────────────
 
 /// <summary>
-/// Bản CHECK constraint của cột exam_submissions.status nằm trong database_schema.sql (được
-/// compose.yaml mount làm docker-entrypoint-initdb.d/init.sql) chứ KHÔNG có trong migration EF,
-/// nên không thể phát hiện lệch bằng build. Test này đọc thẳng file schema để chặn đúng lỗi C1:
-/// thêm giá trị enum mà quên cập nhật CHECK ⇒ mọi lần nộp bài tự luận trả về 500.
+/// Chặn lỗi C1: thêm giá trị SubmissionStatusEnum mà chuỗi ghi xuống DB dài hơn cột ⇒ mọi lần nộp
+/// bài trả về 500. Nguồn schema giờ là EF migration, nên test đọc EF model thay vì parse
+/// database_schema.sql (file đó chỉ còn là tham chiếu cho database bootstrap bằng DDL cũ).
+/// CHECK (status IN ...) chỉ tồn tại trong DDL cũ, migration không sinh ra nó — ràng buộc thực tế
+/// còn lại là độ dài cột, và các test container kiểm schema thật.
 /// </summary>
 public class SubmissionStatusSchemaTests
 {
-    private static string SchemaPath([CallerFilePath] string thisFile = "")
-        => Path.GetFullPath(Path.Combine(Path.GetDirectoryName(thisFile)!, "..", "database_schema.sql"));
-
     /// <summary>Chuỗi được EF ghi xuống DB cho một giá trị enum.</summary>
     private static string Persisted(SubmissionStatusEnum status)
         => (string)new SnakeCaseEnumConverter<SubmissionStatusEnum>().ConvertToProvider(status)!;
 
-    private static string SubmissionsTableDdl()
+    /// <summary>Độ dài tối đa của cột theo EF model — build model không cần kết nối DB.</summary>
+    private static int? StatusMaxLength()
     {
-        var sql = File.ReadAllText(SchemaPath());
-        var start = sql.IndexOf("CREATE TABLE public.exam_submissions", StringComparison.Ordinal);
-        Assert.True(start >= 0, "Không tìm thấy bảng exam_submissions trong database_schema.sql");
-        var end = sql.IndexOf(");", start, StringComparison.Ordinal);
-        return sql[start..end];
-    }
-
-    [Fact]
-    public void Every_submission_status_is_allowed_by_the_check_constraint()
-    {
-        var ddl = SubmissionsTableDdl();
-        var match = Regex.Match(ddl, @"CHECK\s*\(status\s+IN\s*\(([^)]*)\)\)", RegexOptions.IgnoreCase);
-        Assert.True(match.Success, "Không tìm thấy CHECK (status IN (...)) cho exam_submissions");
-
-        var allowed = match.Groups[1].Value
-            .Split(',')
-            .Select(s => s.Trim().Trim('\''))
-            .ToHashSet(StringComparer.Ordinal);
-
-        foreach (var status in Enum.GetValues<SubmissionStatusEnum>())
-            Assert.Contains(Persisted(status), allowed);
+        var options = new DbContextOptionsBuilder<AppDbContext>()
+            .UseNpgsql("Host=localhost;Database=model-only")
+            .UseSnakeCaseNamingConvention()
+            .Options;
+        using var db = new AppDbContext(options);
+        return db.Model
+            .FindEntityType(typeof(ExamSubmission))!
+            .FindProperty(nameof(ExamSubmission.Status))!
+            .GetMaxLength();
     }
 
     [Fact]
     public void Every_submission_status_fits_the_declared_column_length()
     {
-        var ddl = SubmissionsTableDdl();
-        var match = Regex.Match(ddl, @"status\s+VARCHAR\((\d+)\)", RegexOptions.IgnoreCase);
-        Assert.True(match.Success, "Không đọc được VARCHAR(n) của cột status");
-        var maxLength = int.Parse(match.Groups[1].Value);
-
-        // 20 cũng là giá trị HasMaxLength(20) trong AppDbContext — hai nơi phải khớp nhau.
+        var maxLength = StatusMaxLength();
         Assert.Equal(20, maxLength);
         foreach (var status in Enum.GetValues<SubmissionStatusEnum>())
             Assert.True(Persisted(status).Length <= maxLength,
-                $"'{Persisted(status)}' dài {Persisted(status).Length} ký tự > VARCHAR({maxLength})");
+                $"'{Persisted(status)}' dài {Persisted(status).Length} ký tự > varchar({maxLength})");
     }
 
     [Fact]

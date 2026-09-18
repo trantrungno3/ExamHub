@@ -91,6 +91,10 @@
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB:?set POSTGRES_DB}
     volumes:
+      # Bootstrap schema bằng DDL snapshot. EF migration đã là nguồn schema chuẩn
+      # (Database:ApplyMigrationsOnStartup, xem appsettings.json) nhưng compose chưa có service API
+      # nào để chạy migrate, nên mount này còn ở lại. Bỏ nó cùng lúc thêm service API dev đặt
+      # Database__ApplyMigrationsOnStartup: "true".
       - ./database_schema.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} --dbname=$${POSTGRES_DB}"]
