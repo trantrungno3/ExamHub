@@ -1,9 +1,9 @@
-import {useMemo, useState} from 'react'
+import {Suspense, useMemo, useState} from 'react'
 import {useNavigate} from 'react-router-dom'
 import type {TableColumnsType} from 'antd'
 import {Dropdown, Input, message, Popconfirm, Select, Table} from 'antd'
 import {BarChartOutlined, DownloadOutlined, EyeOutlined, SearchOutlined} from '@ant-design/icons'
-import {AnalyticsDrawer} from './AnalyticsDrawer'
+import {AnalyticsDrawer} from './AnalyticsDrawerLazy'
 import {useDeleteExamMutation, useExamsQuery, usePublishExamMutation,} from '../../hooks/queries/useExams'
 import {useGradeLevelsListQuery, useSubjectsQuery} from '../../hooks/queries/useCategoryLists'
 import {examService} from '../../services/examService'
@@ -159,7 +159,9 @@ export default function ExamListPage() {
                 </div>
             </div>
 
-            <AnalyticsDrawer examId={analyticsExamId} onClose={() => setAnalyticsExamId(undefined)}/>
+            <Suspense fallback={null}>
+                <AnalyticsDrawer examId={analyticsExamId} onClose={() => setAnalyticsExamId(undefined)}/>
+            </Suspense>
         </>
     )
 }

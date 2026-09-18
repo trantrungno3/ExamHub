@@ -1,4 +1,4 @@
-import {useEffect, useMemo, useState} from 'react'
+import {Suspense, useEffect, useMemo, useState} from 'react'
 import {useNavigate, useParams} from 'react-router-dom'
 import type {TableColumnsType} from 'antd'
 import {
@@ -35,7 +35,7 @@ import {useCohortsQuery} from '../../hooks/queries/useCohorts'
 import {useCohortClassesQuery} from '../../hooks/queries/useCohortClasses'
 import {statusCode} from '../../services/requestService'
 import {ROUTES} from '../../routes/paths'
-import {AnalyticsDrawer} from './AnalyticsDrawer'
+import {AnalyticsDrawer} from './AnalyticsDrawerLazy'
 import PageHeader from '../../components/PageHeader'
 import {toOptions, toOptionsBy} from '../../utils/options'
 
@@ -271,7 +271,9 @@ function PoolSection({sessionId, exams, subjectId, gradeLevelId}: {
             <AddExamsModal open={modalOpen} onClose={() => setModalOpen(false)} sessionId={sessionId}
                            subjectId={subjectId} gradeLevelId={gradeLevelId}
                            existingIds={exams.map(e => e.examId)}/>
-            <AnalyticsDrawer examId={analyticsExamId} onClose={() => setAnalyticsExamId(undefined)}/>
+            <Suspense fallback={null}>
+                <AnalyticsDrawer examId={analyticsExamId} onClose={() => setAnalyticsExamId(undefined)}/>
+            </Suspense>
         </div>
     )
 }

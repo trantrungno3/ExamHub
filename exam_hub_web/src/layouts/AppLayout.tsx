@@ -1,4 +1,5 @@
-import {useCallback, useEffect, useState} from 'react'
+import {Suspense, useCallback, useEffect, useState} from 'react'
+import {Spin} from 'antd'
 import {Outlet, useLocation, useNavigate} from 'react-router-dom'
 import {
     AppstoreOutlined,
@@ -166,7 +167,9 @@ export default function AppLayout() {
             </aside>
 
             <div className="page-canvas">
-                <Outlet/>
+                <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Spin size="large"/></div>}>
+                    <Outlet/>
+                </Suspense>
             </div>
         </div>
     )
