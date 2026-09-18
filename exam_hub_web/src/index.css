@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
-/* ─── Design tokens (Figma) ──────────────────────── */
+/* ─── Design tokens (Figma) ──────────────────────
+   Giữ đồng bộ với src/constants/theme.ts (antd đọc từ đó). */
 @theme {
   --color-primary: #3a74f5;
   --color-primary-soft: #e9ecfe;
