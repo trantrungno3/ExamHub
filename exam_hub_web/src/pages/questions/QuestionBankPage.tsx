@@ -152,8 +152,17 @@ export default function QuestionBankPage() {
         void qc.invalidateQueries({queryKey: QUESTION_KEYS.stats})
     }
     const bulkVerify = async () => {
-        await Promise.all(selectedRowKeys.map(id => questionService.verify(id)))
-        message.success(`Đã duyệt ${selectedRowKeys.length} câu hỏi`)
+        const results = await Promise.allSettled(selectedRowKeys.map(id => questionService.verify(id)))
+        const succeeded = results.filter(
+            r => r.status === 'fulfilled' && r.value.status !== statusCode.Error).length
+        const failed = results.length - succeeded
+        if (failed === 0) {
+            message.success(`Đã duyệt ${succeeded} câu hỏi`)
+        } else if (succeeded === 0) {
+            message.error(`Không thể duyệt ${failed} câu hỏi`)
+        } else {
+            message.warning(`Đã duyệt ${succeeded} câu hỏi, ${failed} câu hỏi thất bại`)
+        }
         setSelectedRowKeys([]); invalidate()
     }
     const bulkDelete = async () => {
