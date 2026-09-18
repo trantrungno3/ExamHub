@@ -24,10 +24,10 @@ jobs:
           dotnet-version: '10.0.400'
       - name: Restore
         working-directory: ExamHub
-        run: dotnet restore exam_hub_api/ExamHub.API/ExamHub.API.csproj
+        run: dotnet restore exam_hub_api/ExamHub.Tests/ExamHub.Tests.csproj
       - name: Build
         working-directory: ExamHub
-        run: dotnet build exam_hub_api/ExamHub.API/ExamHub.API.csproj --no-restore -v q
+        run: dotnet build exam_hub_api/ExamHub.Tests/ExamHub.Tests.csproj --no-restore -v q
       - name: Test
         working-directory: ExamHub
         run: dotnet test exam_hub_api/ExamHub.Tests/ExamHub.Tests.csproj --no-build -v q
@@ -53,6 +53,9 @@ jobs:
       - name: Lint
         working-directory: exam_hub_web
         run: pnpm lint
+      - name: Test
+        working-directory: exam_hub_web
+        run: pnpm test
       - name: Build
         working-directory: exam_hub_web
         run: pnpm build
