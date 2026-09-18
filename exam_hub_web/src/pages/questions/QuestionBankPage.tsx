@@ -41,6 +41,8 @@ import PageHeader from '../../components/PageHeader'
 import {stripHtml} from '../../utils/snapshot'
 import {toOptions} from '../../utils/options'
 import {useDebounced} from '../../hooks/useDebounced'
+import {StatCard} from '../../components/StatCard'
+import {BRAND} from '../../constants/theme'
 
 interface FilterFormValues {
     gradeLevelId?: number
@@ -61,25 +63,6 @@ function Chip({label, color}: {label: string; color: ChipColor}) {
               className="inline-flex items-center rounded-full px-2.5 py-0.5 text-[12px] font-medium whitespace-nowrap">
             {label}
         </span>
-    )
-}
-
-function StatCard({label, value, icon, color, bg}: {
-    label: string; value?: number; icon: React.ReactNode; color: string; bg: string
-}) {
-    return (
-        <div className="flex-1 bg-white rounded-xl border p-4 flex items-center gap-3" style={{borderColor: '#eceef2'}}>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center text-[18px]"
-                 style={{background: bg, color}}>
-                {icon}
-            </div>
-            <div>
-                <div className="text-[22px] font-bold leading-tight" style={{color: '#191d27'}}>
-                    {value != null ? value.toLocaleString('vi-VN') : '—'}
-                </div>
-                <div className="text-[12px]" style={{color: '#6f7788'}}>{label}</div>
-            </div>
-        </div>
     )
 }
 
@@ -274,11 +257,11 @@ export default function QuestionBankPage() {
             <div className="flex-1 overflow-auto p-6 flex flex-col gap-4">
                 {/* Stat cards */}
                 <div className="flex gap-4 flex-wrap">
-                    <StatCard label="Tổng câu hỏi" value={stats.data?.total} icon={<DatabaseOutlined/>} color="#3a74f5" bg="#eef1ff"/>
-                    <StatCard label="Đã duyệt" value={stats.data?.verified} icon={<CheckCircleFilled/>} color="#1ea375" bg="#e7f7ef"/>
-                    <StatCard label="Chờ duyệt" value={stats.data?.pending} icon={<ClockCircleFilled/>} color="#d98a00" bg="#fff4e5"/>
-                    <StatCard label="Bị từ chối" value={stats.data?.rejected} icon={<CloseCircleFilled/>} color="#e74242" bg="#fee5e5"/>
-                    <StatCard label="Không HĐ" value={stats.data?.inactive} icon={<StopOutlined/>} color="#6f7788" bg="#eef0f3"/>
+                    <StatCard label="Tổng câu hỏi" value={stats.data?.total} icon={<DatabaseOutlined/>} color={BRAND.primary} bg="#eef1ff"/>
+                    <StatCard label="Đã duyệt" value={stats.data?.verified} icon={<CheckCircleFilled/>} color={BRAND.success} bg="#e7f7ef"/>
+                    <StatCard label="Chờ duyệt" value={stats.data?.pending} icon={<ClockCircleFilled/>} color={BRAND.warning} bg={BRAND.warningSoft}/>
+                    <StatCard label="Bị từ chối" value={stats.data?.rejected} icon={<CloseCircleFilled/>} color={BRAND.danger} bg={BRAND.dangerSoft}/>
+                    <StatCard label="Không HĐ" value={stats.data?.inactive} icon={<StopOutlined/>} color={BRAND.muted} bg="#eef0f3"/>
                 </div>
 
                 {/* Filters */}

@@ -21,24 +21,8 @@ import {
 import {useGradeLevelsListQuery, useSubjectsQuery} from '../../hooks/queries/useCategoryLists'
 import {StatusTag} from '../../components/StatusTag'
 import PageHeader from '../../components/PageHeader'
-
-function StatCard({label, value, icon, color, bg}: {
-    label: string; value?: number; icon: React.ReactNode; color: string; bg: string
-}) {
-    return (
-        <div className="flex-1 bg-white rounded-xl border p-4 flex items-center gap-3" style={{borderColor: '#eceef2'}}>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center text-[18px]" style={{background: bg, color}}>
-                {icon}
-            </div>
-            <div>
-                <div className="text-[22px] font-bold leading-tight" style={{color: '#191d27'}}>
-                    {value != null ? value.toLocaleString('vi-VN') : '—'}
-                </div>
-                <div className="text-[12px]" style={{color: '#6f7788'}}>{label}</div>
-            </div>
-        </div>
-    )
-}
+import {StatCard} from '../../components/StatCard'
+import {BRAND} from '../../constants/theme'
 
 function BoolIcon({on}: {on?: boolean}) {
     return on
@@ -132,10 +116,10 @@ export default function ExamTemplatePage() {
             <div className="flex-1 overflow-auto p-6 flex flex-col gap-4">
                 {/* Stat cards */}
                 <div className="flex gap-4 flex-wrap">
-                    <StatCard label="Tổng mẫu" value={stats.data?.totalTemplates} icon={<DatabaseOutlined/>} color="#3a74f5" bg="#eef1ff"/>
-                    <StatCard label="Đang dùng" value={stats.data?.activeTemplates} icon={<CheckCircleFilled/>} color="#1ea375" bg="#e7f7ef"/>
+                    <StatCard label="Tổng mẫu" value={stats.data?.totalTemplates} icon={<DatabaseOutlined/>} color={BRAND.primary} bg="#eef1ff"/>
+                    <StatCard label="Đang dùng" value={stats.data?.activeTemplates} icon={<CheckCircleFilled/>} color={BRAND.success} bg="#e7f7ef"/>
                     <StatCard label="Tổng đề sinh" value={stats.data?.totalExamsGenerated} icon={<ThunderboltFilled/>} color="#8b5cf6" bg="#f3ecfe"/>
-                    <StatCard label="Trung bình câu" value={stats.data?.avgQuestions} icon={<BarsOutlined/>} color="#d98a00" bg="#fff4e5"/>
+                    <StatCard label="Trung bình câu" value={stats.data?.avgQuestions} icon={<BarsOutlined/>} color={BRAND.warning} bg={BRAND.warningSoft}/>
                 </div>
 
                 <div className="flex items-center gap-2 flex-wrap">
