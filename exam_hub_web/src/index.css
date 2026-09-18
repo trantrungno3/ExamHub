@@ -31,6 +31,26 @@ body {
 
 #root { width: 100%; height: 100%; }
 
+/* ─── Focus (bàn phím) ──────────────────────────── */
+/* :focus-visible chứ không phải :focus — click chuột không hiện viền. */
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ─── Giảm chuyển động ──────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .exam-timer--danger,
+  .take-timer--danger { animation: none; }
+  .exam-paper { animation: none; }
+  *, *::before, *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
 /* ─── Auth layout ────────────────────────────────── */
 .auth-layout {
   @apply flex h-screen w-screen;
@@ -191,7 +211,7 @@ body {
 }
 
 .stat-card-label {
-  @apply text-[11px] text-gray-500;
+  @apply text-[11px] text-gray-600;
 }
 
 .stat-card-trend {
@@ -217,7 +237,7 @@ body {
 }
 
 .table-th {
-  @apply px-4 py-3 text-left text-[11px] font-semibold text-gray-400
+  @apply px-4 py-3 text-left text-[11px] font-semibold text-gray-600
          uppercase tracking-wide bg-gray-50;
 }
 
