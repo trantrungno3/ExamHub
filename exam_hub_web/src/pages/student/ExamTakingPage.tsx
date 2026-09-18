@@ -12,9 +12,9 @@ import QuestionMedia from '../../components/QuestionMedia'
 import {submissionService} from '../../services/submissionService'
 import {deadlineFromDuration} from './examTimer'
 import {ExamCountdown} from './ExamCountdown'
+import {answeredIds, sameSet} from './answerState'
 
 const letter = (i: number) => String.fromCharCode(65 + i)
-const hasAnswer = (v: unknown) => (typeof v === 'string' ? v.trim().length > 0 : v != null)
 
 export default function ExamTakingPage() {
     const [params] = useSearchParams()
@@ -49,7 +49,7 @@ function ExamRunner({exam, studentId, studentName, sessionId, submissionId, dead
     )
     const parsed = useMemo(() => questions.map(q => parseAnswers(q.answersSnapshot)), [questions])
 
-    const [values, setValues] = useState<Record<string, unknown>>({})
+    const [answered, setAnswered] = useState<Set<string>>(new Set())
     const [activeIdx, setActiveIdx] = useState(0)
     const [flagged, setFlagged] = useState<Set<string>>(new Set())
     const fallbackDeadline = useRef(Date.now() + exam.durationMinutes * 60_000)
@@ -93,7 +93,7 @@ function ExamRunner({exam, studentId, studentName, sessionId, submissionId, dead
             // Merge: existing in-progress values win over restored ones
             const merged = { ...restored, ...form.getFieldsValue(true) }
             form.setFieldsValue(merged)
-            setValues(prev => ({ ...restored, ...prev }))
+            setAnswered(answeredIds(merged))
         }).catch(() => {})
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [submissionId, durationMinutes, deadlineAt])
@@ -109,7 +109,7 @@ function ExamRunner({exam, studentId, studentName, sessionId, submissionId, dead
     }, [submissionId, toAnswerPayload])
 
     const total = questions.length
-    const answeredCount = questions.filter(q => hasAnswer(values[q.id])).length
+    const answeredCount = questions.reduce((n, q) => n + (answered.has(q.id) ? 1 : 0), 0)
     const unanswered = total - answeredCount
     const progress = total ? Math.round((answeredCount / total) * 100) : 0
 
@@ -159,10 +159,10 @@ function ExamRunner({exam, studentId, studentName, sessionId, submissionId, dead
         return n
     })
     const cellClass = (q: {id: string}, idx: number) => {
-        const answered = hasAnswer(values[q.id])
-        if (idx === activeIdx) return `take-cell take-cell--current${answered ? ' take-cell--current-answered' : ''}`
+        const isAnswered = answered.has(q.id)
+        if (idx === activeIdx) return `take-cell take-cell--current${isAnswered ? ' take-cell--current-answered' : ''}`
         if (flagged.has(q.id)) return 'take-cell take-cell--flagged'
-        if (answered) return 'take-cell take-cell--answered'
+        if (isAnswered) return 'take-cell take-cell--answered'
         return 'take-cell'
     }
     const avatarChar = (studentName ?? 'A').charAt(0).toUpperCase()
@@ -184,7 +184,11 @@ function ExamRunner({exam, studentId, studentName, sessionId, submissionId, dead
                 <ExamCountdown deadlineAt={effectiveDeadline} onExpire={handleExpire}/>
             </div>
 
-            <Form form={form} component={false} onValuesChange={() => setValues(form.getFieldsValue(true))}>
+            <Form form={form} component={false}
+                  onValuesChange={() => {
+                      const next = answeredIds(form.getFieldsValue(true))
+                      setAnswered(prev => (sameSet(prev, next) ? prev : next))
+                  }}>
                 <div className="take-body">
                     {/* Khu câu hỏi (tối) */}
                     <div className="take-main">
