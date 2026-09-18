@@ -7,6 +7,7 @@ import {Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip} from 'rechart
 import {useExamsQuery} from '../../hooks/queries/useExams'
 import {useQuestionsQuery} from '../../hooks/queries/useQuestions'
 import {formatTimestamp} from '../../utils/datetime'
+import PageHeader from '../../components/PageHeader'
 import {EXAM_STATUS_LABEL, EXAM_STATUS_PIE_COLOR, EXAM_STATUS_TAG_COLOR} from '../../constants'
 
 export default function DashboardPage() {
@@ -84,13 +85,7 @@ export default function DashboardPage() {
 
     return (
         <>
-            <div className="top-bar">
-                <div>
-                    <p className="top-bar-title">Tổng quan hệ thống</p>
-                    <p className="top-bar-subtitle">{today}</p>
-                </div>
-                <div className="top-bar-avatar">TT</div>
-            </div>
+            <PageHeader title="Tổng quan hệ thống" subtitle={today}/>
 
             <div className="flex-1 overflow-auto p-6 flex flex-col gap-5">
                 <div className="flex gap-4">

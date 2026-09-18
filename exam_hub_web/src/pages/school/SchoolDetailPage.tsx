@@ -11,6 +11,7 @@ import {useCohortMembersBySchoolQuery} from '../../hooks/queries/useCohortMember
 import {statusCode} from '../../services/requestService'
 import {userService} from '../../services/userService'
 import {useQuery} from '@tanstack/react-query'
+import PageHeader from '../../components/PageHeader'
 
 export default function SchoolDetailPage() {
     const {id} = useParams<{id: string}>()
@@ -163,13 +164,12 @@ export default function SchoolDetailPage() {
 
     return (
         <>
-            <div className="top-bar">
+            <PageHeader left={
                 <Breadcrumb items={[
                     {title: <a onClick={() => navigate('/app/schools')}>Trường học</a>},
                     {title: school?.name ?? `Trường #${schoolId}`},
                 ]}/>
-                <div className="top-bar-avatar">TT</div>
-            </div>
+            }/>
 
             <div className="flex-1 overflow-auto">
                 <Tabs items={tabItems} className="category-tabs"

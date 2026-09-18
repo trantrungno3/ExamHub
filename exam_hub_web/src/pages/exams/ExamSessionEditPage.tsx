@@ -17,7 +17,7 @@ import {
     Tag
 } from 'antd'
 import dayjs, {type Dayjs} from 'dayjs'
-import {ArrowLeftOutlined, PlusOutlined} from '@ant-design/icons'
+import {PlusOutlined} from '@ant-design/icons'
 import {
     useAddAssignmentMutation,
     useCreateExamSessionMutation,
@@ -36,6 +36,7 @@ import {useCohortClassesQuery} from '../../hooks/queries/useCohortClasses'
 import {statusCode} from '../../services/requestService'
 import {ROUTES} from '../../routes/paths'
 import {AnalyticsDrawer} from './AnalyticsDrawer'
+import PageHeader from '../../components/PageHeader'
 
 const PICK_MODE_OPTIONS = [
     {value: 'Random', label: 'Ngẫu nhiên (hệ thống bốc đề)'},
@@ -127,23 +128,16 @@ export default function ExamSessionEditPage() {
 
     return (
         <>
-            <div className="top-bar">
-                <div className="flex items-center gap-3">
-                    <button className="text-gray-500 hover:text-gray-800"
-                            onClick={() => navigate(ROUTES.EXAM_SESSIONS)}>
-                        <ArrowLeftOutlined/>
-                    </button>
-                    <div>
-                        <p className="top-bar-title">{isEdit ? 'Sửa kỳ thi' : 'Tạo kỳ thi'}</p>
-                        <p className="top-bar-subtitle">Cấu hình, chọn đề và giao cho lớp/khoá</p>
-                    </div>
-                </div>
-                {detail && (
+            <PageHeader
+                title={isEdit ? 'Sửa kỳ thi' : 'Tạo kỳ thi'}
+                subtitle="Cấu hình, chọn đề và giao cho lớp/khoá"
+                backTo={ROUTES.EXAM_SESSIONS}
+                right={detail && (
                     <Tag color={isPublished ? 'green' : detail.status === 'closed' ? 'default' : 'gold'}>
                         {isPublished ? 'Đã phát hành' : detail.status === 'closed' ? 'Đã đóng' : 'Nháp'}
                     </Tag>
                 )}
-            </div>
+            />
 
             <div className="flex-1 overflow-auto p-6">
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 items-start">
