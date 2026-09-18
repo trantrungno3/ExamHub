@@ -13,6 +13,7 @@ import {parseAnswers, stripHtml} from '../../utils/snapshot'
 import QuestionMedia from '../../components/QuestionMedia'
 import {formatTimestamp} from '../../utils/datetime'
 import {OPTION_LETTER, SUBMISSION_STATUS_LABEL} from '../../constants'
+import PageHeader from '../../components/PageHeader'
 
 export default function SubmissionReviewPage() {
     const {id} = useParams<{id: string}>()
@@ -48,13 +49,7 @@ export default function SubmissionReviewPage() {
 
     return (
         <>
-            <div className="top-bar">
-                <div>
-                    <p className="top-bar-title">Xem bài làm học sinh</p>
-                    <p className="top-bar-subtitle">{exam?.title ?? 'Đang tải…'}</p>
-                </div>
-                <div className="top-bar-avatar">TT</div>
-            </div>
+            <PageHeader title="Xem bài làm học sinh" subtitle={exam?.title ?? 'Đang tải…'}/>
 
             <div className="flex-1 overflow-auto p-6 flex flex-col gap-4">
                 {/* Action bar */}

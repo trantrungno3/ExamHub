@@ -11,6 +11,7 @@ import {
     useDeleteSchoolMutation,
 } from '../../hooks/queries/useSchools'
 import {statusCode} from '../../services/requestService'
+import PageHeader from '../../components/PageHeader'
 
 export default function SchoolListPage() {
     const navigate = useNavigate()
@@ -69,10 +70,7 @@ export default function SchoolListPage() {
 
     return (
         <>
-            <div className="top-bar">
-                <p className="top-bar-title">Quản lý trường học</p>
-                <div className="top-bar-avatar">TT</div>
-            </div>
+            <PageHeader title="Quản lý trường học"/>
 
             <div className="flex-1 overflow-auto p-6 flex flex-col gap-4">
                 <div className="flex justify-end">

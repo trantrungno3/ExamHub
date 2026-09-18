@@ -10,6 +10,7 @@ import {examService} from '../../services/examService'
 import {StatusTag} from '../../components/StatusTag'
 import {DEFAULT_PAGE, DEFAULT_PAGE_SIZE, EXAM_STATUS_LABEL, EXAM_STATUS_VARIANT} from '../../constants'
 import {ROUTES} from '../../routes/paths'
+import PageHeader from '../../components/PageHeader'
 
 export default function ExamListPage() {
     const navigate = useNavigate()
@@ -107,13 +108,7 @@ export default function ExamListPage() {
 
     return (
         <>
-            <div className="top-bar">
-                <div>
-                    <p className="top-bar-title">Đề thi</p>
-                    <p className="top-bar-subtitle">Danh sách đề thi đã sinh — xem trước & xuất file</p>
-                </div>
-                <div className="top-bar-avatar">TT</div>
-            </div>
+            <PageHeader title="Đề thi" subtitle="Danh sách đề thi đã sinh — xem trước & xuất file"/>
 
             <div className="flex-1 overflow-auto p-6 flex flex-col gap-4">
                 <div className="flex items-center gap-2 flex-wrap">

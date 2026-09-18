@@ -17,6 +17,7 @@ import {
     useTopicsQuery,
 } from '../../hooks/queries/useCategoryLists'
 import {BLOOM_CHIP, NEUTRAL_CHIP} from '../../constants'
+import PageHeader from '../../components/PageHeader'
 
 
 type AnswerForm = { content: string; isCorrect: boolean }
@@ -183,17 +184,16 @@ export default function AddQuestionPage() {
     return (
         <>
             <Spin fullscreen spinning={!!busyTip} tip={busyTip}/>
-            <div className="top-bar">
-                <div>
-                    <p className="top-bar-title">{isEdit ? 'Sửa câu hỏi' : 'Thêm câu hỏi mới'}</p>
-                    <p className="top-bar-subtitle">
+            <PageHeader
+                title={isEdit ? 'Sửa câu hỏi' : 'Thêm câu hỏi mới'}
+                subtitle={
+                    <>
                         <span className="cursor-pointer hover:underline" style={{color: '#3a74f5'}}
                               onClick={() => navigate('/app/questions')}>Câu hỏi</span>
                         {' / '}{isEdit ? 'Chỉnh sửa' : 'Thêm mới'}
-                    </p>
-                </div>
-                <div className="top-bar-avatar">TT</div>
-            </div>
+                    </>
+                }
+            />
 
             <div className="flex-1 overflow-auto p-6">
                 <Form form={form} layout="vertical" initialValues={EMPTY}>

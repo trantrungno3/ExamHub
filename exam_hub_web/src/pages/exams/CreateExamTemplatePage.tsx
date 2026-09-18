@@ -13,6 +13,7 @@ import {
     useSubjectsQuery,
     useTopicsQuery,
 } from '../../hooks/queries/useCategoryLists'
+import PageHeader from '../../components/PageHeader'
 
 const ROMAN = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X']
 const roman = (n: number) => ROMAN[n] ?? String(n)
@@ -159,17 +160,16 @@ export default function CreateExamTemplatePage() {
 
     return (
         <>
-            <div className="top-bar">
-                <div>
-                    <p className="top-bar-title">{isEdit ? 'Sửa mẫu đề thi' : 'Tạo mẫu đề thi mới'}</p>
-                    <p className="top-bar-subtitle">
+            <PageHeader
+                title={isEdit ? 'Sửa mẫu đề thi' : 'Tạo mẫu đề thi mới'}
+                subtitle={
+                    <>
                         <span className="text-blue-500 cursor-pointer hover:underline"
                               onClick={() => navigate('/app/exams')}>Mẫu đề thi</span>
                         {' / '}{isEdit ? 'Chỉnh sửa' : 'Tạo mới'}
-                    </p>
-                </div>
-                <div className="top-bar-avatar">TT</div>
-            </div>
+                    </>
+                }
+            />
 
             <div className="flex-1 overflow-auto p-6">
                 <Form

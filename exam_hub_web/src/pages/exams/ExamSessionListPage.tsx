@@ -13,6 +13,7 @@ import {useGradeLevelsListQuery, useSubjectsQuery} from '../../hooks/queries/use
 import {ROUTES} from '../../routes/paths'
 import {StatusTag} from '../../components/StatusTag'
 import {DEFAULT_PAGE, DEFAULT_PAGE_SIZE, PICK_MODE_LABEL, SESSION_STATUS_LABEL, SESSION_STATUS_VARIANT} from '../../constants'
+import PageHeader from '../../components/PageHeader'
 
 function fmt(ms: number): string {
     return new Date(ms).toLocaleString('vi-VN', {day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'})
@@ -93,13 +94,7 @@ export default function ExamSessionListPage() {
 
     return (
         <>
-            <div className="top-bar">
-                <div>
-                    <p className="top-bar-title">Kỳ thi</p>
-                    <p className="top-bar-subtitle">Cấu hình kỳ thi theo môn + cấp lớp, giao cho lớp/khoá</p>
-                </div>
-                <div className="top-bar-avatar">TT</div>
-            </div>
+            <PageHeader title="Kỳ thi" subtitle="Cấu hình kỳ thi theo môn + cấp lớp, giao cho lớp/khoá"/>
 
             <div className="flex-1 overflow-auto p-6 flex flex-col gap-4">
                 <div className="flex items-center gap-2 flex-wrap">

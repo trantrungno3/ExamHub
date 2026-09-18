@@ -20,6 +20,7 @@ import {
 } from '../../hooks/queries/useExamTemplates'
 import {useGradeLevelsListQuery, useSubjectsQuery} from '../../hooks/queries/useCategoryLists'
 import {StatusTag} from '../../components/StatusTag'
+import PageHeader from '../../components/PageHeader'
 
 function StatCard({label, value, icon, color, bg}: {
     label: string; value?: number; icon: React.ReactNode; color: string; bg: string
@@ -126,13 +127,7 @@ export default function ExamTemplatePage() {
 
     return (
         <>
-            <div className="top-bar">
-                <div>
-                    <p className="top-bar-title">Mẫu đề thi</p>
-                    <p className="top-bar-subtitle">Cấu hình cấu trúc đề thi để sinh đề tự động</p>
-                </div>
-                <div className="top-bar-avatar">TT</div>
-            </div>
+            <PageHeader title="Mẫu đề thi" subtitle="Cấu hình cấu trúc đề thi để sinh đề tự động"/>
 
             <div className="flex-1 overflow-auto p-6 flex flex-col gap-4">
                 {/* Stat cards */}

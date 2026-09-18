@@ -7,6 +7,7 @@ import {StatusTag} from '../../components/StatusTag'
 import {SUBMISSION_STATUS_LABEL, SUBMISSION_STATUS_VARIANT} from '../../constants'
 import {formatTimestamp} from '../../utils/datetime'
 import {ROUTES} from '../../routes/paths'
+import PageHeader from '../../components/PageHeader'
 
 export default function SubmissionListPage() {
     const {id} = useParams<{ id: string }>()
@@ -67,13 +68,7 @@ export default function SubmissionListPage() {
 
     return (
         <>
-            <div className="top-bar">
-                <div>
-                    <p className="top-bar-title">Bài nộp kỳ thi</p>
-                    <p className="top-bar-subtitle">{subtitle || 'Danh sách bài nộp của học sinh'}</p>
-                </div>
-                <div className="top-bar-avatar">TT</div>
-            </div>
+            <PageHeader title="Bài nộp kỳ thi" subtitle={subtitle || 'Danh sách bài nộp của học sinh'}/>
 
             <div className="flex-1 overflow-auto p-6 flex flex-col gap-4">
                 <div className="flex items-center justify-between">

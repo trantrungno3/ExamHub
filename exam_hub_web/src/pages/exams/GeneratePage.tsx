@@ -11,6 +11,7 @@ import {
     useSubjectsQuery,
     useTopicsQuery,
 } from '../../hooks/queries/useCategoryLists'
+import PageHeader from '../../components/PageHeader'
 
 type GenerateForm = {
     title: string
@@ -171,13 +172,7 @@ export default function GeneratePage() {
 
     return (
         <>
-            <div className="top-bar">
-                <div>
-                    <p className="top-bar-title">Sinh đề thi</p>
-                    <p className="top-bar-subtitle">Sinh đề tự động từ ngân hàng câu hỏi theo cấu hình phần thi</p>
-                </div>
-                <div className="top-bar-avatar">TT</div>
-            </div>
+            <PageHeader title="Sinh đề thi" subtitle="Sinh đề tự động từ ngân hàng câu hỏi theo cấu hình phần thi"/>
 
             <div className="flex-1 overflow-auto p-6">
                 <Form

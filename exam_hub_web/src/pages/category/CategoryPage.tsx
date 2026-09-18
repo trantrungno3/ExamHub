@@ -5,6 +5,7 @@ import {CognitiveTab} from './cognitive'
 import {SubjectTab} from './subject'
 import {TopicTab} from './topic'
 import {QuestionTypeTab} from './question-type'
+import PageHeader from '../../components/PageHeader'
 
 const TAB_ITEMS = [
     {key: 'grade', label: 'Cấp lớp', children: <GradeTab/>},
@@ -18,12 +19,7 @@ const TAB_ITEMS = [
 export default function CategoryPage() {
     return (
         <>
-            <div className="top-bar">
-                <div>
-                    <p className="top-bar-title">Danh mục cấu hình</p>
-                </div>
-                <div className="top-bar-avatar">TT</div>
-            </div>
+            <PageHeader title="Danh mục cấu hình"/>
 
             <div className="flex-1 overflow-auto">
                 <Tabs

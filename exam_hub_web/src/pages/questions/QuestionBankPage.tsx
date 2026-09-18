@@ -37,6 +37,7 @@ import {statusCode} from '../../services/requestService'
 import {StatusTag} from '../../components/StatusTag'
 import {BulkImportModal} from './BulkImportModal'
 import {BLOOM_CHIP, BLOOM_NUM, DEFAULT_PAGE, DEFAULT_PAGE_SIZE, DIFF_CHIP, NEUTRAL_CHIP, TYPE_CHIP, type ChipColor} from '../../constants'
+import PageHeader from '../../components/PageHeader'
 
 interface FilterFormValues {
     gradeLevelId?: number
@@ -260,13 +261,8 @@ export default function QuestionBankPage() {
 
     return (
         <>
-            <div className="top-bar">
-                <div>
-                    <p className="top-bar-title">Ngân hàng câu hỏi</p>
-                    <p className="top-bar-subtitle">Quản lý toàn bộ câu hỏi theo môn học · chủ đề · độ khó · cấp độ Bloom</p>
-                </div>
-                <div className="top-bar-avatar">TT</div>
-            </div>
+            <PageHeader title="Ngân hàng câu hỏi"
+                        subtitle="Quản lý toàn bộ câu hỏi theo môn học · chủ đề · độ khó · cấp độ Bloom"/>
 
             <div className="flex-1 overflow-auto p-6 flex flex-col gap-4">
                 {/* Stat cards */}
