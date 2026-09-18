@@ -18,6 +18,7 @@ import {
 } from '../../hooks/queries/useCategoryLists'
 import {BLOOM_CHIP, NEUTRAL_CHIP} from '../../constants'
 import PageHeader from '../../components/PageHeader'
+import {stripHtml} from '../../utils/snapshot'
 
 
 type AnswerForm = { content: string; isCorrect: boolean }
@@ -406,8 +407,4 @@ export default function AddQuestionPage() {
             </div>
         </>
     )
-}
-
-function stripHtml(html: string): string {
-    return html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
 }

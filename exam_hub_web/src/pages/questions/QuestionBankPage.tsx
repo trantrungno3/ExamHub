@@ -38,6 +38,7 @@ import {StatusTag} from '../../components/StatusTag'
 import {BulkImportModal} from './BulkImportModal'
 import {BLOOM_CHIP, BLOOM_NUM, DEFAULT_PAGE, DEFAULT_PAGE_SIZE, DIFF_CHIP, NEUTRAL_CHIP, TYPE_CHIP, type ChipColor} from '../../constants'
 import PageHeader from '../../components/PageHeader'
+import {stripHtml} from '../../utils/snapshot'
 
 interface FilterFormValues {
     gradeLevelId?: number
@@ -420,8 +421,4 @@ export default function QuestionBankPage() {
             />
         </>
     )
-}
-
-function stripHtml(html: string): string {
-    return html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
 }
