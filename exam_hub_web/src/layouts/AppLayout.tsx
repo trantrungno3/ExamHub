@@ -1,6 +1,6 @@
 import {Suspense, useCallback, useEffect, useState} from 'react'
 import {Spin} from 'antd'
-import {Outlet, useLocation, useNavigate} from 'react-router-dom'
+import {NavLink, Outlet, useLocation, useNavigate} from 'react-router-dom'
 import {
     AppstoreOutlined,
     UnorderedListOutlined,
@@ -106,6 +106,7 @@ export default function AppLayout() {
                                 <div key={item.key}>
                                     <button
                                         onClick={() => toggleGroup(item.key, activeChild)}
+                                        aria-expanded={open}
                                         className={`sidebar-nav-item ${activeChild ? 'sidebar-nav-item--active' : ''}`}
                                     >
                                         <span className="text-base">{ICON_MAP[item.icon] ?? <AppstoreOutlined/>}</span>
@@ -115,16 +116,15 @@ export default function AppLayout() {
                                     {open && (
                                         <div className="ml-4">
                                             {item.children.map((child) => (
-                                                <button
+                                                <NavLink
                                                     key={child.key}
-                                                    onClick={() => child.path && navigate(child.path)}
-                                                    className={`sidebar-nav-item ${
-                                                        child.path && location.pathname.startsWith(child.path) ? 'sidebar-nav-item--active' : ''
-                                                    }`}
+                                                    to={child.path ?? '#'}
+                                                    className={({isActive}) =>
+                                                        `sidebar-nav-item ${isActive ? 'sidebar-nav-item--active' : ''}`}
                                                 >
                                                     <span className="text-base">{ICON_MAP[child.icon] ?? <AppstoreOutlined/>}</span>
                                                     <span>{child.label}</span>
-                                                </button>
+                                                </NavLink>
                                             ))}
                                         </div>
                                     )}
@@ -132,30 +132,27 @@ export default function AppLayout() {
                             )
                         }
                         return (
-                            <button
+                            <NavLink
                                 key={item.key}
-                                onClick={() => item.path && navigate(item.path)}
-                                className={`sidebar-nav-item ${
-                                    item.path && location.pathname.startsWith(item.path) ? 'sidebar-nav-item--active' : ''
-                                }`}
+                                to={item.path ?? '#'}
+                                className={({isActive}) =>
+                                    `sidebar-nav-item ${isActive ? 'sidebar-nav-item--active' : ''}`}
                             >
                                 <span className="text-base">{ICON_MAP[item.icon] ?? <AppstoreOutlined/>}</span>
                                 <span>{item.label}</span>
-                            </button>
+                            </NavLink>
                         )
                     })}
                 </nav>
 
                 <div className="sidebar-footer">
-                    <button
-                        onClick={() => navigate('/app/profile')}
-                        className={`sidebar-nav-item ${
-                            location.pathname.startsWith('/app/profile') ? 'sidebar-nav-item--active' : ''
-                        }`}
+                    <NavLink
+                        to="/app/profile"
+                        className={({isActive}) => `sidebar-nav-item ${isActive ? 'sidebar-nav-item--active' : ''}`}
                     >
                         <UserOutlined/>
                         <span>Tài khoản</span>
-                    </button>
+                    </NavLink>
                     <button
                         onClick={handleLogout}
                         className="sidebar-nav-item text-red-400 hover:!text-red-300 hover:!bg-red-500/10"
