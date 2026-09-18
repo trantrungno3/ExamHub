@@ -529,7 +529,12 @@ public class AppDbContext : DbContext
             e.Property(x => x.Modified).HasColumnName(ModifyFieldsTable.Modified);
             e.Property(x => x.AttemptNo).HasDefaultValue((short)1);
             e.HasIndex(x => new { x.ExamId, x.StudentId });
-            e.HasIndex(x => new { x.SessionId, x.StudentId });
+            e.HasIndex(x => new { x.SessionId, x.StudentId, x.AttemptNo })
+                .IsUnique()
+                .HasFilter("\"session_id\" IS NOT NULL");
+            e.HasIndex(x => new { x.SessionId, x.StudentId })
+                .IsUnique()
+                .HasFilter("\"session_id\" IS NOT NULL AND \"status\" = 'in_progress'");
             e.HasOne(x => x.Exam)
                 .WithMany()
                 .HasForeignKey(x => x.ExamId)

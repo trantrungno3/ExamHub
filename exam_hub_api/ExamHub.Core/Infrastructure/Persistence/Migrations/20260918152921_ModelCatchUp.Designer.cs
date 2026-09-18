@@ -3,17 +3,20 @@ using System;
 using ExamHub.Core.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace ExamHub.Core.Persistence.Migrations
+namespace ExamHub.Core.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260918152921_ModelCatchUp")]
+    partial class ModelCatchUp
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -808,16 +811,6 @@ namespace ExamHub.Core.Persistence.Migrations
 
                     b.HasIndex("ExamId", "StudentId")
                         .HasDatabaseName("ix_exam_submissions_exam_id_student_id");
-
-                    b.HasIndex("SessionId", "StudentId")
-                        .IsUnique()
-                        .HasDatabaseName("ix_exam_submissions_session_id_student_id")
-                        .HasFilter("\"session_id\" IS NOT NULL AND \"status\" = 'in_progress'");
-
-                    b.HasIndex("SessionId", "StudentId", "AttemptNo")
-                        .IsUnique()
-                        .HasDatabaseName("ix_exam_submissions_session_id_student_id_attempt_no")
-                        .HasFilter("\"session_id\" IS NOT NULL");
 
                     b.ToTable("exam_submissions", (string)null);
                 });
