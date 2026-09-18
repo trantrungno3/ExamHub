@@ -3,6 +3,8 @@ using ExamHub.Core.DataTransferObjects.ExamSession;
 using ExamHub.Core.Domain.Entities;
 using ExamHub.Core.Domain.Enums;
 using ExamHub.Core.Domain.Interfaces;
+using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using TVT.Core;
 
 namespace ExamHub.Core.Infrastructure.Persistence.Services.Implementations;
@@ -262,7 +264,21 @@ public class ExamSessionService(IExamSessionRepository _repo, IExamRepository _e
             ModifiedBy = by,
             Modified = DateTime.UtcNow
         };
-        await _repo.CreateSubmissionAsync(submission, ct);
+        try
+        {
+            await _repo.CreateSubmissionAsync(submission, ct);
+        }
+        // Thua race với request start song song — unique index của DB là chốt cuối. Trả lượt của
+        // người thắng để start trở nên idempotent; mọi lỗi DB khác vẫn nổi lên.
+        catch (DbUpdateException ex) when (
+            ex.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation })
+        {
+            var winner = await _repo.GetInProgressAsync(sessionId, studentId, ct);
+            if (winner is null)
+                return RequestResponse<StartSessionResponse>.Error("Lượt làm bài đã được tạo. Vui lòng tải lại.");
+            submission = winner;
+            examId = winner.ExamId;
+        }
         return RequestResponse<StartSessionResponse>.Success(
             "Vào thi thành công!", new StartSessionResponse(
                 submission.Id, examId, ToMs(session.DeadlineFor(submission.StartedAt)), session.DurationMinutes), 1);

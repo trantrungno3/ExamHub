@@ -3,6 +3,8 @@ using ExamHub.Core.Domain.Entities;
 using ExamHub.Core.Domain.Enums;
 using ExamHub.Core.Domain.Interfaces;
 using ExamHub.Core.Infrastructure.Persistence.Services.Implementations;
+using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using TVT.Core.Enums;
 using Xunit;
 
@@ -101,8 +103,12 @@ internal sealed class FakeExamSessionRepository : IExamSessionRepository
         => Task.FromResult<IReadOnlyList<ExamSubmission>>(
             Submissions.Where(x => x.SessionId == sessionId && x.StudentId == studentId).ToList());
 
+    /// <summary>Hook mô phỏng insert thua race: trả exception để throw thay vì thêm row.</summary>
+    public Func<ExamSubmission, Exception?>? OnCreateSubmission { get; set; }
+
     public Task CreateSubmissionAsync(ExamSubmission submission, CancellationToken ct = default)
     {
+        if (OnCreateSubmission?.Invoke(submission) is { } ex) throw ex;
         Submissions.Add(submission);
         return Task.CompletedTask;
     }
@@ -500,6 +506,80 @@ public class ExamSessionServiceStartTests
         Assert.Equal(session.DurationMinutes, result.Data.DurationMinutes);
         Assert.Single(repo.Submissions);
         Assert.Equal(SubmissionStatusEnum.InProgress, repo.Submissions.Single().Status);
+    }
+
+    /// <summary>Dựng fake đã sẵn sàng start, kèm hook insert thua unique violation.</summary>
+    private static (FakeExamSessionRepository Repo, ExamSessionService Service, Guid ExamId) StartableSession(
+        Guid sessionId, Guid studentId)
+    {
+        var repo = new FakeExamSessionRepository();
+        repo.Sessions.Add(OpenSession(sessionId));
+        repo.AssignedStudentIds.Add(studentId);
+        var examId = Guid.NewGuid();
+        repo.PoolExams.Add(new ExamSessionExam
+        {
+            SessionId = sessionId, ExamId = examId,
+            Exam = new Exam { Id = examId, Title = "de", SubjectId = 1, GradeLevelId = 1 },
+        });
+        return (repo, new ExamSessionService(repo, new FakeExamRepository()), examId);
+    }
+
+    private static DbUpdateException UniqueViolation() => new(
+        "duplicate",
+        new PostgresException("duplicate", "ERROR", "ERROR", PostgresErrorCodes.UniqueViolation));
+
+    [Fact]
+    public async Task StartAsync_LosesInsertRace_ReturnsWinningSubmission()
+    {
+        var sessionId = Guid.NewGuid();
+        var studentId = Guid.NewGuid();
+        var (repo, service, examId) = StartableSession(sessionId, studentId);
+        // Người thắng race chỉ xuất hiện SAU khi insert của ta bị unique violation.
+        var winner = new ExamSubmission
+        {
+            Id = Guid.NewGuid(), SessionId = sessionId, ExamId = examId, StudentId = studentId,
+            Status = SubmissionStatusEnum.InProgress, AttemptNo = 1, StartedAt = DateTime.UtcNow,
+        };
+        repo.OnCreateSubmission = _ =>
+        {
+            repo.Submissions.Add(winner);
+            return UniqueViolation();
+        };
+
+        var result = await service.StartAsync(sessionId, studentId, null, "student1");
+
+        Assert.Equal(RequestResponseStatus.Success, result.Status);
+        Assert.Equal(winner.Id, result.Data!.SubmissionId);
+        Assert.Equal(winner.ExamId, result.Data.ExamId);
+        Assert.Single(repo.Submissions);
+    }
+
+    [Fact]
+    public async Task StartAsync_UniqueViolationWithoutWinner_ReturnsError()
+    {
+        var sessionId = Guid.NewGuid();
+        var studentId = Guid.NewGuid();
+        var (repo, service, _) = StartableSession(sessionId, studentId);
+        repo.OnCreateSubmission = _ => UniqueViolation();
+
+        var result = await service.StartAsync(sessionId, studentId, null, "student1");
+
+        Assert.Equal(RequestResponseStatus.Error, result.Status);
+        Assert.Empty(repo.Submissions);
+    }
+
+    [Fact]
+    public async Task StartAsync_NonUniqueDbError_Propagates()
+    {
+        var sessionId = Guid.NewGuid();
+        var studentId = Guid.NewGuid();
+        var (repo, service, _) = StartableSession(sessionId, studentId);
+        repo.OnCreateSubmission = _ => new DbUpdateException(
+            "deadlock",
+            new PostgresException("deadlock", "ERROR", "ERROR", PostgresErrorCodes.DeadlockDetected));
+
+        await Assert.ThrowsAsync<DbUpdateException>(
+            () => service.StartAsync(sessionId, studentId, null, "student1"));
     }
 
     [Theory]
