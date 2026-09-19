@@ -55,3 +55,11 @@ interface GradeAnswerBody {
     feedback?: string
     gradedBy: string
 }
+
+/** Kết quả phân trang từ API: khớp PagedResult<T> phía backend. */
+interface Paged<T> {
+    total: number
+    page: number
+    pageSize: number
+    items: T[]
+}

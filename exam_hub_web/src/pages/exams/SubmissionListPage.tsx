@@ -1,3 +1,4 @@
+import {useState} from 'react'
 import {useLocation, useNavigate, useParams} from 'react-router-dom'
 import type {TableColumnsType} from 'antd'
 import {Button, Table} from 'antd'
@@ -13,10 +14,13 @@ export default function SubmissionListPage() {
     const {id} = useParams<{ id: string }>()
     const navigate = useNavigate()
     const {state} = useLocation() as { state?: { title?: string; subjectName?: string; gradeLevelName?: string } }
-    const {data: submissions, isLoading} = useSubmissionsBySessionQuery(id)
+    const [page, setPage] = useState(1)
+    const [pageSize, setPageSize] = useState(20)
+    const {data: submissions, isLoading} = useSubmissionsBySessionQuery(id, page, pageSize)
     const finalize = useFinalizeSubmissionMutation()
 
-    const rows = submissions ?? []
+    const rows = submissions?.items ?? []
+    const total = submissions?.total ?? 0
     const gradedCount = rows.filter(s => s.status === 'Graded').length
     // 'Submitted' phải nằm trong hàng đợi chấm: theo Global Constraint "KHÔNG backfill dữ liệu
     // submission cũ", mọi bài tự luận nộp TRƯỚC nhánh này vẫn mang status='Submitted' vĩnh viễn.
@@ -77,17 +81,30 @@ export default function SubmissionListPage() {
                         <ArrowLeftOutlined/> Danh sách kỳ thi
                     </button>
                     <div className="flex items-center gap-3">
-                        <span className="text-sm text-gray-500">Đã chấm {gradedCount}/{rows.length} bài nộp</span>
+                        {/* Danh sách đã phân trang phía server, nên hai con số này và nút chốt điểm chỉ
+                            tính trên trang đang xem — nói rõ ra thay vì để giáo viên tưởng đã chốt cả kỳ thi.
+                            Muốn chốt cả kỳ thi cần một endpoint finalize-by-session riêng. */}
+                        <span className="text-sm text-gray-500">
+                            Đã chấm {gradedCount}/{rows.length} bài nộp trong trang · {total} bài nộp toàn kỳ thi
+                        </span>
                         <Button type="primary" disabled={pending.length === 0} loading={finalize.isPending}
                                 onClick={() => pending.forEach(s => finalize.mutate(s.id))}>
-                            Chốt điểm &amp; công bố
+                            Chốt điểm trang này
                         </Button>
                     </div>
                 </div>
 
                 <div className="section-card shrink-0">
                     <Table columns={columns} dataSource={rows} rowKey="id" loading={isLoading}
-                           pagination={{showTotal: total => `Tổng số ${total} bài nộp`}}/>
+                           pagination={{
+                               current: page, pageSize, total, showSizeChanger: true,
+                               pageSizeOptions: [10, 20, 50, 100],
+                               showTotal: t => `Tổng số ${t} bài nộp`,
+                               onChange: (nextPage, nextSize) => {
+                                   setPage(nextPage)
+                                   setPageSize(nextSize)
+                               },
+                           }}/>
                 </div>
             </div>
         </>

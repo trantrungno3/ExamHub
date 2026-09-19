@@ -1,3 +1,4 @@
+using ExamHub.Core.DataTransferObjects.Common;
 using ExamHub.API.Authorization;
 using Microsoft.AspNetCore.RateLimiting;
 using ExamHub.Core.DataTransferObjects.Exam;
@@ -47,6 +48,11 @@ public class ExamSubmissionController(IExamSubmissionService service) : Authoriz
     /// <param name="studentId">Id học sinh cần tra cứu.</param>
     /// <param name="ct">Token huỷ yêu cầu.</param>
     /// <returns>Danh sách bài nộp của học sinh.</returns>
+    /// <remarks>
+    /// CỐ Ý không phân trang: hai màn học sinh (danh sách kỳ thi, trang cá nhân) cần đủ danh sách để
+    /// suy ra trạng thái từng kỳ thi, và số bài nộp của một học sinh bị chặn bởi số kỳ thi được giao.
+    /// Repository/service đã có GetPageByStudentAsync khi nào hai màn đó chuyển sang phân trang.
+    /// </remarks>
     [HttpGet("by-student/{studentId:guid}")]
     public async Task<ActionResult<RequestResponse<IReadOnlyList<ExamSubmissionResponse>>>> GetByStudent(Guid studentId, CancellationToken ct)
     {
@@ -77,17 +83,22 @@ public class ExamSubmissionController(IExamSubmissionService service) : Authoriz
     /// <returns>Danh sách bài nộp thuộc kỳ thi, kèm tên/lớp học sinh.</returns>
     [HttpGet("by-session/{sessionId:guid}")]
     [Authorize(Roles = "Admin,Teacher")]
-    public async Task<ActionResult<RequestResponse<IReadOnlyList<ExamSubmissionResponse>>>> GetBySession(Guid sessionId, CancellationToken ct)
+    public async Task<ActionResult<RequestResponse<PagedResult<ExamSubmissionResponse>>>> GetBySession(
+        Guid sessionId, CancellationToken ct, [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
-        var result = await service.GetBySessionAsync(sessionId, ct);
+        var (items, total, safePage, safeSize) = await service.GetPageBySessionAsync(sessionId, page, pageSize, ct);
+        // Directory chỉ tra cho đúng trang hiện tại, không phải toàn bộ học sinh của kỳ thi.
         var directory = await service.GetStudentDirectoryAsync(
-            result.Select(s => s.StudentId).Distinct().ToList(), ct);
-        var list = result.Select(s =>
+            items.Select(s => s.StudentId).Distinct().ToList(), ct);
+        var list = items.Select(s =>
         {
             directory.TryGetValue(s.StudentId, out var info);
             return ExamSubmissionResponse.FromEntity(s, info?.Name, info?.ClassName);
         }).ToList();
-        return Ok(RequestResponse<IReadOnlyList<ExamSubmissionResponse>>.Success("Lấy danh sách thành công!", list, list.Count));
+        return Ok(RequestResponse<PagedResult<ExamSubmissionResponse>>.Success(
+            "Lấy danh sách thành công!",
+            PagedResult<ExamSubmissionResponse>.Create(list, total, safePage, safeSize),
+            total));
     }
 
     /// <summary>Lấy các lần nộp của một học sinh trong một kỳ thi (học sinh xem lại kết quả)</summary>

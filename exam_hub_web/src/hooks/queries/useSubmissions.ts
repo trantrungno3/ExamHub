@@ -8,7 +8,8 @@ export const SUBMISSION_KEYS = {
     detail: (id: string) => ['submissions', 'detail', id] as const,
     byExam: (examId: string) => ['submissions', 'byExam', examId] as const,
     byStudent: (studentId: string) => ['submissions', 'byStudent', studentId] as const,
-    bySession: (sessionId: string) => ['submissions', 'bySession', sessionId] as const,
+    bySession: (sessionId: string, page: number, pageSize: number) =>
+        ['submissions', 'bySession', sessionId, page, pageSize] as const,
     bySessionStudent: (sessionId: string, studentId: string) =>
         ['submissions', 'bySession', sessionId, 'student', studentId] as const,
 }
@@ -29,11 +30,16 @@ export function useSubmissionsByExamQuery(examId?: string) {
     })
 }
 
-export function useSubmissionsBySessionQuery(sessionId?: string) {
+const EMPTY_PAGE: Paged<ExamSubmission> = {total: 0, page: 1, pageSize: 20, items: []}
+
+export function useSubmissionsBySessionQuery(sessionId?: string, page = 1, pageSize = 20) {
     return useQuery({
-        queryKey: SUBMISSION_KEYS.bySession(sessionId ?? ''),
-        queryFn: async () => (await submissionService.getBySession(sessionId!)).data ?? [],
+        queryKey: SUBMISSION_KEYS.bySession(sessionId ?? '', page, pageSize),
+        queryFn: async () =>
+            (await submissionService.getBySession(sessionId!, page, pageSize)).data ?? EMPTY_PAGE,
         enabled: !!sessionId,
+        // Giữ trang cũ trong lúc tải trang mới để bảng không nhảy về rỗng.
+        placeholderData: (previous) => previous,
     })
 }
 
