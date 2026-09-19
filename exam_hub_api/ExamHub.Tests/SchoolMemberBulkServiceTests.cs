@@ -99,8 +99,54 @@ sealed class FakeBulkCohortMembers : ICohortMemberRepository
     public Task<int> SaveChangesAsync(CancellationToken ct = default) => throw new NotSupportedException();
 }
 
+sealed class SizedBulkFile(byte[] content, long length, string fileName) : IFormFile
+{
+    public string ContentType => "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+    public string ContentDisposition => "";
+    public IHeaderDictionary Headers { get; } = new HeaderDictionary();
+    public long Length => length;
+    public string Name => "file";
+    public string FileName => fileName;
+    public void CopyTo(Stream target) => target.Write(content);
+    public Task CopyToAsync(Stream target, CancellationToken cancellationToken = default)
+        => target.WriteAsync(content, cancellationToken).AsTask();
+    public Stream OpenReadStream() => new MemoryStream(content, writable: false);
+}
+
 public class SchoolMemberBulkServicePreviewTests
 {
+    private const long MaxImportBytes = 10 * 1024 * 1024;
+
+    [Theory]
+    [InlineData("members.xlsx", 0, "File import không được để trống.")]
+    [InlineData("members.csv", 1, "Chỉ chấp nhận file Excel (.xlsx).")]
+    [InlineData("members.xlsx", MaxImportBytes + 1, "File import không được vượt quá 10 MB.")]
+    public async Task PreviewAsync_InvalidFileBoundaryThrows(string fileName, long length, string message)
+    {
+        var fixture = Fixture.ValidSchool();
+        var file = new FormFile(Stream.Null, 0, length, "file", fileName);
+
+        var exception = await Assert.ThrowsAsync<InvalidDataException>(
+            () => fixture.Service.PreviewAsync(new(1, file)));
+
+        Assert.Equal(message, exception.Message);
+    }
+
+    [Fact]
+    public async Task PreviewAsync_AcceptsUppercaseExtensionAtExactLimit()
+    {
+        var fixture = Fixture.ValidSchool();
+        var source = Workbook(["teacher1", "Teacher", "", ""]);
+        using var stream = source.OpenReadStream();
+        using var output = new MemoryStream();
+        stream.CopyTo(output);
+        var file = new SizedBulkFile(output.ToArray(), MaxImportBytes, "MEMBERS.XLSX");
+
+        var result = await fixture.Service.PreviewAsync(new(1, file));
+
+        Assert.Equal(1, result.ValidCount);
+    }
+
     [Fact]
     public async Task PreviewAsync_NormalizesValidTeacherAndStudentRows()
     {

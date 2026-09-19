@@ -18,6 +18,7 @@ public sealed class SchoolMemberBulkService(
     AppDbContext db) : ISchoolMemberBulkService
 {
     private const int ColumnCount = 4;
+    private const long MaxImportBytes = 10 * 1024 * 1024;
     private static readonly string[] Headers = ["UserName", "Role", "CohortName", "Section"];
     private static readonly IReadOnlyDictionary<string, string> Roles =
         new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
@@ -30,7 +31,7 @@ public sealed class SchoolMemberBulkService(
         SchoolMemberImportRequest request, CancellationToken ct = default)
     {
         ArgumentNullException.ThrowIfNull(db);
-        ArgumentNullException.ThrowIfNull(request.File);
+        ValidateFile(request.File);
 
         await using var stream = request.File.OpenReadStream();
         XLWorkbook workbook;
@@ -179,6 +180,16 @@ public sealed class SchoolMemberBulkService(
         for (var column = 0; column < Headers.Length; column++)
             if (!string.Equals(sheet.Cell(1, column + 1).GetString().Trim(), Headers[column], StringComparison.Ordinal))
                 throw new ArgumentException("Tiêu đề Excel phải là UserName, Role, CohortName, Section.");
+    }
+
+    private static void ValidateFile(IFormFile? file)
+    {
+        if (file is null || file.Length == 0)
+            throw new InvalidDataException("File import không được để trống.");
+        if (!file.FileName.EndsWith(".xlsx", StringComparison.OrdinalIgnoreCase))
+            throw new InvalidDataException("Chỉ chấp nhận file Excel (.xlsx).");
+        if (file.Length > MaxImportBytes)
+            throw new InvalidDataException("File import không được vượt quá 10 MB.");
     }
 
     private static string Cell(IXLWorksheet sheet, int row, int column)
