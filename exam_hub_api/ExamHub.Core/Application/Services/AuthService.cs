@@ -56,25 +56,26 @@ public sealed class AuthService(IUserService userService, ITokenClaimsResolver t
     }
 
     /// <summary>
-    ///     Lấy token mới bằng refesh token
+    ///     Lấy token mới bằng refresh token
     /// </summary>
-    /// <param name="dto">Thông tin token</param>
+    /// <param name="accessToken">Access token đã/sắp hết hạn</param>
+    /// <param name="refreshToken">Refresh token đọc từ cookie HttpOnly</param>
     /// <returns></returns>
-    public async Task<RequestResponse<TokenModel>> RefreshToken(TokenModel dto)
+    public async Task<RequestResponse<TokenModel>> RefreshToken(string accessToken, string refreshToken)
     {
-        if (string.IsNullOrEmpty(dto.AccessToken) || string.IsNullOrEmpty(dto.RefreshToken))
+        if (string.IsNullOrEmpty(accessToken) || string.IsNullOrEmpty(refreshToken))
             return RequestResponse<TokenModel>.Error("Không được để trống thông tin!");
 
-        var claims = AuthExtension.GetPrincipalFromExpiredToken(dto.AccessToken, AppCommon.Audience);
+        var claims = AuthExtension.GetPrincipalFromExpiredToken(accessToken, AppCommon.Audience);
         if (claims == null)
             return RequestResponse<TokenModel>.Error("Token không hợp lệ!");
 
         var userName = claims.GetUserName();
         var userInfo = await userService.FindByNameAsync(userName);
-        if (userInfo == null || userInfo.RefreshToken != dto.RefreshToken)
+        if (userInfo == null || userInfo.RefreshToken != refreshToken)
             return RequestResponse<TokenModel>.Error("Token không hợp lệ!");
 
-        if (!AuthExtension.ValidRefreshToken(dto.RefreshToken, AppCommon.AudienceRefresh))
+        if (!AuthExtension.ValidRefreshToken(refreshToken, AppCommon.AudienceRefresh))
             return RequestResponse<TokenModel>.Error("Token đã hết hạn!");
 
         var customClaims = await tokenClaimsResolver.ResolveAsync(userInfo.Id, userInfo.Roles);
@@ -146,10 +147,33 @@ public sealed class AuthService(IUserService userService, ITokenClaimsResolver t
             return RequestResponse<bool>.Error("Mật khẩu hiện tại không đúng!");
 
         user.PasswordHash = dto.NewPassword.GetPasswordHash(AppCommon.SaltPassHash!);
+        // Đổi mật khẩu phải chặn luôn refresh token cũ: nếu không, cookie bị đánh cắp vẫn xin được
+        // access token mới vô hạn dù mật khẩu đã đổi.
+        user.RefreshToken = null;
         user.ModifiedBy = userName;
         user.Modified = DateTime.UtcNow;
         await userService.UpdateAsync(user);
 
         return RequestResponse<bool>.Success("Đổi mật khẩu thành công!", true, 1);
+    }
+
+    /// <summary>
+    ///     Thu hồi refresh token đang lưu của người dùng (logout / đổi mật khẩu)
+    /// </summary>
+    public async Task<RequestResponse<bool>> RevokeRefreshToken(string userName)
+    {
+        if (string.IsNullOrEmpty(userName))
+            return RequestResponse<bool>.Error("Không xác định được người dùng!");
+
+        var user = await userService.FindByNameAsync(userName);
+        if (user == null)
+            return RequestResponse<bool>.Error("Không tìm thấy thông tin!");
+
+        user.RefreshToken = null;
+        user.ModifiedBy = userName;
+        user.Modified = DateTime.UtcNow;
+        await userService.UpdateAsync(user);
+
+        return RequestResponse<bool>.Success("Đăng xuất thành công!", true, 1);
     }
 }

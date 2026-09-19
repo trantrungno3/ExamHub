@@ -22,11 +22,18 @@ public interface IAuthService
     Task<RequestResponse<object>> Register(RegisterDto dto);
 
     /// <summary>
-    ///     Lấy token mới bằng refesh token
+    ///     Lấy token mới bằng refresh token. Refresh token là tham số riêng vì nó đến từ cookie
+    ///     HttpOnly, không đi trong request body.
     /// </summary>
-    /// <param name="dto">Thông tin token</param>
-    /// <returns></returns>
-    Task<RequestResponse<TokenModel>> RefreshToken(TokenModel dto);
+    /// <param name="accessToken">Access token đã/sắp hết hạn, dùng để lấy danh tính.</param>
+    /// <param name="refreshToken">Refresh token đọc từ cookie.</param>
+    Task<RequestResponse<TokenModel>> RefreshToken(string accessToken, string refreshToken);
+
+    /// <summary>
+    ///     Thu hồi refresh token đang lưu của người dùng. Access token hiện tại vẫn hợp lệ tới khi
+    ///     hết hạn, nhưng không thể refresh thêm.
+    /// </summary>
+    Task<RequestResponse<bool>> RevokeRefreshToken(string userName);
 
     /// <summary>
     ///     Lấy thông tin người dùng

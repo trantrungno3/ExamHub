@@ -274,7 +274,7 @@ public class AuthServiceRefreshTests
         };
         var service = new AuthService(userService, resolver);
 
-        var result = await service.RefreshToken(new TokenModel(accessToken, refreshToken));
+        var result = await service.RefreshToken(accessToken, refreshToken);
 
         Assert.Equal(RequestResponseStatus.Success, result.Status);
         Assert.NotNull(result.Data);
@@ -282,5 +282,73 @@ public class AuthServiceRefreshTests
         Assert.Equal("rotated-refresh-token", result.Data.RefreshToken);
         Assert.Equal(resolver.ClaimsToReturn, userService.CapturedCustomData);
         Assert.Single(resolver.Calls);
+    }
+
+    [Fact]
+    public async Task RefreshToken_MissingRefreshToken_ReturnsErrorWithoutTouchingUserStore()
+    {
+        ConfigureTestAudiences();
+        var userService = new FakeUserServiceForLogin();
+        var service = new AuthService(userService, new FakeTokenClaimsResolver());
+
+        var result = await service.RefreshToken("some-access-token", "");
+
+        Assert.Equal(RequestResponseStatus.Error, result.Status);
+        Assert.Null(userService.UpdatedUser);
+    }
+}
+
+public class AuthServiceRevokeTests
+{
+    static AuthServiceRevokeTests() => AppCommon.SaltPassHash = "test-salt";
+
+    private static UserAdmin UserWithRefreshToken(string userName = "teacher1") => new()
+    {
+        Id = Guid.NewGuid(),
+        UserName = userName,
+        DisplayName = "Teacher One",
+        RefreshToken = "stored-refresh-token",
+    };
+
+    [Fact]
+    public async Task RevokeRefreshToken_ClearsStoredTokenAndPersists()
+    {
+        var user = UserWithRefreshToken();
+        var userService = new FakeUserServiceForLogin { UserToReturn = user };
+        var service = new AuthService(userService, new FakeTokenClaimsResolver());
+
+        var result = await service.RevokeRefreshToken(user.UserName!);
+
+        Assert.Equal(RequestResponseStatus.Success, result.Status);
+        Assert.Same(user, userService.UpdatedUser);
+        Assert.Null(userService.UpdatedUser!.RefreshToken);
+    }
+
+    [Fact]
+    public async Task RevokeRefreshToken_UnknownUser_ReturnsErrorWithoutUpdate()
+    {
+        var userService = new FakeUserServiceForLogin { UserToReturn = null };
+        var service = new AuthService(userService, new FakeTokenClaimsResolver());
+
+        var result = await service.RevokeRefreshToken("ghost");
+
+        Assert.Equal(RequestResponseStatus.Error, result.Status);
+        Assert.Null(userService.UpdatedUser);
+    }
+
+    [Fact]
+    public async Task ChangePassword_RevokesRefreshTokenSoStolenCookieCannotRefresh()
+    {
+        var user = UserWithRefreshToken();
+        user.PasswordHash = "old-pass".GetPasswordHash(AppCommon.SaltPassHash!);
+        var userService = new FakeUserServiceForLogin { UserToReturn = user };
+        var service = new AuthService(userService, new FakeTokenClaimsResolver());
+
+        var result = await service.ChangePassword(
+            user.UserName!,
+            new ChangePasswordDto { OldPassword = "old-pass", NewPassword = "new-pass-123" });
+
+        Assert.Equal(RequestResponseStatus.Success, result.Status);
+        Assert.Null(userService.UpdatedUser!.RefreshToken);
     }
 }

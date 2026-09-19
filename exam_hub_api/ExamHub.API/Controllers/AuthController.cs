@@ -43,7 +43,7 @@ public class AuthController(IAuthService service) : ControllerBase
     [HttpPost("refresh-token")]
     public async Task<ActionResult<RequestResponse<TokenModel>>> RefreshToken([FromBody] TokenModel dto)
     {
-        return Ok(await service.RefreshToken(dto));
+        return Ok(await service.RefreshToken(dto.AccessToken, dto.RefreshToken));
     }
 
     /// <summary>Lấy thông tin tài khoản đang đăng nhập</summary>
