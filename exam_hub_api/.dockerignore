@@ -1,5 +1,5 @@
-﻿**/.dockerignore
-**/.env
+# Bản gốc do Visual Studio sinh, giữ nguyên các mục IDE/tooling.
+**/.dockerignore
 **/.git
 **/.gitignore
 **/.project
@@ -23,3 +23,15 @@
 **/values.dev.yaml
 LICENSE
 README.md
+
+# ── Thêm 2026-09-19 ──────────────────────────────────────────────────────────
+# .env là config local (Compose đọc nó ở host, image không cần); .env.example thì giữ làm mẫu.
+# Bản gốc dùng `**/.env` nên cũng loại luôn .env.example — tách ra để giữ lại file mẫu.
+**/.env
+**/.env.*
+!**/.env.example
+
+# Snapshot DDL chỉ còn để tham chiếu; schema do EF migration dựng nên image không cần file này.
+database_schema.sql
+
+*.log

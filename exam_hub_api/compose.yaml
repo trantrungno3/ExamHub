@@ -1,59 +1,70 @@
 ﻿services:
-#  api:
-#    build:
-#      context: ./ExamHub.API
-#      dockerfile: Dockerfile
-#    container_name: api
-#    restart: unless-stopped
-#    ports:
-#      - "5000:8080"
-#    environment:
-#      ConnectionStrings__Default: ""
-#      ConnectionStrings__MongoDB: ""
-#      Redis__ConnectionString: ""
-#      MinIO__Endpoint: "minio:9000"
-#      MinIO__AccessKey: ""
-#      MinIO__SecretKey: ""
-#      RabbitMQ__Host: "rabbitmq"
-#      RabbitMQ__Username: ""
-#      RabbitMQ__Password: ""
-#      Jwt__SecretKey: ""
-#      Jwt__Issuer: "ExamHub"
-#      Jwt__Audience: "ExamHubUsers"
-#    depends_on:
-#      postgres:
-#        condition: service_healthy
-#      redis:
-#        condition: service_started
-#      mongo:
-#        condition: service_started
-#      minio:
-#        condition: service_started
-#      rabbitmq:
-#        condition: service_started
-#
-#  frontend:
-#    build:
-#      context: ./frontend
-#      dockerfile: Dockerfile
-#    container_name: frontend
-#    restart: unless-stopped
-#    ports:
-#      - "3000:80"
-#    depends_on:
-#      - api
-#
-#  nginx:
-#    image: nginx:alpine
-#    container_name: nginx
-#    restart: unless-stopped
-#    ports:
-#      - "80:80"
-#    volumes:
-#      - ./nginx.conf:/etc/nginx/nginx.conf:ro
-#    depends_on:
-#      - api
-#      - frontend
+  # Build context là exam_hub_api (trong repo), còn repo sibling trungtv_core vào bằng named
+  # additional context — xem đầu ExamHub.API/Dockerfile để biết vì sao không đặt context ở thư mục cha.
+  # Đổi đường dẫn trungtv_core ở đây nếu nó không nằm cạnh repo này.
+  migrate:
+    build: &api-build
+      context: .
+      dockerfile: ExamHub.API/Dockerfile
+      additional_contexts:
+        trungtv_core: ../../trungtv_core
+    container_name: examhub-migrate
+    # One-shot gate: chạy migration rồi exit 0. api chỉ start sau khi service này hoàn tất, nên
+    # không instance nào nhận traffic trên schema chưa sẵn sàng.
+    command: ["--migrate-only"]
+    restart: "no"
+    environment: &api-env
+      ASPNETCORE_ENVIRONMENT: Development
+      PostgreSqlConfig__ConnectionString: "Server=postgres;Port=5432;Database=${POSTGRES_DB};User Id=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};"
+      Redis__ConnectionString: "redis:6379,password=${REDIS_PASSWORD}"
+      MongoStorageLogConfig__ConnectionString: "mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@mongo:27017/?authSource=admin"
+      MinioStorageConfig__Endpoint: "minio:9000"
+      MinioStorageConfig__AccessKey: ${MINIO_ROOT_USER}
+      MinioStorageConfig__SecretKey: ${MINIO_ROOT_PASSWORD}
+      # web phục vụ frontend và proxy /api, nên browser chỉ thấy một origin.
+      Cors__AllowedOrigins__0: ${WEB_ORIGIN:-http://localhost:8080}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  api:
+    build: *api-build
+    container_name: examhub-api
+    restart: unless-stopped
+    environment: *api-env
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/health/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 30s
+
+  web:
+    build:
+      context: ../exam_hub_web
+      args:
+        # Vite nhúng giá trị này lúc build, nên đổi origin công khai là phải build lại image web.
+        VITE_API_BASE: ${WEB_ORIGIN:-http://localhost:8080}
+    container_name: examhub-web
+    restart: unless-stopped
+    ports:
+      - "${WEB_PORT:-8080}:80"
+    environment:
+      API_ORIGIN: http://api:8080
+    depends_on:
+      api:
+        condition: service_healthy
 
   rabbitmq:
     image: rabbitmq:4.1.0-management
@@ -105,11 +116,6 @@
       # pgdata đã được khai báo ở cuối file nhưng KHÔNG được mount — dữ liệu PostgreSQL mất sạch
       # mỗi lần recreate container. Đây là mount thật sự giữ data.
       - pgdata:/var/lib/postgresql/data
-      # Bootstrap schema bằng DDL snapshot. EF migration đã là nguồn schema chuẩn
-      # (Database:ApplyMigrationsOnStartup, xem appsettings.json) nhưng compose chưa có service API
-      # nào để chạy migrate, nên mount này còn ở lại. Bỏ nó cùng lúc thêm service API dev đặt
-      # Database__ApplyMigrationsOnStartup: "true".
-      - ./database_schema.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} --dbname=$${POSTGRES_DB}"]
       interval: 10s

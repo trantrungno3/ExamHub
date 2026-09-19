@@ -84,11 +84,16 @@ builder.Services.AddRateLimiter(options =>
 var app = builder.Build();
 
 // Bootstrap schema bằng migration — opt-in để production không bao giờ tự migrate khi khởi động.
-if (builder.Configuration.GetValue<bool>("Database:ApplyMigrationsOnStartup"))
+// `--migrate-only` chạy migration rồi THOÁT: Compose dùng nó làm one-shot gate, api chỉ start sau
+// khi service migrate exit 0, nên không có instance nào nhận traffic trên schema chưa sẵn sàng.
+var migrateOnly = args.Contains("--migrate-only");
+if (migrateOnly || builder.Configuration.GetValue<bool>("Database:ApplyMigrationsOnStartup"))
 {
     await using var migrationScope = app.Services.CreateAsyncScope();
     await migrationScope.ServiceProvider.GetRequiredService<AppDbContext>().Database.MigrateAsync();
 }
+
+if (migrateOnly) return;
 
 if (app.Environment.IsDevelopment())
 {
