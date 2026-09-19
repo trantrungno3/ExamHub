@@ -53,7 +53,9 @@ async function fetchWithTimeout(input: string, init: RequestInit): Promise<Respo
     const controller = new AbortController()
     const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS)
     try {
-        return await fetch(input, {...init, signal: controller.signal})
+        // credentials:'include' đặt một lần ở đây cho mọi request: cookie refresh HttpOnly chỉ được
+        // gửi kèm khi có flag này, và endpoint refresh/logout phụ thuộc hoàn toàn vào nó.
+        return await fetch(input, {...init, credentials: 'include', signal: controller.signal})
     } catch (err) {
         if (err instanceof DOMException && err.name === 'AbortError') {
             throw new Error('Yêu cầu quá thời gian chờ. Vui lòng thử lại.')

@@ -70,11 +70,8 @@ export default function AppLayout() {
             navigate('/login', {replace: true})
             return
         }
-        if (isTokenExpired(token.refreshExpiresAt)) {
-            logout()
-            navigate('/login', {replace: true})
-            return
-        }
+        // Không còn kiểm tra refresh expiry ở client: cookie HttpOnly là nguồn sự thật, refresh
+        // thất bại mới là tín hiệu hết phiên.
         if (isTokenExpired(token.expiresAt)) {
             void refresh().then(ok => {
                 if (!ok) navigate('/login', {replace: true})

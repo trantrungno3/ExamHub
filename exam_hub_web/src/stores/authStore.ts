@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { extractUserFromToken, getTokenExpiresAt, isTokenExpired } from '../utils/jwt'
+import { extractUserFromToken, getTokenExpiresAt } from '../utils/jwt'
 import { authService } from '../services/authService'
 import { setUnauthorizedHandler, statusCode } from '../services/requestService'
 
@@ -13,8 +13,11 @@ interface AuthState {
 
 interface AuthActions {
     login: (userName: string, password: string, isRemember?: boolean) => Promise<string | null>
-    logout: () => void
-    setTokens: (raw: TokenPair) => void
+    /** Revoke phía server (best-effort) rồi xoá state local. */
+    logout: () => Promise<void>
+    /** Xoá state local, KHÔNG gọi server — dùng khi refresh đã thất bại. */
+    clearSession: () => void
+    setTokens: (raw: AccessTokenResponse) => void
     refresh: () => Promise<boolean>
 }
 
@@ -31,9 +34,7 @@ export const useAuthStore = create<AuthStore>()(
             isRefreshing: false,
 
             setTokens(raw) {
-                const expiresAt = getTokenExpiresAt(raw.accessToken)
-                const refreshExpiresAt = getTokenExpiresAt(raw.refreshToken)
-                const token: TokenModel = { ...raw, expiresAt, refreshExpiresAt }
+                const token: TokenModel = { accessToken: raw.accessToken, expiresAt: getTokenExpiresAt(raw.accessToken) }
                 const user = extractUserFromToken(raw.accessToken)
                 set({ token, user, isAuthenticated: true })
             },
@@ -49,35 +50,46 @@ export const useAuthStore = create<AuthStore>()(
                 }
             },
 
-            logout() {
+            clearSession() {
                 set({ token: null, user: null, isAuthenticated: false })
+            },
+
+            async logout() {
+                // Best-effort: server revoke refresh token và xoá cookie. Dù lỗi mạng vẫn phải
+                // xoá state local, nếu không user thấy mình còn đăng nhập.
+                try {
+                    await authService.logout()
+                } catch {
+                    // bỏ qua — vẫn clear ở finally
+                } finally {
+                    get().clearSession()
+                }
             },
 
             refresh() {
                 if (refreshPromise) return refreshPromise
 
                 const { token } = get()
-                if (!token?.refreshToken) return Promise.resolve(false)
+                if (!token?.accessToken) return Promise.resolve(false)
 
-                const currentPair: TokenPair = {
-                    accessToken: token.accessToken,
-                    refreshToken: token.refreshToken,
-                }
+                const currentAccessToken = token.accessToken
                 set({ isRefreshing: true })
 
                 // ponytail: single-flight qua module-level promise — chặn nhiều request 401 song song
                 // gọi refresh-token nhiều lần; caller đến sau nhận chung promise thay vì bị bỏ qua.
                 refreshPromise = (async () => {
                     try {
-                        const res = await authService.refresh(currentPair)
+                        const res = await authService.refresh(currentAccessToken)
                         if (res.status === statusCode.Error || !res.data) {
-                            get().logout()
+                            // clearSession, KHÔNG logout: gọi /Auth/logout ở đây sẽ nhận 401 và
+                            // kích hoạt lại refresh qua unauthorized handler → vòng lặp.
+                            get().clearSession()
                             return false
                         }
                         get().setTokens(res.data)
                         return true
                     } catch {
-                        get().logout()
+                        get().clearSession()
                         return false
                     } finally {
                         set({ isRefreshing: false })
@@ -93,13 +105,14 @@ export const useAuthStore = create<AuthStore>()(
             // Chỉ persist token/user — isAuthenticated và isRefreshing là state suy ra được (không phải
             // nguồn sự thật), lưu xuống localStorage dễ lệch với token thật khi token hết hạn giữa 2 lần mở app.
             partialize: (state) => ({ token: state.token, user: state.user }),
-            // Sau khi rehydrate từ localStorage, suy lại isAuthenticated/user trực tiếp từ token đã lưu
-            // (thay vì tin state cũ) để tránh hiển thị "đã đăng nhập" với token đã hết hạn/bị sửa tay.
-            // Phải check hết hạn NGAY ĐÂY (đồng bộ, trước render đầu) — nếu chỉ set isAuthenticated=true
-            // rồi để AppLayout tự phát hiện hết hạn sau trong useEffect thì ProtectedRoute/StudentLayout/
-            // LoginPage đều đã kịp điều hướng theo cờ sai, gây nhảy qua lại login/trang cũ vài nhịp.
+            // Sau khi rehydrate, suy lại isAuthenticated/user trực tiếp từ token đã lưu thay vì tin
+            // state cũ. Không còn refresh expiry ở client để đối chiếu — cookie HttpOnly là nguồn sự
+            // thật duy nhất và JS không đọc được nó — nên có access token đã lưu là coi như còn
+            // phiên; AppLayout refresh ngay khi access token hết hạn và clearSession nếu thất bại.
+            // Đổi lại: access token hết hạn sẽ hiện app shell một nhịp trước khi bị đẩy về login,
+            // đây là hệ quả tất yếu của việc client không biết cookie còn sống hay không.
             onRehydrateStorage: () => (state) => {
-                if (state?.token && !isTokenExpired(state.token.refreshExpiresAt)) {
+                if (state?.token?.accessToken) {
                     state.isAuthenticated = true
                     state.user = extractUserFromToken(state.token.accessToken)
                 } else if (state) {

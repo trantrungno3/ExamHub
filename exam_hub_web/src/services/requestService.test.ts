@@ -50,6 +50,17 @@ it('refreshes and retries an authenticated request once after 401', async () => 
     expect(secondHeaders.get('Authorization')).toBe('Bearer new-access')
 })
 
+it('sends the refresh cookie on every request', async () => {
+    storeAccessToken('access')
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse(200, {status: 1, message: 'ok'}))
+    vi.stubGlobal('fetch', fetchMock)
+
+    await AuthHttp.get('/menu')
+
+    // Không có credentials:'include' thì cookie HttpOnly không bao giờ tới server và refresh chết.
+    expect(fetchMock.mock.calls[0][1]?.credentials).toBe('include')
+})
+
 it('does not retry more than once when the retried request is also 401', async () => {
     storeAccessToken('old-access')
     const fetchMock = vi.fn()
