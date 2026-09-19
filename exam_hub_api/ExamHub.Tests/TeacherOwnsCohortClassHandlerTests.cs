@@ -1,3 +1,4 @@
+using TVT.Core.Claims;
 using System.Security.Claims;
 using ExamHub.API.Authorization;
 using ExamHub.Core.Application.Services;
@@ -12,13 +13,15 @@ public class TeacherOwnsCohortClassHandlerTests
     // unconditionally inside the handler's CurrentUserInfo construction, and each throws
     // ArgumentException if its claim is missing — every identity below needs all three,
     // same requirement documented in CurrentUserInfoTests.
+    // roleType phải là ConstClaim.Role để khớp RoleClaimType của TokenValidationParameters; dùng
+    // mặc định (ClaimTypes.Role) là kiểm IsInRole trên claim mà token thật không phát.
     private static ClaimsIdentity BaseIdentity(string role) => new(
     [
         new Claim("UserId", Guid.NewGuid().ToString()),
         new Claim("UserName", "u1"),
         new Claim("DisplayName", "User One"),
-        new Claim(ClaimTypes.Role, role),
-    ]);
+        new Claim(ConstClaim.Role, role),
+    ], "test", ClaimTypes.Name, ConstClaim.Role);
 
     private static async Task<bool> AuthorizeAsync(ClaimsPrincipal user, int cohortClassId)
     {

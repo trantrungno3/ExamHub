@@ -1,3 +1,4 @@
+using TVT.Core.Claims;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Security.Claims;
@@ -73,10 +74,14 @@ public class AuthorizationBoundaryTests
             new("UserName", "u1"),
             new("DisplayName", "User One"),
         };
-        // Cả hai: ClaimTypes.Role cho IsInRole của handler, "Role" cho CurrentUserInfo.GetRoles().
-        claims.AddRange(roles.Select(r => new Claim(ClaimTypes.Role, r)));
-        claims.AddRange(roles.Select(r => new Claim("Role", r)));
-        return new ClaimsPrincipal(new ClaimsIdentity(claims, "test"));
+        // Một loại claim duy nhất, đúng như production: token ghi role bằng ConstClaim.Role
+        // (UserService.CreateTokenJwt) và TokenValidationParameters đặt RoleClaimType =
+        // ConstClaim.Role (AuthExtension), nên IsInRole và CurrentUserInfo.GetRoles đọc CÙNG claim.
+        // Phải truyền roleType cho ClaimsIdentity, vì mặc định nó là ClaimTypes.Role — dựng identity
+        // theo mặc định là test IsInRole trên một claim mà production không bao giờ phát.
+        claims.AddRange(roles.Select(r => new Claim(ConstClaim.Role, r)));
+        return new ClaimsPrincipal(new ClaimsIdentity(
+            claims, "test", ClaimTypes.Name, ConstClaim.Role));
     }
 
     // ── Chưa đăng nhập: fallback policy RequireAuthenticatedUser phủ toàn bộ API ──────────────
