@@ -25,12 +25,8 @@ public class ExamSessionRepository(AppDbContext _db) : IExamSessionRepository
         int page, int pageSize, int? subjectId, int? gradeLevelId,
         ExamSessionStatusEnum? status, string? keyword, CancellationToken ct = default)
     {
-        var query = _db.Set<ExamSession>()
-            .Include(s => s.Subject)
-            .Include(s => s.GradeLevel)
-            .Include(s => s.Exams)
-            .Include(s => s.Assignments)
-            .AsQueryable();
+        // Base query chỉ có filter: COUNT không cần kéo theo navigation nào.
+        var query = _db.Set<ExamSession>().AsNoTracking();
 
         if (subjectId is not null) query = query.Where(s => s.SubjectId == subjectId.Value);
         if (gradeLevelId is not null) query = query.Where(s => s.GradeLevelId == gradeLevelId.Value);
@@ -42,10 +38,18 @@ public class ExamSessionRepository(AppDbContext _db) : IExamSessionRepository
         }
 
         var total = await query.CountAsync(ct);
+
+        // Page trước rồi mới nạp quan hệ, và AsSplitQuery vì include hai collection trong cùng một
+        // query là tích Descartes: mỗi session sinh Exams × Assignments dòng.
         var items = await query
             .OrderByDescending(s => s.Created)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
+            .Include(s => s.Subject)
+            .Include(s => s.GradeLevel)
+            .Include(s => s.Exams)
+            .Include(s => s.Assignments)
+            .AsSplitQuery()
             .ToListAsync(ct);
         return (items, total);
     }
