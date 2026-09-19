@@ -1,3 +1,4 @@
+using ExamHub.API.Authorization;
 using Microsoft.AspNetCore.RateLimiting;
 using ExamHub.Core.DataTransferObjects.Exam;
 using ExamHub.Core.Domain.Interfaces;
@@ -22,6 +23,7 @@ public class ExamSubmissionController(IExamSubmissionService service) : Authoriz
     {
         var result = await service.GetWithAnswersAsync(id, ct);
         if (result is null) return NotFound();
+        if (!SubmissionAccess.CanRead(CurrentUser, result.StudentId)) return Forbid();
         var directory = await service.GetStudentDirectoryAsync(new List<Guid> { result.StudentId }, ct);
         directory.TryGetValue(result.StudentId, out var info);
         return Ok(RequestResponse<ExamSubmissionResponse>.Success(
@@ -48,6 +50,7 @@ public class ExamSubmissionController(IExamSubmissionService service) : Authoriz
     [HttpGet("by-student/{studentId:guid}")]
     public async Task<ActionResult<RequestResponse<IReadOnlyList<ExamSubmissionResponse>>>> GetByStudent(Guid studentId, CancellationToken ct)
     {
+        if (!SubmissionAccess.CanRead(CurrentUser, studentId)) return Forbid();
         var result = await service.GetByStudentAsync(studentId, ct);
         var list = result.Select(s => ExamSubmissionResponse.FromEntity(s)).ToList();
         return Ok(RequestResponse<IReadOnlyList<ExamSubmissionResponse>>.Success("Lấy danh sách thành công!", list, list.Count));
@@ -62,6 +65,7 @@ public class ExamSubmissionController(IExamSubmissionService service) : Authoriz
     public async Task<ActionResult<RequestResponse<ExamSubmissionResponse>>> GetByExamAndStudent(
         Guid examId, Guid studentId, CancellationToken ct)
     {
+        if (!SubmissionAccess.CanRead(CurrentUser, studentId)) return Forbid();
         var result = await service.GetByExamAndStudentAsync(examId, studentId, ct);
         if (result is null) return NotFound();
         return Ok(RequestResponse<ExamSubmissionResponse>.Success("Lấy dữ liệu thành công!", ExamSubmissionResponse.FromEntity(result), 1));

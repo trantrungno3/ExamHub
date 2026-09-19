@@ -1,13 +1,13 @@
-import {Navigate, Outlet, useNavigate} from 'react-router-dom'
+import {Outlet, useNavigate} from 'react-router-dom'
 import {Button} from 'antd'
 import {LogoutOutlined} from '@ant-design/icons'
 import {useAuth} from '../hooks/useAuth'
 
 export default function StudentLayout() {
     const navigate = useNavigate()
-    const {user, isAuthenticated, logout} = useAuth()
-
-    if (!isAuthenticated) return <Navigate to="/login" replace/>
+    // Không check auth ở đây nữa: ProtectedRoute allowedRoles={['Student']} bọc ngoài layout này
+    // đã chặn cả chưa đăng nhập và sai role, hai chỗ cùng redirect dễ lệch nhau.
+    const {user, logout} = useAuth()
 
     const handleLogout = () => {
         logout()

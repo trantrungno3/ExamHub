@@ -44,27 +44,33 @@ const router = createBrowserRouter([
             { path: ROUTES.LOGIN,    element: <LoginPage /> },
             { path: ROUTES.REGISTER, element: <RegisterPage /> },
 
-            /* ── Student portal (with header layout) ── */
-            {
-                element: <StudentLayout />,
-                children: [
-                    { path: ROUTES.STUDENT_EXAMS,   element: <StudentSessionListPage /> },
-                    { path: ROUTES.STUDENT_SESSION_POOL, element: <StudentSessionPoolPage /> },
-                    { path: ROUTES.STUDENT_PROFILE, element: <StudentProfilePage /> },
-                ],
-            },
-
-            /* ── Student exam-taking flow (full screen, no header) ── */
-            { path: ROUTES.STUDENT_EXAM,      element: <ExamCoverPage /> },
-            { path: ROUTES.STUDENT_EXAM_TAKE, element: <ExamTakingPage /> },
-            { path: ROUTES.STUDENT_EXAM_RESULT, element: <ExamResultPage /> },
-
             { path: ROUTES.FORBIDDEN, element: <Placeholder title="403 — Không có quyền truy cập" /> },
             { path: ROUTES.NO_ROLE,   element: <NoRolePage /> },
 
+            /* ── Toàn bộ khu học sinh: cả portal có header và luồng làm bài full-screen ── */
+            {
+                element: <ProtectedRoute allowedRoles={['Student']} />,
+                children: [
+                    /* Student portal (with header layout) */
+                    {
+                        element: <StudentLayout />,
+                        children: [
+                            { path: ROUTES.STUDENT_EXAMS,   element: <StudentSessionListPage /> },
+                            { path: ROUTES.STUDENT_SESSION_POOL, element: <StudentSessionPoolPage /> },
+                            { path: ROUTES.STUDENT_PROFILE, element: <StudentProfilePage /> },
+                        ],
+                    },
+
+                    /* Student exam-taking flow (full screen, no header) */
+                    { path: ROUTES.STUDENT_EXAM,        element: <ExamCoverPage /> },
+                    { path: ROUTES.STUDENT_EXAM_TAKE,   element: <ExamTakingPage /> },
+                    { path: ROUTES.STUDENT_EXAM_RESULT, element: <ExamResultPage /> },
+                ],
+            },
+
             /* ── Protected admin / teacher app ── */
             {
-                element: <ProtectedRoute />,
+                element: <ProtectedRoute allowedRoles={['Admin', 'Teacher']} />,
                 children: [
                     {
                         path: ROUTES.APP,
