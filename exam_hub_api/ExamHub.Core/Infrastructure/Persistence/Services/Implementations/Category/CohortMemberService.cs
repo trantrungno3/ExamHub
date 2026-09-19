@@ -61,20 +61,25 @@ public class CohortMemberService : ICohortMemberService
     }
 
     // ── Helpers ─────────────────────────────────────────────────
-    private static string? NormalizeSection(string? section)
+    internal static string? NormalizeSection(string? section)
         => string.IsNullOrWhiteSpace(section) ? null : section.Trim().ToUpperInvariant();
 
-    /// <summary>Validates the section against the cohort's class range. Returns null when valid,
-    /// or the Vietnamese error message when not.</summary>
-    private async Task<string?> ValidateSectionAsync(int cohortId, string? section, CancellationToken ct)
+    internal static string? ValidateSection(Cohort? cohort, string? section)
     {
-        if (section is null) return null; // chưa xếp lớp — hợp lệ
-        var cohort = await _cohortRepo.GetByIdAsync(cohortId, ct);
+        if (section is null) return null;
         if (cohort is null) return "Không tìm thấy khoá học.";
         var allowed = Enumerable.Range(0, cohort.NumClasses)
             .Select(i => ((char)('A' + i)).ToString());
         return allowed.Contains(section)
             ? null
             : $"Lớp '{section}' không hợp lệ cho khoá này (chỉ A..{(char)('A' + cohort.NumClasses - 1)}).";
+    }
+
+    /// <summary>Validates the section against the cohort's class range. Returns null when valid,
+    /// or the Vietnamese error message when not.</summary>
+    private async Task<string?> ValidateSectionAsync(int cohortId, string? section, CancellationToken ct)
+    {
+        var cohort = await _cohortRepo.GetByIdAsync(cohortId, ct);
+        return ValidateSection(cohort, section);
     }
 }
