@@ -62,6 +62,35 @@ public class ExamSubmissionRepository : BaseRepository<ExamSubmission, Guid>, IE
             .ToListAsync(ct);
 
     /// <inheritdoc/>
+    public async Task<(IReadOnlyList<ExamSubmission> Items, int Total)> GetPageBySessionAsync(
+        Guid sessionId, int page, int pageSize, CancellationToken ct = default)
+        => await PageAsync(Set.AsNoTracking().Where(x => x.SessionId == sessionId), page, pageSize, ct);
+
+    /// <inheritdoc/>
+    public async Task<(IReadOnlyList<ExamSubmission> Items, int Total)> GetPageByStudentAsync(
+        Guid studentId, int page, int pageSize, CancellationToken ct = default)
+        => await PageAsync(
+            Set.AsNoTracking().Where(x => x.StudentId == studentId).Include(x => x.Exam),
+            page, pageSize, ct);
+
+    /// <summary>
+    /// Count trên query đã filter, rồi Skip/Take. Sort phụ theo Id vì Created có thể trùng tới
+    /// millisecond — thiếu tie-break thì hai trang liên tiếp có thể lặp hoặc bỏ sót bản ghi.
+    /// </summary>
+    private static async Task<(IReadOnlyList<ExamSubmission> Items, int Total)> PageAsync(
+        IQueryable<ExamSubmission> query, int page, int pageSize, CancellationToken ct)
+    {
+        var total = await query.CountAsync(ct);
+        var items = await query
+            .OrderByDescending(x => x.Created)
+            .ThenBy(x => x.Id)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(ct);
+        return (items, total);
+    }
+
+    /// <inheritdoc/>
     public async Task<IReadOnlyList<ExamSubmission>> GetBySessionAsync(Guid sessionId, CancellationToken ct = default)
         => await Set.AsNoTracking()
             .Where(x => x.SessionId == sessionId)

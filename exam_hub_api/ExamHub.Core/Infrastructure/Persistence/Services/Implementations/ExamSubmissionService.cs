@@ -1,3 +1,4 @@
+using ExamHub.Core.DataTransferObjects.Common;
 using ExamHub.Core.Application.Grading;
 using ExamHub.Core.Application.Services;
 using ExamHub.Core.DataTransferObjects.Exam;
@@ -68,6 +69,23 @@ public class ExamSubmissionService : IExamSubmissionService
 
     public Task<IReadOnlyList<ExamSubmission>> GetBySessionAsync(Guid sessionId, CancellationToken ct = default)
         => _submissionRepo.GetBySessionAsync(sessionId, ct);
+
+    // Clamp ngay trong service: mọi caller đều bị chặn, không phụ thuộc controller nào nhớ clamp.
+    public async Task<(IReadOnlyList<ExamSubmission> Items, int Total, int Page, int PageSize)> GetPageBySessionAsync(
+        Guid sessionId, int page, int pageSize, CancellationToken ct = default)
+    {
+        var (safePage, safeSize) = PageRequest.Normalize(page, pageSize);
+        var (items, total) = await _submissionRepo.GetPageBySessionAsync(sessionId, safePage, safeSize, ct);
+        return (items, total, safePage, safeSize);
+    }
+
+    public async Task<(IReadOnlyList<ExamSubmission> Items, int Total, int Page, int PageSize)> GetPageByStudentAsync(
+        Guid studentId, int page, int pageSize, CancellationToken ct = default)
+    {
+        var (safePage, safeSize) = PageRequest.Normalize(page, pageSize);
+        var (items, total) = await _submissionRepo.GetPageByStudentAsync(studentId, safePage, safeSize, ct);
+        return (items, total, safePage, safeSize);
+    }
 
     public Task<IReadOnlyList<ExamSubmission>> GetBySessionAndStudentAsync(Guid sessionId, Guid studentId, CancellationToken ct = default)
         => _submissionRepo.GetBySessionAndStudentAsync(sessionId, studentId, ct);

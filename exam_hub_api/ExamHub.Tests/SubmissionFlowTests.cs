@@ -81,6 +81,10 @@ file sealed class FakeSubmissionRepository : IExamSubmissionRepository
         => throw new NotSupportedException();
     public Task<IReadOnlyList<ExamSubmission>> GetByStudentAsync(Guid studentId, CancellationToken ct = default)
         => throw new NotSupportedException();
+    public Task<(IReadOnlyList<ExamSubmission> Items, int Total)> GetPageBySessionAsync(Guid sessionId, int page, int pageSize, CancellationToken ct = default)
+        => throw new NotSupportedException();
+    public Task<(IReadOnlyList<ExamSubmission> Items, int Total)> GetPageByStudentAsync(Guid studentId, int page, int pageSize, CancellationToken ct = default)
+        => throw new NotSupportedException();
     public Task<IReadOnlyList<ExamSubmission>> GetBySessionAsync(Guid sessionId, CancellationToken ct = default)
         => throw new NotSupportedException();
     public Task<IReadOnlyList<ExamSubmission>> GetBySessionAndStudentAsync(Guid sessionId, Guid studentId, CancellationToken ct = default)

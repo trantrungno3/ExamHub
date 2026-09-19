@@ -90,6 +90,17 @@ public interface IExamSubmissionRepository : IBaseRepository<ExamSubmission, Gui
     /// <summary>Lấy danh sách bài nộp theo kỳ thi</summary>
     Task<IReadOnlyList<ExamSubmission>> GetBySessionAsync(Guid sessionId, CancellationToken ct = default);
 
+    /// <summary>
+    /// Một trang bài nộp của kỳ thi, sắp xếp ổn định. Tách method riêng thay vì đổi
+    /// <see cref="GetBySessionAsync"/> để lookup nội bộ giữ nguyên contract.
+    /// </summary>
+    Task<(IReadOnlyList<ExamSubmission> Items, int Total)> GetPageBySessionAsync(
+        Guid sessionId, int page, int pageSize, CancellationToken ct = default);
+
+    /// <summary>Một trang bài nộp của học sinh, sắp xếp ổn định.</summary>
+    Task<(IReadOnlyList<ExamSubmission> Items, int Total)> GetPageByStudentAsync(
+        Guid studentId, int page, int pageSize, CancellationToken ct = default);
+
     /// <summary>Lấy các lần nộp của một học sinh trong một kỳ thi</summary>
     Task<IReadOnlyList<ExamSubmission>> GetBySessionAndStudentAsync(Guid sessionId, Guid studentId, CancellationToken ct = default);
 

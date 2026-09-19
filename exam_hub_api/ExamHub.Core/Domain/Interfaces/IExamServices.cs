@@ -147,6 +147,14 @@ public interface IExamSubmissionService
     /// <summary>Lấy danh sách bài nộp theo kỳ thi</summary>
     Task<IReadOnlyList<ExamSubmission>> GetBySessionAsync(Guid sessionId, CancellationToken ct = default);
 
+    /// <summary>Một trang bài nộp của kỳ thi; page/pageSize được clamp trong service.</summary>
+    Task<(IReadOnlyList<ExamSubmission> Items, int Total, int Page, int PageSize)> GetPageBySessionAsync(
+        Guid sessionId, int page, int pageSize, CancellationToken ct = default);
+
+    /// <summary>Một trang bài nộp của học sinh; page/pageSize được clamp trong service.</summary>
+    Task<(IReadOnlyList<ExamSubmission> Items, int Total, int Page, int PageSize)> GetPageByStudentAsync(
+        Guid studentId, int page, int pageSize, CancellationToken ct = default);
+
     /// <summary>Lấy các lần nộp của một học sinh trong một kỳ thi</summary>
     Task<IReadOnlyList<ExamSubmission>> GetBySessionAndStudentAsync(Guid sessionId, Guid studentId, CancellationToken ct = default);
 
