@@ -2,6 +2,7 @@ using ExamHub.Core.DataTransferObjects.ExamSession;
 using ExamHub.Core.Domain.Entities;
 using ExamHub.Core.Domain.Enums;
 using ExamHub.Core.Infrastructure.Persistence;
+using ExamHub.Tests.Infrastructure;
 using ExamHub.Core.Infrastructure.Persistence.Repositories.Implementations;
 using ExamHub.Core.Infrastructure.Persistence.Services.Implementations;
 using Microsoft.EntityFrameworkCore;
@@ -14,45 +15,14 @@ using Xunit;
 namespace ExamHub.Tests;
 
 /// <summary>
-/// Starts a real postgres:17-alpine container (Testcontainers) once per test class and applies
-/// EF migrations against it, so tests using this fixture exercise the real DB constraints
-/// (partial unique indexes) instead of the in-memory fakes used everywhere else in this project.
-/// </summary>
-public sealed class PostgresContainerFixture : IAsyncLifetime
-{
-    private readonly PostgreSqlContainer _container = new PostgreSqlBuilder("postgres:17-alpine")
-        .Build();
-
-    private string ConnectionString => _container.GetConnectionString();
-
-    public async Task InitializeAsync()
-    {
-        await _container.StartAsync();
-        await using var db = CreateContext();
-        await db.Database.MigrateAsync();
-    }
-
-    public AppDbContext CreateContext()
-    {
-        var options = new DbContextOptionsBuilder<AppDbContext>()
-            .UseNpgsql(ConnectionString)
-            .UseSnakeCaseNamingConvention()
-            .Options;
-        return new AppDbContext(options);
-    }
-
-    public Task DisposeAsync() => _container.DisposeAsync().AsTask();
-}
-
-/// <summary>
 /// Concurrent starts must leave one in_progress submission for the session and student.
 /// </summary>
-public class SubmissionConcurrencyIntegrationTests : IClassFixture<PostgresContainerFixture>
+public class SubmissionConcurrencyIntegrationTests : IClassFixture<PostgresIntegrationFixture>
 {
     private static int _gradeNumber;
-    private readonly PostgresContainerFixture _fixture;
+    private readonly PostgresIntegrationFixture _fixture;
 
-    public SubmissionConcurrencyIntegrationTests(PostgresContainerFixture fixture)
+    public SubmissionConcurrencyIntegrationTests(PostgresIntegrationFixture fixture)
         => _fixture = fixture;
 
     private async Task<(Guid sessionId, Guid studentId, Guid examId)> SeedAsync()
