@@ -1,3 +1,4 @@
+using ExamHub.Core.DataTransferObjects.Common;
 using Microsoft.AspNetCore.RateLimiting;
 using ExamHub.Core.Application.Services;
 using ExamHub.Core.DataTransferObjects.Question;
@@ -44,19 +45,20 @@ public class QuestionController(
     [HttpGet]
     public async Task<ActionResult<RequestResponse<object>>> GetPaged([FromQuery] QuestionPagedRequest request, CancellationToken ct)
     {
+        // Clamp trước khi xuống DB và dùng đúng giá trị đã clamp trong response, để client biết
+        // nó thực sự nhận trang nào chứ không phải trang nó đã hỏi.
+        var (page, pageSize) = PageRequest.Normalize(request.Page, request.PageSize);
         var (items, total) = await service.GetPagedAsync(
-            request.Page, request.PageSize,
+            page, pageSize,
             request.TopicId, request.QuestionTypeId, request.DifficultyLevelId,
             request.CognitiveLevelId, request.Keyword, request.ReviewStatus,
             request.SubjectId, request.GradeLevelId, ct);
 
-        return Ok(RequestResponse<object>.Success("Lấy danh sách thành công!", new
-        {
-            Total    = total,
-            Page     = request.Page,
-            PageSize = request.PageSize,
-            Items    = items.Select(q => QuestionResponse.FromEntity(q)).ToList()
-        }, total));
+        return Ok(RequestResponse<object>.Success(
+            "Lấy danh sách thành công!",
+            PagedResult<QuestionResponse>.Create(
+                items.Select(q => QuestionResponse.FromEntity(q)).ToList(), total, page, pageSize),
+            total));
     }
 
     /// <summary>Lấy danh sách câu hỏi theo chủ đề</summary>

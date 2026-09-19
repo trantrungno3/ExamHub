@@ -1,3 +1,4 @@
+using ExamHub.Core.DataTransferObjects.Common;
 using Microsoft.AspNetCore.RateLimiting;
 using ExamHub.Core.Application.Services;
 using ExamHub.Core.DataTransferObjects.ExamSession;
@@ -32,14 +33,12 @@ public class ExamSessionController(IExamSessionService service, IAuthorizationSe
         [FromQuery] ExamSessionStatusEnum? status = null, [FromQuery] string? keyword = null,
         CancellationToken ct = default)
     {
-        var (items, total) = await service.GetPagedAsync(page, pageSize, subjectId, gradeLevelId, status, keyword, ct);
-        return Ok(RequestResponse<object>.Success("Lấy danh sách thành công!", new
-        {
-            Total = total,
-            Page = page,
-            PageSize = pageSize,
-            Items = items
-        }, total));
+        var (safePage, safePageSize) = PageRequest.Normalize(page, pageSize);
+        var (items, total) = await service.GetPagedAsync(safePage, safePageSize, subjectId, gradeLevelId, status, keyword, ct);
+        return Ok(RequestResponse<object>.Success(
+            "Lấy danh sách thành công!",
+            PagedResult<ExamSessionResponse>.Create(items, total, safePage, safePageSize),
+            total));
     }
 
     /// <summary>Chi tiết kỳ thi kèm pool đề + assignments.</summary>

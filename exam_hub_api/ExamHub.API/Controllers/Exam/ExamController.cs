@@ -1,3 +1,4 @@
+using ExamHub.Core.DataTransferObjects.Common;
 using ExamHub.Core.Application.Services;
 using ExamHub.Core.DataTransferObjects.Exam;
 using ExamHub.Core.Domain.Interfaces;
@@ -43,18 +44,17 @@ public class ExamController(IExamService service, IExportService exportService) 
     [HttpGet]
     public async Task<ActionResult<RequestResponse<object>>> GetPaged([FromQuery] ExamPagedRequest request, CancellationToken ct)
     {
+        var (page, pageSize) = PageRequest.Normalize(request.Page, request.PageSize);
         var (items, total) = await service.GetPagedAsync(
-            request.Page, request.PageSize,
+            page, pageSize,
             request.GradeLevelId, request.SubjectId,
             request.Status, request.Keyword, ct);
 
-        return Ok(RequestResponse<object>.Success("Lấy danh sách thành công!", new
-        {
-            Total    = total,
-            Page     = request.Page,
-            PageSize = request.PageSize,
-            Items    = items.Select(e => ExamResponse.FromEntity(e)).ToList()
-        }, total));
+        return Ok(RequestResponse<object>.Success(
+            "Lấy danh sách thành công!",
+            PagedResult<ExamResponse>.Create(
+                items.Select(e => ExamResponse.FromEntity(e)).ToList(), total, page, pageSize),
+            total));
     }
 
     /// <summary>Lấy danh sách đề thi biến thể cùng lô</summary>
