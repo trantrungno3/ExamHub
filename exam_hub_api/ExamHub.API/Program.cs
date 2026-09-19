@@ -1,5 +1,7 @@
+using System.Threading.RateLimiting;
 using ExamHub.Core;
 using ExamHub.Core.Infrastructure.Persistence;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 using TVT.Core.Extensions;
@@ -28,10 +30,50 @@ builder.Services.AddScoped<Microsoft.AspNetCore.Authorization.IAuthorizationHand
     ExamHub.API.Authorization.TeacherOwnsSubjectHandler>();
 builder.Services.AddScoped<Microsoft.AspNetCore.Authorization.IAuthorizationHandler,
     ExamHub.API.Authorization.TeacherOwnsCohortClassHandler>();
+// Cookie refresh chỉ được gửi kèm khi CORS cho phép credentials, và AllowCredentials KHÔNG hợp lệ
+// cùng AllowAnyOrigin — nên bắt buộc phải có allowlist origin tường minh.
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
+if (allowedOrigins.Length == 0 && !builder.Environment.IsDevelopment())
+    throw new InvalidOperationException(
+        "Cors:AllowedOrigins trống. Cấu hình origin của frontend trước khi chạy ngoài Development.");
+
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy(name: "all",
-        policy => policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
+    options.AddPolicy("web", policy => policy
+        .WithOrigins(allowedOrigins)
+        .AllowAnyHeader()
+        .AllowAnyMethod()
+        .AllowCredentials());
+});
+
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    // Đăng nhập chưa có danh tính nên chỉ phân vùng được theo IP. Giới hạn phải chịu được cả một
+    // phòng máy của trường sau cùng một IP NAT đăng nhập đầu giờ — 10/phút sẽ chặn oan cả lớp.
+    options.AddPolicy("auth", context => RateLimitPartition.GetFixedWindowLimiter(
+        context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+        _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = 60,
+            Window = TimeSpan.FromMinutes(1),
+            QueueLimit = 0,
+        }));
+
+    // Phân vùng theo username trước, IP chỉ là fallback: autosave chạy ~20s/lần cho mỗi học sinh
+    // (~3 request/phút), nên 60/phút/người là thừa sức, còn nếu phân vùng theo IP thì một phòng thi
+    // 30 máy sau NAT sẽ vượt hạn mức giữa giờ làm bài.
+    options.AddPolicy("write-heavy", context => RateLimitPartition.GetFixedWindowLimiter(
+        context.User.Identity?.IsAuthenticated == true
+            ? context.User.GetUserName()
+            : context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+        _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = 60,
+            Window = TimeSpan.FromMinutes(1),
+            QueueLimit = 0,
+        }));
 });
 
 var app = builder.Build();
@@ -49,10 +91,24 @@ if (app.Environment.IsDevelopment())
     app.MapScalarApiReference("/docs");
 }
 
+// Header tối thiểu cho API: chặn MIME sniffing và nhúng iframe. CSP thuộc reverse proxy của
+// frontend (plan operability), không đặt ở đây.
+app.Use(async (context, next) =>
+{
+    context.Response.Headers["X-Content-Type-Options"] = "nosniff";
+    context.Response.Headers["X-Frame-Options"] = "DENY";
+    await next();
+});
+
+if (!app.Environment.IsDevelopment())
+    app.UseHsts();
+
 app.UseServices();
 app.UseHttpsRedirection();
-app.UseCors("all");
+app.UseCors("web");
 app.UseAuthentication();
 app.UseAuthorization();
+// Sau UseAuthentication để policy write-heavy phân vùng được theo username.
+app.UseRateLimiter();
 app.MapControllers();
 app.Run();

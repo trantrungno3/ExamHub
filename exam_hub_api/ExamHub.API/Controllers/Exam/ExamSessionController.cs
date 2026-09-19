@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.RateLimiting;
 using ExamHub.Core.Application.Services;
 using ExamHub.Core.DataTransferObjects.ExamSession;
 using ExamHub.Core.Domain.Enums;
@@ -210,6 +211,7 @@ public class ExamSessionController(IExamSessionService service, IAuthorizationSe
     /// <param name="request">Đề thi được chọn (chỉ dùng khi PickMode=StudentChoice).</param>
     /// <param name="ct">Token huỷ yêu cầu.</param>
     /// <returns>Submission vừa tạo kèm đề thi; 401 nếu không xác định được người dùng hiện tại.</returns>
+    [EnableRateLimiting("write-heavy")]
     [HttpPost("{id:guid}/start")]
     public async Task<ActionResult<RequestResponse<StartSessionResponse>>> Start(Guid id, [FromBody] StartSessionRequest request, CancellationToken ct)
     {

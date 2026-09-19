@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.RateLimiting;
 using ExamHub.Core.DataTransferObjects.Exam;
 using ExamHub.Core.Domain.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -103,6 +104,7 @@ public class ExamSubmissionController(IExamSubmissionService service) : Authoriz
     /// <param name="request">Bài làm và danh sách câu trả lời cần nộp.</param>
     /// <param name="ct">Token huỷ yêu cầu.</param>
     /// <returns>Bài nộp vừa tạo (HTTP 201).</returns>
+    [EnableRateLimiting("write-heavy")]
     [HttpPost]
     public async Task<ActionResult<RequestResponse<ExamSubmissionResponse>>> Submit(
         [FromBody] ExamSubmissionRequest request,
@@ -170,6 +172,7 @@ public class ExamSubmissionController(IExamSubmissionService service) : Authoriz
     /// <param name="answers">Danh sách câu trả lời hiện tại của học sinh.</param>
     /// <param name="ct">Token huỷ yêu cầu.</param>
     /// <returns>Kết quả lưu tạm; 403 nếu không phải chủ bài nộp; 409 nếu bài nộp không còn ở trạng thái InProgress.</returns>
+    [EnableRateLimiting("write-heavy")]
     [HttpPut("{id:guid}/progress")]
     public async Task<ActionResult<RequestResponse<bool>>> SaveProgress(
         Guid id, [FromBody] IEnumerable<SubmissionAnswerRequest> answers, CancellationToken ct)

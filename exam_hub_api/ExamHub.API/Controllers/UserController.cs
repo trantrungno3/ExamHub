@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.RateLimiting;
 using ExamHub.Core;
 using ExamHub.Core.Application.Services;
 using ExamHub.Core.DataTransferObjects.User;
@@ -61,6 +62,7 @@ public class UserController(
     /// <param name="request">File Excel + mật khẩu mặc định cho tài khoản mới.</param>
     /// <param name="ct">Token huỷ yêu cầu.</param>
     /// <returns>Kết quả import kèm số dòng thành công/lỗi.</returns>
+    [EnableRateLimiting("write-heavy")]
     [HttpPost("bulk-import")]
     public async Task<ActionResult<RequestResponse<BulkUserImportResponse>>> BulkImport(
         [FromForm] BulkUserImportRequest request, CancellationToken ct)

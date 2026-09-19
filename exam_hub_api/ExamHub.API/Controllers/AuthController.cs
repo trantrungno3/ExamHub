@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.RateLimiting;
 using ExamHub.Core.Application.Services;
 using ExamHub.Core.DataAccessObjects;
 using Microsoft.AspNetCore.Authorization;
@@ -41,7 +42,7 @@ public class AuthController(IAuthService service) : ControllerBase
         RequestResponse<TokenModel> result)
     {
         if (result.Status != RequestResponseStatus.Success || result.Data is null)
-            return Ok(RequestResponse<AccessTokenResponse>.Error(result.Message));
+            return Ok(RequestResponse<AccessTokenResponse>.Error(result.Message ?? "Đăng nhập thất bại."));
 
         SetRefreshCookie(result.Data.RefreshToken);
         return Ok(RequestResponse<AccessTokenResponse>.Success(
@@ -52,6 +53,7 @@ public class AuthController(IAuthService service) : ControllerBase
     /// <param name="dto">Tên đăng nhập và mật khẩu.</param>
     /// <returns>Access token; refresh token đi bằng cookie HttpOnly.</returns>
     [AllowAnonymous]
+    [EnableRateLimiting("auth")]
     [HttpPost("login")]
     public async Task<ActionResult<RequestResponse<AccessTokenResponse>>> Login([FromBody] LoginDto dto)
     {
@@ -62,6 +64,7 @@ public class AuthController(IAuthService service) : ControllerBase
     /// <param name="dto">Thông tin tài khoản cần đăng ký.</param>
     /// <returns>Kết quả đăng ký.</returns>
     [AllowAnonymous]
+    [EnableRateLimiting("auth")]
     [HttpPost("register")]
     public async Task<ActionResult<RequestResponse<object>>> Register([FromBody] RegisterDto dto)
     {
@@ -72,6 +75,7 @@ public class AuthController(IAuthService service) : ControllerBase
     /// <param name="dto">Access token hiện tại; refresh token đọc từ cookie HttpOnly.</param>
     /// <returns>Access token mới; cookie refresh được rotate.</returns>
     [AllowAnonymous]
+    [EnableRateLimiting("auth")]
     [HttpPost("refresh-token")]
     public async Task<ActionResult<RequestResponse<AccessTokenResponse>>> RefreshToken(
         [FromBody] RefreshAccessTokenRequest dto)

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.RateLimiting;
 using ExamHub.Core.Application.Services;
 using ExamHub.Core.DataTransferObjects.Question;
 using ExamHub.Core.Domain.Interfaces;
@@ -146,6 +147,7 @@ public class QuestionController(
     /// <param name="request">File Excel chứa câu hỏi + đáp án cần import.</param>
     /// <param name="ct">Token huỷ yêu cầu.</param>
     /// <returns>Kết quả import kèm số dòng thành công/lỗi.</returns>
+    [EnableRateLimiting("write-heavy")]
     [HttpPost("bulk-import")]
     [Authorize(Roles = "Admin,Teacher")]
     public async Task<ActionResult<RequestResponse<BulkImportQuestionResponse>>> BulkImport(
@@ -167,6 +169,7 @@ public class QuestionController(
     /// <param name="file">Tệp ảnh/PDF cần upload, tối đa 10 MB.</param>
     /// <param name="ct">Token huỷ yêu cầu.</param>
     /// <returns>URL của tệp trên MinIO.</returns>
+    [EnableRateLimiting("write-heavy")]
     [HttpPost("attachment")]
     [Authorize(Roles = "Admin,Teacher")]
     public async Task<ActionResult<RequestResponse<object>>> UploadAttachment(IFormFile file, CancellationToken ct)
@@ -194,6 +197,7 @@ public class QuestionController(
     /// <param name="file">Tệp audio cần upload, tối đa 10 MB.</param>
     /// <param name="ct">Token huỷ yêu cầu.</param>
     /// <returns>URL của tệp trên MinIO.</returns>
+    [EnableRateLimiting("write-heavy")]
     [HttpPost("audio")]
     [Authorize(Roles = "Admin,Teacher")]
     public async Task<ActionResult<RequestResponse<object>>> UploadAudio(IFormFile file, CancellationToken ct)
