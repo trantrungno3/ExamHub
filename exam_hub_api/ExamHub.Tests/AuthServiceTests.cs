@@ -197,28 +197,149 @@ public class AuthServiceLoginClaimsTests
     }
 }
 
+/// <summary>Fake IAuthService — chỉ các method controller auth thật sự gọi được implement.</summary>
+file sealed class FakeAuthService : IAuthService
+{
+    public TokenModel TokenToReturn { get; set; } = new("access-1", "refresh-1");
+    public bool Fail { get; set; }
+    public string? RevokedUserName { get; private set; }
+    public (string AccessToken, string RefreshToken)? RefreshCall { get; private set; }
+
+    private TVT.Core.RequestResponse<TokenModel> TokenResult => Fail
+        ? TVT.Core.RequestResponse<TokenModel>.Error("Token không hợp lệ!")
+        : TVT.Core.RequestResponse<TokenModel>.Success("ok", TokenToReturn, 1);
+
+    public Task<TVT.Core.RequestResponse<TokenModel>> Login(LoginDto dto) => Task.FromResult(TokenResult);
+
+    public Task<TVT.Core.RequestResponse<TokenModel>> RefreshToken(string accessToken, string refreshToken)
+    {
+        RefreshCall = (accessToken, refreshToken);
+        return Task.FromResult(TokenResult);
+    }
+
+    public Task<TVT.Core.RequestResponse<bool>> RevokeRefreshToken(string userName)
+    {
+        RevokedUserName = userName;
+        return Task.FromResult(TVT.Core.RequestResponse<bool>.Success("ok", true, 1));
+    }
+
+    public Task<TVT.Core.RequestResponse<object>> Register(RegisterDto dto) => throw new NotSupportedException();
+    public Task<TVT.Core.RequestResponse<UserInfo>> GetUserInfo(string userName) => throw new NotSupportedException();
+    public Task<TVT.Core.RequestResponse<UserInfo>> UpdateProfile(string userName, UpdateProfileDto dto) => throw new NotSupportedException();
+    public Task<TVT.Core.RequestResponse<bool>> ChangePassword(string userName, ChangePasswordDto dto) => throw new NotSupportedException();
+}
+
 public class AuthControllerRefreshContractTests
 {
+    /// <summary>Dựng controller với HttpContext thật để đọc/ghi được cookie.</summary>
+    // Tham số là IAuthService, không phải fake: type file-local không được xuất hiện trong chữ ký
+    // thành viên của class test public (CS9051).
+    private static (AuthController Controller, DefaultHttpContext Http) ControllerFor(
+        IAuthService service, string? refreshCookie = null, string? userName = null)
+    {
+        var http = new DefaultHttpContext();
+        if (refreshCookie is not null)
+            http.Request.Headers.Cookie = $"examhub_refresh={refreshCookie}";
+        if (userName is not null)
+            http.User = new ClaimsPrincipal(new ClaimsIdentity(
+                [new Claim(ConstClaim.UserName, userName)], "test"));
+        return (
+            new AuthController(service) { ControllerContext = new ControllerContext { HttpContext = http } },
+            http);
+    }
+
+    private static string SetCookieHeader(DefaultHttpContext http)
+        => Assert.Single(http.Response.Headers.SetCookie!)!;
+
     [Fact]
-    public void RefreshToken_UsesPostBodyAndReturnsTokenModel()
+    public void RefreshToken_TakesAccessTokenOnlyAndReturnsAccessTokenResponse()
     {
         var action = typeof(AuthController).GetMethod(nameof(AuthController.RefreshToken))!;
 
         var post = Assert.Single(action.GetCustomAttributes<HttpPostAttribute>());
         Assert.Equal("refresh-token", post.Template);
-        Assert.Empty(action.GetCustomAttributes<HttpGetAttribute>());
 
         var parameter = Assert.Single(action.GetParameters());
         Assert.NotNull(parameter.GetCustomAttribute<FromBodyAttribute>());
+        Assert.Equal(typeof(RefreshAccessTokenRequest), parameter.ParameterType);
 
-        // Verify return type is Task<ActionResult<RequestResponse<TokenModel>>>
-        Assert.True(action.ReturnType.IsGenericType);
-        Assert.Equal("Task`1", action.ReturnType.Name);
-        var actionResultType = action.ReturnType.GetGenericArguments()[0];
-        Assert.Equal("ActionResult`1", actionResultType.Name);
-        var responseType = actionResultType.GetGenericArguments()[0];
+        var responseType = action.ReturnType.GetGenericArguments()[0].GetGenericArguments()[0];
         Assert.Equal("RequestResponse`1", responseType.Name);
-        Assert.Equal("TokenModel", responseType.GetGenericArguments()[0].Name);
+        Assert.Equal(typeof(AccessTokenResponse), responseType.GetGenericArguments()[0]);
+    }
+
+    [Fact]
+    public void Logout_RequiresAuthorizationAndPostsToLogout()
+    {
+        var action = typeof(AuthController).GetMethod(nameof(AuthController.Logout))!;
+
+        Assert.Equal("logout", Assert.Single(action.GetCustomAttributes<HttpPostAttribute>()).Template);
+        Assert.NotEmpty(action.GetCustomAttributes<Microsoft.AspNetCore.Authorization.AuthorizeAttribute>());
+    }
+
+    [Fact]
+    public async Task Login_PutsRefreshTokenInHttpOnlyCookieAndKeepsItOutOfTheBody()
+    {
+        var service = new FakeAuthService { TokenToReturn = new TokenModel("access-1", "refresh-1") };
+        var (controller, http) = ControllerFor(service);
+
+        var result = await controller.Login(new LoginDto { UserName = "u", Password = "p" });
+
+        var cookie = SetCookieHeader(http);
+        Assert.Contains("examhub_refresh=refresh-1", cookie);
+        Assert.Contains("httponly", cookie, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("secure", cookie, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("samesite=lax", cookie, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("path=/api/Auth", cookie, StringComparison.OrdinalIgnoreCase);
+
+        var body = Assert.IsType<TVT.Core.RequestResponse<AccessTokenResponse>>(
+            Assert.IsType<OkObjectResult>(result.Result).Value);
+        Assert.Equal("access-1", body.Data!.AccessToken);
+        // Refresh token không được lọt vào response body dưới bất kỳ hình thức nào.
+        Assert.DoesNotContain("refresh-1", System.Text.Json.JsonSerializer.Serialize(body));
+    }
+
+    [Fact]
+    public async Task RefreshToken_ReadsCookieAndRotatesIt()
+    {
+        var service = new FakeAuthService { TokenToReturn = new TokenModel("access-2", "refresh-2") };
+        var (controller, http) = ControllerFor(service, refreshCookie: "refresh-1");
+
+        var result = await controller.RefreshToken(new RefreshAccessTokenRequest("expired-access"));
+
+        Assert.Equal(("expired-access", "refresh-1"), service.RefreshCall);
+        Assert.Contains("examhub_refresh=refresh-2", SetCookieHeader(http));
+        var body = Assert.IsType<TVT.Core.RequestResponse<AccessTokenResponse>>(
+            Assert.IsType<OkObjectResult>(result.Result).Value);
+        Assert.Equal("access-2", body.Data!.AccessToken);
+    }
+
+    [Fact]
+    public async Task RefreshToken_WithoutCookie_FailsWithoutCallingService()
+    {
+        var service = new FakeAuthService();
+        var (controller, _) = ControllerFor(service);
+
+        var result = await controller.RefreshToken(new RefreshAccessTokenRequest("expired-access"));
+
+        Assert.Null(service.RefreshCall);
+        var body = Assert.IsType<TVT.Core.RequestResponse<AccessTokenResponse>>(
+            Assert.IsType<OkObjectResult>(result.Result).Value);
+        Assert.Equal(RequestResponseStatus.Error, body.Status);
+    }
+
+    [Fact]
+    public async Task Logout_RevokesStoredTokenAndClearsCookie()
+    {
+        var service = new FakeAuthService();
+        var (controller, http) = ControllerFor(service, refreshCookie: "refresh-1", userName: "teacher1");
+
+        await controller.Logout();
+
+        Assert.Equal("teacher1", service.RevokedUserName);
+        var cookie = SetCookieHeader(http);
+        Assert.Contains("examhub_refresh=", cookie);
+        Assert.Contains("expires=Thu, 01 Jan 1970", cookie, StringComparison.OrdinalIgnoreCase);
     }
 }
 
