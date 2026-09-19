@@ -1,7 +1,9 @@
 using System.Threading.RateLimiting;
+using ExamHub.API.Health;
 using ExamHub.Core;
 using ExamHub.Core.Infrastructure.Persistence;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 using TVT.Core.Extensions;
@@ -45,6 +47,9 @@ builder.Services.AddCors(options =>
         .AllowAnyMethod()
         .AllowCredentials());
 });
+
+builder.Services.AddHealthChecks()
+    .AddCheck<DatabaseReadyCheck>("database", tags: ["ready"]);
 
 builder.Services.AddRateLimiter(options =>
 {
@@ -110,5 +115,21 @@ app.UseAuthentication();
 app.UseAuthorization();
 // Sau UseAuthentication để policy write-heavy phân vùng được theo username.
 app.UseRateLimiter();
+
+// Liveness không gọi dependency nào — chỉ trả lời "process còn sống". Readiness mới kiểm database.
+// Cả hai AllowAnonymous vì fallback policy của app là RequireAuthenticatedUser, còn orchestrator
+// probe thì không có token.
+app.MapHealthChecks("/health/live", new HealthCheckOptions
+{
+    Predicate = _ => false,
+    ResponseWriter = HealthResponse.WriteAsync,
+}).AllowAnonymous();
+
+app.MapHealthChecks("/health/ready", new HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("ready"),
+    ResponseWriter = HealthResponse.WriteAsync,
+}).AllowAnonymous();
+
 app.MapControllers();
 app.Run();
