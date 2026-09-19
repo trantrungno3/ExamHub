@@ -34,14 +34,28 @@ public class CohortMemberRepository : BaseRepository<CohortMember, Guid>, ICohor
             .FirstOrDefaultAsync(x => x.CohortId == cohortId && x.StudentId == studentId, ct);
 
     public async Task<bool> SetActiveAsync(Guid id, bool isActive, CancellationToken ct = default)
-        => await Set
+    {
+        var now = DateTime.UtcNow;
+        var modifiedBy = Db.CurrentUserName;
+        return await Set
             .Where(x => x.Id == id)
-            .ExecuteUpdateAsync(s => s.SetProperty(x => x.IsActive, isActive), ct) > 0;
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(x => x.IsActive, isActive)
+                .SetProperty(x => x.Modified, now)
+                .SetProperty(x => x.ModifiedBy, modifiedBy), ct) > 0;
+    }
 
     public async Task<bool> SetSectionAsync(Guid id, string? section, CancellationToken ct = default)
-        => await Set
+    {
+        var now = DateTime.UtcNow;
+        var modifiedBy = Db.CurrentUserName;
+        return await Set
             .Where(x => x.Id == id)
-            .ExecuteUpdateAsync(s => s.SetProperty(x => x.Section, section), ct) > 0;
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(x => x.Section, section)
+                .SetProperty(x => x.Modified, now)
+                .SetProperty(x => x.ModifiedBy, modifiedBy), ct) > 0;
+    }
 
     /// <inheritdoc/>
     public Task<bool> ExistsActiveMembershipAsync(int cohortId, Guid studentId, CancellationToken ct = default)

@@ -84,9 +84,14 @@ public class ExamRepository : BaseRepository<Exam, Guid>, IExamRepository
 
     /// <inheritdoc/>
     public async Task<bool> UpdateStatusAsync(Guid id, ExamStatusEnum status, CancellationToken ct = default)
-        => await Set
+    {
+        var now = DateTime.UtcNow;
+        var modifiedBy = Db.CurrentUserName;
+        return await Set
             .Where(x => x.Id == id)
             .ExecuteUpdateAsync(s => s
                 .SetProperty(x => x.Status, status)
-                .SetProperty(x => x.Modified, DateTime.UtcNow), ct) > 0;
+                .SetProperty(x => x.Modified, now)
+                .SetProperty(x => x.ModifiedBy, modifiedBy), ct) > 0;
+    }
 }

@@ -4,8 +4,11 @@ using ExamHub.API.Controllers;
 using ExamHub.Core;
 using ExamHub.Core.Application.Services;
 using ExamHub.Core.DataAccessObjects;
+using ExamHub.Core.DataTransferObjects.User;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
+using TVT.Core.Claims;
 using TVT.Core.Db.PostgreSql.Services;
 using TVT.Core.Enums;
 using TVT.Core.Extensions;
@@ -30,17 +33,27 @@ file sealed class FakeTokenClaimsResolver : ITokenClaimsResolver
 file sealed class FakeUserServiceForLogin : IUserService
 {
     public UserAdmin? UserToReturn { get; set; }
+    public UserAdmin? CreatedUser { get; private set; }
+    public UserAdmin? UpdatedUser { get; private set; }
     public List<KeyValuePair<string, string>>? CapturedCustomData { get; private set; }
     public string AccessTokenToReturn { get; set; } = "new-access-token";
     public string RefreshTokenToReturn { get; set; } = "new-refresh-token";
 
     public IEnumerable<UserAdmin> GetList() => throw new NotSupportedException();
-    public Task<UserAdmin?> CreateAsync(UserAdmin user) => throw new NotSupportedException();
+    public Task<UserAdmin?> CreateAsync(UserAdmin user)
+    {
+        CreatedUser = user;
+        return Task.FromResult<UserAdmin?>(user);
+    }
     public Task<UserAdmin?> FindByIdAsync(Guid id) => throw new NotSupportedException();
     public Task<UserAdmin?> FindByNameAsync(string userName) => Task.FromResult(UserToReturn);
     public Task<UserAdmin?> FindByEmailAsync(string email) => throw new NotSupportedException();
     public Task<int> UpdateOneFieldAsync<TField>(Guid id, System.Linq.Expressions.Expression<Func<UserAdmin, TField>> field, TField value) => throw new NotSupportedException();
-    public Task<int> UpdateAsync(UserAdmin user) => throw new NotSupportedException();
+    public Task<int> UpdateAsync(UserAdmin user)
+    {
+        UpdatedUser = user;
+        return Task.FromResult(1);
+    }
     public Task<int> UpdateFieldsAsync(Guid id, params TVT.Core.Db.PostgreSql.SqlBuilder.FieldUpdate<UserAdmin>[] fields) => throw new NotSupportedException();
     public Task<bool> CheckUserNameExistAsync(string userName) => throw new NotSupportedException();
     public Task<bool> CheckUserExistByIdAsync(Guid id) => throw new NotSupportedException();
@@ -57,6 +70,96 @@ file sealed class FakeUserServiceForLogin : IUserService
     }
 
     public string CreateTokenJwt(ConfigAudience audienceConfig, UserAdmin user, TimeSpan expireTime) => throw new NotSupportedException();
+}
+
+public class AuditUserWriteTests
+{
+    static AuditUserWriteTests() => AppCommon.SaltPassHash = "test-salt";
+
+    [Fact]
+    public async Task Register_stamps_creator_and_modifier()
+    {
+        var users = new FakeUserServiceForLogin();
+        var service = new AuthService(users, new FakeTokenClaimsResolver());
+
+        await service.Register(new RegisterDto
+        {
+            UserName = "student1",
+            Password = "secret1",
+            DisplayName = "Student One",
+        });
+
+        Assert.Equal("student1", users.CreatedUser!.CreatedBy);
+        Assert.Equal("student1", users.CreatedUser.ModifiedBy);
+        Assert.NotNull(users.CreatedUser.Modified);
+    }
+
+    [Fact]
+    public async Task UpdateProfile_stamps_current_user()
+    {
+        var user = User("student1");
+        var users = new FakeUserServiceForLogin { UserToReturn = user };
+        var service = new AuthService(users, new FakeTokenClaimsResolver());
+
+        await service.UpdateProfile("student1", new UpdateProfileDto
+        {
+            DisplayName = "Student One Updated",
+        });
+
+        Assert.Same(user, users.UpdatedUser);
+        Assert.Equal("student1", user.ModifiedBy);
+        Assert.NotNull(user.Modified);
+    }
+
+    [Fact]
+    public async Task ChangePassword_stamps_current_user()
+    {
+        var user = User("student1");
+        user.PasswordHash = "old-secret".GetPasswordHash(AppCommon.SaltPassHash!);
+        var users = new FakeUserServiceForLogin { UserToReturn = user };
+        var service = new AuthService(users, new FakeTokenClaimsResolver());
+
+        await service.ChangePassword("student1", new ChangePasswordDto
+        {
+            OldPassword = "old-secret",
+            NewPassword = "new-secret",
+        });
+
+        Assert.Same(user, users.UpdatedUser);
+        Assert.Equal("student1", user.ModifiedBy);
+        Assert.NotNull(user.Modified);
+    }
+
+    [Fact]
+    public async Task AdminCreate_stamps_current_admin()
+    {
+        var users = new FakeUserServiceForLogin();
+        var principal = new ClaimsPrincipal(new ClaimsIdentity(
+            [new Claim(ConstClaim.UserName, "admin1")], "test"));
+        var accessor = new HttpContextAccessor
+        {
+            HttpContext = new DefaultHttpContext { User = principal },
+        };
+        var service = new UserManagementService(users, accessor);
+
+        await service.CreateAsync(new CreateUserRequest
+        {
+            UserName = "student1",
+            Password = "secret1",
+            DisplayName = "Student One",
+        });
+
+        Assert.Equal("admin1", users.CreatedUser!.CreatedBy);
+        Assert.Equal("admin1", users.CreatedUser.ModifiedBy);
+        Assert.NotNull(users.CreatedUser.Modified);
+    }
+
+    private static UserAdmin User(string userName) => new()
+    {
+        Id = Guid.NewGuid(),
+        UserName = userName,
+        DisplayName = "Student One",
+    };
 }
 
 public class AuthServiceLoginClaimsTests

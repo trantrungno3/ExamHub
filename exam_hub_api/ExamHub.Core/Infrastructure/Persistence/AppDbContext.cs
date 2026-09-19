@@ -1,8 +1,11 @@
 using ExamHub.Core.Domain.Entities;
 using ExamHub.Core.Domain.Enums;
 using ExamHub.Core.Infrastructure.Persistence.Converters;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using TVT.Core.Claims;
 using TVT.Core.IdentityUser.PostgreSql.FieldTables;
+using TVT.Core.Models;
 
 namespace ExamHub.Core.Infrastructure.Persistence;
 
@@ -11,9 +14,57 @@ namespace ExamHub.Core.Infrastructure.Persistence;
 /// </summary>
 public class AppDbContext : DbContext
 {
+    private readonly IHttpContextAccessor? _httpContextAccessor;
+
     /// <inheritdoc />
-    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
+    public AppDbContext(
+        DbContextOptions<AppDbContext> options,
+        IHttpContextAccessor? httpContextAccessor = null) : base(options)
     {
+        _httpContextAccessor = httpContextAccessor;
+    }
+
+    internal string? CurrentUserName =>
+        _httpContextAccessor?.HttpContext?.User.FindFirst(ConstClaim.UserName)?.Value;
+
+    internal void ApplyAuditFields(DateTime now)
+    {
+        foreach (var entry in ChangeTracker.Entries<ModifyModelBase>()
+                     .Where(x => x.State is EntityState.Added or EntityState.Modified))
+        {
+            var entity = entry.Entity;
+            if (entry.State == EntityState.Added)
+            {
+                entity.Created ??= now;
+                entity.CreatedBy ??= CurrentUserName;
+                entity.Modified ??= now;
+                entity.ModifiedBy ??= entity.CreatedBy ?? CurrentUserName;
+                continue;
+            }
+
+            entry.Property(x => x.Created).IsModified = false;
+            entry.Property(x => x.CreatedBy).IsModified = false;
+            entity.Modified = now;
+            entity.ModifiedBy = CurrentUserName ?? entity.ModifiedBy;
+            entry.Property(x => x.Modified).IsModified = true;
+            entry.Property(x => x.ModifiedBy).IsModified = true;
+        }
+    }
+
+    /// <inheritdoc />
+    public override int SaveChanges(bool acceptAllChangesOnSuccess)
+    {
+        ApplyAuditFields(DateTime.UtcNow);
+        return base.SaveChanges(acceptAllChangesOnSuccess);
+    }
+
+    /// <inheritdoc />
+    public override Task<int> SaveChangesAsync(
+        bool acceptAllChangesOnSuccess,
+        CancellationToken cancellationToken = default)
+    {
+        ApplyAuditFields(DateTime.UtcNow);
+        return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
     }
 
     // ── DbSets ──────────────────────────────────────────────────────────────

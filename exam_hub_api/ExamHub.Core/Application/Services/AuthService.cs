@@ -43,7 +43,12 @@ public sealed class AuthService(IUserService userService, ITokenClaimsResolver t
         if (userInfo != null)
             return RequestResponse<object>.Error("Người dùng đã tồn tại!");
         var data = dto.ToDomain();
+        var now = DateTime.UtcNow;
         data.PasswordHash = dto.Password.GetPasswordHash(AppCommon.SaltPassHash!);
+        data.Created = now;
+        data.CreatedBy = dto.UserName;
+        data.Modified = now;
+        data.ModifiedBy = dto.UserName;
         var userAdmin = await userService.CreateAsync(data);
         return userAdmin != null
             ? RequestResponse<object>.Success("Đăng kí thành công!")
@@ -116,6 +121,7 @@ public sealed class AuthService(IUserService userService, ITokenClaimsResolver t
         user.PhoneNumber = dto.PhoneNumber;
         if (!string.IsNullOrEmpty(dto.Email))
             user.SetEmail(dto.Email);
+        user.ModifiedBy = userName;
         user.Modified = DateTime.UtcNow;
         await userService.UpdateAsync(user);
 
@@ -140,6 +146,7 @@ public sealed class AuthService(IUserService userService, ITokenClaimsResolver t
             return RequestResponse<bool>.Error("Mật khẩu hiện tại không đúng!");
 
         user.PasswordHash = dto.NewPassword.GetPasswordHash(AppCommon.SaltPassHash!);
+        user.ModifiedBy = userName;
         user.Modified = DateTime.UtcNow;
         await userService.UpdateAsync(user);
 

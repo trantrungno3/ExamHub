@@ -23,7 +23,14 @@ public class CohortClassRepository : BaseRepository<CohortClass, int>, ICohortCl
             .ToListAsync(ct);
 
     public async Task<bool> SetHomeroomTeacherAsync(int id, Guid? teacherId, CancellationToken ct = default)
-        => await Set
+    {
+        var now = DateTime.UtcNow;
+        var modifiedBy = Db.CurrentUserName;
+        return await Set
             .Where(x => x.Id == id)
-            .ExecuteUpdateAsync(s => s.SetProperty(x => x.HomeroomTeacherId, teacherId), ct) > 0;
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(x => x.HomeroomTeacherId, teacherId)
+                .SetProperty(x => x.Modified, now)
+                .SetProperty(x => x.ModifiedBy, modifiedBy), ct) > 0;
+    }
 }
