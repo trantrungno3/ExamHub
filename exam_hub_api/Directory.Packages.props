@@ -2,9 +2,22 @@
   <PropertyGroup>
     <!-- Enable central package management, https://learn.microsoft.com/en-us/nuget/consume-packages/Central-Package-Management -->
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <!-- Cho phép pin cả package transitive: ba CVE dưới đây đến qua ../trungtv_core, repo đó không
+         import file này, nên không pin transitive thì không nâng được từ phía ExamHub. -->
+    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
     <TargetFramework>net10.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
+    <!-- Vá CVE transitive. Lấy đúng bản vá TỐI THIỂU theo advisory, không lấy bản mới nhất:
+         Microsoft.OpenApi có nhánh 3.x nhưng nhảy major dễ vỡ code trungtv_core (được build từ
+         source cùng repo này), nên dùng 2.7.5 — bản vá của nhánh 2.x.
+         GHSA-v5pm-xwqc-g5wc (High)   Microsoft.OpenApi  2.3.0  -> 2.7.5
+         GHSA-pggp-6c3x-2xmx (High)   Snappier           1.0.0  -> 1.3.1
+         GHSA-6c8g-7p36-r338 (Mod)    SharpCompress      0.30.1 -> 0.48.0 -->
+    <PackageVersion Include="Microsoft.OpenApi" Version="2.7.5" />
+    <PackageVersion Include="Snappier" Version="1.3.1" />
+    <PackageVersion Include="SharpCompress" Version="0.48.0" />
+
     <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.3" />
     <PackageVersion Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="10.0.2" />
     <PackageVersion Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="10.0.2" />
