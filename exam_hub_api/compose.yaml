@@ -65,6 +65,12 @@
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:?set RABBITMQ_DEFAULT_USER}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:?set RABBITMQ_DEFAULT_PASS}
+    # Không thêm volume: RabbitMQ ở đây chỉ chuyển message, không giữ state của ứng dụng.
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "check_running"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
 
   minio:
     image: quay.io/minio/minio:RELEASE.2025-03-12T18-04-18Z-cpuv1
@@ -73,12 +79,17 @@
     ports:
       - '9000:9000'
       - '9001:9001'
-#    volumes:
-#      - ./storage:/data
+    volumes:
+      - miniodata:/data
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:?set MINIO_ROOT_USER}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?set MINIO_ROOT_PASSWORD}
     command: server --console-address ":9001" /data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   postgres:
     image: postgres:17-alpine
@@ -91,6 +102,9 @@
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB:?set POSTGRES_DB}
     volumes:
+      # pgdata đã được khai báo ở cuối file nhưng KHÔNG được mount — dữ liệu PostgreSQL mất sạch
+      # mỗi lần recreate container. Đây là mount thật sự giữ data.
+      - pgdata:/var/lib/postgresql/data
       # Bootstrap schema bằng DDL snapshot. EF migration đã là nguồn schema chuẩn
       # (Database:ApplyMigrationsOnStartup, xem appsettings.json) nhưng compose chưa có service API
       # nào để chạy migrate, nên mount này còn ở lại. Bỏ nó cùng lúc thêm service API dev đặt
@@ -103,17 +117,30 @@
       retries: 5
 
   redis:
+    # KHÔNG pin được: Bitnami đã rút mọi tag versioned của bitnami/redis khỏi Docker Hub (đã thử
+    # 7.2 / 7.4 / 7.4.1 / 8.0 — không tồn tại), chỉ còn `latest`. Muốn pin phải chuyển sang image
+    # redis chính thức, nhưng image đó đặt mật khẩu bằng `--requirepass` chứ không phải
+    # REDIS_PASSWORD, tức đổi contract config — cần owner quyết định, không tự đổi.
     image: 'bitnami/redis:latest'
     container_name: redis
     restart: unless-stopped
     environment:
       REDIS_PASSWORD: ${REDIS_PASSWORD:?set REDIS_PASSWORD}
       REDIS_MASTER_PASSWORD: ${REDIS_PASSWORD:?set REDIS_PASSWORD}
+      # AOF bật thì volume mới thật sự giữ dữ liệu qua restart.
+      REDIS_AOF_ENABLED: 'yes'
+    volumes:
+      - redisdata:/bitnami/redis/data
     ports:
       - '6379:6379'
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a $${REDIS_PASSWORD} ping | grep -q PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   mongo:
-    image: 'mongo:latest'
+    image: 'mongo:8.0'
     container_name: mongo
     restart: unless-stopped
     ports:
@@ -121,6 +148,16 @@
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME:?set MONGO_INITDB_ROOT_USERNAME}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD:?set MONGO_INITDB_ROOT_PASSWORD}
+    volumes:
+      - mongodata:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 volumes:
   pgdata:
+  miniodata:
+  mongodata:
+  redisdata:
