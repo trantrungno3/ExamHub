@@ -1,5 +1,5 @@
 import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query'
-import {message} from 'antd'
+import {App} from 'antd'
 import {statusCode} from '../../services/requestService'
 import {questionService} from '../../services/questionService'
 
@@ -41,6 +41,7 @@ export function useQuestionQuery(id: string | undefined) {
 
 export function useDeleteQuestionMutation() {
     const qc = useQueryClient()
+    const {message} = App.useApp()
     return useMutation({
         mutationFn: (id: string) => questionService.remove(id),
         onSuccess: (res) => {
@@ -58,6 +59,7 @@ export function useDeleteQuestionMutation() {
 
 export function useVerifyQuestionMutation() {
     const qc = useQueryClient()
+    const {message} = App.useApp()
     return useMutation({
         mutationFn: (id: string) => questionService.verify(id),
         onSuccess: () => {
@@ -71,6 +73,7 @@ export function useVerifyQuestionMutation() {
 
 export function useUnverifyQuestionMutation() {
     const qc = useQueryClient()
+    const {message} = App.useApp()
     return useMutation({
         mutationFn: (id: string) => questionService.unverify(id),
         onSuccess: () => {
@@ -84,6 +87,7 @@ export function useUnverifyQuestionMutation() {
 
 export function useRejectQuestionMutation() {
     const qc = useQueryClient()
+    const {message} = App.useApp()
     return useMutation({
         mutationFn: ({id, reason}: {id: string; reason: string}) => questionService.reject(id, reason),
         onSuccess: (res) => {
@@ -98,6 +102,7 @@ export function useRejectQuestionMutation() {
 
 export function useBulkImportMutation() {
     const qc = useQueryClient()
+    const {message} = App.useApp()
     return useMutation({
         mutationFn: (args: BulkImportArgs) => questionService.bulkImport(args),
         onSuccess: (res) => {

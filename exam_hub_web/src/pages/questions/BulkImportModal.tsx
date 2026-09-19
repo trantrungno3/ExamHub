@@ -1,8 +1,8 @@
-import {useState} from 'react'
-import {Alert, Button, Modal, Select, Upload} from 'antd'
-import type {UploadFile} from 'antd'
-import {DownloadOutlined, InboxOutlined} from '@ant-design/icons'
-import {useBulkImportMutation} from '../../hooks/queries/useQuestions'
+import { DownloadOutlined, InboxOutlined } from '@ant-design/icons'
+import type { UploadFile } from 'antd'
+import { Alert, Button, Modal, Select, Upload } from 'antd'
+import { useState } from 'react'
+import { useBulkImportMutation } from '../../hooks/queries/useQuestions'
 
 type Props = {
     open: boolean
@@ -12,7 +12,7 @@ type Props = {
     cognitives: CognitiveLevel[]
 }
 
-export function BulkImportModal({open, onClose, topics, difficulties, cognitives}: Props) {
+export function BulkImportModal({ open, onClose, topics, difficulties, cognitives }: Props) {
     const [fileList, setFileList] = useState<UploadFile[]>([])
     const [topicId, setTopicId] = useState<number>()
     const [difficultyId, setDifficultyId] = useState<number>()
@@ -76,7 +76,7 @@ export function BulkImportModal({open, onClose, topics, difficulties, cognitives
                         onChange={setTopicId}
                         showSearch
                         optionFilterProp="label"
-                        options={topics.map(t => ({value: t.id, label: t.name}))}
+                        options={topics.map(t => ({ value: t.id, label: t.name }))}
                     />
                 </div>
                 <div>
@@ -86,7 +86,7 @@ export function BulkImportModal({open, onClose, topics, difficulties, cognitives
                         className="w-full"
                         value={difficultyId}
                         onChange={setDifficultyId}
-                        options={difficulties.map(d => ({value: d.id, label: d.name}))}
+                        options={difficulties.map(d => ({ value: d.id, label: d.name }))}
                     />
                 </div>
                 <div>
@@ -97,7 +97,7 @@ export function BulkImportModal({open, onClose, topics, difficulties, cognitives
                         allowClear
                         value={cognitiveId}
                         onChange={setCognitiveId}
-                        options={cognitives.map(c => ({value: c.id, label: c.name}))}
+                        options={cognitives.map(c => ({ value: c.id, label: c.name }))}
                     />
                 </div>
 
@@ -108,7 +108,7 @@ export function BulkImportModal({open, onClose, topics, difficulties, cognitives
                     <Button
                         type="link"
                         size="small"
-                        icon={<DownloadOutlined/>}
+                        icon={<DownloadOutlined />}
                         href="/question_import_template.xlsx"
                         download
                     >
@@ -121,9 +121,9 @@ export function BulkImportModal({open, onClose, topics, difficulties, cognitives
                     maxCount={1}
                     fileList={fileList}
                     beforeUpload={() => false}
-                    onChange={({fileList: fl}) => setFileList(fl.slice(-1))}
+                    onChange={({ fileList: fl }) => setFileList(fl.slice(-1))}
                 >
-                    <p className="ant-upload-drag-icon"><InboxOutlined/></p>
+                    <p className="ant-upload-drag-icon"><InboxOutlined /></p>
                     <p className="ant-upload-text">Kéo thả hoặc bấm để chọn file .xlsx</p>
                 </Upload.Dragger>
 
@@ -131,7 +131,7 @@ export function BulkImportModal({open, onClose, topics, difficulties, cognitives
                     <Alert
                         type={result.errorCount > 0 ? 'warning' : 'success'}
                         showIcon
-                        message={`Đã import ${result.successCount} câu, ${result.errorCount} lỗi`}
+                        title={`Đã import ${result.successCount} câu, ${result.errorCount} lỗi`}
                         description={result.errors.length > 0 && (
                             <ul className="list-disc pl-4 max-h-40 overflow-auto">
                                 {result.errors.map((e, i) => (

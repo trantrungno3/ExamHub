@@ -1,4 +1,4 @@
-import { ConfigProvider } from 'antd'
+import { App as AntdApp, ConfigProvider } from 'antd'
 import { AppRouter } from './routes'
 import { AuthProvider } from './AuthProvider'
 import { BRAND } from './constants/theme'
@@ -24,9 +24,11 @@ const theme = {
 export default function App() {
   return (
     <ConfigProvider theme={theme}>
-      <AuthProvider>
-        <AppRouter />
-      </AuthProvider>
+      <AntdApp>
+        <AuthProvider>
+          <AppRouter />
+        </AuthProvider>
+      </AntdApp>
     </ConfigProvider>
   )
 }

@@ -1,70 +1,59 @@
 ﻿services:
-  # Build context là exam_hub_api (trong repo), còn repo sibling trungtv_core vào bằng named
-  # additional context — xem đầu ExamHub.API/Dockerfile để biết vì sao không đặt context ở thư mục cha.
-  # Đổi đường dẫn trungtv_core ở đây nếu nó không nằm cạnh repo này.
-  migrate:
-    build: &api-build
-      context: .
-      dockerfile: ExamHub.API/Dockerfile
-      additional_contexts:
-        trungtv_core: ../../trungtv_core
-    container_name: examhub-migrate
-    # One-shot gate: chạy migration rồi exit 0. api chỉ start sau khi service này hoàn tất, nên
-    # không instance nào nhận traffic trên schema chưa sẵn sàng.
-    command: ["--migrate-only"]
-    restart: "no"
-    environment: &api-env
-      ASPNETCORE_ENVIRONMENT: Development
-      PostgreSqlConfig__ConnectionString: "Server=postgres;Port=5432;Database=${POSTGRES_DB};User Id=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};"
-      Redis__ConnectionString: "redis:6379,password=${REDIS_PASSWORD}"
-      MongoStorageLogConfig__ConnectionString: "mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@mongo:27017/?authSource=admin"
-      MinioStorageConfig__Endpoint: "minio:9000"
-      MinioStorageConfig__AccessKey: ${MINIO_ROOT_USER}
-      MinioStorageConfig__SecretKey: ${MINIO_ROOT_PASSWORD}
-      # web phục vụ frontend và proxy /api, nên browser chỉ thấy một origin.
-      Cors__AllowedOrigins__0: ${WEB_ORIGIN:-http://localhost:8080}
-    depends_on:
-      postgres:
-        condition: service_healthy
-
-  api:
-    build: *api-build
-    container_name: examhub-api
-    restart: unless-stopped
-    environment: *api-env
-    depends_on:
-      migrate:
-        condition: service_completed_successfully
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      mongo:
-        condition: service_healthy
-      minio:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-fsS", "http://localhost:8080/health/ready"]
-      interval: 10s
-      timeout: 5s
-      retries: 6
-      start_period: 30s
-
-  web:
-    build:
-      context: ../exam_hub_web
-      args:
-        # Vite nhúng giá trị này lúc build, nên đổi origin công khai là phải build lại image web.
-        VITE_API_BASE: ${WEB_ORIGIN:-http://localhost:8080}
-    container_name: examhub-web
-    restart: unless-stopped
-    ports:
-      - "${WEB_PORT:-8080}:80"
-    environment:
-      API_ORIGIN: http://api:8080
-    depends_on:
-      api:
-        condition: service_healthy
+#  api:
+#    build:
+#      context: ./ExamHub.API
+#      dockerfile: Dockerfile
+#    container_name: api
+#    restart: unless-stopped
+#    ports:
+#      - "5000:8080"
+#    environment:
+#      ConnectionStrings__Default: "Host=postgres;Database=content;Username=admin;Password=content@123"
+#      ConnectionStrings__MongoDB: "mongodb://admin:admin@123@mongo:27017/"
+#      Redis__ConnectionString: "redis:6379,password=redis@123"
+#      MinIO__Endpoint: "minio:9000"
+#      MinIO__AccessKey: "admin"
+#      MinIO__SecretKey: "admin@123"
+#      RabbitMQ__Host: "rabbitmq"
+#      RabbitMQ__Username: "admin"
+#      RabbitMQ__Password: "rabbit@123"
+#      Jwt__SecretKey: "your-super-secret-256-bit-key"
+#      Jwt__Issuer: "ExamHub"
+#      Jwt__Audience: "ExamHubUsers"
+#    depends_on:
+#      postgres:
+#        condition: service_healthy
+#      redis:
+#        condition: service_started
+#      mongo:
+#        condition: service_started
+#      minio:
+#        condition: service_started
+#      rabbitmq:
+#        condition: service_started
+#
+#  frontend:
+#    build:
+#      context: ./frontend
+#      dockerfile: Dockerfile
+#    container_name: frontend
+#    restart: unless-stopped
+#    ports:
+#      - "3000:80"
+#    depends_on:
+#      - api
+#
+#  nginx:
+#    image: nginx:alpine
+#    container_name: nginx
+#    restart: unless-stopped
+#    ports:
+#      - "80:80"
+#    volumes:
+#      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+#    depends_on:
+#      - api
+#      - frontend
 
   rabbitmq:
     image: rabbitmq:4.1.0-management
@@ -74,14 +63,8 @@
       - '5672:5672'
       - '15672:15672'
     environment:
-      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:?set RABBITMQ_DEFAULT_USER}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:?set RABBITMQ_DEFAULT_PASS}
-    # Không thêm volume: RabbitMQ ở đây chỉ chuyển message, không giữ state của ứng dụng.
-    healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "-q", "check_running"]
-      interval: 15s
-      timeout: 10s
-      retries: 5
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: rabbit@123
 
   minio:
     image: quay.io/minio/minio:RELEASE.2025-03-12T18-04-18Z-cpuv1
@@ -90,17 +73,12 @@
     ports:
       - '9000:9000'
       - '9001:9001'
-    volumes:
-      - miniodata:/data
+#    volumes:
+#      - ./storage:/data
     environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:?set MINIO_ROOT_USER}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?set MINIO_ROOT_PASSWORD}
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: admin@123
     command: server --console-address ":9001" /data
-    healthcheck:
-      test: ["CMD", "mc", "ready", "local"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
   postgres:
     image: postgres:17-alpine
@@ -109,61 +87,36 @@
     ports:
       - "5432:5432"
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:?set POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB:?set POSTGRES_DB}
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: examhub@123
+      POSTGRES_DB: examhub
     volumes:
-      # pgdata đã được khai báo ở cuối file nhưng KHÔNG được mount — dữ liệu PostgreSQL mất sạch
-      # mỗi lần recreate container. Đây là mount thật sự giữ data.
-      - pgdata:/var/lib/postgresql/data
+      - ./database_schema.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} --dbname=$${POSTGRES_DB}"]
+      test: "pg_isready -U admin --dbname=examhub"
       interval: 10s
       timeout: 5s
       retries: 5
 
   redis:
-    # KHÔNG pin được: Bitnami đã rút mọi tag versioned của bitnami/redis khỏi Docker Hub (đã thử
-    # 7.2 / 7.4 / 7.4.1 / 8.0 — không tồn tại), chỉ còn `latest`. Muốn pin phải chuyển sang image
-    # redis chính thức, nhưng image đó đặt mật khẩu bằng `--requirepass` chứ không phải
-    # REDIS_PASSWORD, tức đổi contract config — cần owner quyết định, không tự đổi.
     image: 'bitnami/redis:latest'
     container_name: redis
     restart: unless-stopped
     environment:
-      REDIS_PASSWORD: ${REDIS_PASSWORD:?set REDIS_PASSWORD}
-      REDIS_MASTER_PASSWORD: ${REDIS_PASSWORD:?set REDIS_PASSWORD}
-      # AOF bật thì volume mới thật sự giữ dữ liệu qua restart.
-      REDIS_AOF_ENABLED: 'yes'
-    volumes:
-      - redisdata:/bitnami/redis/data
+      REDIS_PASSWORD: redis@123
+      REDIS_MASTER_PASSWORD: redis@123
     ports:
       - '6379:6379'
-    healthcheck:
-      test: ["CMD-SHELL", "redis-cli -a $${REDIS_PASSWORD} ping | grep -q PONG"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
   mongo:
-    image: 'mongo:8.0'
+    image: 'mongo:latest'
     container_name: mongo
     restart: unless-stopped
     ports:
       - '27017:27017'
     environment:
-      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME:?set MONGO_INITDB_ROOT_USERNAME}
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD:?set MONGO_INITDB_ROOT_PASSWORD}
-    volumes:
-      - mongodata:/data/db
-    healthcheck:
-      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin@123
 
 volumes:
   pgdata:
-  miniodata:
-  mongodata:
-  redisdata:

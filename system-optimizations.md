@@ -1,22 +1,24 @@
-# ExamHub — Đề xuất tối ưu hệ thống
+# xamHub — Đề xuất tối ưu hệ thống
 
 > Đánh giá từ source hiện tại ngày **2026-09-16**. Tài liệu này chỉ đề xuất và sắp xếp ưu tiên, chưa thay đổi logic ứng dụng.
 
 ## 1. Tóm tắt ưu tiên
 
-| Ưu tiên | Việc cần làm | Lợi ích chính | Ước lượng |
-|---|---|---|---|
-| P0 | Thu hồi và di chuyển toàn bộ secret khỏi Git | Chặn lộ DB/JWT/storage credentials | S–M |
-| P0 | Đồng bộ API refresh token giữa web và backend | Khôi phục refresh session đang lỗi runtime | S |
-| P1 | Nâng/cập nhật dependency có CVE và sửa EF version mismatch | Giảm rủi ro supply-chain/runtime | M |
-| P1 | Làm atomic luồng bắt đầu/nộp/lưu bài | Tránh vượt lượt, tạo hai bài, mất đáp án | M–L |
-| P1 | Siết CORS, rate limit, refresh token và route authorization | Giảm bề mặt tấn công | M |
-| P1 | Hoàn thiện CI và đưa lint về xanh | Ngăn regression trước merge | M |
-| P1 | Chuẩn hóa một nguồn schema/migration | Tránh môi trường có schema khác nhau | M |
-| P2 | Code-split frontend và bỏ devtools khỏi production | Giảm bundle 2,7 MB, tải trang nhanh hơn | M |
-| P2 | Tối ưu query/index/pagination | Ổn định khi dữ liệu tăng | M |
-| P2 | Thêm integration/E2E/contract tests | Bắt lỗi xuyên tầng | M–L |
-| P2 | Hoàn thiện Docker/health/observability | Deploy và vận hành tin cậy hơn | M |
+
+| Ưu tiên | Việc cần làm                                                | Lợi ích chính                              | Ước lượng |
+| ------- | ----------------------------------------------------------- | ------------------------------------------ | --------- |
+| P0      | Thu hồi và di chuyển toàn bộ secret khỏi Git                | Chặn lộ DB/JWT/storage credentials         | S–M       |
+| P0      | Đồng bộ API refresh token giữa web và backend               | Khôi phục refresh session đang lỗi runtime | S         |
+| P1      | Nâng/cập nhật dependency có CVE và sửa EF version mismatch  | Giảm rủi ro supply-chain/runtime           | M         |
+| P1      | Làm atomic luồng bắt đầu/nộp/lưu bài                        | Tránh vượt lượt, tạo hai bài, mất đáp án   | M–L       |
+| P1      | Siết CORS, rate limit, refresh token và route authorization | Giảm bề mặt tấn công                       | M         |
+| P1      | Hoàn thiện CI và đưa lint về xanh                           | Ngăn regression trước merge                | M         |
+| P1      | Chuẩn hóa một nguồn schema/migration                        | Tránh môi trường có schema khác nhau       | M         |
+| P2      | Code-split frontend và bỏ devtools khỏi production          | Giảm bundle 2,7 MB, tải trang nhanh hơn    | M         |
+| P2      | Tối ưu query/index/pagination                               | Ổn định khi dữ liệu tăng                   | M         |
+| P2      | Thêm integration/E2E/contract tests                         | Bắt lỗi xuyên tầng                         | M–L       |
+| P2      | Hoàn thiện Docker/health/observability                      | Deploy và vận hành tin cậy hơn             | M         |
+
 
 `S`: dưới 1 ngày, `M`: 1–3 ngày, `L`: trên 3 ngày; chỉ là ước lượng tương đối.
 
@@ -300,15 +302,17 @@ Hiện có logging/middleware từ TVT Core và config Mongo, nhưng source Exam
 
 Không đánh giá tối ưu chỉ bằng cảm giác; nên chốt baseline và đo lại:
 
-| Mảng | Chỉ số |
-|---|---|
-| Security | 0 secret trong scan; 0 high CVE; test 401/403 pass |
+
+| Mảng        | Chỉ số                                                                |
+| ----------- | --------------------------------------------------------------------- |
+| Security    | 0 secret trong scan; 0 high CVE; test 401/403 pass                    |
 | Reliability | 0 duplicate attempt trong concurrency test; autosave rollback an toàn |
-| Frontend | entry gzip, LCP, route load time, số request khi mở trang |
-| API | p50/p95/p99 latency, 5xx rate, DB query count và rows scanned |
-| Generator | thời gian sinh 1/20 đề, cache hit ratio, insufficient pool rate |
-| Submission | autosave/submit success rate, submit p95, grading backlog |
-| Delivery | CI duration, lint/build/test pass rate, deployment rollback rate |
+| Frontend    | entry gzip, LCP, route load time, số request khi mở trang             |
+| API         | p50/p95/p99 latency, 5xx rate, DB query count và rows scanned         |
+| Generator   | thời gian sinh 1/20 đề, cache hit ratio, insufficient pool rate       |
+| Submission  | autosave/submit success rate, submit p95, grading backlog             |
+| Delivery    | CI duration, lint/build/test pass rate, deployment rollback rate      |
+
 
 ## 8. Không nên làm ngay
 
@@ -317,3 +321,4 @@ Không đánh giá tối ưu chỉ bằng cảm giác; nên chốt baseline và 
 - Không refactor toàn bộ repository/service cùng lúc; ưu tiên các luồng P0/P1 có test.
 - Không tăng `chunkSizeWarningLimit` để che cảnh báo bundle; phải code-split hoặc chứng minh kích thước chấp nhận được.
 - Không suppress vulnerability/version warning nếu chưa xác định dependency gốc và bản vá.
+
