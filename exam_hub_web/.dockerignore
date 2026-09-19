@@ -1,0 +1,12 @@
+# node_modules của host là bản build cho OS khác: copy vào image sẽ ghi đè bản pnpm vừa install
+# và làm `pnpm build` phải install lại rồi fail.
+node_modules
+dist
+
+# Không đưa config local/secret vào image. .env.example vẫn vào được vì nó chỉ là mẫu.
+.env
+.env.*
+!.env.example
+
+.git
+*.log
