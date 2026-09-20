@@ -1,6 +1,7 @@
 import {describe, expect, it} from 'vitest'
 import {
     MAX_SCHOOL_MEMBER_IMPORT_BYTES,
+    canImportSchoolMemberPreview,
     validateSchoolMemberImportFile,
 } from './schoolMemberImportFile'
 
@@ -24,5 +25,15 @@ describe('validateSchoolMemberImportFile', () => {
                 size: MAX_SCHOOL_MEMBER_IMPORT_BYTES,
             }),
         ).toBeNull()
+    })
+})
+
+describe('canImportSchoolMemberPreview', () => {
+    it.each([
+        [undefined, false],
+        [{validCount: 0}, false],
+        [{validCount: 1}, true],
+    ])('gates import from preview %#', (preview, expected) => {
+        expect(canImportSchoolMemberPreview(preview)).toBe(expected)
     })
 })

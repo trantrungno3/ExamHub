@@ -11,3 +11,10 @@ export function validateSchoolMemberImportFile(
         ? 'File import không được vượt quá 10 MB.'
         : null
 }
+
+/** Chỉ cho phép import khi preview còn ít nhất một dòng hợp lệ. */
+export function canImportSchoolMemberPreview(
+    preview?: Pick<SchoolMemberImportPreview, 'validCount'>,
+): boolean {
+    return (preview?.validCount ?? 0) > 0
+}
