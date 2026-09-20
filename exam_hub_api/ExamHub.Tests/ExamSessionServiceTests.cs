@@ -229,6 +229,33 @@ public class ExamSessionServiceManagementTests
     }
 
     [Fact]
+    public async Task UpdateAsync_ChangingSubject_WithMismatchedPool_ReturnsError()
+    {
+        var repo = new FakeExamSessionRepository();
+        var id = Guid.NewGuid();
+        repo.Sessions.Add(new ExamSession
+        {
+            Id = id, Title = "s", SubjectId = 1, GradeLevelId = 1,
+            OpenAt = DateTime.UtcNow, CloseAt = DateTime.UtcNow.AddDays(1),
+        });
+        repo.PoolExams.Add(new ExamSessionExam
+        {
+            SessionId = id, Exam = new Exam { Title = "Đề Toán", SubjectId = 1, GradeLevelId = 1 },
+        });
+        var service = new ExamSessionService(repo, new FakeExamRepository());
+        var req = new UpdateExamSessionRequest
+        {
+            Title = "s", SubjectId = 2, GradeLevelId = 1,
+            OpenAt = DateTime.UtcNow, CloseAt = DateTime.UtcNow.AddDays(1), MaxAttempts = 1, PickMode = "Random",
+        };
+
+        var result = await service.UpdateAsync(id, req, "teacher1");
+
+        Assert.Equal(RequestResponseStatus.Error, result.Status);
+        Assert.Equal("Kỳ thi đang có đề không thuộc môn/cấp lớp mới. Gỡ các đề đó trước khi đổi.", result.Message);
+    }
+
+    [Fact]
     public async Task PublishAsync_EmptyPool_ReturnsError()
     {
         var repo = new FakeExamSessionRepository();

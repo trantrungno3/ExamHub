@@ -184,16 +184,16 @@ export default function QuestionBankPage() {
             title: 'Nội dung câu hỏi', dataIndex: 'content', key: 'content',
             render: (_, q) => (
                 <div className="min-w-0">
-                    <div className="font-medium line-clamp-1" style={{color: '#1d2129'}}>
+                    <div className="font-medium line-clamp-1" style={{color: BRAND.inkStrong}}>
                         {q.contentPlain || stripHtml(q.content)}
                     </div>
-                    {q.topicName && <div className="text-[12px]" style={{color: '#9aa2b1'}}>{q.topicName}</div>}
+                    {q.topicName && <div className="text-[12px]" style={{color: BRAND.mutedSoft}}>{q.topicName}</div>}
                 </div>
             ),
         },
         {
             title: 'Chủ đề', dataIndex: 'topicName', key: 'topicName', width: 140,
-            render: v => <span style={{color: '#6f7788'}}>{v ?? '—'}</span>,
+            render: v => <span style={{color: BRAND.muted}}>{v ?? '—'}</span>,
         },
         {
             title: 'Loại', dataIndex: 'questionTypeName', key: 'questionTypeName', width: 150,
@@ -210,7 +210,7 @@ export default function QuestionBankPage() {
         {
             title: 'Bloom', dataIndex: 'cognitiveLevelName', key: 'cognitiveLevelName', width: 130,
             render: (_, q) => {
-                if (!q.cognitiveLevelId || !q.cognitiveLevelName) return <span style={{color: '#c4cad3'}}>—</span>
+                if (!q.cognitiveLevelId || !q.cognitiveLevelName) return <span style={{color: BRAND.borderStrong}}>—</span>
                 const code = cogCodeById[q.cognitiveLevelId]
                 const b = BLOOM_CHIP[code]
                 const num = BLOOM_NUM[code]
@@ -238,14 +238,14 @@ export default function QuestionBankPage() {
                     <div className="flex gap-2 items-center">
                         <button className="btn-edit" onClick={() => navigate(`/app/questions/${q.id}/edit`)}>Sửa</button>
                         {st === 'approved' ? (
-                            <button className="text-[13px] hover:underline" style={{color: '#d98a00'}}
+                            <button className="text-[13px] hover:underline" style={{color: BRAND.warning}}
                                     onClick={() => unverifyMutation.mutate(q.id)}>Bỏ duyệt</button>
                         ) : (
-                            <button className="text-[13px] hover:underline flex items-center gap-1" style={{color: '#1ea375'}}
+                            <button className="text-[13px] hover:underline flex items-center gap-1" style={{color: BRAND.success}}
                                     onClick={() => verifyMutation.mutate(q.id)}><CheckOutlined/> Duyệt</button>
                         )}
                         {st === 'pending' && (
-                            <button className="text-[13px] hover:underline" style={{color: '#e74242'}}
+                            <button className="text-[13px] hover:underline" style={{color: BRAND.danger}}
                                     onClick={() => { setRejectTarget(q); setRejectReason('') }}>Từ chối</button>
                         )}
                         <Popconfirm title="Xóa câu hỏi này?" okText="Xóa" cancelText="Hủy" okButtonProps={{danger: true}}
@@ -291,7 +291,7 @@ export default function QuestionBankPage() {
 
                 {/* Bloom legend */}
                 <div className="flex items-center gap-2 flex-wrap text-[12px]">
-                    <span style={{color: '#6f7788'}}>Bloom:</span>
+                    <span style={{color: BRAND.muted}}>Bloom:</span>
                     {bloomLegend.map(c => (
                         <Chip key={c.id} label={`${c.levelOrder}.${c.name}`} color={BLOOM_CHIP[c.code] ?? NEUTRAL_CHIP}/>
                     ))}
@@ -300,8 +300,8 @@ export default function QuestionBankPage() {
                 {/* Bulk action bar */}
                 {selectedRowKeys.length > 0 && (
                     <div className="flex items-center gap-3 px-3 py-2 rounded-lg"
-                         style={{background: '#eef1ff', border: '1px solid #d6e0fb'}}>
-                        <span className="text-[13px] font-medium" style={{color: '#3a74f5'}}>
+                         style={{background: BRAND.primaryTint, border: '1px solid #d6e0fb'}}>
+                        <span className="text-[13px] font-medium" style={{color: BRAND.primary}}>
                             Đã chọn {selectedRowKeys.length}
                         </span>
                         <Button size="small" type="primary" onClick={bulkVerify}>Duyệt hàng loạt</Button>
@@ -398,7 +398,7 @@ export default function QuestionBankPage() {
                 cancelText="Huỷ"
                 okButtonProps={{danger: true, disabled: !rejectReason.trim(), loading: rejectMutation.isPending}}
             >
-                <p className="text-[13px] mb-2" style={{color: '#6f7788'}}>
+                <p className="text-[13px] mb-2" style={{color: BRAND.muted}}>
                     Nhập lý do từ chối câu hỏi. Câu hỏi sẽ chuyển sang trạng thái <b>Bị từ chối</b> và không dùng để sinh đề.
                 </p>
                 <Input.TextArea

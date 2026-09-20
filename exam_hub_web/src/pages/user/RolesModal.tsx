@@ -1,6 +1,7 @@
 import {useState} from 'react'
 import {Checkbox, Modal, Space} from 'antd'
 import {AVAILABLE_ROLES} from '../../services/userService'
+import {ROLE_LABEL} from '../../constants'
 
 type Props = {
     userName: string | null
@@ -44,7 +45,7 @@ export function RolesModal({userName, currentRoles, onClose, onSave}: Readonly<P
                                 )
                             }}
                         >
-                            {role}
+                            {ROLE_LABEL[role] ?? role}
                         </Checkbox>
                     ))}
                 </Space>

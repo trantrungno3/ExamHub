@@ -117,7 +117,13 @@ public record ExamSubmissionResponse(
             e.IsPassed,
             e.Status.ToString(),
             e.Created.ToTimestamp(),
-            includeAnswers ? e.Answers.Select(SubmissionAnswerResponse.FromEntity).ToList() : null,
+            // Sắp theo thứ tự câu trong đề: DB không đảm bảo thứ tự dòng (autosave xoá-rồi-ghi
+            // liên tục làm xáo trộn), mà FE đánh số "Câu i+1" theo vị trí mảng.
+            includeAnswers
+                ? e.Answers
+                    .OrderBy(a => a.ExamQuestion?.SortOrder ?? int.MaxValue)
+                    .Select(SubmissionAnswerResponse.FromEntity).ToList()
+                : null,
             studentName,
             studentClassName,
             e.SessionId

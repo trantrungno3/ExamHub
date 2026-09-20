@@ -12,13 +12,15 @@ export const EXAM_KEYS = {
     analytics: (id: string) => ['exams', 'analytics', id] as const,
 }
 
-export function useExamsQuery(query: ExamPagedQuery) {
+/** `enabled=false` để hoãn gọi API tới lúc thật sự cần (vd: chỉ khi mở modal chọn đề). */
+export function useExamsQuery(query: ExamPagedQuery, enabled = true) {
     return useQuery({
         queryKey: EXAM_KEYS.paged(query),
         queryFn: async () => {
             const res = await examService.getPaged(query)
             return res.data ?? {total: 0, page: query.page ?? 1, pageSize: query.pageSize ?? 20, items: []}
         },
+        enabled,
     })
 }
 

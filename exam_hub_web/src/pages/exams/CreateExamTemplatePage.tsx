@@ -14,14 +14,15 @@ import {
     useTopicsQuery,
 } from '../../hooks/queries/useCategoryLists'
 import PageHeader from '../../components/PageHeader'
+import {BRAND} from '../../constants/theme'
 
 const ROMAN = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X']
 const roman = (n: number) => ROMAN[n] ?? String(n)
 
 const PCT_FIELDS = [
-    {name: 'pctEasy', label: 'Dễ', bg: '#dff5ed', fg: '#1ea375'},
-    {name: 'pctMedium', label: 'TB', bg: '#fff4e5', fg: '#d98a00'},
-    {name: 'pctHard', label: 'Khó', bg: '#fee5e5', fg: '#e74242'},
+    {name: 'pctEasy', label: 'Dễ', bg: BRAND.successSoft, fg: BRAND.success},
+    {name: 'pctMedium', label: 'TB', bg: BRAND.warningSoft, fg: BRAND.warning},
+    {name: 'pctHard', label: 'Khó', bg: BRAND.dangerSoft, fg: BRAND.danger},
     {name: 'pctVeryHard', label: 'RK', bg: '#f3ecfe', fg: '#8b5cf6'},
 ] as const
 
@@ -283,9 +284,9 @@ export default function CreateExamTemplatePage() {
                                         </div>
                                         {fields.map((field, idx) => (
                                             <div key={field.key} className="rounded-xl overflow-hidden border"
-                                                 style={{borderColor: '#eceef2'}}>
+                                                 style={{borderColor: BRAND.border}}>
                                                 <div className="flex items-center justify-between px-4 py-2.5"
-                                                     style={{background: '#191d27'}}>
+                                                     style={{background: BRAND.ink}}>
                                                     <span className="text-[13px] font-semibold text-white">
                                                         Phần {roman(idx + 1)}{watchedSections?.[idx]?.sectionName ? `: ${watchedSections[idx].sectionName}` : ''}
                                                     </span>
@@ -362,10 +363,10 @@ export default function CreateExamTemplatePage() {
                                                     return (
                                                         <div className="flex items-center justify-between mt-2">
                                                             <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-[12px] font-medium"
-                                                                  style={ok ? {background: '#dff5ed', color: '#1ea375'} : {background: '#fee5e5', color: '#e74242'}}>
+                                                                  style={ok ? {background: BRAND.successSoft, color: BRAND.success} : {background: BRAND.dangerSoft, color: BRAND.danger}}>
                                                                 Tổng: {sum}% {ok ? '✓ Hợp lệ' : '✗'}
                                                             </span>
-                                                            <span className="text-[12px]" style={{color: '#9aa2b1'}}>
+                                                            <span className="text-[12px]" style={{color: BRAND.mutedSoft}}>
                                                                 Điểm/câu: {s?.scorePerQuestion ?? 0}
                                                             </span>
                                                         </div>
@@ -390,7 +391,7 @@ export default function CreateExamTemplatePage() {
                 </Button>
                 {!isEdit && (
                     <Button loading={saveMutation.isPending} onClick={() => submit(true)}
-                            style={{background: '#1ea375', borderColor: '#1ea375', color: '#fff'}}>
+                            style={{background: BRAND.success, borderColor: BRAND.success, color: '#fff'}}>
                         Lưu & Sinh đề ngay
                     </Button>
                 )}

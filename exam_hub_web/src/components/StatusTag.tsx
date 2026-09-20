@@ -4,8 +4,7 @@ const MAP = {
     success: {bg: BRAND.successSoft, fg: BRAND.success},
     danger: {bg: BRAND.dangerSoft, fg: BRAND.danger},
     warning: {bg: BRAND.warningSoft, fg: BRAND.warning},
-    // #eef0f3 không có trong @theme — giữ nguyên.
-    default: {bg: '#eef0f3', fg: BRAND.muted},
+    default: {bg: BRAND.neutralSoft, fg: BRAND.muted},
 } as const
 
 export type StatusVariant = keyof typeof MAP

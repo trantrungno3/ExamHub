@@ -2,6 +2,7 @@ import {useQuery} from '@tanstack/react-query'
 import {Table, Tag} from 'antd'
 import type {TableColumnsType} from 'antd'
 import {ProfileCard} from './ProfileCard'
+import {ROLE_COLOR, ROLE_LABEL} from '../../constants'
 import {useAuth} from '../../hooks/useAuth'
 import {useSubjectsQuery} from '../../hooks/queries/useCategoryLists'
 import {useSchoolsQuery} from '../../hooks/queries/useSchools'
@@ -35,7 +36,7 @@ export default function TeacherProfilePage() {
     ]
     const schoolColumns: TableColumnsType<SchoolMember> = [
         {title: 'Trường', dataIndex: 'schoolId', key: 'schoolId', render: v => schoolName(v)},
-        {title: 'Vai trò', dataIndex: 'role', key: 'role', render: v => <Tag>{v}</Tag>},
+        {title: 'Vai trò', dataIndex: 'role', key: 'role', render: v => <Tag color={ROLE_COLOR[v] ?? 'default'}>{ROLE_LABEL[v] ?? v}</Tag>},
         {title: 'Trạng thái', dataIndex: 'isActive', key: 'isActive',
             render: v => <Tag color={v ? 'green' : 'default'}>{v ? 'Hoạt động' : 'Tắt'}</Tag>},
     ]

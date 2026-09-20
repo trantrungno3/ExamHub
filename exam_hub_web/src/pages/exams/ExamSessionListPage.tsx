@@ -1,4 +1,5 @@
-import { PlusOutlined, SearchOutlined } from '@ant-design/icons'
+import dayjs from 'dayjs'
+import { PlayCircleOutlined, PlusOutlined, SearchOutlined, StopOutlined } from '@ant-design/icons'
 import type { TableColumnsType } from 'antd'
 import { Button, Input, Popconfirm, Select, Table } from 'antd'
 import { useMemo, useState } from 'react'
@@ -21,15 +22,11 @@ import {
 } from '../../hooks/queries/useExamSessions'
 import { useDebounced } from '../../hooks/useDebounced'
 import { ROUTES } from '../../routes/paths'
+import {BRAND} from '../../constants/theme'
 
+/** openAt/closeAt là timestamp mili-giây → `dd/MM/yyyy HH:mm`. */
 function fmt(ms: number): string {
-    return new Date(ms).toLocaleString('vi-VN', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-    })
+    return dayjs(ms).format('DD/MM/YYYY HH:mm')
 }
 
 export default function ExamSessionListPage() {
@@ -71,8 +68,17 @@ export default function ExamSessionListPage() {
         { title: 'Môn', dataIndex: 'subjectName', key: 'subjectName', width: 130, render: v => v ?? '—' },
         { title: 'Cấp lớp', dataIndex: 'gradeLevelName', key: 'gradeLevelName', width: 100, render: v => v ?? '—' },
         {
-            title: 'Khung giờ', key: 'time', width: 260,
-            render: (_, s) => <span className="text-sm text-gray-600">{fmt(s.openAt)} → {fmt(s.closeAt)}</span>,
+            title: 'Khung giờ', key: 'time', width: 200,
+            render: (_, s) => (
+                <div className="text-sm text-gray-600 leading-6">
+                    <div className="flex items-center gap-1.5" title="Bắt đầu">
+                        <PlayCircleOutlined style={{color: BRAND.success}}/>{fmt(s.openAt)}
+                    </div>
+                    <div className="flex items-center gap-1.5" title="Kết thúc">
+                        <StopOutlined style={{color: BRAND.danger}}/>{fmt(s.closeAt)}
+                    </div>
+                </div>
+            ),
         },
         {
             title: 'Thời gian',

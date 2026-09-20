@@ -4,6 +4,7 @@ import {Button, Input, Modal, Popconfirm, Switch, Table, Tag, Tooltip} from 'ant
 import {BookOutlined, DeleteOutlined, EditOutlined, KeyOutlined, PlusOutlined, SearchOutlined, TeamOutlined, UploadOutlined} from '@ant-design/icons'
 import {message} from 'antd'
 import {userService} from '../../services/userService'
+import {ROLE_COLOR, ROLE_LABEL} from '../../constants'
 import {statusCode} from '../../services/requestService'
 import {UserFormModal} from './UserFormModal'
 import {ResetPasswordModal} from './ResetPasswordModal'
@@ -153,7 +154,7 @@ export default function UserPage() {
         {
             title: 'Vai trò', dataIndex: 'roles', key: 'roles', width: 200,
             render: (roles: string[]) => roles.length
-                ? roles.map(r => <Tag key={r} color={r === 'Admin' ? 'red' : r === 'Teacher' ? 'orange' : 'green'}>{r}</Tag>)
+                ? roles.map(r => <Tag key={r} color={ROLE_COLOR[r] ?? 'default'}>{ROLE_LABEL[r] ?? r}</Tag>)
                 : <span className="text-gray-300 text-xs">Chưa có</span>,
         },
         {

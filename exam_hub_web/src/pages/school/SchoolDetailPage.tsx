@@ -1,9 +1,10 @@
-import {useState} from 'react'
+import {useMemo, useState} from 'react'
 import {useNavigate, useParams} from 'react-router-dom'
-import {Breadcrumb, Button, Form, Input, Modal, Popconfirm, Table, Tabs, Tag} from 'antd'
+import {Breadcrumb, Button, Form, Input, Modal, Popconfirm, Segmented, Table, Tabs, Tag} from 'antd'
 import type {TableColumnsType} from 'antd'
-import {PlusOutlined, RightOutlined} from '@ant-design/icons'
+import {PlusOutlined, RightOutlined, SearchOutlined} from '@ant-design/icons'
 import {StatusTag} from '../../components/StatusTag'
+import {ROLE_COLOR, ROLE_LABEL} from '../../constants'
 import {useSchoolsQuery} from '../../hooks/queries/useSchools'
 import {useCohortsQuery, useCreateCohortMutation, useDeleteCohortMutation} from '../../hooks/queries/useCohorts'
 import {useSchoolMembersQuery, useRemoveSchoolMemberMutation, useSetSchoolMemberActiveMutation} from '../../hooks/queries/useSchoolMembers'
@@ -12,6 +13,8 @@ import {useUsersQuery} from '../../hooks/queries/useUsers'
 import {statusCode} from '../../services/requestService'
 import PageHeader from '../../components/PageHeader'
 import SchoolMemberAddModal from './SchoolMemberAddModal'
+import {buildMemberRows, filterMemberRows, type MemberKind, type MemberRow} from './schoolMemberRows'
+import {useDebounced} from '../../hooks/useDebounced'
 
 export default function SchoolDetailPage() {
     const {id} = useParams<{id: string}>()
@@ -35,6 +38,19 @@ export default function SchoolDetailPage() {
     const [cohortModal, setCohortModal] = useState(false)
     const [memberModal, setMemberModal] = useState(false)
     const [cohortForm] = Form.useForm<CohortBody>()
+
+    // Tab "Thành viên" gộp nhân sự trường + học sinh các khoá thành một bảng, lọc client-side.
+    const [memberKind, setMemberKind] = useState<'all' | MemberKind>('all')
+    const [memberKeyword, setMemberKeyword] = useState('')
+    const debouncedMemberKeyword = useDebounced(memberKeyword)
+    const memberRows = useMemo(
+        () => buildMemberRows(members, students, allUsers, cohorts),
+        [members, students, allUsers, cohorts],
+    )
+    const visibleMemberRows = useMemo(
+        () => filterMemberRows(memberRows, memberKind, debouncedMemberKeyword),
+        [memberRows, memberKind, debouncedMemberKeyword],
+    )
 
     const handleAddCohort = async () => {
         const values = await cohortForm.validateFields()
@@ -64,54 +80,35 @@ export default function SchoolDetailPage() {
         },
     ]
 
-    const memberColumns: TableColumnsType<SchoolMember> = [
+    const memberColumns: TableColumnsType<MemberRow> = [
+        {title: 'Họ tên', dataIndex: 'displayName', key: 'displayName', render: v => <span className="font-medium">{v}</span>},
+        {title: 'Email', dataIndex: 'email', key: 'email'},
+        {title: 'Vai trò', dataIndex: 'role', key: 'role', width: 130,
+            render: v => <Tag color={ROLE_COLOR[v] ?? 'default'}>{ROLE_LABEL[v] ?? v}</Tag>},
         {
-            title: 'Họ tên', key: 'displayName',
-            render: (_, record) => {
-                const user = allUsers.find(u => u.id === record.userId)
-                return user ? user.displayName ?? user.userName : <span className="font-mono text-xs">{record.userId}</span>
-            },
+            title: 'Khoá/Lớp', dataIndex: 'cohortLabel', key: 'cohortLabel', width: 140,
+            render: v => v ?? <span className="text-gray-400">—</span>,
         },
         {
-            title: 'Email', key: 'email',
-            render: (_, record) => allUsers.find(u => u.id === record.userId)?.email ?? '—',
+            title: 'Trạng thái', dataIndex: 'isActive', key: 'isActive', width: 120,
+            render: (v, record) => <StatusTag status={v ? 'success' : 'default'}
+                label={v ? (record.kind === 'student' ? 'Đang học' : 'Hoạt động') : 'Tắt'}/>,
         },
-        {title: 'Vai trò', dataIndex: 'role', key: 'role', render: v => <Tag>{v}</Tag>},
-        {title: 'Trạng thái', dataIndex: 'isActive', key: 'isActive', render: v => <StatusTag status={v ? 'success' : 'default'} label={v ? 'Hoạt động' : 'Tắt'}/>},
         {
             title: 'Thao tác', key: 'actions', width: 140,
-            render: (_, record) => (
+            // Học sinh không có mutation ở màn này — quản lý trong trang chi tiết khoá.
+            render: (_, record) => record.kind !== 'staff' ? null : (
                 <div className="flex gap-2">
-                    <Button size="small" onClick={() => setActiveMutation.mutate({id: record.id, isActive: !record.isActive})}>
+                    <Button size="small" onClick={() => setActiveMutation.mutate({id: record.memberId, isActive: !record.isActive})}>
                         {record.isActive ? 'Tắt' : 'Bật'}
                     </Button>
                     <Popconfirm title="Xóa thành viên?" okText="Xóa" cancelText="Hủy" okButtonProps={{danger: true}}
-                        onConfirm={() => removeMemberMutation.mutate(record.id)}>
+                        onConfirm={() => removeMemberMutation.mutate(record.memberId)}>
                         <button className="btn-delete">Xóa</button>
                     </Popconfirm>
                 </div>
             ),
         },
-    ]
-
-    const studentColumns: TableColumnsType<CohortMember> = [
-        {
-            title: 'Học sinh', key: 'displayName',
-            render: (_, record) => {
-                const user = allUsers.find(u => u.id === record.studentId)
-                return user ? user.displayName ?? user.userName : <span className="font-mono text-xs">{record.studentId}</span>
-            },
-        },
-        {
-            title: 'Email', key: 'email',
-            render: (_, record) => allUsers.find(u => u.id === record.studentId)?.email ?? '—',
-        },
-        {
-            title: 'Khoá', key: 'cohortName',
-            render: (_, record) => cohorts.find(c => c.id === record.cohortId)?.name ?? `#${record.cohortId}`,
-        },
-        {title: 'Lớp', dataIndex: 'section', key: 'section', render: v => v ?? <span className="text-gray-400">Chưa xếp</span>},
-        {title: 'Trạng thái', dataIndex: 'isActive', key: 'isActive', render: v => <StatusTag status={v ? 'success' : 'default'} label={v ? 'Đang học' : 'Tắt'}/>},
     ]
 
     const tabItems = [
@@ -129,23 +126,27 @@ export default function SchoolDetailPage() {
             ),
         },
         {
-            key: 'members', label: 'Thành viên trường',
+            key: 'members', label: `Thành viên (${memberRows.length})`,
             children: (
                 <div className="flex flex-col gap-4 p-4">
-                    <div className="flex justify-end">
-                        <Button type="primary" icon={<PlusOutlined/>} onClick={() => setMemberModal(true)}>
+                    <div className="flex items-center gap-2 flex-wrap">
+                        <Segmented value={memberKind} onChange={v => setMemberKind(v as 'all' | MemberKind)}
+                            options={[
+                                {value: 'all', label: 'Tất cả'},
+                                {value: 'staff', label: 'Nhân sự'},
+                                {value: 'student', label: 'Học sinh'},
+                            ]}/>
+                        <Input prefix={<SearchOutlined className="text-gray-400"/>} placeholder="Tìm theo tên/email..."
+                            style={{width: 240}} allowClear value={memberKeyword}
+                            onChange={e => setMemberKeyword(e.target.value)}/>
+                        <Button type="primary" icon={<PlusOutlined/>} className="ml-auto"
+                            onClick={() => setMemberModal(true)}>
                             Thêm thành viên
                         </Button>
                     </div>
-                    <Table columns={memberColumns} dataSource={members} rowKey="id" loading={fetchingMembers} pagination={false} scroll={{x: 700}}/>
-                </div>
-            ),
-        },
-        {
-            key: 'students', label: 'Học sinh',
-            children: (
-                <div className="flex flex-col gap-4 p-4">
-                    <Table columns={studentColumns} dataSource={students} rowKey="id" loading={fetchingStudents} pagination={false} scroll={{x: 700}}/>
+                    <Table columns={memberColumns} dataSource={visibleMemberRows} rowKey="key"
+                        loading={fetchingMembers || fetchingStudents}
+                        pagination={{pageSize: 20, showSizeChanger: true}} scroll={{x: 700}}/>
                 </div>
             ),
         },

@@ -93,11 +93,23 @@ async function wrapNetworkError<T>(promise: Promise<ApiResponse<T>>): Promise<Ap
     }
 }
 
+/** Exception chưa được backend bắt trả 500 kèm stack trace .NET dạng text thuần,
+ *  không phải JSON — lấy message ở dòng đầu, bỏ tên exception. */
+export function parseDotnetError(text: string): string {
+    const first = text.split('\n', 1)[0].trim()
+    return first.replace(/^[\w.+]*Exception:\s*/, '').split(' ---> ')[0].trim()
+        || 'Đã xảy ra lỗi không xác định.'
+}
+
 async function handleResponse<T>(res: Response): Promise<ApiResponse<T>> {
     if (res.status === 204) return {status: statusCode.Success, message: 'Thành công'}
     const text = await res.text()
     if (!text) return {status: res.ok ? statusCode.Success : statusCode.Error, message: ''}
-    return JSON.parse(text) as ApiResponse<T>
+    try {
+        return JSON.parse(text) as ApiResponse<T>
+    } catch {
+        return {status: statusCode.Error, message: parseDotnetError(text)}
+    }
 }
 
 function buildHeaders(auth: boolean): Headers {

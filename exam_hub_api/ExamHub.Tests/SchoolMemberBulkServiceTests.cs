@@ -262,21 +262,21 @@ public class SchoolMemberBulkServicePreviewTests
     public async Task PreviewAsync_WrongHeadersFails()
     {
         var fixture = Fixture.ValidSchool();
-        await Assert.ThrowsAsync<ArgumentException>(() => fixture.Service.PreviewAsync(new(1, WorkbookWithHeaders(["Role", "UserName", "CohortName", "Section"], ["teacher1", "Teacher", "", ""]))));
+        await Assert.ThrowsAsync<InvalidDataException>(() => fixture.Service.PreviewAsync(new(1, WorkbookWithHeaders(["Role", "UserName", "CohortName", "Section"], ["teacher1", "Teacher", "", ""]))));
     }
 
     [Fact]
     public async Task PreviewAsync_ExtraHeaderFails()
     {
         var fixture = Fixture.ValidSchool();
-        await Assert.ThrowsAsync<ArgumentException>(() => fixture.Service.PreviewAsync(new(1, WorkbookWithHeaders(["UserName", "Role", "CohortName", "Section", "Extra"], ["teacher1", "Teacher", "", ""]))));
+        await Assert.ThrowsAsync<InvalidDataException>(() => fixture.Service.PreviewAsync(new(1, WorkbookWithHeaders(["UserName", "Role", "CohortName", "Section", "Extra"], ["teacher1", "Teacher", "", ""]))));
     }
 
     [Fact]
     public async Task PreviewAsync_WorkbookWithoutWorksheetsFails()
     {
         var fixture = Fixture.ValidSchool();
-        await Assert.ThrowsAsync<ArgumentException>(() => fixture.Service.PreviewAsync(new(1, EmptyWorkbook())));
+        await Assert.ThrowsAsync<InvalidDataException>(() => fixture.Service.PreviewAsync(new(1, EmptyWorkbook())));
     }
 }
 

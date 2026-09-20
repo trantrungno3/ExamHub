@@ -26,8 +26,8 @@ import {BRAND} from '../../constants/theme'
 
 function BoolIcon({on}: {on?: boolean}) {
     return on
-        ? <CheckOutlined style={{color: '#1ea375'}}/>
-        : <CloseOutlined style={{color: '#c4cad3'}}/>
+        ? <CheckOutlined style={{color: BRAND.success}}/>
+        : <CloseOutlined style={{color: BRAND.borderStrong}}/>
 }
 
 export default function ExamTemplatePage() {
@@ -63,8 +63,8 @@ export default function ExamTemplatePage() {
             render: (v, t) => (
                 <span className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full inline-block shrink-0"
-                          style={{background: t.isActive ? '#1ea375' : '#c4cad3'}}/>
-                    <span className="font-medium" style={{color: '#1d2129'}}>{v}</span>
+                          style={{background: t.isActive ? BRAND.success : BRAND.borderStrong}}/>
+                    <span className="font-medium" style={{color: BRAND.inkStrong}}>{v}</span>
                 </span>
             ),
         },
@@ -72,7 +72,7 @@ export default function ExamTemplatePage() {
             title: 'Lớp', dataIndex: 'gradeLevelName', key: 'gradeLevelName', width: 90,
             render: v => v
                 ? <span className="inline-flex items-center rounded-md px-2 py-0.5 text-[12px] font-medium"
-                        style={{background: '#eef0f3', color: '#6f7788'}}>{v}</span>
+                        style={{background: BRAND.neutralSoft, color: BRAND.muted}}>{v}</span>
                 : '—',
         },
         {title: 'Môn', dataIndex: 'subjectName', key: 'subjectName', width: 120, render: v => v ?? '—'},
@@ -96,7 +96,7 @@ export default function ExamTemplatePage() {
             render: (_, t) => (
                 <div className="flex gap-2 items-center">
                     <button className="btn-edit" onClick={() => navigate(`/app/exams/${t.id}/edit`)}>Sửa</button>
-                    <button className="text-[13px] hover:underline flex items-center gap-1" style={{color: '#1ea375'}}
+                    <button className="text-[13px] hover:underline flex items-center gap-1" style={{color: BRAND.success}}
                             onClick={() => navigate(`/app/generate?templateId=${t.id}`)}>
                         <ThunderboltOutlined/> Sinh đề
                     </button>

@@ -38,6 +38,7 @@ public class ExamSubmissionRepository : BaseRepository<ExamSubmission, Guid>, IE
     public async Task<ExamSubmission?> GetWithAnswersAsync(Guid id, CancellationToken ct = default)
         => await Set
             .Include(x => x.Answers)
+            .ThenInclude(a => a.ExamQuestion)
             .FirstOrDefaultAsync(x => x.Id == id, ct);
 
     /// <inheritdoc/>

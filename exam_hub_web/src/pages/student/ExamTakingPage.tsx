@@ -259,7 +259,7 @@ function ExamRunner({exam, studentId, studentName, sessionId, submissionId, dead
                             </div>
                         </div>
 
-                        <div className="px-4 py-3 flex border-b border-[#eceef2]">
+                        <div className="px-4 py-3 flex border-b border-border">
                             <div className="take-stat">
                                 <p className="take-stat-num text-emerald-600">{answeredCount}</p>
                                 <p className="take-stat-label">Đã trả lời</p>
@@ -274,7 +274,7 @@ function ExamRunner({exam, studentId, studentName, sessionId, submissionId, dead
                             </div>
                         </div>
 
-                        <div className="px-4 py-3 border-b border-[#eceef2]">
+                        <div className="px-4 py-3 border-b border-border">
                             <div className="flex items-center justify-between text-[12px] text-stone-500 mb-1.5">
                                 <span>Tiến độ</span><span className="font-semibold text-stone-700">{progress}%</span>
                             </div>
@@ -295,7 +295,7 @@ function ExamRunner({exam, studentId, studentName, sessionId, submissionId, dead
                             </div>
                         </div>
 
-                        <div className="p-3 border-t border-[#eceef2]">
+                        <div className="p-3 border-t border-border">
                             {unanswered > 0 && (
                                 <p className="text-center text-[12px] text-stone-500 mb-2">Còn {unanswered} câu chưa trả lời</p>
                             )}
@@ -310,7 +310,7 @@ function ExamRunner({exam, studentId, studentName, sessionId, submissionId, dead
             </Form>
 
             {/* Thanh nộp bài cho màn nhỏ (không có panel bên) */}
-            <div className="lg:hidden flex items-center gap-3 px-4 py-3 bg-white border-t border-[#eceef2]">
+            <div className="lg:hidden flex items-center gap-3 px-4 py-3 bg-white border-t border-border">
                 <span className="text-[13px] text-stone-600 flex-1">
                     Đã làm <b className="text-emerald-600">{answeredCount}</b>/{total} câu
                 </span>

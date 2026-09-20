@@ -38,6 +38,7 @@ import {ROUTES} from '../../routes/paths'
 import {AnalyticsDrawer} from './AnalyticsDrawerLazy'
 import PageHeader from '../../components/PageHeader'
 import {toOptions, toOptionsBy} from '../../utils/options'
+import {BRAND} from '../../constants/theme'
 
 const PICK_MODE_OPTIONS = [
     {value: 'Random', label: 'Ngẫu nhiên (hệ thống bốc đề)'},
@@ -71,6 +72,7 @@ export default function ExamSessionEditPage() {
 
     const [form] = Form.useForm<ExamSessionFormValues>()
     const watchedGradeId = Form.useWatch('gradeLevelId', form)
+    const watchedSubjectId = Form.useWatch('subjectId', form)
     const subjectOptions = useMemo(
         () => (subjects.data ?? [])
             .filter(s => s.gradeLevelId === watchedGradeId)
@@ -93,12 +95,13 @@ export default function ExamSessionEditPage() {
         })
     }, [detail, form])
 
-    const handleSave = async () => {
+    /** Trả về true khi đã lưu thành công — "Xuất bản" dựa vào đây để lưu trước rồi mới phát hành. */
+    const handleSave = async (): Promise<boolean> => {
         let v: ExamSessionFormValues
         try {
             v = await form.validateFields()
         } catch {
-            return // AntD tự hiển thị lỗi trên từng field
+            return false // AntD tự hiển thị lỗi trên từng field
         }
         const body: ExamSessionBody = {
             title: v.title.trim(),
@@ -113,16 +116,25 @@ export default function ExamSessionEditPage() {
         }
         if (new Date(body.closeAt) <= new Date(body.openAt)) {
             message.warning('Thời điểm đóng phải sau thời điểm mở.')
-            return
+            return false
         }
-        if (isEdit) {
-            await update.mutateAsync({id: id!, body})
-        } else {
-            const res = await create.mutateAsync(body)
-            if (res.status !== statusCode.Error && res.data) {
-                navigate(`${ROUTES.EXAM_SESSIONS}/${res.data}/edit`, {replace: true})
+        try {
+            if (isEdit) {
+                const res = await update.mutateAsync({id: id!, body})
+                return res.status !== statusCode.Error
             }
+            const res = await create.mutateAsync(body)
+            if (res.status === statusCode.Error || !res.data) return false
+            navigate(`${ROUTES.EXAM_SESSIONS}/${res.data}/edit`, {replace: true})
+            return true
+        } catch {
+            return false // mutation đã báo lỗi qua message
         }
+    }
+
+    /** Lưu thay đổi đang mở trên form trước, lưu hỏng thì không phát hành. */
+    const handlePublish = async (sessionId: string) => {
+        if (await handleSave()) publish.mutate(sessionId)
     }
 
     const isPublished = detail?.status === 'published'
@@ -147,7 +159,7 @@ export default function ExamSessionEditPage() {
                     ) : (
                         <>
                             {/* ── Cấu hình ── */}
-                            <div className="bg-white rounded-xl border border-[#eceef2] p-5">
+                            <div className="bg-white rounded-xl border border-border p-5">
                                 <Form form={form} layout="vertical"
                                       initialValues={{durationMinutes: 45, maxAttempts: 1, pickMode: 'Random'}}
                                       className="session-info-form"
@@ -160,7 +172,7 @@ export default function ExamSessionEditPage() {
                                                   form.setFieldValue('subjectId', undefined)
                                           }
                                       }}>
-                                    <h3 className="text-[15px] font-semibold text-[#191d27] mb-4">Thông tin kỳ thi</h3>
+                                    <h3 className="text-[15px] font-semibold text-ink mb-4">Thông tin kỳ thi</h3>
                                     <Form.Item label="Tiêu đề" name="title"
                                                rules={[{required: true, message: 'Nhập tiêu đề kỳ thi'}]}>
                                         <Input placeholder="VD: Kiểm tra giữa kỳ 1"/>
@@ -206,9 +218,10 @@ export default function ExamSessionEditPage() {
                                             {isEdit ? 'Lưu thay đổi' : 'Tạo & tiếp tục'}
                                         </Button>
                                         {isEdit && detail && (
-                                            <Button className="border-[#1ea375] text-[#1ea375]"
-                                                    disabled={isPublished} loading={publish.isPending}
-                                                    onClick={() => publish.mutate(detail.id)}>
+                                            <Button className="border-success text-success"
+                                                    disabled={isPublished}
+                                                    loading={publish.isPending || update.isPending}
+                                                    onClick={() => handlePublish(detail.id)}>
                                                 {isPublished ? 'Đã xuất bản' : 'Xuất bản'}
                                             </Button>
                                         )}
@@ -218,8 +231,12 @@ export default function ExamSessionEditPage() {
 
                             {isEdit && detail && (
                                 <div className="flex flex-col gap-4">
+                                    {/* Lọc đề theo môn/cấp lớp đang chọn trên form, không theo bản đã lưu. */}
                                     <PoolSection sessionId={detail.id} exams={detail.exams}
-                                                 subjectId={detail.subjectId} gradeLevelId={detail.gradeLevelId}/>
+                                                 subjectId={watchedSubjectId ?? detail.subjectId}
+                                                 gradeLevelId={watchedGradeId ?? detail.gradeLevelId}
+                                                 unsavedFilter={(watchedSubjectId ?? detail.subjectId) !== detail.subjectId
+                                                     || (watchedGradeId ?? detail.gradeLevelId) !== detail.gradeLevelId}/>
                                     <AssignmentSection sessionId={detail.id} assignments={detail.assignments}/>
                                 </div>
                             )}
@@ -232,8 +249,8 @@ export default function ExamSessionEditPage() {
 }
 
 // ── Pool đề ─────────────────────────────────────────────────────────────
-function PoolSection({sessionId, exams, subjectId, gradeLevelId}: {
-    sessionId: string; exams: SessionExam[]; subjectId: number; gradeLevelId: number
+function PoolSection({sessionId, exams, subjectId, gradeLevelId, unsavedFilter}: {
+    sessionId: string; exams: SessionExam[]; subjectId: number; gradeLevelId: number; unsavedFilter: boolean
 }) {
     const [modalOpen, setModalOpen] = useState(false)
     const [analyticsExamId, setAnalyticsExamId] = useState<string>()
@@ -247,7 +264,7 @@ function PoolSection({sessionId, exams, subjectId, gradeLevelId}: {
             title: 'Thao tác', key: 'actions', width: 140,
             render: (_, e) => (
                 <div className="flex items-center gap-3">
-                    <button className="text-[13px] hover:underline" style={{color: '#3a74f5'}}
+                    <button className="text-[13px] hover:underline" style={{color: BRAND.primary}}
                             onClick={() => setAnalyticsExamId(e.examId)}>Phân tích
                     </button>
                     <Popconfirm title="Gỡ đề khỏi kỳ thi?" okText="Gỡ" cancelText="Hủy"
@@ -260,16 +277,16 @@ function PoolSection({sessionId, exams, subjectId, gradeLevelId}: {
     ]
 
     return (
-        <div className="bg-white rounded-xl border border-[#eceef2] p-5 flex flex-col gap-3">
+        <div className="bg-white rounded-xl border border-border p-5 flex flex-col gap-3">
             <div className="flex items-center justify-between">
-                <h3 className="text-[15px] font-semibold text-[#191d27]">Đề trong kỳ thi ({exams.length})</h3>
+                <h3 className="text-[15px] font-semibold text-ink">Đề trong kỳ thi ({exams.length})</h3>
                 <Button type="primary" icon={<PlusOutlined/>} onClick={() => setModalOpen(true)}>Thêm đề</Button>
             </div>
             <Table columns={columns} dataSource={exams} rowKey="examId" size="small" pagination={false}
                    scroll={{x: 700}}
                    locale={{emptyText: 'Chưa có đề nào'}}/>
             <AddExamsModal open={modalOpen} onClose={() => setModalOpen(false)} sessionId={sessionId}
-                           subjectId={subjectId} gradeLevelId={gradeLevelId}
+                           subjectId={subjectId} gradeLevelId={gradeLevelId} unsavedFilter={unsavedFilter}
                            existingIds={exams.map(e => e.examId)}/>
             <Suspense fallback={null}>
                 <AnalyticsDrawer examId={analyticsExamId} onClose={() => setAnalyticsExamId(undefined)}/>
@@ -278,15 +295,16 @@ function PoolSection({sessionId, exams, subjectId, gradeLevelId}: {
     )
 }
 
-function AddExamsModal({open, onClose, sessionId, subjectId, gradeLevelId, existingIds}: {
+function AddExamsModal({open, onClose, sessionId, subjectId, gradeLevelId, existingIds, unsavedFilter}: {
     open: boolean; onClose: () => void; sessionId: string
-    subjectId: number; gradeLevelId: number; existingIds: string[]
+    subjectId: number; gradeLevelId: number; existingIds: string[]; unsavedFilter: boolean
 }) {
     const query: ExamPagedQuery = useMemo(
         () => ({page: 1, pageSize: 100, status: 'Published', subjectId, gradeLevelId}),
         [subjectId, gradeLevelId],
     )
-    const {data, isLoading} = useExamsQuery(query)
+    // Chỉ gọi API khi modal mở — trang chi tiết kỳ thi không cần danh sách đề cho tới lúc bấm "Thêm đề".
+    const {data, isLoading} = useExamsQuery(query, open)
     const setExams = useSetSessionExamsMutation()
     const [selected, setSelected] = useState<string[]>([])
 
@@ -305,6 +323,12 @@ function AddExamsModal({open, onClose, sessionId, subjectId, gradeLevelId, exist
     return (
         <Modal title="Thêm đề vào kỳ thi" open={open} onCancel={onClose} onOk={handleOk}
                okText="Thêm" cancelText="Hủy" confirmLoading={setExams.isPending}>
+            {/* BE chấm theo môn/cấp lớp ĐÃ LƯU, nên thêm đề trước khi lưu sẽ bị từ chối. */}
+            {unsavedFilter && (
+                <p className="text-[13px] mb-3" style={{color: BRAND.warning}}>
+                    Đang lọc theo môn/cấp lớp chưa lưu — hãy bấm "Lưu thay đổi" trước khi thêm đề.
+                </p>
+            )}
             {isLoading ? <Spin/> : available.length === 0 ? (
                 <p className="text-gray-500">Không có đề đã phát hành cùng môn/cấp lớp.</p>
             ) : (
@@ -371,8 +395,8 @@ function AssignmentSection({sessionId, assignments}: { sessionId: string; assign
     ]
 
     return (
-        <div className="bg-white rounded-xl border border-[#eceef2] p-5 flex flex-col gap-3">
-            <h3 className="text-[15px] font-semibold text-[#191d27]">Giao cho lớp/khoá ({assignments.length})</h3>
+        <div className="bg-white rounded-xl border border-border p-5 flex flex-col gap-3">
+            <h3 className="text-[15px] font-semibold text-ink">Giao cho lớp/khoá ({assignments.length})</h3>
             <div className="flex items-end gap-2 flex-wrap">
                 <div>
                     <label className="block text-xs text-gray-500 mb-1">Trường</label>

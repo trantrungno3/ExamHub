@@ -1,5 +1,5 @@
 import {describe, expect, it} from 'vitest'
-import {getStudentSessionAction} from './studentSessionAction'
+import {getStudentSessionAction, takeUrl} from './studentSessionAction'
 
 const session = (overrides: Partial<MySession> = {}): MySession => ({
     id: 'session-1',
@@ -43,5 +43,28 @@ describe('getStudentSessionAction', () => {
 
     it('starts an open Random session', () => {
         expect(getStudentSessionAction(session())).toEqual({kind: 'start'})
+    })
+})
+
+describe('takeUrl', () => {
+    const result: StartSessionResult = {
+        submissionId: 'sub-1',
+        examId: 'exam-1',
+        deadlineAt: 1700000000000,
+        durationMinutes: 45,
+    }
+
+    it('sends a fresh attempt to the cover page', () => {
+        expect(takeUrl(result, 'session-1', false)).toBe(
+            '/student/exam?examId=exam-1&sessionId=session-1&submissionId=sub-1' +
+            '&deadlineAt=1700000000000&durationMinutes=45',
+        )
+    })
+
+    it('skips the cover page when resuming an in-progress attempt', () => {
+        expect(takeUrl(result, 'session-1', true)).toBe(
+            '/student/exam/take?examId=exam-1&sessionId=session-1&submissionId=sub-1' +
+            '&deadlineAt=1700000000000&durationMinutes=45',
+        )
     })
 })

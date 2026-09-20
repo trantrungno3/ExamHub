@@ -37,6 +37,16 @@ public class ExamSessionService(IExamSessionRepository _repo, IExamRepository _e
         if (req.CloseAt.ToUniversalTime() <= req.OpenAt.ToUniversalTime())
             return RequestResponse<bool>.Error("Thời điểm đóng phải sau thời điểm mở.");
 
+        // SetExamsAsync đã chặn đề lệch môn/cấp lớp, nhưng đổi môn/cấp lớp của kỳ thi sau khi đã
+        // thêm đề thì phá chính ràng buộc đó theo đường vòng — pool còn lại toàn đề sai môn.
+        if (req.SubjectId != entity.SubjectId || req.GradeLevelId != entity.GradeLevelId)
+        {
+            var pool = await _repo.GetPoolExamsAsync(id, ct);
+            if (pool.Any(e => e.SubjectId != req.SubjectId || e.GradeLevelId != req.GradeLevelId))
+                return RequestResponse<bool>.Error(
+                    "Kỳ thi đang có đề không thuộc môn/cấp lớp mới. Gỡ các đề đó trước khi đổi.");
+        }
+
         entity.Title = req.Title;
         entity.Description = req.Description;
         entity.SubjectId = req.SubjectId;

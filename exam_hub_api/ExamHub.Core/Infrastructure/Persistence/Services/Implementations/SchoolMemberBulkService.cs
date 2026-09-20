@@ -153,13 +153,13 @@ public sealed class SchoolMemberBulkService(
         }
         catch (Exception ex)
         {
-            throw new ArgumentException("File Excel không hợp lệ.", ex);
+            throw new InvalidDataException("File Excel không hợp lệ.", ex);
         }
 
         using (workbook)
         {
             var sheet = workbook.Worksheets.FirstOrDefault()
-                ?? throw new ArgumentException("File Excel không có worksheet.");
+                ?? throw new InvalidDataException("File Excel không có worksheet.");
             ValidateHeaders(sheet);
 
             var context = await LoadContextAsync(request.SchoolId, ct);
@@ -328,10 +328,10 @@ public sealed class SchoolMemberBulkService(
     private static void ValidateHeaders(IXLWorksheet sheet)
     {
         if ((sheet.Row(1).LastCellUsed()?.Address.ColumnNumber ?? 0) != Headers.Length)
-            throw new ArgumentException("Tiêu đề Excel phải là UserName, Role, CohortName, Section.");
+            throw new InvalidDataException("Tiêu đề Excel phải là UserName, Role, CohortName, Section.");
         for (var column = 0; column < Headers.Length; column++)
             if (!string.Equals(sheet.Cell(1, column + 1).GetString().Trim(), Headers[column], StringComparison.Ordinal))
-                throw new ArgumentException("Tiêu đề Excel phải là UserName, Role, CohortName, Section.");
+                throw new InvalidDataException("Tiêu đề Excel phải là UserName, Role, CohortName, Section.");
     }
 
     private static void ValidateFile(IFormFile? file)

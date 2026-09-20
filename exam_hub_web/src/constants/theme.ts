@@ -16,4 +16,19 @@ export const BRAND = {
     border: '#eceef2',
     surface: '#f5f5f6',
     sidebar: '#191d27',
+    /* Các sắc độ phụ — lặp ở nhiều màn, gom về đây thay vì viết hex tại chỗ. */
+    primaryTint: '#eef1ff',
+    /** Chữ phụ trên nền primary (hero xanh). */
+    primaryOn: '#cdd9fb',
+    successTint: '#e7f7ef',
+    /** Chữ xám nhạt hơn `muted` — placeholder, icon phụ. */
+    mutedSoft: '#9aa2b1',
+    /** Nền xám trung tính cho chip/tag không trạng thái. */
+    neutralSoft: '#eef0f3',
+    /** Viền đậm hơn `border` — đường kẻ nhấn, icon mờ. */
+    borderStrong: '#c4cad3',
+    /** Chữ tiêu đề đậm hơn `ink` một nấc (màn học sinh). */
+    inkStrong: '#1d2129',
+    /** Nền "bàn thi" của khu vực học sinh. */
+    desk: '#f5f4f1',
 } as const

@@ -8,6 +8,7 @@ import {
     usePreviewSchoolMembersMutation,
 } from '../../hooks/queries/useSchoolMembers'
 import {schoolMemberService} from '../../services/schoolMemberService'
+import {ROLE_LABEL} from '../../constants'
 import {eligibleSchoolUsers, sectionsForCohort} from './schoolMemberAddOptions'
 import {
     canImportSchoolMemberPreview,
@@ -145,9 +146,9 @@ export default function SchoolMemberAddModal({
                     value={role}
                     onChange={changeRole}
                     options={[
-                        {value: 'Admin', label: 'Admin'},
-                        {value: 'Teacher', label: 'Teacher'},
-                        {value: 'Student', label: 'Student'},
+                        {value: 'Admin', label: ROLE_LABEL.Admin},
+                        {value: 'Teacher', label: ROLE_LABEL.Teacher},
+                        {value: 'Student', label: ROLE_LABEL.Student},
                     ]}
                 />
             </label>
@@ -255,7 +256,7 @@ export default function SchoolMemberAddModal({
                         columns={[
                             {title: 'Dòng', dataIndex: 'rowNumber'},
                             {title: 'Tên đăng nhập', dataIndex: 'userName'},
-                            {title: 'Vai trò', dataIndex: 'role'},
+                            {title: 'Vai trò', dataIndex: 'role', render: v => ROLE_LABEL[v] ?? v},
                             {title: 'Khoá', dataIndex: 'cohortName'},
                             {title: 'Lớp', dataIndex: 'section'},
                             {

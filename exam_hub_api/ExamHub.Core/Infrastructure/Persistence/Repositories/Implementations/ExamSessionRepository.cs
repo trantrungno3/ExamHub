@@ -185,7 +185,10 @@ public class ExamSessionRepository(AppDbContext _db) : IExamSessionRepository
 
         return await _db.Set<ExamSession>()
             .Include(s => s.Subject).Include(s => s.GradeLevel).Include(s => s.Assignments)
-            .Where(s => s.Status == ExamSessionStatusEnum.Published)
+            // Cả Closed: kỳ thi đóng sớm vẫn phải hiện phía HS để xem lại kết quả (Draft thì không,
+            // vì chưa từng công bố). Chặn làm bài là việc của StudentAccessErrorAsync, không phải
+            // của query này — giấu kỳ thi đi làm bài đã nộp biến mất khỏi danh sách.
+            .Where(s => s.Status == ExamSessionStatusEnum.Published || s.Status == ExamSessionStatusEnum.Closed)
             .Where(s => s.Assignments.Any(a =>
                 (a.CohortId != null && cohortIds.Contains(a.CohortId.Value)) ||
                 (a.CohortClassId != null && classIds.Contains(a.CohortClassId.Value))))

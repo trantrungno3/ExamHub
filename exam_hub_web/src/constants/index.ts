@@ -39,7 +39,7 @@ export const SUBMISSION_STATUS_LABEL_STUDENT: Record<SubmissionStatus, string> =
 export const SUBMISSION_STATUS_VARIANT: Record<SubmissionStatus, StatusVariant> = {
     InProgress: 'default', Submitted: 'default', PendingManualGrade: 'warning', Graded: 'success',
 }
-/** Màu cho AntD <Tag> (SessionResultsModal). */
+/** Màu cho AntD <Tag> (SessionAttempts). */
 export const SUBMISSION_STATUS_TAG_COLOR: Record<SubmissionStatus, string> = {
     InProgress: 'default', Submitted: 'default', PendingManualGrade: 'gold', Graded: 'green',
 }

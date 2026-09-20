@@ -13,12 +13,12 @@ import {
     ScheduleOutlined,
     LogoutOutlined,
     DownOutlined,
-    RightOutlined,
 } from '@ant-design/icons'
 import type {ReactNode} from 'react'
 import {useAuth} from '../hooks/useAuth'
 import {isTokenExpired} from '../utils/jwt'
 import {useMenuQuery} from '../hooks/queries/useMenu'
+import {ROUTES} from '../routes/paths'
 
 const ICON_MAP: Record<string, ReactNode> = {
     dashboard:  <AppstoreOutlined/>,
@@ -81,6 +81,18 @@ export default function AppLayout() {
         }
     }, [location.pathname, token, navigate, refresh, logout])
 
+    // TEMP-PERF: đo click → paint của mỗi lần đổi page. Xoá sau khi debug xong.
+    useEffect(() => {
+        const t0 = performance.now()
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+            const paint = performance.now() - t0
+            const net = performance.getEntriesByType('resource')
+                .filter(e => e.startTime >= t0 - 50 && e.name.includes('/api/'))
+                .map(e => `${e.name.split('/api/')[1].split('?')[0]}:${Math.round(e.duration)}ms`)
+            console.log(`[nav] ${location.pathname} paint=${Math.round(paint)}ms api=[${net.join(' ')}]`)
+        }))
+    }, [location.pathname])
+
     const handleLogout = useCallback(() => {
         logout()
         navigate('/login')
@@ -89,10 +101,10 @@ export default function AppLayout() {
     return (
         <div className="app-layout">
             <aside className="sidebar">
-                <div className="sidebar-logo">
+                <button className="sidebar-logo" aria-label="Về trang chủ" onClick={() => navigate(ROUTES.APP)}>
                     <div className="sidebar-logo-icon">EH</div>
                     <span className="sidebar-logo-name">ExamHub</span>
-                </div>
+                </button>
 
                 <nav className="sidebar-nav">
                     {navItems.map((item) => {
@@ -104,22 +116,21 @@ export default function AppLayout() {
                                     <button
                                         onClick={() => toggleGroup(item.key, activeChild)}
                                         aria-expanded={open}
-                                        className={`sidebar-nav-item ${activeChild ? 'sidebar-nav-item--active' : ''}`}
+                                        className={`sidebar-nav-item ${open || activeChild ? 'sidebar-nav-item--open' : ''}`}
                                     >
                                         <span className="text-base">{ICON_MAP[item.icon] ?? <AppstoreOutlined/>}</span>
                                         <span className="flex-1 text-left">{item.label}</span>
-                                        <span className="text-xs">{open ? <DownOutlined/> : <RightOutlined/>}</span>
+                                        <DownOutlined className={`sidebar-chevron ${open ? '' : '-rotate-90'}`}/>
                                     </button>
                                     {open && (
-                                        <div className="ml-4">
+                                        <div className="sidebar-submenu" role="group">
                                             {item.children.map((child) => (
                                                 <NavLink
                                                     key={child.key}
                                                     to={child.path ?? '#'}
                                                     className={({isActive}) =>
-                                                        `sidebar-nav-item ${isActive ? 'sidebar-nav-item--active' : ''}`}
+                                                        `sidebar-subitem ${isActive ? 'sidebar-nav-item--active' : ''}`}
                                                 >
-                                                    <span className="text-base">{ICON_MAP[child.icon] ?? <AppstoreOutlined/>}</span>
                                                     <span>{child.label}</span>
                                                 </NavLink>
                                             ))}

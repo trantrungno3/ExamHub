@@ -9,6 +9,7 @@ import {
 import {useExamWithQuestionsQuery} from '../../hooks/queries/useExams'
 import {useCohortClassQuery} from '../../hooks/queries/useCohortClasses'
 import {useAuth} from '../../hooks/useAuth'
+import {BRAND} from '../../constants/theme'
 
 export default function ExamCoverPage() {
     const [agreed, setAgreed] = useState(false)
@@ -54,11 +55,11 @@ export default function ExamCoverPage() {
     ]
 
     return (
-        <div className="min-h-full" style={{background: '#f5f4f1'}}>
+        <div className="min-h-full" style={{background: BRAND.desk}}>
             {/* Hero xanh */}
-            <div className="px-4 pt-10 pb-24 text-center text-white" style={{background: '#3a74f5'}}>
+            <div className="px-4 pt-10 pb-24 text-center text-white" style={{background: BRAND.primary}}>
                 <h1 className="text-[30px] font-bold leading-tight">{exam.title}</h1>
-                <p className="mt-1.5 text-[14px]" style={{color: '#cdd9fb'}}>
+                <p className="mt-1.5 text-[14px]" style={{color: BRAND.primaryOn}}>
                     {cohortClass?.schoolYear ? `Năm học ${cohortClass.schoolYear} · ` : ''}
                     {cohortClass?.className ? `Lớp ${cohortClass.className}` : 'ExamHub'}
                 </p>
@@ -68,7 +69,7 @@ export default function ExamCoverPage() {
                              style={{background: 'rgba(255,255,255,0.14)', border: '1px solid rgba(255,255,255,0.22)'}}>
                             <div className="text-[18px] text-white/90 leading-none">{s.icon}</div>
                             <div className="text-[20px] font-bold text-white leading-tight mt-1.5">{s.value}</div>
-                            <div className="text-[12px] mt-1" style={{color: '#cdd9fb'}}>{s.label}</div>
+                            <div className="text-[12px] mt-1" style={{color: BRAND.primaryOn}}>{s.label}</div>
                         </div>
                     ))}
                 </div>
@@ -76,21 +77,21 @@ export default function ExamCoverPage() {
 
             {/* Card trắng đè lên hero */}
             <div className="max-w-2xl mx-auto px-4 -mt-14 pb-12">
-                <div className="bg-white rounded-2xl border p-6 sm:p-7" style={{borderColor: '#eceef2'}}>
+                <div className="bg-white rounded-2xl border p-6 sm:p-7" style={{borderColor: BRAND.border}}>
                     <h2 className="text-[16px] font-semibold pb-3 mb-1 border-b"
-                        style={{color: '#191d27', borderColor: '#eceef2'}}>Thông tin bài thi</h2>
+                        style={{color: BRAND.ink, borderColor: BRAND.border}}>Thông tin bài thi</h2>
                     <div className="flex flex-col gap-2">
                         {info.map(([k, v]) => (
                             <div key={k} className="flex items-center gap-4 text-[14px]">
                                 <span className="w-32 shrink-0 rounded-md px-3 py-1.5 text-center"
-                                      style={{background: '#f3f4f6', color: '#6f7788'}}>{k}</span>
-                                <span className="font-semibold" style={{color: '#1d2129'}}>{v}</span>
+                                      style={{background: '#f3f4f6', color: BRAND.muted}}>{k}</span>
+                                <span className="font-semibold" style={{color: BRAND.inkStrong}}>{v}</span>
                             </div>
                         ))}
                     </div>
 
                     <div className="flex gap-3 items-start rounded-lg px-4 py-3 text-[13.5px] leading-6 mt-4"
-                         style={{background: '#fff4e5', border: '1px solid #ffe0b2', color: '#b26a00'}}>
+                         style={{background: BRAND.warningSoft, border: '1px solid #ffe0b2', color: '#b26a00'}}>
                         <WarningOutlined className="text-base mt-0.5 shrink-0"/>
                         <div>
                             <p>Sau khi bắt đầu, đồng hồ đếm ngược sẽ chạy và không thể tạm dừng.</p>

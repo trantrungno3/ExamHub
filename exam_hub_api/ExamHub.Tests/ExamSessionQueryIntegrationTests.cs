@@ -105,4 +105,50 @@ public class ExamSessionQueryIntegrationTests(PostgresIntegrationFixture fixture
         Assert.Empty(db.ChangeTracker.Entries());
         Assert.All(items, s => Assert.Equal(EntityState.Detached, db.Entry(s).State));
     }
+
+    /// <summary>
+    /// Kỳ thi đóng sớm (Status=Closed) vẫn phải nằm trong danh sách của học sinh — giấu đi thì bài
+    /// đã nộp biến mất, HS không xem lại được kết quả. Draft thì không, vì chưa từng công bố.
+    /// </summary>
+    [Fact]
+    public async Task Assigned_sessions_include_closed_but_not_draft()
+    {
+        var studentId = Guid.NewGuid();
+        await using (var seed = fixture.CreateContext())
+        {
+            var gradeLevel = new GradeLevel { Name = "Khối closed", GradeNumber = (short)Interlocked.Increment(ref _gradeNumber) };
+            var subject = new Subject { Name = "Toán closed", Code = $"QC-{Guid.NewGuid():N}"[..18], GradeLevel = gradeLevel };
+            var school = new School { Name = "Trường closed", Code = $"SC-{Guid.NewGuid():N}"[..18] };
+            var cohort = new Cohort { Name = "Khoá closed", School = school, StartYear = 2024, EndYear = 2027, GradeStart = 10 };
+
+            ExamSession NewSession(string title, ExamSessionStatusEnum status)
+            {
+                var s = new ExamSession
+                {
+                    Title = title, Subject = subject, GradeLevel = gradeLevel,
+                    OpenAt = DateTime.UtcNow.AddHours(-2), CloseAt = DateTime.UtcNow.AddHours(2),
+                    MaxAttempts = 1, PickMode = ExamSessionPickModeEnum.Random, Status = status,
+                };
+                s.Assignments.Add(new ExamSessionAssignment { Cohort = cohort });
+                return s;
+            }
+
+            seed.AddRange(gradeLevel, subject, school, cohort,
+                new CohortMember { Cohort = cohort, StudentId = studentId, IsActive = true },
+                NewSession("Đang mở", ExamSessionStatusEnum.Published),
+                NewSession("Đã đóng", ExamSessionStatusEnum.Closed),
+                NewSession("Nháp", ExamSessionStatusEnum.Draft));
+            await seed.SaveChangesAsync();
+        }
+
+        await using var db = fixture.CreateContext();
+        var repo = new ExamSessionRepository(db);
+
+        var sessions = await repo.GetAssignedToStudentAsync(studentId);
+
+        var titles = sessions.Select(s => s.Title).ToList();
+        Assert.Equal(2, titles.Count);
+        Assert.Contains("Đang mở", titles);
+        Assert.Contains("Đã đóng", titles);
+    }
 }
