@@ -27,10 +27,15 @@
 - No new dependency for something a few lines of code can do.
 - No new file when editing an existing one is enough.
 
-## Model (user switches with `/model`; the agent cannot switch by itself)
+## Claude model (user switches with `/model`; the agent cannot switch by itself)
 - Planning / brainstorming / hard debugging → Opus 5 High.
 - Regular coding, small edits → Sonnet 5 Medium.
 - If the agent notices the wrong model is active, mention it in one line — never try to switch.
+
+## Codex
+- Use the active model/reasoning level; do not attempt to switch it.
+- Use only skills and tools available in the current session.
+- `.claude/agents/**` is Claude-only; Codex uses its available subagent tools.
 
 ## Splitting a plan across subagents
 After a plan is approved, slice it by stack boundary before writing any code:
