@@ -1,7 +1,9 @@
+using ExamHub.Core.Application.Services;
 using ExamHub.Core.DataTransferObjects.School;
 using ExamHub.Core.Domain.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using TVT.Core;
 
 namespace ExamHub.API.Controllers.School;
@@ -9,8 +11,21 @@ namespace ExamHub.API.Controllers.School;
 /// <summary>Controller quản lý thành viên trường học</summary>
 [ApiController]
 [Route("api/[controller]")]
-public class SchoolMemberController(ISchoolMemberService service) : AuthorizeControllerBase
+public class SchoolMemberController(
+    ISchoolMemberService service,
+    ISchoolMemberBulkService bulkService) : AuthorizeControllerBase
 {
+    private const long MaxImportBytes = 10 * 1024 * 1024;
+
+    /// <summary>Kiểm tra metadata file import; trả về thông báo lỗi hoặc null khi hợp lệ.</summary>
+    private static string? ValidateImportFile(IFormFile? file)
+    {
+        if (file is null || file.Length == 0) return "File import không được để trống.";
+        if (!file.FileName.EndsWith(".xlsx", StringComparison.OrdinalIgnoreCase))
+            return "Chỉ chấp nhận file Excel (.xlsx).";
+        return file.Length > MaxImportBytes ? "File import không được vượt quá 10 MB." : null;
+    }
+
     /// <summary>Lấy theo ID</summary>
     /// <param name="id">Id thành viên cần lấy.</param>
     /// <param name="ct">Token huỷ yêu cầu.</param>
@@ -108,4 +123,77 @@ public class SchoolMemberController(ISchoolMemberService service) : AuthorizeCon
         var result = await service.SetActiveAsync(id, isActive, ct);
         return Ok(RequestResponse<bool>.Success("Cập nhật trạng thái thành công!", result, 1));
     }
+
+    /// <summary>Thêm nhiều tài khoản có sẵn vào trường trong một lần</summary>
+    /// <param name="request">Vai trò, danh sách người dùng và vị trí khoá/lớp khi là Student.</param>
+    /// <param name="ct">Token huỷ yêu cầu.</param>
+    /// <returns>Số dòng thành công và danh sách lỗi theo vị trí lựa chọn.</returns>
+    [HttpPost("bulk")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<RequestResponse<SchoolMemberBulkResult>>> BulkAdd(
+        [FromBody] SchoolMemberBulkAddRequest request, CancellationToken ct)
+    {
+        var result = await bulkService.AddAsync(request, ct);
+        return Ok(RequestResponse<SchoolMemberBulkResult>.Success(
+            $"Thêm hoàn tất: {result.SuccessCount} thành công, {result.ErrorCount} lỗi.",
+            result, result.SuccessCount));
+    }
+
+    /// <summary>Kiểm tra file Excel thành viên mà không ghi dữ liệu</summary>
+    /// <param name="request">Trường đích và file .xlsx cần kiểm tra.</param>
+    /// <param name="ct">Token huỷ yêu cầu.</param>
+    /// <returns>Từng dòng kèm trạng thái hợp lệ và lỗi; 400 nếu file sai định dạng.</returns>
+    [HttpPost("bulk-import/preview")]
+    [Authorize(Roles = "Admin")]
+    [EnableRateLimiting("write-heavy")]
+    public async Task<ActionResult<RequestResponse<SchoolMemberImportPreviewResponse>>> Preview(
+        [FromForm] SchoolMemberImportRequest request, CancellationToken ct)
+    {
+        var error = ValidateImportFile(request.File);
+        if (error is not null) return BadRequest(RequestResponse<object>.Error(error));
+        try
+        {
+            var result = await bulkService.PreviewAsync(request, ct);
+            return Ok(RequestResponse<SchoolMemberImportPreviewResponse>.Success(
+                "Kiểm tra file thành công.", result, result.Rows.Count));
+        }
+        catch (InvalidDataException ex)
+        {
+            return BadRequest(RequestResponse<object>.Error(ex.Message));
+        }
+    }
+
+    /// <summary>Import các dòng hợp lệ từ file Excel thành viên</summary>
+    /// <param name="request">Trường đích và file .xlsx cần import.</param>
+    /// <param name="ct">Token huỷ yêu cầu.</param>
+    /// <returns>Số dòng ghi thành công và lỗi theo số dòng trong file; 400 nếu file sai định dạng.</returns>
+    [HttpPost("bulk-import")]
+    [Authorize(Roles = "Admin")]
+    [EnableRateLimiting("write-heavy")]
+    public async Task<ActionResult<RequestResponse<SchoolMemberBulkResult>>> BulkImport(
+        [FromForm] SchoolMemberImportRequest request, CancellationToken ct)
+    {
+        var error = ValidateImportFile(request.File);
+        if (error is not null) return BadRequest(RequestResponse<object>.Error(error));
+        try
+        {
+            var result = await bulkService.ImportAsync(request, ct);
+            return Ok(RequestResponse<SchoolMemberBulkResult>.Success(
+                $"Import hoàn tất: {result.SuccessCount} thành công, {result.ErrorCount} lỗi.",
+                result, result.SuccessCount));
+        }
+        catch (InvalidDataException ex)
+        {
+            return BadRequest(RequestResponse<object>.Error(ex.Message));
+        }
+    }
+
+    /// <summary>Tải file Excel mẫu để import thành viên trường</summary>
+    /// <returns>File .xlsx mẫu với đúng thứ tự cột mà <c>BulkImport</c> yêu cầu.</returns>
+    [HttpGet("bulk-import/template")]
+    [Authorize(Roles = "Admin")]
+    public IActionResult DownloadImportTemplate() => File(
+        bulkService.BuildTemplate(),
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "school-member-import-template.xlsx");
 }
