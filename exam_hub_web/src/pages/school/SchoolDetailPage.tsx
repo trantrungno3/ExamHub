@@ -1,17 +1,17 @@
 import {useState} from 'react'
 import {useNavigate, useParams} from 'react-router-dom'
-import {Breadcrumb, Button, Form, Input, Modal, Popconfirm, Select, Table, Tabs, Tag} from 'antd'
+import {Breadcrumb, Button, Form, Input, Modal, Popconfirm, Table, Tabs, Tag} from 'antd'
 import type {TableColumnsType} from 'antd'
 import {PlusOutlined, RightOutlined} from '@ant-design/icons'
 import {StatusTag} from '../../components/StatusTag'
 import {useSchoolsQuery} from '../../hooks/queries/useSchools'
 import {useCohortsQuery, useCreateCohortMutation, useDeleteCohortMutation} from '../../hooks/queries/useCohorts'
-import {useSchoolMembersQuery, useAddSchoolMemberMutation, useRemoveSchoolMemberMutation, useSetSchoolMemberActiveMutation} from '../../hooks/queries/useSchoolMembers'
+import {useSchoolMembersQuery, useRemoveSchoolMemberMutation, useSetSchoolMemberActiveMutation} from '../../hooks/queries/useSchoolMembers'
 import {useCohortMembersBySchoolQuery} from '../../hooks/queries/useCohortMembers'
+import {useUsersQuery} from '../../hooks/queries/useUsers'
 import {statusCode} from '../../services/requestService'
-import {userService} from '../../services/userService'
-import {useQuery} from '@tanstack/react-query'
 import PageHeader from '../../components/PageHeader'
+import SchoolMemberAddModal from './SchoolMemberAddModal'
 
 export default function SchoolDetailPage() {
     const {id} = useParams<{id: string}>()
@@ -27,30 +27,19 @@ export default function SchoolDetailPage() {
 
     const createCohortMutation = useCreateCohortMutation(schoolId)
     const deleteCohortMutation = useDeleteCohortMutation(schoolId)
-    const addMemberMutation = useAddSchoolMemberMutation(schoolId)
     const removeMemberMutation = useRemoveSchoolMemberMutation(schoolId)
     const setActiveMutation = useSetSchoolMemberActiveMutation(schoolId)
 
-    const {data: allUsers = []} = useQuery({
-        queryKey: ['users'],
-        queryFn: async () => (await userService.getAll()).data ?? [],
-    })
+    const {data: allUsers = []} = useUsersQuery()
 
     const [cohortModal, setCohortModal] = useState(false)
     const [memberModal, setMemberModal] = useState(false)
     const [cohortForm] = Form.useForm<CohortBody>()
-    const [memberForm] = Form.useForm<SchoolMemberBody>()
 
     const handleAddCohort = async () => {
         const values = await cohortForm.validateFields()
         const res = await createCohortMutation.mutateAsync({...values, schoolId})
         if (res.status !== statusCode.Error) { setCohortModal(false); cohortForm.resetFields() }
-    }
-
-    const handleAddMember = async () => {
-        const values = await memberForm.validateFields()
-        const res = await addMemberMutation.mutateAsync({...values, schoolId})
-        if (res.status !== statusCode.Error) { setMemberModal(false); memberForm.resetFields() }
     }
 
     const cohortColumns: TableColumnsType<Cohort> = [
@@ -202,20 +191,16 @@ export default function SchoolDetailPage() {
                 </Form>
             </Modal>
 
-            {/* Modal thêm thành viên */}
-            <Modal title="Thêm thành viên trường" open={memberModal} onOk={handleAddMember}
-                onCancel={() => setMemberModal(false)} okText="Thêm" cancelText="Hủy"
-                confirmLoading={addMemberMutation.isPending}>
-                <Form form={memberForm} layout="vertical">
-                    <Form.Item name="userId" label="Người dùng" rules={[{required: true}]}>
-                        <Select showSearch optionFilterProp="label"
-                            options={allUsers.map(u => ({value: u.id, label: `${u.displayName ?? u.userName} (${u.roles.join(', ')})`}))}/>
-                    </Form.Item>
-                    <Form.Item name="role" label="Vai trò" rules={[{required: true}]}>
-                        <Select options={[{value: 'Admin', label: 'Admin'}, {value: 'Teacher', label: 'Teacher'}]}/>
-                    </Form.Item>
-                </Form>
-            </Modal>
+            {/* Modal thêm thành viên: thủ công nhiều người hoặc import Excel */}
+            <SchoolMemberAddModal
+                open={memberModal}
+                schoolId={schoolId}
+                users={allUsers}
+                cohorts={cohorts}
+                members={members}
+                students={students}
+                onClose={() => setMemberModal(false)}
+            />
         </>
     )
 }
