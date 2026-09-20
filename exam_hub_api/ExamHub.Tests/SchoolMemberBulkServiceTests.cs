@@ -1,4 +1,4 @@
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 using ClosedXML.Excel;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
@@ -10,7 +10,9 @@ using ExamHub.Core.Infrastructure.Persistence;
 using ExamHub.Core.Infrastructure.Persistence.Services.Implementations;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using TVT.Core;
 using TVT.Core.IdentityUser.PostgreSql.Models;
+using static ExamHub.Tests.BulkTestData;
 
 namespace ExamHub.Tests;
 
@@ -276,11 +278,313 @@ public class SchoolMemberBulkServicePreviewTests
         var fixture = Fixture.ValidSchool();
         await Assert.ThrowsAsync<ArgumentException>(() => fixture.Service.PreviewAsync(new(1, EmptyWorkbook())));
     }
+}
 
-    private static FormFile Workbook(params string[][] rows)
+sealed class FakeSchoolMemberWriter : ISchoolMemberService
+{
+    public List<SchoolMember> Added { get; } = [];
+    public bool FailNextSave { get; set; }
+
+    public Task<SchoolMember> AddMemberAsync(SchoolMember entity, CancellationToken ct = default)
+    {
+        if (FailNextSave)
+        {
+            FailNextSave = false;
+            throw new DbUpdateException("duplicate key");
+        }
+        entity.Id = Guid.NewGuid();
+        Added.Add(entity);
+        return Task.FromResult(entity);
+    }
+
+    public Task<IReadOnlyList<SchoolMember>> GetBySchoolAsync(int schoolId, CancellationToken ct = default) => throw new NotSupportedException();
+    public Task<IReadOnlyList<SchoolMember>> GetBySchoolAndRoleAsync(int schoolId, string role, CancellationToken ct = default) => throw new NotSupportedException();
+    public Task<IReadOnlyList<SchoolMember>> GetByUserAsync(Guid userId, CancellationToken ct = default) => throw new NotSupportedException();
+    public Task<SchoolMember?> GetByIdAsync(Guid id, CancellationToken ct = default) => throw new NotSupportedException();
+    public Task<SchoolMember> UpdateAsync(SchoolMember entity, CancellationToken ct = default) => throw new NotSupportedException();
+    public Task RemoveMemberAsync(Guid id, CancellationToken ct = default) => throw new NotSupportedException();
+    public Task<bool> SetActiveAsync(Guid id, bool isActive, CancellationToken ct = default) => throw new NotSupportedException();
+}
+
+sealed class FakeCohortMemberWriter : ICohortMemberService
+{
+    public List<CohortMember> Added { get; } = [];
+    public string? NextError { get; set; }
+
+    public Task<RequestResponse<CohortMember>> AddStudentAsync(CohortMember entity, CancellationToken ct = default)
+    {
+        if (NextError is not null)
+        {
+            var message = NextError;
+            NextError = null;
+            return Task.FromResult(RequestResponse<CohortMember>.Error(message));
+        }
+        entity.Id = Guid.NewGuid();
+        Added.Add(entity);
+        return Task.FromResult(RequestResponse<CohortMember>.Success("ok", entity, 1));
+    }
+
+    public Task<IReadOnlyList<CohortMember>> GetByCohortAsync(int cohortId, CancellationToken ct = default) => throw new NotSupportedException();
+    public Task<IReadOnlyList<CohortMember>> GetBySchoolAsync(int schoolId, CancellationToken ct = default) => throw new NotSupportedException();
+    public Task<IReadOnlyList<CohortMember>> GetByStudentAsync(Guid studentId, CancellationToken ct = default) => throw new NotSupportedException();
+    public Task<CohortMember?> GetByIdAsync(Guid id, CancellationToken ct = default) => throw new NotSupportedException();
+    public Task RemoveStudentAsync(Guid id, CancellationToken ct = default) => throw new NotSupportedException();
+    public Task<bool> SetActiveAsync(Guid id, bool isActive, CancellationToken ct = default) => throw new NotSupportedException();
+    public Task<RequestResponse<bool>> SetSectionAsync(Guid id, string? section, CancellationToken ct = default) => throw new NotSupportedException();
+}
+
+public class SchoolMemberBulkServiceImportTests
+{
+    [Fact]
+    public async Task ImportAsync_RevalidatesMembershipCreatedAfterPreview()
+    {
+        var fixture = Fixture.ValidSchool();
+        var request = new SchoolMemberImportRequest(1, Workbook(["teacher1", "Teacher", "", ""]));
+        Assert.Equal(1, (await fixture.Service.PreviewAsync(request)).ValidCount);
+        fixture.SchoolMembers.Items.Add(new()
+        {
+            SchoolId = 1, UserId = fixture.Teacher.Id, Role = "Teacher", IsActive = true,
+        });
+
+        var result = await fixture.Service.ImportAsync(request);
+
+        Assert.Equal(0, result.SuccessCount);
+        Assert.Equal(1, result.ErrorCount);
+        Assert.Empty(fixture.SchoolMemberWriter.Added);
+    }
+
+    [Fact]
+    public async Task ImportAsync_PersistenceFailureDoesNotBlockNextValidRow()
+    {
+        var fixture = Fixture.ValidSchool();
+        fixture.SchoolMemberWriter.FailNextSave = true;
+        var result = await fixture.Service.ImportAsync(new(1, Workbook(
+            ["teacher1", "Teacher", "", ""],
+            ["teacher2", "Teacher", "", ""])));
+
+        Assert.Equal(1, result.SuccessCount);
+        Assert.Equal(1, result.ErrorCount);
+        Assert.Single(fixture.SchoolMemberWriter.Added);
+        Assert.Equal(2, result.Errors.Single().RowNumber);
+    }
+
+    [Fact]
+    public async Task ImportAsync_WritesTeacherToSchoolAndStudentToCohort()
+    {
+        var fixture = Fixture.ValidSchool();
+
+        var result = await fixture.Service.ImportAsync(new(1, Workbook(
+            ["teacher1", "Teacher", "", ""],
+            ["student1", "Student", "Khoá 2026", "b"])));
+
+        Assert.Equal(2, result.SuccessCount);
+        Assert.Equal(0, result.ErrorCount);
+        var member = Assert.Single(fixture.SchoolMemberWriter.Added);
+        Assert.Equal(1, member.SchoolId);
+        Assert.Equal("Teacher", member.Role);
+        Assert.True(member.IsActive);
+        var cohortMember = Assert.Single(fixture.CohortMemberWriter.Added);
+        Assert.Equal(1, cohortMember.CohortId);
+        Assert.Equal(fixture.Student.Id, cohortMember.StudentId);
+        Assert.Equal("B", cohortMember.Section);
+    }
+
+    [Fact]
+    public async Task ImportAsync_InvalidRowKeepsSpreadsheetRowNumberAndSkipsWrite()
+    {
+        var fixture = Fixture.ValidSchool();
+
+        var result = await fixture.Service.ImportAsync(new(1, Workbook(
+            ["missing", "Teacher", "", ""],
+            ["teacher1", "Teacher", "", ""])));
+
+        Assert.Equal(1, result.SuccessCount);
+        Assert.Equal(2, result.Errors.Single().RowNumber);
+        Assert.Single(fixture.SchoolMemberWriter.Added);
+    }
+
+    [Fact]
+    public async Task ImportAsync_CohortWriterErrorBecomesRowError()
+    {
+        var fixture = Fixture.ValidSchool();
+        fixture.CohortMemberWriter.NextError = "Học sinh đã thuộc lớp khác trong khối này.";
+
+        var result = await fixture.Service.ImportAsync(new(1, Workbook(
+            ["student1", "Student", "Khoá 2026", "A"])));
+
+        Assert.Equal(0, result.SuccessCount);
+        Assert.Equal("Học sinh đã thuộc lớp khác trong khối này.", result.Errors.Single().Message);
+        Assert.Empty(fixture.CohortMemberWriter.Added);
+    }
+}
+
+public class SchoolMemberBulkServiceManualTests
+{
+    [Fact]
+    public async Task AddAsync_AddsAdminAndTeacherAsSchoolMembers()
+    {
+        var fixture = Fixture.ValidSchool();
+
+        var admins = await fixture.Service.AddAsync(new(1, "Admin", [fixture.Admin.Id]));
+        var teachers = await fixture.Service.AddAsync(new(1, "Teacher", [fixture.Teacher.Id, fixture.Teacher2.Id]));
+
+        Assert.Equal(1, admins.SuccessCount);
+        Assert.Equal(2, teachers.SuccessCount);
+        Assert.Equal(["Admin", "Teacher", "Teacher"], fixture.SchoolMemberWriter.Added.Select(x => x.Role));
+        Assert.All(fixture.SchoolMemberWriter.Added, x => Assert.Equal(1, x.SchoolId));
+    }
+
+    [Fact]
+    public async Task AddAsync_AddsStudentsToCohortSection()
+    {
+        var fixture = Fixture.ValidSchool();
+
+        var result = await fixture.Service.AddAsync(
+            new(1, "Student", [fixture.Student.Id, fixture.Student2.Id], 1, "b"));
+
+        Assert.Equal(2, result.SuccessCount);
+        Assert.Equal(0, result.ErrorCount);
+        Assert.All(fixture.CohortMemberWriter.Added, x =>
+        {
+            Assert.Equal(1, x.CohortId);
+            Assert.Equal("B", x.Section);
+            Assert.True(x.IsActive);
+        });
+    }
+
+    [Fact]
+    public async Task AddAsync_DuplicateUserIdIsErrorAtSelectionPosition()
+    {
+        var fixture = Fixture.ValidSchool();
+
+        var result = await fixture.Service.AddAsync(
+            new(1, "Teacher", [fixture.Teacher.Id, fixture.Teacher.Id]));
+
+        Assert.Equal(1, result.SuccessCount);
+        Assert.Equal(2, result.Errors.Single().RowNumber);
+        Assert.Single(fixture.SchoolMemberWriter.Added);
+    }
+
+    [Fact]
+    public async Task AddAsync_GlobalRoleMismatchIsError()
+    {
+        var fixture = Fixture.ValidSchool();
+
+        var result = await fixture.Service.AddAsync(new(1, "Teacher", [fixture.Student.Id]));
+
+        Assert.Equal(0, result.SuccessCount);
+        Assert.Equal(1, result.ErrorCount);
+        Assert.Empty(fixture.SchoolMemberWriter.Added);
+    }
+
+    [Fact]
+    public async Task AddAsync_UnknownOrDeletedUserIsError()
+    {
+        var fixture = Fixture.ValidSchool();
+        var deleted = DeletedUser("gone", "Teacher");
+        fixture.Users.Items.Add(deleted);
+
+        var result = await fixture.Service.AddAsync(
+            new(1, "Teacher", [Guid.NewGuid(), deleted.Id]));
+
+        Assert.Equal(0, result.SuccessCount);
+        Assert.Equal(2, result.ErrorCount);
+    }
+
+    [Fact]
+    public async Task AddAsync_CohortFromAnotherSchoolIsError()
+    {
+        var fixture = Fixture.ValidSchool();
+        fixture.Cohorts.Items.Add(new() { Id = 9, SchoolId = 2, Name = "Khoá khác", NumClasses = 2, IsActive = true });
+
+        var result = await fixture.Service.AddAsync(new(1, "Student", [fixture.Student.Id], 9, "A"));
+
+        Assert.Equal(1, result.ErrorCount);
+        Assert.Empty(fixture.CohortMemberWriter.Added);
+    }
+
+    [Fact]
+    public async Task AddAsync_InactiveCohortIsError()
+    {
+        var fixture = Fixture.ValidSchool();
+        fixture.Cohorts.Items.Single().IsActive = false;
+
+        var result = await fixture.Service.AddAsync(new(1, "Student", [fixture.Student.Id], 1, "A"));
+
+        Assert.Equal(1, result.ErrorCount);
+        Assert.Empty(fixture.CohortMemberWriter.Added);
+    }
+
+    [Fact]
+    public async Task AddAsync_InvalidSectionIsError()
+    {
+        var fixture = Fixture.ValidSchool();
+
+        var result = await fixture.Service.AddAsync(new(1, "Student", [fixture.Student.Id], 1, "C"));
+
+        Assert.Equal(1, result.ErrorCount);
+        Assert.Empty(fixture.CohortMemberWriter.Added);
+    }
+
+    [Fact]
+    public async Task AddAsync_StudentWithoutCohortOrSectionIsError()
+    {
+        var fixture = Fixture.ValidSchool();
+
+        var noCohort = await fixture.Service.AddAsync(new(1, "Student", [fixture.Student.Id], null, "A"));
+        var noSection = await fixture.Service.AddAsync(new(1, "Student", [fixture.Student.Id], 1, null));
+
+        Assert.Equal(1, noCohort.ErrorCount);
+        Assert.Equal(1, noSection.ErrorCount);
+        Assert.Empty(fixture.CohortMemberWriter.Added);
+    }
+
+    [Fact]
+    public async Task AddAsync_InactiveTeacherMembershipIsError()
+    {
+        var fixture = Fixture.ValidSchool();
+        fixture.SchoolMembers.Items.Add(new()
+        {
+            SchoolId = 1, UserId = fixture.Teacher.Id, Role = "Teacher", IsActive = false,
+        });
+
+        var result = await fixture.Service.AddAsync(new(1, "Teacher", [fixture.Teacher.Id]));
+
+        Assert.Equal(1, result.ErrorCount);
+        Assert.Empty(fixture.SchoolMemberWriter.Added);
+    }
+
+    [Fact]
+    public async Task AddAsync_StudentInAnotherCohortOfSameSchoolIsError()
+    {
+        var fixture = Fixture.ValidSchool();
+        fixture.Cohorts.Items.Add(new() { Id = 2, SchoolId = 1, Name = "Khoá 2027", NumClasses = 2, IsActive = true });
+        fixture.CohortMembers.Items.Add(new() { CohortId = 2, StudentId = fixture.Student.Id, IsActive = false });
+
+        var result = await fixture.Service.AddAsync(new(1, "Student", [fixture.Student.Id], 1, "A"));
+
+        Assert.Equal(1, result.ErrorCount);
+        Assert.Empty(fixture.CohortMemberWriter.Added);
+    }
+
+    [Fact]
+    public async Task AddAsync_UnsupportedRoleIsError()
+    {
+        var fixture = Fixture.ValidSchool();
+
+        var result = await fixture.Service.AddAsync(new(1, "Principal", [fixture.Teacher.Id]));
+
+        Assert.Equal(0, result.SuccessCount);
+        Assert.Equal(1, result.ErrorCount);
+    }
+}
+
+static class BulkTestData
+{
+    internal static FormFile Workbook(params string[][] rows)
         => WorkbookWithHeaders(["UserName", "Role", "CohortName", "Section"], rows);
 
-    private static FormFile WorkbookWithHeaders(string[] headers, params string[][] rows)
+    internal static FormFile WorkbookWithHeaders(string[] headers, params string[][] rows)
     {
         using var workbook = new XLWorkbook();
         var sheet = workbook.Worksheets.Add("Members");
@@ -293,7 +597,7 @@ public class SchoolMemberBulkServicePreviewTests
         return new FormFile(new MemoryStream(bytes), 0, bytes.Length, "file", "members.xlsx");
     }
 
-    private static FormFile EmptyWorkbook()
+    internal static FormFile EmptyWorkbook()
     {
         using var output = new MemoryStream();
         using (var document = SpreadsheetDocument.Create(output, SpreadsheetDocumentType.Workbook, true))
@@ -306,50 +610,69 @@ public class SchoolMemberBulkServicePreviewTests
         return new FormFile(new MemoryStream(bytes), 0, bytes.Length, "file", "members.xlsx");
     }
 
-    private static UserAdmin DeletedUser(string userName, string role)
+    internal static UserAdmin DeletedUser(string userName, string role)
     {
         var user = User(userName, role);
         user.Deleted = DateTime.UtcNow;
         return user;
     }
 
-    private static UserAdmin User(string userName, string role)
+    internal static UserAdmin User(string userName, string role)
     {
         var user = new UserAdmin { Id = Guid.NewGuid(), UserName = userName, DisplayName = userName };
         user.AddRole(role);
         return user;
     }
 
-    private sealed class Fixture
+    internal sealed class Fixture
     {
         public required SchoolMemberBulkService Service { get; init; }
         public required FakeBulkUsers Users { get; init; }
         public required FakeBulkSchoolMembers SchoolMembers { get; init; }
         public required FakeBulkCohorts Cohorts { get; init; }
         public required FakeBulkCohortMembers CohortMembers { get; init; }
+        public required FakeSchoolMemberWriter SchoolMemberWriter { get; init; }
+        public required FakeCohortMemberWriter CohortMemberWriter { get; init; }
+        public required UserAdmin Admin { get; init; }
         public required UserAdmin Teacher { get; init; }
+        public required UserAdmin Teacher2 { get; init; }
         public required UserAdmin Student { get; init; }
+        public required UserAdmin Student2 { get; init; }
 
         public static Fixture ValidSchool()
         {
             var users = new FakeBulkUsers();
+            var admin = User("admin1", "Admin");
             var teacher = User("teacher1", "Teacher");
+            var teacher2 = User("teacher2", "Teacher");
             var student = User("student1", "Student");
-            users.Items.AddRange([teacher, student, User("student2", "Student")]);
+            var student2 = User("student2", "Student");
+            users.Items.AddRange([admin, teacher, teacher2, student, student2]);
             var schoolMembers = new FakeBulkSchoolMembers();
             var cohorts = new FakeBulkCohorts();
             cohorts.Items.Add(new() { Id = 1, SchoolId = 1, Name = "Khoá 2026", NumClasses = 2, IsActive = true });
             var cohortMembers = new FakeBulkCohortMembers();
+            var schoolMemberWriter = new FakeSchoolMemberWriter();
+            var cohortMemberWriter = new FakeCohortMemberWriter();
             return new()
             {
                 Users = users,
                 SchoolMembers = schoolMembers,
                 Cohorts = cohorts,
                 CohortMembers = cohortMembers,
+                SchoolMemberWriter = schoolMemberWriter,
+                CohortMemberWriter = cohortMemberWriter,
+                Admin = admin,
                 Teacher = teacher,
+                Teacher2 = teacher2,
                 Student = student,
-                Service = new SchoolMemberBulkService(users, schoolMembers, cohorts, cohortMembers, null!, null!,
-                    new AppDbContext(new DbContextOptionsBuilder<AppDbContext>().Options)),
+                Student2 = student2,
+                Service = new SchoolMemberBulkService(users, schoolMembers, cohorts, cohortMembers,
+                    schoolMemberWriter, cohortMemberWriter,
+                    new AppDbContext(new DbContextOptionsBuilder<AppDbContext>()
+                        .UseNpgsql("Host=localhost;Database=model-only")
+                        .UseSnakeCaseNamingConvention()
+                        .Options)),
             };
         }
     }
