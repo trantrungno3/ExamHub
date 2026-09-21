@@ -1,0 +1,16 @@
+title = "ExamHub gitleaks configuration"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Generated output and owner-approved local appsettings exception"
+paths = [
+  '''(^|/)bin/''',
+  '''(^|/)obj/''',
+  '''(^|/)dist/''',
+  '''(^|/)node_modules/''',
+  # Owner override: this local-only project deliberately versions backend
+  # appsettings so the same development configuration works on several PCs.
+  '''^exam_hub_api/ExamHub\.API/appsettings(?:\.Development)?\.json$'''
+]

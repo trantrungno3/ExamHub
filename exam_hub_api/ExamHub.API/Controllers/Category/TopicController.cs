@@ -21,6 +21,9 @@ public class TopicController(ITopicService service)
     protected override TopicResponse ToResponse(Topic entity) => TopicResponse.FromEntity(entity);
 
     /// <summary>Lấy theo môn học</summary>
+    /// <param name="subjectId">Id môn học cần lọc.</param>
+    /// <param name="ct">Token huỷ yêu cầu.</param>
+    /// <returns>Danh sách chủ đề thuộc môn học.</returns>
     [HttpGet("by-subject/{subjectId:int}")]
     [Authorize]
     public async Task<ActionResult<RequestResponse<IReadOnlyList<TopicResponse>>>> GetBySubject(int subjectId, CancellationToken ct = default)
@@ -31,6 +34,9 @@ public class TopicController(ITopicService service)
     }
 
     /// <summary>Lấy chủ đề gốc theo môn học</summary>
+    /// <param name="subjectId">Id môn học cần lọc.</param>
+    /// <param name="ct">Token huỷ yêu cầu.</param>
+    /// <returns>Danh sách chủ đề gốc (không có chủ đề cha) thuộc môn học.</returns>
     [HttpGet("root/by-subject/{subjectId:int}")]
     [Authorize]
     public async Task<ActionResult<RequestResponse<IReadOnlyList<TopicResponse>>>> GetRootTopics(int subjectId, CancellationToken ct = default)
@@ -41,6 +47,9 @@ public class TopicController(ITopicService service)
     }
 
     /// <summary>Lấy chủ đề con</summary>
+    /// <param name="parentId">Id chủ đề cha.</param>
+    /// <param name="ct">Token huỷ yêu cầu.</param>
+    /// <returns>Danh sách chủ đề con trực tiếp của chủ đề cha.</returns>
     [HttpGet("{parentId:int}/children")]
     [Authorize]
     public async Task<ActionResult<RequestResponse<IReadOnlyList<TopicResponse>>>> GetChildren(int parentId, CancellationToken ct = default)

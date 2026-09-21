@@ -33,7 +33,12 @@ public sealed class UserManagementService(
     public async Task<UserAdmin?> CreateAsync(CreateUserRequest request)
     {
         var entity = request.ToEntity();
+        var now = DateTime.UtcNow;
         entity.PasswordHash = request.Password.GetPasswordHash(AppCommon.SaltPassHash!);
+        entity.Created = now;
+        entity.CreatedBy = CurrentUser;
+        entity.Modified = now;
+        entity.ModifiedBy = CurrentUser;
         if (!string.IsNullOrEmpty(request.Email))
             entity.SetEmail(request.Email);
         return await inner.CreateAsync(entity);

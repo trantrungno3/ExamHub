@@ -10,6 +10,7 @@ import {statusCode} from '../../services/requestService'
 import {userService} from '../../services/userService'
 import {useQuery} from '@tanstack/react-query'
 import {TeachingAssignmentDrawer} from './TeachingAssignmentDrawer'
+import PageHeader from '../../components/PageHeader'
 
 export default function CohortDetailPage() {
     const {id} = useParams<{id: string}>()
@@ -45,7 +46,7 @@ export default function CohortDetailPage() {
         {title: 'Lớp', dataIndex: 'className', key: 'className', render: v => <span className="font-medium">{v}</span>},
         {title: 'Lớp', dataIndex: 'section', key: 'section', width: 80},
         {title: 'Năm học', dataIndex: 'schoolYear', key: 'schoolYear'},
-        {title: 'Năm học (index)', dataIndex: 'yearIndex', key: 'yearIndex'},
+        {title: 'Năm thứ', dataIndex: 'yearIndex', key: 'yearIndex'},
         {
             title: 'GVCN', dataIndex: 'homeroomTeacherId', key: 'homeroomTeacherId',
             render: (v) => {
@@ -134,13 +135,12 @@ export default function CohortDetailPage() {
 
     return (
         <>
-            <div className="top-bar">
+            <PageHeader left={
                 <Breadcrumb items={[
                     {title: <a onClick={() => navigate('/app/schools')}>Trường học</a>},
                     {title: `Khoá #${cohortId}`},
                 ]}/>
-                <div className="top-bar-avatar">TT</div>
-            </div>
+            }/>
 
             <div className="flex-1 overflow-auto">
                 <Tabs items={tabItems} className="category-tabs"

@@ -1,15 +1,20 @@
-import {useState} from 'react'
+import {useMemo, useState} from 'react'
 import {useNavigate, useParams} from 'react-router-dom'
-import {Breadcrumb, Button, Form, Input, Modal, Popconfirm, Select, Table, Tabs, Tag} from 'antd'
+import {Breadcrumb, Button, Form, Input, Modal, Popconfirm, Segmented, Table, Tabs, Tag} from 'antd'
 import type {TableColumnsType} from 'antd'
-import {PlusOutlined, RightOutlined} from '@ant-design/icons'
+import {PlusOutlined, RightOutlined, SearchOutlined} from '@ant-design/icons'
 import {StatusTag} from '../../components/StatusTag'
+import {ROLE_COLOR, ROLE_LABEL} from '../../constants'
 import {useSchoolsQuery} from '../../hooks/queries/useSchools'
 import {useCohortsQuery, useCreateCohortMutation, useDeleteCohortMutation} from '../../hooks/queries/useCohorts'
-import {useSchoolMembersQuery, useAddSchoolMemberMutation, useRemoveSchoolMemberMutation, useSetSchoolMemberActiveMutation} from '../../hooks/queries/useSchoolMembers'
+import {useSchoolMembersQuery, useRemoveSchoolMemberMutation, useSetSchoolMemberActiveMutation} from '../../hooks/queries/useSchoolMembers'
+import {useCohortMembersBySchoolQuery} from '../../hooks/queries/useCohortMembers'
+import {useUsersQuery} from '../../hooks/queries/useUsers'
 import {statusCode} from '../../services/requestService'
-import {userService} from '../../services/userService'
-import {useQuery} from '@tanstack/react-query'
+import PageHeader from '../../components/PageHeader'
+import SchoolMemberAddModal from './SchoolMemberAddModal'
+import {buildMemberRows, filterMemberRows, type MemberKind, type MemberRow} from './schoolMemberRows'
+import {useDebounced} from '../../hooks/useDebounced'
 
 export default function SchoolDetailPage() {
     const {id} = useParams<{id: string}>()
@@ -21,33 +26,36 @@ export default function SchoolDetailPage() {
 
     const {data: cohorts = [], isFetching: fetchingCohorts} = useCohortsQuery(schoolId)
     const {data: members = [], isFetching: fetchingMembers} = useSchoolMembersQuery(schoolId)
+    const {data: students = [], isFetching: fetchingStudents} = useCohortMembersBySchoolQuery(schoolId)
 
     const createCohortMutation = useCreateCohortMutation(schoolId)
     const deleteCohortMutation = useDeleteCohortMutation(schoolId)
-    const addMemberMutation = useAddSchoolMemberMutation(schoolId)
     const removeMemberMutation = useRemoveSchoolMemberMutation(schoolId)
     const setActiveMutation = useSetSchoolMemberActiveMutation(schoolId)
 
-    const {data: allUsers = []} = useQuery({
-        queryKey: ['users'],
-        queryFn: async () => (await userService.getAll()).data ?? [],
-    })
+    const {data: allUsers = []} = useUsersQuery()
 
     const [cohortModal, setCohortModal] = useState(false)
     const [memberModal, setMemberModal] = useState(false)
     const [cohortForm] = Form.useForm<CohortBody>()
-    const [memberForm] = Form.useForm<SchoolMemberBody>()
+
+    // Tab "Thành viên" gộp nhân sự trường + học sinh các khoá thành một bảng, lọc client-side.
+    const [memberKind, setMemberKind] = useState<'all' | MemberKind>('all')
+    const [memberKeyword, setMemberKeyword] = useState('')
+    const debouncedMemberKeyword = useDebounced(memberKeyword)
+    const memberRows = useMemo(
+        () => buildMemberRows(members, students, allUsers, cohorts),
+        [members, students, allUsers, cohorts],
+    )
+    const visibleMemberRows = useMemo(
+        () => filterMemberRows(memberRows, memberKind, debouncedMemberKeyword),
+        [memberRows, memberKind, debouncedMemberKeyword],
+    )
 
     const handleAddCohort = async () => {
         const values = await cohortForm.validateFields()
         const res = await createCohortMutation.mutateAsync({...values, schoolId})
         if (res.status !== statusCode.Error) { setCohortModal(false); cohortForm.resetFields() }
-    }
-
-    const handleAddMember = async () => {
-        const values = await memberForm.validateFields()
-        const res = await addMemberMutation.mutateAsync({...values, schoolId})
-        if (res.status !== statusCode.Error) { setMemberModal(false); memberForm.resetFields() }
     }
 
     const cohortColumns: TableColumnsType<Cohort> = [
@@ -61,7 +69,7 @@ export default function SchoolDetailPage() {
             render: (_, record) => (
                 <div className="flex gap-2">
                     <Popconfirm title="Xóa khoá học này?" okText="Xóa" cancelText="Hủy" okButtonProps={{danger: true}}
-                        onConfirm={() => deleteCohortMutation.mutate(record.id)}>
+                        onConfirm={() => deleteCohortMutation.mutate({id: record.id})}>
                         <button className="btn-delete">Xóa</button>
                     </Popconfirm>
                     <Button size="small" icon={<RightOutlined/>} onClick={() => navigate(`/app/cohorts/${record.id}`)}>
@@ -72,19 +80,30 @@ export default function SchoolDetailPage() {
         },
     ]
 
-    const memberColumns: TableColumnsType<SchoolMember> = [
-        {title: 'User ID', dataIndex: 'userId', key: 'userId', render: v => <span className="font-mono text-xs">{v}</span>},
-        {title: 'Vai trò', dataIndex: 'role', key: 'role', render: v => <Tag>{v}</Tag>},
-        {title: 'Trạng thái', dataIndex: 'isActive', key: 'isActive', render: v => <StatusTag status={v ? 'success' : 'default'} label={v ? 'Hoạt động' : 'Tắt'}/>},
+    const memberColumns: TableColumnsType<MemberRow> = [
+        {title: 'Họ tên', dataIndex: 'displayName', key: 'displayName', render: v => <span className="font-medium">{v}</span>},
+        {title: 'Email', dataIndex: 'email', key: 'email'},
+        {title: 'Vai trò', dataIndex: 'role', key: 'role', width: 130,
+            render: v => <Tag color={ROLE_COLOR[v] ?? 'default'}>{ROLE_LABEL[v] ?? v}</Tag>},
+        {
+            title: 'Khoá/Lớp', dataIndex: 'cohortLabel', key: 'cohortLabel', width: 140,
+            render: v => v ?? <span className="text-gray-400">—</span>,
+        },
+        {
+            title: 'Trạng thái', dataIndex: 'isActive', key: 'isActive', width: 120,
+            render: (v, record) => <StatusTag status={v ? 'success' : 'default'}
+                label={v ? (record.kind === 'student' ? 'Đang học' : 'Hoạt động') : 'Tắt'}/>,
+        },
         {
             title: 'Thao tác', key: 'actions', width: 140,
-            render: (_, record) => (
+            // Học sinh không có mutation ở màn này — quản lý trong trang chi tiết khoá.
+            render: (_, record) => record.kind !== 'staff' ? null : (
                 <div className="flex gap-2">
-                    <Button size="small" onClick={() => setActiveMutation.mutate({id: record.id, isActive: !record.isActive})}>
+                    <Button size="small" onClick={() => setActiveMutation.mutate({id: record.memberId, isActive: !record.isActive})}>
                         {record.isActive ? 'Tắt' : 'Bật'}
                     </Button>
                     <Popconfirm title="Xóa thành viên?" okText="Xóa" cancelText="Hủy" okButtonProps={{danger: true}}
-                        onConfirm={() => removeMemberMutation.mutate(record.id)}>
+                        onConfirm={() => removeMemberMutation.mutate(record.memberId)}>
                         <button className="btn-delete">Xóa</button>
                     </Popconfirm>
                 </div>
@@ -107,15 +126,27 @@ export default function SchoolDetailPage() {
             ),
         },
         {
-            key: 'members', label: 'Thành viên trường',
+            key: 'members', label: `Thành viên (${memberRows.length})`,
             children: (
                 <div className="flex flex-col gap-4 p-4">
-                    <div className="flex justify-end">
-                        <Button type="primary" icon={<PlusOutlined/>} onClick={() => setMemberModal(true)}>
+                    <div className="flex items-center gap-2 flex-wrap">
+                        <Segmented value={memberKind} onChange={v => setMemberKind(v as 'all' | MemberKind)}
+                            options={[
+                                {value: 'all', label: 'Tất cả'},
+                                {value: 'staff', label: 'Nhân sự'},
+                                {value: 'student', label: 'Học sinh'},
+                            ]}/>
+                        <Input prefix={<SearchOutlined className="text-gray-400"/>} placeholder="Tìm theo tên/email..."
+                            style={{width: 240}} allowClear value={memberKeyword}
+                            onChange={e => setMemberKeyword(e.target.value)}/>
+                        <Button type="primary" icon={<PlusOutlined/>} className="ml-auto"
+                            onClick={() => setMemberModal(true)}>
                             Thêm thành viên
                         </Button>
                     </div>
-                    <Table columns={memberColumns} dataSource={members} rowKey="id" loading={fetchingMembers} pagination={false} scroll={{x: 700}}/>
+                    <Table columns={memberColumns} dataSource={visibleMemberRows} rowKey="key"
+                        loading={fetchingMembers || fetchingStudents}
+                        pagination={{pageSize: 20, showSizeChanger: true}} scroll={{x: 700}}/>
                 </div>
             ),
         },
@@ -123,13 +154,12 @@ export default function SchoolDetailPage() {
 
     return (
         <>
-            <div className="top-bar">
+            <PageHeader left={
                 <Breadcrumb items={[
                     {title: <a onClick={() => navigate('/app/schools')}>Trường học</a>},
                     {title: school?.name ?? `Trường #${schoolId}`},
                 ]}/>
-                <div className="top-bar-avatar">TT</div>
-            </div>
+            }/>
 
             <div className="flex-1 overflow-auto">
                 <Tabs items={tabItems} className="category-tabs"
@@ -162,20 +192,16 @@ export default function SchoolDetailPage() {
                 </Form>
             </Modal>
 
-            {/* Modal thêm thành viên */}
-            <Modal title="Thêm thành viên trường" open={memberModal} onOk={handleAddMember}
-                onCancel={() => setMemberModal(false)} okText="Thêm" cancelText="Hủy"
-                confirmLoading={addMemberMutation.isPending}>
-                <Form form={memberForm} layout="vertical">
-                    <Form.Item name="userId" label="Người dùng" rules={[{required: true}]}>
-                        <Select showSearch optionFilterProp="label"
-                            options={allUsers.map(u => ({value: u.id, label: `${u.displayName ?? u.userName} (${u.roles.join(', ')})`}))}/>
-                    </Form.Item>
-                    <Form.Item name="role" label="Vai trò" rules={[{required: true}]}>
-                        <Select options={[{value: 'Admin', label: 'Admin'}, {value: 'Teacher', label: 'Teacher'}]}/>
-                    </Form.Item>
-                </Form>
-            </Modal>
+            {/* Modal thêm thành viên: thủ công nhiều người hoặc import Excel */}
+            <SchoolMemberAddModal
+                open={memberModal}
+                schoolId={schoolId}
+                users={allUsers}
+                cohorts={cohorts}
+                members={members}
+                students={students}
+                onClose={() => setMemberModal(false)}
+            />
         </>
     )
 }

@@ -42,4 +42,7 @@
         <ProjectReference Include="..\..\..\trungtv_core\TVT_Core_MinIOStorage\TVT_Core_MinIOStorage.csproj"/>
         <ProjectReference Include="..\..\..\trungtv_core\TVT_Core_RabbitMQ\TVT_Core_RabbitMQ.csproj"/>
     </ItemGroup>
+    <ItemGroup>
+        <InternalsVisibleTo Include="ExamHub.Tests" />
+    </ItemGroup>
 </Project>

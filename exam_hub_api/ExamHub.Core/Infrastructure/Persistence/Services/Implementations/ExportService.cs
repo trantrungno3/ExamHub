@@ -10,6 +10,7 @@ using ExamHub.Core.Domain.Interfaces;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
+using TVT.Core;
 using TVT.Core.MinioStorage;
 using QuestDocument = QuestPDF.Fluent.Document;
 using WordDocument = DocumentFormat.OpenXml.Wordprocessing.Document;
@@ -32,32 +33,36 @@ public class ExportService(IExamService examService, IMinioStorageService storag
     }
 
     /// <inheritdoc/>
-    public async Task<string> ExportPdfAsync(Guid examId, CancellationToken ct = default)
+    public async Task<RequestResponse<string>> ExportPdfAsync(Guid examId, CancellationToken ct = default)
     {
-        var exam = await LoadExamAsync(examId, ct);
-        var bytes = RenderPdf(exam);
+        var (exam, error) = await LoadExamAsync(examId, ct);
+        if (error is not null) return RequestResponse<string>.Error(error);
+        var bytes = RenderPdf(exam!);
         return await UploadAsync(bytes, $"exports/{examId}.pdf", "application/pdf");
     }
 
     /// <inheritdoc/>
-    public async Task<string> ExportDocxAsync(Guid examId, CancellationToken ct = default)
+    public async Task<RequestResponse<string>> ExportDocxAsync(Guid examId, CancellationToken ct = default)
     {
-        var exam = await LoadExamAsync(examId, ct);
-        var bytes = RenderDocx(exam);
+        var (exam, error) = await LoadExamAsync(examId, ct);
+        if (error is not null) return RequestResponse<string>.Error(error);
+        var bytes = RenderDocx(exam!);
         return await UploadAsync(bytes, $"exports/{examId}.docx", DocxContentType);
     }
 
-    private async Task<Exam> LoadExamAsync(Guid examId, CancellationToken ct)
-        => await examService.GetWithQuestionsAsync(examId, ct)
-           ?? throw new InvalidOperationException($"Đề thi {examId} không tồn tại.");
+    private async Task<(Exam? Exam, string? Error)> LoadExamAsync(Guid examId, CancellationToken ct)
+    {
+        var exam = await examService.GetWithQuestionsAsync(examId, ct);
+        return exam is null ? (null, $"Đề thi {examId} không tồn tại.") : (exam, null);
+    }
 
-    private async Task<string> UploadAsync(byte[] bytes, string objectName, string contentType)
+    private async Task<RequestResponse<string>> UploadAsync(byte[] bytes, string objectName, string contentType)
     {
         using var ms = new MemoryStream(bytes);
         var (ok, url) = await storage.UploadStreamAsync(ms, objectName, contentType);
         if (!ok || string.IsNullOrEmpty(url))
-            throw new InvalidOperationException("Tải file đề thi lên MinIO thất bại.");
-        return url;
+            return RequestResponse<string>.Error("Tải file đề thi lên MinIO thất bại.");
+        return RequestResponse<string>.Success("Xuất đề thi thành công!", url, 1);
     }
 
     // ── PDF rendering ────────────────────────────────────────────

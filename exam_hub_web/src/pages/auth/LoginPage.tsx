@@ -2,7 +2,7 @@ import {useEffect, useState} from 'react'
 import {useNavigate} from 'react-router-dom'
 import {Button, Form, Input, message, Typography} from 'antd'
 import {LockOutlined, UserOutlined} from '@ant-design/icons'
-import {useAuth} from '../../AuthProvider'
+import {useAuth} from '../../hooks/useAuth'
 import {useAuthStore} from '../../stores/authStore'
 import {ROUTES} from '../../routes/paths'
 

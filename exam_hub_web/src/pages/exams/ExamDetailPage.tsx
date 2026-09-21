@@ -8,6 +8,7 @@ import QuestionMedia from '../../components/QuestionMedia'
 import {StatusTag} from '../../components/StatusTag'
 import {EXAM_STATUS_LABEL, EXAM_STATUS_VARIANT, OPTION_LETTER} from '../../constants'
 import {ROUTES} from '../../routes/paths'
+import PageHeader from '../../components/PageHeader'
 
 export default function ExamDetailPage() {
     const {id} = useParams<{id: string}>()
@@ -29,15 +30,8 @@ export default function ExamDetailPage() {
 
     return (
         <>
-            <div className="top-bar">
-                <div>
-                    <p className="top-bar-title">Xem chi tiết đề thi</p>
-                    <p className="top-bar-subtitle">
-                        {exam ? `${exam.title}${exam.examCode ? ` · Mã đề ${exam.examCode}` : ''}` : 'Đang tải…'}
-                    </p>
-                </div>
-                <div className="top-bar-avatar">TT</div>
-            </div>
+            <PageHeader title="Xem chi tiết đề thi"
+                        subtitle={exam ? `${exam.title}${exam.examCode ? ` · Mã đề ${exam.examCode}` : ''}` : 'Đang tải…'}/>
 
             <div className="flex-1 overflow-auto p-6 flex flex-col gap-4">
                 {isLoading && <div className="flex justify-center py-16"><Spin size="large"/></div>}

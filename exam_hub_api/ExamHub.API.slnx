@@ -20,4 +20,5 @@
   </Folder>
   <Project Path="ExamHub.API/ExamHub.API.csproj" />
   <Project Path="ExamHub.Core/ExamHub.Core.csproj" />
+  <Project Path="ExamHub.Tests/ExamHub.Tests.csproj" />
 </Solution>

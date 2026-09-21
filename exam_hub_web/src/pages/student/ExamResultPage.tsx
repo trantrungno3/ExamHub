@@ -1,9 +1,17 @@
 import {useState} from 'react'
 import {useNavigate, useSearchParams} from 'react-router-dom'
-import {Button, Empty, Spin} from 'antd'
+import {Button, Empty, message, Spin} from 'antd'
 import {CheckCircleOutlined, CheckOutlined, CloseCircleOutlined} from '@ant-design/icons'
 import {useSubmissionQuery} from '../../hooks/queries/useSubmissions'
+import {useMySessionsQuery, useStartSessionMutation} from '../../hooks/queries/useExamSessions'
+import {statusCode} from '../../services/requestService'
 import {SUBMISSION_STATUS_LABEL_STUDENT} from '../../constants'
+import {BRAND} from '../../constants/theme'
+
+function takeUrl(examId: string, sessionId: string, submissionId: string, deadlineAt: number, durationMinutes: number): string {
+    const p = new URLSearchParams({examId, sessionId, submissionId, deadlineAt: String(deadlineAt), durationMinutes: String(durationMinutes)})
+    return `/student/exam?${p.toString()}`
+}
 
 function fmtDuration(sec: number): string {
     const m = Math.floor(sec / 60)
@@ -13,10 +21,10 @@ function fmtDuration(sec: number): string {
 
 function StatBox({label, value, tone}: {label: string; value: number | string; tone: 'green' | 'red' | 'gray' | 'blue'}) {
     const c = {
-        green: {bg: '#e7f7ef', fg: '#1ea375'},
-        red: {bg: '#fde9e9', fg: '#e74242'},
-        gray: {bg: '#eef0f3', fg: '#6f7788'},
-        blue: {bg: '#eef1ff', fg: '#3a74f5'},
+        green: {bg: BRAND.successTint, fg: BRAND.success},
+        red: {bg: '#fde9e9', fg: BRAND.danger},
+        gray: {bg: BRAND.neutralSoft, fg: BRAND.muted},
+        blue: {bg: BRAND.primaryTint, fg: BRAND.primary},
     }[tone]
     return (
         <div className="rounded-xl px-4 py-3.5" style={{background: c.bg}}>
@@ -31,10 +39,34 @@ export default function ExamResultPage() {
     const [params] = useSearchParams()
     const submissionId = params.get('submissionId') ?? undefined
     const {data: sub, isLoading} = useSubmissionQuery(submissionId)
+    const {data: sessions = []} = useMySessionsQuery()
+    const start = useStartSessionMutation()
     const [showDetail, setShowDetail] = useState(false)
 
     if (isLoading) return <div className="exam-desk flex justify-center py-24"><Spin size="large"/></div>
     if (!sub) return <div className="exam-desk flex justify-center py-24"><Empty description="Không tìm thấy bài nộp"/></div>
+
+    // Kỳ thi tương ứng (nếu bài nộp thuộc luồng kỳ thi) — dùng để cho phép "Làm lại" khi còn lượt.
+    const mySession = sessions.find(s => s.id === sub.sessionId)
+    const canRetake = !!mySession && mySession.availability === 'open'
+        && !mySession.inProgressSubmissionId
+        && mySession.maxAttempts - mySession.usedAttempts > 0
+
+    const retake = async () => {
+        if (!mySession) return
+        if (mySession.pickMode === 'StudentChoice') {
+            navigate(`/student/session/${mySession.id}/pool`, {
+                state: {title: mySession.title, subjectName: mySession.subjectName, gradeLevelName: mySession.gradeLevelName},
+            })
+            return
+        }
+        const res = await start.mutateAsync({id: mySession.id})
+        if (res.status === statusCode.Error || !res.data) {
+            message.error(res.message || 'Không thể vào thi')
+            return
+        }
+        navigate(takeUrl(res.data.examId, mySession.id, res.data.submissionId, res.data.deadlineAt, res.data.durationMinutes))
+    }
 
     const graded = sub.status === 'Graded'
     const answers = sub.answers ?? []
@@ -44,32 +76,32 @@ export default function ExamResultPage() {
     const pass = graded && (sub.isPassed ?? (sub.totalScore != null && sub.totalScore >= 5))
 
     return (
-        <div className="min-h-full" style={{background: '#f5f4f1'}}>
+        <div className="min-h-full" style={{background: BRAND.desk}}>
             {/* Hero xanh */}
-            <div className="px-4 pt-10 pb-24 text-center text-white" style={{background: '#3a74f5'}}>
+            <div className="px-4 pt-10 pb-24 text-center text-white" style={{background: BRAND.primary}}>
                 <div className="mx-auto w-14 h-14 rounded-full flex items-center justify-center text-[24px]"
-                     style={{background: pass ? '#1ea375' : 'rgba(255,255,255,0.18)'}}>
+                     style={{background: pass ? BRAND.success : 'rgba(255,255,255,0.18)'}}>
                     {pass ? <CheckOutlined/> : '📝'}
                 </div>
                 <h1 className="mt-3 text-[26px] font-bold">
                     {graded ? (pass ? 'Bạn đã ĐẠT!' : 'Chưa đạt') : 'Đã nộp bài'}
                 </h1>
-                <p className="mt-1 text-[14px]" style={{color: '#cdd9fb'}}>{SUBMISSION_STATUS_LABEL_STUDENT[sub.status]}</p>
+                <p className="mt-1 text-[14px]" style={{color: BRAND.primaryOn}}>{SUBMISSION_STATUS_LABEL_STUDENT[sub.status]}</p>
             </div>
 
             {/* Card kết quả */}
             <div className="max-w-2xl mx-auto px-4 -mt-16 pb-12">
-                <div className="bg-white rounded-2xl border p-6 sm:p-7" style={{borderColor: '#eceef2'}}>
+                <div className="bg-white rounded-2xl border p-6 sm:p-7" style={{borderColor: BRAND.border}}>
                     <div className={`result-score ${graded ? 'result-score--graded' : 'result-score--pending'}`}>
                         {graded && sub.totalScore != null ? sub.totalScore : '—'}
                     </div>
                     <p className="text-center text-[12px] font-semibold uppercase tracking-wider mt-1"
-                       style={{color: graded ? (pass ? '#1ea375' : '#e74242') : '#9aa2b1'}}>
+                       style={{color: graded ? (pass ? BRAND.success : BRAND.danger) : BRAND.mutedSoft}}>
                         {graded ? (pass ? 'ĐẠT' : 'CHƯA ĐẠT') : 'CHỜ CHẤM'}
                     </p>
 
                     {!graded && (
-                        <p className="text-center text-[12.5px] mt-2 leading-5 max-w-[380px] mx-auto" style={{color: '#9aa2b1'}}>
+                        <p className="text-center text-[12.5px] mt-2 leading-5 max-w-[380px] mx-auto" style={{color: BRAND.mutedSoft}}>
                             Phần trắc nghiệm đã chấm tự động; điểm tổng sẽ có sau khi giáo viên chốt điểm.
                         </p>
                     )}
@@ -85,15 +117,15 @@ export default function ExamResultPage() {
 
                     {showDetail && (
                         <div className="mt-6">
-                            <p className="text-[13px] font-semibold mb-1" style={{color: '#6f7788'}}>Chi tiết theo câu</p>
+                            <p className="text-[13px] font-semibold mb-1" style={{color: BRAND.muted}}>Chi tiết theo câu</p>
                             {answers.map((a, i) => (
                                 <div key={a.id} className="flex items-center justify-between py-2 text-[14px]"
-                                     style={{borderBottom: '1px dashed #eceef2'}}>
-                                    <span className="font-semibold" style={{color: '#1d2129'}}>Câu {i + 1}</span>
+                                     style={{borderBottom: `1px dashed ${BRAND.border}`}}>
+                                    <span className="font-semibold" style={{color: BRAND.inkStrong}}>Câu {i + 1}</span>
                                     <span className="flex items-center gap-2.5">
-                                        {a.isCorrect === true && <CheckCircleOutlined style={{color: '#1ea375'}}/>}
-                                        {a.isCorrect === false && <CloseCircleOutlined style={{color: '#e74242'}}/>}
-                                        <span className="tabular-nums" style={{color: '#6f7788'}}>{a.scoreEarned} đ</span>
+                                        {a.isCorrect === true && <CheckCircleOutlined style={{color: BRAND.success}}/>}
+                                        {a.isCorrect === false && <CloseCircleOutlined style={{color: BRAND.danger}}/>}
+                                        <span className="tabular-nums" style={{color: BRAND.muted}}>{a.scoreEarned} đ</span>
                                     </span>
                                 </div>
                             ))}
@@ -110,6 +142,12 @@ export default function ExamResultPage() {
                             Về danh sách kỳ thi
                         </Button>
                     </div>
+                    {canRetake && (
+                        <Button block className="!h-11 !font-semibold mt-3" loading={start.isPending}
+                                onClick={retake}>
+                            Làm lại
+                        </Button>
+                    )}
                 </div>
             </div>
         </div>

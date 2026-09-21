@@ -11,6 +11,7 @@ import {
     useSubjectsQuery,
     useTopicsQuery,
 } from '../../hooks/queries/useCategoryLists'
+import PageHeader from '../../components/PageHeader'
 
 type GenerateForm = {
     title: string
@@ -86,6 +87,14 @@ export default function GeneratePage() {
         if (form.getFieldValue('totalQuestions') !== sectionsTotal)
             form.setFieldValue('totalQuestions', sectionsTotal)
     }, [sectionsTotal, form])
+
+    // Môn học lọc theo lớp đã chọn.
+    const subjectOptions = useMemo(
+        () => (subjects.data ?? [])
+            .filter(s => s.gradeLevelId === watchedGradeId)
+            .map(s => ({value: s.id, label: s.name})),
+        [subjects.data, watchedGradeId],
+    )
 
     // Chủ đề lọc theo lớp + môn đã chọn ở phần thông tin đề thi.
     const topicOptions = useMemo(() => {
@@ -163,13 +172,7 @@ export default function GeneratePage() {
 
     return (
         <>
-            <div className="top-bar">
-                <div>
-                    <p className="top-bar-title">Sinh đề thi</p>
-                    <p className="top-bar-subtitle">Sinh đề tự động từ ngân hàng câu hỏi theo cấu hình phần thi</p>
-                </div>
-                <div className="top-bar-avatar">TT</div>
-            </div>
+            <PageHeader title="Sinh đề thi" subtitle="Sinh đề tự động từ ngân hàng câu hỏi theo cấu hình phần thi"/>
 
             <div className="flex-1 overflow-auto p-6">
                 <Form
@@ -177,6 +180,13 @@ export default function GeneratePage() {
                     layout="vertical"
                     initialValues={EMPTY}
                     onValuesChange={changed => {
+                        // Đổi lớp -> bỏ môn đã chọn nếu môn đó không thuộc lớp mới.
+                        if ('gradeLevelId' in changed) {
+                            const currentSubjectId = form.getFieldValue('subjectId')
+                            const subj = (subjects.data ?? []).find(s => s.id === currentSubjectId)
+                            if (subj && subj.gradeLevelId !== changed.gradeLevelId)
+                                form.setFieldValue('subjectId', undefined)
+                        }
                         // Đổi lớp / môn -> bỏ chủ đề đã chọn ở các phần vì không còn hợp lệ.
                         if ('gradeLevelId' in changed || 'subjectId' in changed) {
                             const sections = (form.getFieldValue('sections') ?? []) as SectionConfig[]
@@ -199,7 +209,7 @@ export default function GeneratePage() {
                                     </Form.Item>
                                     <Form.Item label="Môn học" name="subjectId" rules={[{required: true, message: 'Chọn môn'}]}>
                                         <Select placeholder="Chọn môn" showSearch optionFilterProp="label"
-                                                options={(subjects.data ?? []).map(s => ({value: s.id, label: s.name}))}/>
+                                                disabled={!watchedGradeId} options={subjectOptions}/>
                                     </Form.Item>
                                 </div>
                                 <div className="grid grid-cols-3 gap-4">
@@ -224,8 +234,16 @@ export default function GeneratePage() {
                                     <Form.Item label="Trộn đáp án" name="shuffleAnswers" valuePropName="checked" className="!mb-0">
                                         <Switch/>
                                     </Form.Item>
-                                    <Form.Item label="Chống trùng câu hỏi" name="preventDuplicate" valuePropName="checked" className="!mb-0">
-                                        <Switch/>
+                                    <Form.Item
+                                        label="Chống trùng câu hỏi"
+                                        name="preventDuplicate"
+                                        valuePropName="checked"
+                                        className="!mb-0"
+                                        help={batchMode
+                                            ? 'Bật: mỗi mã đề trong lô có bộ câu hỏi khác nhau. Tắt: mọi mã đề dùng chung 1 bộ câu hỏi.'
+                                            : 'Không áp dụng khi chỉ sinh 1 đề — hệ thống luôn tự chống trùng câu hỏi giữa các phần thi.'}
+                                    >
+                                        <Switch disabled={!batchMode}/>
                                     </Form.Item>
                                 </div>
                             </div>

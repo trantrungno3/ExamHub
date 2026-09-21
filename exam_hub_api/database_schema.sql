@@ -504,6 +504,8 @@ CREATE TABLE public.exam_sessions
     grade_level_id INT NOT NULL REFERENCES grade_levels (id),
     open_at        TIMESTAMPTZ NOT NULL,
     close_at       TIMESTAMPTZ NOT NULL,
+    duration_minutes INT NOT NULL DEFAULT 45
+                     CHECK (duration_minutes BETWEEN 1 AND 1440),
     max_attempts   SMALLINT NOT NULL DEFAULT 1 CHECK (max_attempts >= 1),
     pick_mode      VARCHAR(20) NOT NULL DEFAULT 'Random'
                    CHECK (pick_mode IN ('Random', 'StudentChoice')),
@@ -552,8 +554,11 @@ CREATE TABLE public.exam_submissions
 
     total_score      NUMERIC(5, 2),
     is_passed        BOOLEAN,
+    -- LƯU Ý: 'pending_manual_grade' dài đúng 20 ký tự = VARCHAR(20) không còn dư chỗ.
+    -- Thêm trạng thái mới dài hơn 20 ký tự PHẢI nâng độ dài cột ở đây VÀ ở
+    -- AppDbContext (ExamSubmission.Status .HasMaxLength(20)).
     status           VARCHAR(20) NOT NULL DEFAULT 'in_progress'
-        CHECK (status IN ('in_progress', 'submitted', 'graded')),
+        CHECK (status IN ('in_progress', 'submitted', 'graded', 'pending_manual_grade')),
 
     created            TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
     created_by           VARCHAR(150),
@@ -741,6 +746,34 @@ insert into public.app_users (id, username, avartar, normalizedusername, display
 values ('a2eb9cd9-2a7b-44da-b94b-f5507afe122f', 'admin@admin.vn', null, 'ADMIN@ADMIN.VN', 'Admin', null, 'undefined',
         false, null, 'null', 0, null, false, null, null, '+a/ufQN3DHM9mSsGn1h67ygKwTpqiokgRIPhjgGXBrg=', '{Admin}', null,
         null, '{}', '2026-06-07 10:52:08.226916 +00:00', null, '2026-06-07 10:52:08.226916 +00:00', null);
+
+-- Tài khoản mẫu: Giáo viên và Học sinh — cùng trường với admin, mật khẩu giống admin
+insert into public.app_users (id, username, avartar, normalizedusername, displayname, description, phonenumber, sex,
+                              refreshtoken, email, accessfailedcount, deleted, lockoutenabled, lockoutenddateutc,
+                              normalizedemail, passwordhash, roles, providerkey, loginprovider, claims, created,
+                              created_by, modified, modified_by)
+values ('e7f18a2c-4b3d-4a91-9c56-2d8f6a1b3e40', 'teacher01@examhub.vn',
+        'https://ui-avatars.com/api/?name=Giao+Vien', 'TEACHER01@EXAMHUB.VN', 'Nguyễn Văn Giáo',
+        'Giáo viên chủ nhiệm - Trường Tiểu học Nguyễn Du', '0912345678', true, null,
+        '{"Email":"teacher01@examhub.vn","NormalizedEmail":"TEACHER01@EXAMHUB.VN","EmailConfirmed":true}', 0, null,
+        false, null, 'TEACHER01@EXAMHUB.VN', '+a/ufQN3DHM9mSsGn1h67ygKwTpqiokgRIPhjgGXBrg=', '{Teacher}', null, null,
+        '{}', '2026-09-03 21:00:00.000000 +00:00', 'admin@admin.vn', '2026-09-03 21:00:00.000000 +00:00',
+        'admin@admin.vn'),
+       ('f4a29d3b-7c1e-4f82-8b34-6e5a9c2d1f70', 'student01@examhub.vn',
+        'https://ui-avatars.com/api/?name=Hoc+Sinh', 'STUDENT01@EXAMHUB.VN', 'Trần Thị Học Sinh',
+        'Học sinh lớp 1A - Khoá 2020-2025 - Trường Tiểu học Nguyễn Du', '0987654321', false, null,
+        '{"Email":"student01@examhub.vn","NormalizedEmail":"STUDENT01@EXAMHUB.VN","EmailConfirmed":true}', 0, null,
+        false, null, 'STUDENT01@EXAMHUB.VN', '+a/ufQN3DHM9mSsGn1h67ygKwTpqiokgRIPhjgGXBrg=', '{Student}', null, null,
+        '{}', '2026-09-03 21:00:00.000000 +00:00', 'admin@admin.vn', '2026-09-03 21:00:00.000000 +00:00',
+        'admin@admin.vn');
+
+-- Gắn giáo viên vào trường (id = 1, Trường Tiểu học Nguyễn Du)
+insert into public.school_members (school_id, user_id, role, is_active, joined_at, created_by, modified_by)
+values (1, 'e7f18a2c-4b3d-4a91-9c56-2d8f6a1b3e40', 'Teacher', true, NOW(), 'admin@admin.vn', 'admin@admin.vn');
+
+-- Gắn học sinh vào Khoá 2020-2025 (id = 1, trường Nguyễn Du, bắt đầu từ lớp 1), xếp lớp 1A
+insert into public.cohort_members (cohort_id, student_id, section, joined_at, is_active, created_by, modified_by)
+values (1, 'f4a29d3b-7c1e-4f82-8b34-6e5a9c2d1f70', 'A', CURRENT_DATE, true, 'admin@admin.vn', 'admin@admin.vn');
 
 -- ============================================================
 -- PHẦN 10: DỮ LIỆU MẪU — MÔN HỌC (subjects)
@@ -1183,3 +1216,10 @@ END $$;
 -- ALTER TABLE public.cohort_classes ADD UNIQUE (cohort_id, year_index, section);
 -- ALTER TABLE public.cohort_members ADD COLUMN section VARCHAR(10);
 -- (sau đó CREATE OR REPLACE FUNCTION generate_cohort_classes bản mới ở trên)
+
+-- MIGRATION [2026-09-16]: thời gian làm bài của kỳ thi
+-- ALTER TABLE public.exam_sessions
+--     ADD COLUMN duration_minutes INT NOT NULL DEFAULT 45;
+-- ALTER TABLE public.exam_sessions
+--     ADD CONSTRAINT chk_exam_sessions_duration_minutes
+--     CHECK (duration_minutes BETWEEN 1 AND 1440);

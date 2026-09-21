@@ -63,6 +63,15 @@ public record RegisterDto : AccountDto
     }
 }
 
+/// <summary>
+/// Phần token được phép ra khỏi server. Refresh token đi bằng cookie HttpOnly nên không bao giờ
+/// xuất hiện trong response body.
+/// </summary>
+public sealed record AccessTokenResponse(string AccessToken);
+
+/// <summary>Body của refresh: chỉ có access token đã hết hạn; refresh token đọc từ cookie.</summary>
+public sealed record RefreshAccessTokenRequest(string AccessToken);
+
 /// <summary>DTO cập nhật thông tin cá nhân của người dùng đang đăng nhập</summary>
 public sealed record UpdateProfileDto
 {

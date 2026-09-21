@@ -21,6 +21,9 @@ public class GradeLevelController(IGradeLevelService service)
     protected override GradeLevelResponse ToResponse(GradeLevel entity) => GradeLevelResponse.FromEntity(entity);
 
     /// <summary>Lấy kèm môn học</summary>
+    /// <param name="id">Id khối lớp cần lấy.</param>
+    /// <param name="ct">Token huỷ yêu cầu.</param>
+    /// <returns>Khối lớp kèm danh sách môn học; 404 nếu không tồn tại.</returns>
     [HttpGet("{id:int}/with-subjects")]
     [Authorize]
     public async Task<ActionResult<RequestResponse<GradeLevelResponse>>> GetWithSubjects(int id, CancellationToken ct = default)

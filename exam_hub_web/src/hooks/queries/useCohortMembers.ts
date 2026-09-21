@@ -5,6 +5,7 @@ import {cohortMemberService} from '../../services/cohortMemberService'
 
 export const COHORT_MEMBER_KEYS = {
     byCohort: (cohortId: number) => ['cohortMembers', 'cohort', cohortId] as const,
+    bySchool: (schoolId: number) => ['cohortMembers', 'school', schoolId] as const,
 }
 
 export function useCohortMembersQuery(cohortId: number) {
@@ -15,6 +16,17 @@ export function useCohortMembersQuery(cohortId: number) {
             return res.data ?? []
         },
         enabled: cohortId > 0,
+    })
+}
+
+export function useCohortMembersBySchoolQuery(schoolId: number) {
+    return useQuery({
+        queryKey: COHORT_MEMBER_KEYS.bySchool(schoolId),
+        queryFn: async () => {
+            const res = await cohortMemberService.getBySchool(schoolId)
+            return res.data ?? []
+        },
+        enabled: schoolId > 0,
     })
 }
 

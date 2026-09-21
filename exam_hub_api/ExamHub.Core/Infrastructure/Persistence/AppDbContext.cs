@@ -1,8 +1,11 @@
 using ExamHub.Core.Domain.Entities;
 using ExamHub.Core.Domain.Enums;
 using ExamHub.Core.Infrastructure.Persistence.Converters;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using TVT.Core.Claims;
 using TVT.Core.IdentityUser.PostgreSql.FieldTables;
+using TVT.Core.Models;
 
 namespace ExamHub.Core.Infrastructure.Persistence;
 
@@ -11,9 +14,57 @@ namespace ExamHub.Core.Infrastructure.Persistence;
 /// </summary>
 public class AppDbContext : DbContext
 {
+    private readonly IHttpContextAccessor? _httpContextAccessor;
+
     /// <inheritdoc />
-    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
+    public AppDbContext(
+        DbContextOptions<AppDbContext> options,
+        IHttpContextAccessor? httpContextAccessor = null) : base(options)
     {
+        _httpContextAccessor = httpContextAccessor;
+    }
+
+    internal string? CurrentUserName =>
+        _httpContextAccessor?.HttpContext?.User.FindFirst(ConstClaim.UserName)?.Value;
+
+    internal void ApplyAuditFields(DateTime now)
+    {
+        foreach (var entry in ChangeTracker.Entries<ModifyModelBase>()
+                     .Where(x => x.State is EntityState.Added or EntityState.Modified))
+        {
+            var entity = entry.Entity;
+            if (entry.State == EntityState.Added)
+            {
+                entity.Created ??= now;
+                entity.CreatedBy ??= CurrentUserName;
+                entity.Modified ??= now;
+                entity.ModifiedBy ??= entity.CreatedBy ?? CurrentUserName;
+                continue;
+            }
+
+            entry.Property(x => x.Created).IsModified = false;
+            entry.Property(x => x.CreatedBy).IsModified = false;
+            entity.Modified = now;
+            entity.ModifiedBy = CurrentUserName ?? entity.ModifiedBy;
+            entry.Property(x => x.Modified).IsModified = true;
+            entry.Property(x => x.ModifiedBy).IsModified = true;
+        }
+    }
+
+    /// <inheritdoc />
+    public override int SaveChanges(bool acceptAllChangesOnSuccess)
+    {
+        ApplyAuditFields(DateTime.UtcNow);
+        return base.SaveChanges(acceptAllChangesOnSuccess);
+    }
+
+    /// <inheritdoc />
+    public override Task<int> SaveChangesAsync(
+        bool acceptAllChangesOnSuccess,
+        CancellationToken cancellationToken = default)
+    {
+        ApplyAuditFields(DateTime.UtcNow);
+        return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
     }
 
     // ── DbSets ──────────────────────────────────────────────────────────────
@@ -514,6 +565,10 @@ public class AppDbContext : DbContext
             e.HasKey(x => x.Id);
             e.Property(x => x.Id).HasDefaultValueSql("gen_random_uuid()");
             e.Property(x => x.TotalScore).HasPrecision(6, 2);
+            // 20 = độ dài cột exam_submissions.status trong database_schema.sql. Chuỗi dài nhất
+            // hiện nay là 'pending_manual_grade' — đúng 20 ký tự, KHÔNG còn dư chỗ: thêm trạng
+            // thái mới có tên dài hơn phải nâng cả HasMaxLength ở đây lẫn VARCHAR(20) + CHECK
+            // (status IN ...) trong database_schema.sql.
             e.Property(x => x.Status)
                 .HasConversion(new SnakeCaseEnumConverter<SubmissionStatusEnum>())
                 .HasMaxLength(20)
@@ -525,7 +580,12 @@ public class AppDbContext : DbContext
             e.Property(x => x.Modified).HasColumnName(ModifyFieldsTable.Modified);
             e.Property(x => x.AttemptNo).HasDefaultValue((short)1);
             e.HasIndex(x => new { x.ExamId, x.StudentId });
-            e.HasIndex(x => new { x.SessionId, x.StudentId });
+            e.HasIndex(x => new { x.SessionId, x.StudentId, x.AttemptNo })
+                .IsUnique()
+                .HasFilter("\"session_id\" IS NOT NULL");
+            e.HasIndex(x => new { x.SessionId, x.StudentId })
+                .IsUnique()
+                .HasFilter("\"session_id\" IS NOT NULL AND \"status\" = 'in_progress'");
             e.HasOne(x => x.Exam)
                 .WithMany()
                 .HasForeignKey(x => x.ExamId)
@@ -569,6 +629,7 @@ public class AppDbContext : DbContext
                 .HasConversion<string>()
                 .HasMaxLength(20)
                 .HasDefaultValue(ExamSessionPickModeEnum.Random);
+            e.Property(x => x.DurationMinutes).HasDefaultValue(45);
             e.Property(x => x.MaxAttempts).HasDefaultValue((short)1);
             e.Property(x => x.CreatedBy).HasMaxLength(150).HasColumnName(ModifyFieldsTable.CreatedBy);
             e.Property(x => x.Created).HasColumnName(ModifyFieldsTable.Created);

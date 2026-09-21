@@ -28,11 +28,8 @@ public class ExamTemplateService : IExamTemplateService
     public Task<ExamTemplate?> GetWithSectionsAsync(Guid id, CancellationToken ct = default)
         => _templateRepo.GetWithSectionsAsync(id, ct);
 
-    public Task<IReadOnlyList<ExamTemplate>> GetBySubjectAsync(int subjectId, CancellationToken ct = default)
-        => _templateRepo.GetBySubjectAsync(subjectId, ct);
-
-    public Task<IReadOnlyList<ExamTemplate>> GetByGradeLevelAsync(int gradeLevelId, CancellationToken ct = default)
-        => _templateRepo.GetByGradeLevelAsync(gradeLevelId, ct);
+    public Task<IReadOnlyList<ExamTemplate>> GetFilteredAsync(int? subjectId, int? gradeLevelId, CancellationToken ct = default)
+        => _templateRepo.GetFilteredAsync(subjectId, gradeLevelId, ct);
 
     public async Task<ExamTemplate> CreateAsync(
         ExamTemplate entity, IEnumerable<ExamTemplateSection> sections, CancellationToken ct = default)

@@ -40,7 +40,12 @@ export function useMySessionsQuery() {
 export function useSessionPoolQuery(id?: string) {
     return useQuery({
         queryKey: EXAM_SESSION_KEYS.pool(id ?? ''),
-        queryFn: async () => (await examSessionService.getPool(id!)).data ?? [],
+        queryFn: async () => {
+            const res = await examSessionService.getPool(id!)
+            if (res.status === statusCode.Error)
+                throw new Error(res.message || 'Không thể truy cập danh sách đề')
+            return res.data ?? []
+        },
         enabled: !!id,
     })
 }

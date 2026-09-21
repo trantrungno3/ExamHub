@@ -14,6 +14,9 @@ public class ExamGeneratorController(
     IAuthorizationService authorizationService) : AuthorizeControllerBase
 {
     /// <summary>Sinh đề thi theo cấu hình phần thi và tỉ lệ độ khó</summary>
+    /// <param name="request">Cấu hình sinh đề: môn học, các phần thi và tỉ lệ độ khó.</param>
+    /// <param name="ct">Token huỷ yêu cầu.</param>
+    /// <returns>Id đề thi vừa sinh; 400 nếu ngân hàng câu hỏi không đủ.</returns>
     [HttpPost]
     public async Task<ActionResult<RequestResponse<object>>> Generate(
         [FromBody] GenerateExamApiRequest request,
@@ -35,6 +38,9 @@ public class ExamGeneratorController(
     }
 
     /// <summary>Sinh lô đề thi nhiều biến thể từ cùng ngân hàng câu hỏi</summary>
+    /// <param name="request">Cấu hình sinh đề + số lượng biến thể cần sinh.</param>
+    /// <param name="ct">Token huỷ yêu cầu.</param>
+    /// <returns>Id lô đề (batch) và danh sách biến thể vừa sinh; 400 nếu ngân hàng câu hỏi không đủ.</returns>
     [HttpPost("batch")]
     public async Task<ActionResult<RequestResponse<BatchGenerateExamResponse>>> BatchGenerate(
         [FromBody] BatchGenerateExamApiRequest request,

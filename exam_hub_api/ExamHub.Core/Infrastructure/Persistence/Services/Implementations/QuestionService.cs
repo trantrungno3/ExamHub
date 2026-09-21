@@ -1,3 +1,4 @@
+using ExamHub.Core.Application.Services;
 using ExamHub.Core.DataTransferObjects.Question;
 using ExamHub.Core.Domain.Entities;
 using ExamHub.Core.Domain.Interfaces;
@@ -13,13 +14,15 @@ public class QuestionService : IQuestionService
     private readonly IQuestionAnswerRepository _answerRepo;
     private readonly ITopicRepository _topicRepo;
     private readonly IRedisService _cache;
+    private readonly IExamQuestionRepository _examQuestionRepo;
 
-    public QuestionService(IQuestionRepository questionRepo, IQuestionAnswerRepository answerRepo, ITopicRepository topicRepo, IRedisService cache)
+    public QuestionService(IQuestionRepository questionRepo, IQuestionAnswerRepository answerRepo, ITopicRepository topicRepo, IRedisService cache, IExamQuestionRepository examQuestionRepo)
     {
-        _questionRepo = questionRepo;
-        _answerRepo   = answerRepo;
-        _topicRepo    = topicRepo;
-        _cache        = cache;
+        _questionRepo     = questionRepo;
+        _answerRepo       = answerRepo;
+        _topicRepo        = topicRepo;
+        _cache            = cache;
+        _examQuestionRepo = examQuestionRepo;
     }
 
     public Task<Question?> GetByIdAsync(Guid id, CancellationToken ct = default)
@@ -36,8 +39,9 @@ public class QuestionService : IQuestionService
         int? topicId = null, int? questionTypeId = null,
         int? difficultyLevelId = null, int? cognitiveLevelId = null,
         string? keyword = null,
-        string? reviewStatus = null, CancellationToken ct = default)
-        => _questionRepo.GetPagedAsync(page, pageSize, topicId, questionTypeId, difficultyLevelId, cognitiveLevelId, keyword, reviewStatus, ct);
+        string? reviewStatus = null,
+        int? subjectId = null, int? gradeLevelId = null, CancellationToken ct = default)
+        => _questionRepo.GetPagedAsync(page, pageSize, topicId, questionTypeId, difficultyLevelId, cognitiveLevelId, keyword, reviewStatus, subjectId, gradeLevelId, ct);
 
     public async Task<Question> CreateAsync(Question entity, IEnumerable<QuestionAnswer> answers, CancellationToken ct = default)
     {
@@ -92,8 +96,11 @@ public class QuestionService : IQuestionService
     public async Task DeleteAsync(Guid id, CancellationToken ct = default)
     {
         var existing = await _questionRepo.GetByIdAsync(id, ct);
+        if (existing is null) return;
+        if (await _examQuestionRepo.ExistsByQuestionAsync(id, ct))
+            throw new EntityInUseException("Câu hỏi đang được dùng trong đề thi đã sinh, không thể xoá.");
         await _questionRepo.DeleteByIdAsync(id, ct);
-        if (existing is not null) await InvalidatePoolAsync(existing, ct);
+        await InvalidatePoolAsync(existing, ct);
     }
 
     public async Task VerifyAsync(Guid id, Guid verifiedBy, CancellationToken ct = default)

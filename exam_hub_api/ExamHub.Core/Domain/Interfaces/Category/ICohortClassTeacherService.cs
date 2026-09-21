@@ -1,4 +1,5 @@
 using ExamHub.Core.Domain.Entities;
+using TVT.Core;
 
 namespace ExamHub.Core.Domain.Interfaces;
 
@@ -8,14 +9,17 @@ public interface ICohortClassTeacherService
     /// <summary>Danh sách phân công của một lớp</summary>
     Task<IReadOnlyList<CohortClassTeacher>> GetByClassAsync(int cohortClassId, CancellationToken ct = default);
 
+    /// <summary>Danh sách phân công của một giáo viên (mọi lớp/môn)</summary>
+    Task<IReadOnlyList<CohortClassTeacher>> GetByTeacherAsync(Guid teacherId, CancellationToken ct = default);
+
     /// <summary>Danh sách Id GV hợp lệ để phân công môn cho lớp</summary>
     Task<IReadOnlyList<Guid>> GetEligibleTeacherIdsAsync(int cohortClassId, int subjectId, CancellationToken ct = default);
 
     /// <summary>
     /// Phân công GV dạy môn cho lớp. Validate + kiểm ràng buộc (GV hợp lệ, không trùng môn/lớp)
-    /// trước khi ghi DB; ném InvalidOperationException với thông báo nếu vi phạm.
+    /// trước khi ghi DB; trả về RequestResponse.Error nếu vi phạm.
     /// </summary>
-    Task<CohortClassTeacher> AssignAsync(int cohortClassId, int subjectId, Guid teacherId, CancellationToken ct = default);
+    Task<RequestResponse<CohortClassTeacher>> AssignAsync(int cohortClassId, int subjectId, Guid teacherId, CancellationToken ct = default);
 
     /// <summary>Xoá một phân công theo Id (ném KeyNotFoundException nếu không tồn tại)</summary>
     Task RemoveAsync(int id, CancellationToken ct = default);

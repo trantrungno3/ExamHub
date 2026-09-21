@@ -150,7 +150,9 @@ public record QuestionPagedRequest(
     int? DifficultyLevelId = null,
     int? CognitiveLevelId = null,
     string? Keyword = null,
-    string? ReviewStatus = null
+    string? ReviewStatus = null,
+    int? SubjectId = null,
+    int? GradeLevelId = null
 );
 
 // ── Custom Validation Attribute ───────────────────────────────────────────────

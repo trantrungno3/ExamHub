@@ -1,3 +1,4 @@
+using ExamHub.Core.Application.Services;
 using ExamHub.Core.Domain.Entities;
 using ExamHub.Core.Domain.Interfaces;
 using TVT.Core.Db.Redis;
@@ -5,7 +6,7 @@ using TVT.Core.Db.Redis;
 namespace ExamHub.Core.Infrastructure.Persistence.Services.Implementations;
 
 /// <summary>Triển khai service cho QuestionType</summary>
-public class QuestionTypeService(IQuestionTypeRepository repo, IRedisService cache)
+public class QuestionTypeService(IQuestionTypeRepository repo, IRedisService cache, IQuestionRepository questionRepo)
     : IQuestionTypeService
 {
     private const string AllKey    = "category:question-types:all";
@@ -43,6 +44,8 @@ public class QuestionTypeService(IQuestionTypeRepository repo, IRedisService cac
 
     public async Task DeleteAsync(int id, CancellationToken ct = default)
     {
+        if (await questionRepo.ExistsAsync(q => q.QuestionTypeId == id, ct))
+            throw new EntityInUseException("Loại câu hỏi đang được dùng bởi câu hỏi, không thể xoá.");
         await repo.DeleteByIdAsync(id, ct);
         await InvalidateCacheAsync(ct);
     }

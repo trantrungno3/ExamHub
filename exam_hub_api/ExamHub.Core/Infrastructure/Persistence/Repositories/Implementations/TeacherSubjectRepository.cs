@@ -37,4 +37,22 @@ public class TeacherSubjectRepository : BaseRepository<TeacherSubject, int>, ITe
         => await Set
             .Where(x => x.UserId == userId && x.SubjectId == subjectId)
             .ExecuteDeleteAsync(ct);
+
+    /// <inheritdoc/>
+    public async Task SetSubjectsAsync(Guid userId, IReadOnlyList<int> subjectIds, CancellationToken ct = default)
+    {
+        var wanted = subjectIds.Distinct().ToList();
+        var existingIds = await Set.Where(x => x.UserId == userId)
+            .Select(x => x.SubjectId).ToListAsync(ct);
+
+        var toRemove = existingIds.Except(wanted).ToList();
+        var toAdd = wanted.Except(existingIds).ToList();
+
+        if (toRemove.Count > 0)
+            await Set.Where(x => x.UserId == userId && toRemove.Contains(x.SubjectId))
+                .ExecuteDeleteAsync(ct);
+
+        if (toAdd.Count > 0)
+            await AddRangeAsync(toAdd.Select(id => new TeacherSubject { UserId = userId, SubjectId = id }), ct);
+    }
 }

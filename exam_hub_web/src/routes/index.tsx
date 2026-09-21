@@ -1,14 +1,11 @@
-import { createBrowserRouter, Navigate } from 'react-router-dom'
+import { lazy } from 'react'
+import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom'
 import LoginPage from '../pages/auth/LoginPage'
 import RegisterPage from '../pages/auth/RegisterPage'
 import AppLayout from '../layouts/AppLayout'
-import DashboardPage from '../pages/dashboard/DashboardPage'
 import CategoryPage from '../pages/category/CategoryPage'
 import QuestionBankPage from '../pages/questions/QuestionBankPage'
-import AddQuestionPage from '../pages/questions/AddQuestionPage'
 import ExamTemplatePage from '../pages/exams/ExamTemplatePage'
-import CreateExamTemplatePage from '../pages/exams/CreateExamTemplatePage'
-import GeneratePage from '../pages/exams/GeneratePage'
 import ExamListPage from '../pages/exams/ExamListPage'
 import ExamDetailPage from '../pages/exams/ExamDetailPage'
 import SubmissionReviewPage from '../pages/exams/SubmissionReviewPage'
@@ -31,64 +28,84 @@ import SchoolDetailPage from '../pages/school/SchoolDetailPage'
 import CohortDetailPage from '../pages/school/CohortDetailPage'
 import { ProtectedRoute } from './ProtectedRoute'
 import { ROUTES } from './paths'
+import RouteError from '../components/RouteError'
 
-export { ROUTES }
+/* Route nặng — tách khỏi chunk khởi động (recharts, tiptap, katex). */
+const DashboardPage = lazy(() => import('../pages/dashboard/DashboardPage'))
+const AddQuestionPage = lazy(() => import('../pages/questions/AddQuestionPage'))
+const GeneratePage = lazy(() => import('../pages/exams/GeneratePage'))
+const CreateExamTemplatePage = lazy(() => import('../pages/exams/CreateExamTemplatePage'))
 
-export const router = createBrowserRouter([
-    { path: ROUTES.HOME,     element: <Navigate to={ROUTES.LOGIN} replace /> },
-    { path: ROUTES.LOGIN,    element: <LoginPage /> },
-    { path: ROUTES.REGISTER, element: <RegisterPage /> },
-
-    /* ── Student portal (with header layout) ── */
+const router = createBrowserRouter([
     {
-        element: <StudentLayout />,
+        errorElement: <RouteError />,
         children: [
-            { path: ROUTES.STUDENT_EXAMS,   element: <StudentSessionListPage /> },
-            { path: ROUTES.STUDENT_SESSION_POOL, element: <StudentSessionPoolPage /> },
-            { path: ROUTES.STUDENT_PROFILE, element: <StudentProfilePage /> },
-        ],
-    },
+            { path: ROUTES.HOME,     element: <Navigate to={ROUTES.LOGIN} replace /> },
+            { path: ROUTES.LOGIN,    element: <LoginPage /> },
+            { path: ROUTES.REGISTER, element: <RegisterPage /> },
 
-    /* ── Student exam-taking flow (full screen, no header) ── */
-    { path: ROUTES.STUDENT_EXAM,      element: <ExamCoverPage /> },
-    { path: ROUTES.STUDENT_EXAM_TAKE, element: <ExamTakingPage /> },
-    { path: '/student/exam/result',   element: <ExamResultPage /> },
+            { path: ROUTES.FORBIDDEN, element: <Placeholder title="403 — Không có quyền truy cập" /> },
+            { path: ROUTES.NO_ROLE,   element: <NoRolePage /> },
 
-    { path: ROUTES.FORBIDDEN, element: <Placeholder title="403 — Không có quyền truy cập" /> },
-    { path: ROUTES.NO_ROLE,   element: <NoRolePage /> },
-
-    /* ── Protected admin / teacher app ── */
-    {
-        element: <ProtectedRoute />,
-        children: [
+            /* ── Toàn bộ khu học sinh: cả portal có header và luồng làm bài full-screen ── */
             {
-                path: ROUTES.APP,
-                element: <AppLayout />,
+                element: <ProtectedRoute allowedRoles={['Student']} />,
                 children: [
-                    { index: true,                              element: <Navigate to={ROUTES.DASHBOARD} replace /> },
-                    { path: 'dashboard',                        element: <DashboardPage /> },
-                    { path: 'questions',                        element: <QuestionBankPage /> },
-                    { path: 'questions/add',                    element: <AddQuestionPage /> },
-                    { path: 'questions/:id/edit',               element: <AddQuestionPage /> },
-                    { path: 'exams',                            element: <ExamTemplatePage /> },
-                    { path: 'exams/create',                     element: <CreateExamTemplatePage /> },
-                    { path: 'exams/:id/edit',                   element: <CreateExamTemplatePage /> },
-                    { path: 'category',                         element: <CategoryPage /> },
-                    { path: 'generate',                         element: <GeneratePage /> },
-                    { path: 'exam-list',                        element: <ExamListPage /> },
-                    { path: 'exam-list/:id',                    element: <ExamDetailPage /> },
-                    { path: 'exam-sessions',                    element: <ExamSessionListPage /> },
-                    { path: 'exam-sessions/create',             element: <ExamSessionEditPage /> },
-                    { path: 'exam-sessions/:id/edit',           element: <ExamSessionEditPage /> },
-                    { path: 'exam-sessions/:id/submissions',    element: <SubmissionListPage /> },
-                    { path: 'submissions/:id/review',           element: <SubmissionReviewPage /> },
-                    { path: 'users',                            element: <UserPage /> },
-                    { path: 'schools',      element: <SchoolListPage /> },
-                    { path: 'schools/:id',  element: <SchoolDetailPage /> },
-                    { path: 'cohorts/:id',  element: <CohortDetailPage /> },
-                    { path: 'profile',      element: <AppProfilePage /> },
+                    /* Student portal (with header layout) */
+                    {
+                        element: <StudentLayout />,
+                        children: [
+                            { path: ROUTES.STUDENT_EXAMS,   element: <StudentSessionListPage /> },
+                            { path: ROUTES.STUDENT_SESSION_POOL, element: <StudentSessionPoolPage /> },
+                            { path: ROUTES.STUDENT_PROFILE, element: <StudentProfilePage /> },
+                        ],
+                    },
+
+                    /* Student exam-taking flow (full screen, no header) */
+                    { path: ROUTES.STUDENT_EXAM,        element: <ExamCoverPage /> },
+                    { path: ROUTES.STUDENT_EXAM_TAKE,   element: <ExamTakingPage /> },
+                    { path: ROUTES.STUDENT_EXAM_RESULT, element: <ExamResultPage /> },
+                ],
+            },
+
+            /* ── Protected admin / teacher app ── */
+            {
+                element: <ProtectedRoute allowedRoles={['Admin', 'Teacher']} />,
+                children: [
+                    {
+                        path: ROUTES.APP,
+                        element: <AppLayout />,
+                        children: [
+                            { index: true,                              element: <Navigate to={ROUTES.DASHBOARD} replace /> },
+                            { path: 'dashboard',                        element: <DashboardPage /> },
+                            { path: 'questions',                        element: <QuestionBankPage /> },
+                            { path: 'questions/add',                    element: <AddQuestionPage /> },
+                            { path: 'questions/:id/edit',               element: <AddQuestionPage /> },
+                            { path: 'exams',                            element: <ExamTemplatePage /> },
+                            { path: 'exams/create',                     element: <CreateExamTemplatePage /> },
+                            { path: 'exams/:id/edit',                   element: <CreateExamTemplatePage /> },
+                            { path: 'category',                         element: <CategoryPage /> },
+                            { path: 'generate',                         element: <GeneratePage /> },
+                            { path: 'exam-list',                        element: <ExamListPage /> },
+                            { path: 'exam-list/:id',                    element: <ExamDetailPage /> },
+                            { path: 'exam-sessions',                    element: <ExamSessionListPage /> },
+                            { path: 'exam-sessions/create',             element: <ExamSessionEditPage /> },
+                            { path: 'exam-sessions/:id/edit',           element: <ExamSessionEditPage /> },
+                            { path: 'exam-sessions/:id/submissions',    element: <SubmissionListPage /> },
+                            { path: 'submissions/:id/review',           element: <SubmissionReviewPage /> },
+                            { path: 'users',                            element: <UserPage /> },
+                            { path: 'schools',      element: <SchoolListPage /> },
+                            { path: 'schools/:id',  element: <SchoolDetailPage /> },
+                            { path: 'cohorts/:id',  element: <CohortDetailPage /> },
+                            { path: 'profile',      element: <AppProfilePage /> },
+                        ],
+                    },
                 ],
             },
         ],
     },
 ])
+
+export function AppRouter() {
+    return <RouterProvider router={router} />
+}

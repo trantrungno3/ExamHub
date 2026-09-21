@@ -10,11 +10,8 @@ public interface IExamTemplateRepository : IBaseRepository<ExamTemplate, Guid>
     /// <summary>Lấy template kèm phần thi</summary>
     Task<ExamTemplate?> GetWithSectionsAsync(Guid id, CancellationToken ct = default);
 
-    /// <summary>Lấy danh sách template theo môn học</summary>
-    Task<IReadOnlyList<ExamTemplate>> GetBySubjectAsync(int subjectId, CancellationToken ct = default);
-
-    /// <summary>Lấy danh sách template theo lớp</summary>
-    Task<IReadOnlyList<ExamTemplate>> GetByGradeLevelAsync(int gradeLevelId, CancellationToken ct = default);
+    /// <summary>Lấy danh sách template theo bộ lọc (môn học và/hoặc lớp, không lọc IsActive)</summary>
+    Task<IReadOnlyList<ExamTemplate>> GetFilteredAsync(int? subjectId, int? gradeLevelId, CancellationToken ct = default);
 }
 
 /// <summary>Interface repository cho ExamTemplateSection</summary>
@@ -70,6 +67,9 @@ public interface IExamQuestionRepository : IBaseRepository<ExamQuestion, Guid>
 
     /// <summary>Xóa tất cả câu hỏi của đề thi</summary>
     Task DeleteByExamAsync(Guid examId, CancellationToken ct = default);
+
+    /// <summary>Câu hỏi có đang được dùng trong đề thi nào không (snapshot).</summary>
+    Task<bool> ExistsByQuestionAsync(Guid questionId, CancellationToken ct = default);
 }
 
 /// <summary>Interface repository cho ExamSubmission</summary>
@@ -90,6 +90,17 @@ public interface IExamSubmissionRepository : IBaseRepository<ExamSubmission, Gui
     /// <summary>Lấy danh sách bài nộp theo kỳ thi</summary>
     Task<IReadOnlyList<ExamSubmission>> GetBySessionAsync(Guid sessionId, CancellationToken ct = default);
 
+    /// <summary>
+    /// Một trang bài nộp của kỳ thi, sắp xếp ổn định. Tách method riêng thay vì đổi
+    /// <see cref="GetBySessionAsync"/> để lookup nội bộ giữ nguyên contract.
+    /// </summary>
+    Task<(IReadOnlyList<ExamSubmission> Items, int Total)> GetPageBySessionAsync(
+        Guid sessionId, int page, int pageSize, CancellationToken ct = default);
+
+    /// <summary>Một trang bài nộp của học sinh, sắp xếp ổn định.</summary>
+    Task<(IReadOnlyList<ExamSubmission> Items, int Total)> GetPageByStudentAsync(
+        Guid studentId, int page, int pageSize, CancellationToken ct = default);
+
     /// <summary>Lấy các lần nộp của một học sinh trong một kỳ thi</summary>
     Task<IReadOnlyList<ExamSubmission>> GetBySessionAndStudentAsync(Guid sessionId, Guid studentId, CancellationToken ct = default);
 
@@ -100,6 +111,14 @@ public interface IExamSubmissionRepository : IBaseRepository<ExamSubmission, Gui
     /// </summary>
     Task<IReadOnlyDictionary<Guid, string>> GetStudentClassNamesAsync(
         IReadOnlyCollection<Guid> studentIds, CancellationToken ct = default);
+
+    /// <summary>
+    /// Chạy <paramref name="operation"/> trong một transaction trên cùng scoped DbContext:
+    /// commit khi xong, rollback khi ném. Cần cho nộp bài/lưu tạm vì đó là nhiều lệnh ghi
+    /// (update submission + delete-then-insert đáp án) phải thành công hoặc huỷ trọn gói.
+    /// </summary>
+    Task<T> ExecuteInTransactionAsync<T>(
+        Func<CancellationToken, Task<T>> operation, CancellationToken ct = default);
 }
 
 /// <summary>Interface repository cho SubmissionAnswer</summary>
@@ -110,5 +129,8 @@ public interface ISubmissionAnswerRepository : IBaseRepository<SubmissionAnswer,
 
     /// <summary>Xóa tất cả câu trả lời của bài nộp</summary>
     Task DeleteBySubmissionAsync(Guid submissionId, CancellationToken ct = default);
+
+    /// <summary>Thay toàn bộ đáp án của một bài nộp (dùng cho lưu tạm định kỳ).</summary>
+    Task ReplaceForSubmissionAsync(Guid submissionId, IReadOnlyList<SubmissionAnswer> answers, CancellationToken ct = default);
 }
 

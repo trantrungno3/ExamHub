@@ -15,6 +15,9 @@ public class CohortClassService : ICohortClassService
     public Task<IReadOnlyList<CohortClass>> GetBySchoolYearAsync(string schoolYear, CancellationToken ct = default)
         => _repo.GetBySchoolYearAsync(schoolYear, ct);
 
+    public Task<IReadOnlyList<CohortClass>> GetByHomeroomTeacherAsync(Guid teacherId, CancellationToken ct = default)
+        => _repo.GetAsync(x => x.HomeroomTeacherId == teacherId, ct);
+
     public Task<CohortClass?> GetByIdAsync(int id, CancellationToken ct = default)
         => _repo.GetByIdAsync(id, ct);
 

@@ -23,6 +23,11 @@ public sealed record BatchGenerateExamApiRequest
 
     public bool ShuffleQuestions { get; set; }
     public bool ShuffleAnswers { get; set; }
+    /// <summary>
+    /// true = mỗi mã đề trong lô có bộ câu hỏi khác nhau (chống trùng GIỮA CÁC ĐỀ được sinh ra).
+    /// false = mọi mã đề dùng chung một bộ câu hỏi, chỉ khác thứ tự câu/đáp án (mặc định cũ, đỡ tốn truy vấn).
+    /// Chống trùng câu hỏi GIỮA CÁC PHẦN THI trong cùng một đề luôn được áp dụng, không phụ thuộc cờ này.
+    /// </summary>
     public bool PreventDuplicate { get; set; } = true;
 
     /// <summary>Tổng điểm của đề (tuỳ chọn) — bỏ trống/0 để tự tính từ các phần.</summary>

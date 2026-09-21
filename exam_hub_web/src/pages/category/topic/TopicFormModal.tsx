@@ -46,9 +46,12 @@ export function TopicFormModal({open, record, subjects, onClose, onSave}: Readon
                         isActive: true
                     }
             )
-            if (record?.subjectId) void loadParentOptions(record.subjectId, record.id)
         }
-    }, [form, open, record, loadParentOptions])
+    }, [form, open, record])
+
+    const onAfterOpenChange = (opened: boolean) => {
+        if (opened && record?.subjectId) void loadParentOptions(record.subjectId, record.id)
+    }
 
     const onSubjectChange = (subjectId: number) => {
         form.setFieldValue('parentId', undefined)
@@ -72,6 +75,7 @@ export function TopicFormModal({open, record, subjects, onClose, onSave}: Readon
         <Modal
             title={isEdit ? 'Sửa chủ đề' : 'Thêm chủ đề'}
             open={open}
+            afterOpenChange={onAfterOpenChange}
             onOk={handleOk}
             onCancel={() => {
                 form.resetFields();
@@ -134,10 +138,10 @@ export function TopicFormModal({open, record, subjects, onClose, onSave}: Readon
                 >
                     <Input placeholder="VD: Đại số"/>
                 </Form.Item>
-                <Form.Item label="Mã (code)" name="code">
+                <Form.Item label="Mã" name="code">
                     <Input placeholder="VD: ALG"/>
                 </Form.Item>
-                <Form.Item label="Thứ tự (sort_order)" name="sortOrder">
+                <Form.Item label="Thứ tự" name="sortOrder">
                     <InputNumber min={1} className="w-full"/>
                 </Form.Item>
                 <Form.Item label="Mô tả" name="description">

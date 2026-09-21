@@ -1,3 +1,4 @@
+using ExamHub.Core.Application.Services;
 using ExamHub.Core.Domain.Entities;
 using ExamHub.Core.Domain.Interfaces;
 using TVT.Core.Db.Redis;
@@ -5,7 +6,7 @@ using TVT.Core.Db.Redis;
 namespace ExamHub.Core.Infrastructure.Persistence.Services.Implementations;
 
 /// <summary>Triển khai service cho GradeLevel</summary>
-public class GradeLevelService(IGradeLevelRepository repo, IRedisService cache)
+public class GradeLevelService(IGradeLevelRepository repo, IRedisService cache, IExamRepository examRepo)
     : IGradeLevelService
 {
     private const string AllKey    = "category:grade-levels:all";
@@ -44,6 +45,8 @@ public class GradeLevelService(IGradeLevelRepository repo, IRedisService cache)
 
     public async Task DeleteAsync(int id, CancellationToken ct = default)
     {
+        if (await examRepo.ExistsAsync(e => e.GradeLevelId == id, ct))
+            throw new EntityInUseException("Khối lớp đang được dùng bởi đề thi, không thể xoá.");
         await repo.DeleteByIdAsync(id, ct);
         await InvalidateCacheAsync(ct);
     }

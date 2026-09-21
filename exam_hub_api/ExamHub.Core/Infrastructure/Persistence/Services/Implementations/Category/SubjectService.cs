@@ -1,3 +1,4 @@
+using ExamHub.Core.Application.Services;
 using ExamHub.Core.Domain.Entities;
 using ExamHub.Core.Domain.Interfaces;
 using TVT.Core.Db.Redis;
@@ -5,7 +6,7 @@ using TVT.Core.Db.Redis;
 namespace ExamHub.Core.Infrastructure.Persistence.Services.Implementations;
 
 /// <summary>Triển khai service cho Subject</summary>
-public class SubjectService(ISubjectRepository repo, IRedisService cache)
+public class SubjectService(ISubjectRepository repo, IRedisService cache, ITopicRepository topicRepo, IExamRepository examRepo)
     : ISubjectService
 {
     private const string AllKey    = "category:subjects:all";
@@ -49,6 +50,9 @@ public class SubjectService(ISubjectRepository repo, IRedisService cache)
 
     public async Task DeleteAsync(int id, CancellationToken ct = default)
     {
+        if (await topicRepo.ExistsAsync(t => t.SubjectId == id, ct) ||
+            await examRepo.ExistsAsync(e => e.SubjectId == id, ct))
+            throw new EntityInUseException("Môn học đang được dùng (chủ đề/đề thi), không thể xoá.");
         await repo.DeleteByIdAsync(id, ct);
         await InvalidateCacheAsync(ct);
     }

@@ -81,6 +81,40 @@ interface SchoolMemberBody {
     isActive?: boolean
 }
 
+/* ─── Thêm hàng loạt / import Excel thành viên trường ── */
+
+type SchoolMembershipRole = 'Admin' | 'Teacher' | 'Student'
+
+interface SchoolMemberBulkAddRequest {
+    schoolId: number
+    role: SchoolMembershipRole
+    userIds: string[]
+    cohortId?: number
+    section?: string
+}
+
+interface SchoolMemberImportRowResult {
+    rowNumber: number
+    userName: string
+    role: string
+    cohortName?: string | null
+    section?: string | null
+    isValid: boolean
+    errors: string[]
+}
+
+interface SchoolMemberImportPreview {
+    validCount: number
+    errorCount: number
+    rows: SchoolMemberImportRowResult[]
+}
+
+interface SchoolMemberBulkResult {
+    successCount: number
+    errorCount: number
+    errors: Array<{rowNumber: number; message: string}>
+}
+
 /* ─── CohortMember ── */
 
 interface CohortMember {

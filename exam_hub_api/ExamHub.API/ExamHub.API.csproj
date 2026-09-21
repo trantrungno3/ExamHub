@@ -40,7 +40,12 @@
     </ItemGroup>
 
     <PropertyGroup>
-        <OpenApiGenerateDocuments>true</OpenApiGenerateDocuments>
+        <!-- Off by default: generating the doc constructs the app host, which requires
+             live Minio credentials (TVT_Core builds its client eagerly during DI
+             registration). Secret-free checkouts/CI can't supply those, so build-time
+             generation is opt-in only: dotnet build -p:OpenApiGenerateDocuments=true
+             with real local secrets configured. -->
+        <OpenApiGenerateDocuments Condition="'$(OpenApiGenerateDocuments)' == ''">false</OpenApiGenerateDocuments>
         <OpenApiDocumentsDirectory>$(MSBuildProjectDirectory)</OpenApiDocumentsDirectory>
     </PropertyGroup>
 

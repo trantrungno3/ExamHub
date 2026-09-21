@@ -19,6 +19,7 @@ interface ExamSession {
     openAt: number
     /** epoch ms */
     closeAt: number
+    durationMinutes: number
     maxAttempts: number
     pickMode: ExamSessionPickMode
     status: ExamSessionStatus
@@ -56,6 +57,7 @@ interface ExamSessionDetail {
     gradeLevelName?: string
     openAt: number
     closeAt: number
+    durationMinutes: number
     maxAttempts: number
     pickMode: ExamSessionPickMode
     status: ExamSessionStatus
@@ -71,6 +73,7 @@ interface ExamSessionBody {
     gradeLevelId: number
     openAt: string
     closeAt: string
+    durationMinutes: number
     maxAttempts: number
     pickMode: ExamSessionPickMode
 }
@@ -89,6 +92,7 @@ interface MySession {
     gradeLevelName?: string
     openAt: number
     closeAt: number
+    durationMinutes: number
     pickMode: ExamSessionPickMode
     availability: ExamSessionAvailability
     maxAttempts: number
@@ -111,6 +115,8 @@ interface SessionPoolItem {
 interface StartSessionResult {
     submissionId: string
     examId: string
+    deadlineAt: number
+    durationMinutes: number
 }
 
 interface ExamSessionPagedQuery {

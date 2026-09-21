@@ -21,6 +21,9 @@ public class DifficultyLevelController(IDifficultyLevelService service)
     protected override DifficultyLevelResponse ToResponse(DifficultyLevel entity) => DifficultyLevelResponse.FromEntity(entity);
 
     /// <summary>Lấy theo mã</summary>
+    /// <param name="code">Mã mức độ khó cần tra cứu.</param>
+    /// <param name="ct">Token huỷ yêu cầu.</param>
+    /// <returns>Bản ghi tương ứng; 404 nếu không tồn tại.</returns>
     [HttpGet("code/{code}")]
     [Authorize]
     public async Task<ActionResult<RequestResponse<DifficultyLevelResponse>>> GetByCode(string code, CancellationToken ct = default)

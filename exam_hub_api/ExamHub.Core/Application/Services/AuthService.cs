@@ -7,7 +7,7 @@ using TVT.Core.Models;
 
 namespace ExamHub.Core.Application.Services;
 
-public sealed class AuthService(IUserService userService) : IAuthService
+public sealed class AuthService(IUserService userService, ITokenClaimsResolver tokenClaimsResolver) : IAuthService
 {
     /// <summary>
     ///     Đăng nhập
@@ -23,8 +23,9 @@ public sealed class AuthService(IUserService userService) : IAuthService
             return RequestResponse<TokenModel>.Error("Không tìm thấy người dùng!");
         if (!userInfo.PasswordHash!.Contains(dto.Password.GetPasswordHash(AppCommon.SaltPassHash!)))
             return RequestResponse<TokenModel>.Error("Tài khoản hoặc mật khẩu sai!");
+        var customClaims = await tokenClaimsResolver.ResolveAsync(userInfo.Id, userInfo.Roles);
         var jwtToken = await userService.CreateTokenJwt(AppCommon.Audience, AppCommon.AudienceRefresh, userInfo,
-            TimeSpan.FromHours(8));
+            customClaims, TimeSpan.FromHours(8));
         return RequestResponse<TokenModel>.Success("Đăng nhập thành công!",
             new TokenModel(jwtToken.Item1, jwtToken.Item2), 1);
     }
@@ -42,7 +43,12 @@ public sealed class AuthService(IUserService userService) : IAuthService
         if (userInfo != null)
             return RequestResponse<object>.Error("Người dùng đã tồn tại!");
         var data = dto.ToDomain();
+        var now = DateTime.UtcNow;
         data.PasswordHash = dto.Password.GetPasswordHash(AppCommon.SaltPassHash!);
+        data.Created = now;
+        data.CreatedBy = dto.UserName;
+        data.Modified = now;
+        data.ModifiedBy = dto.UserName;
         var userAdmin = await userService.CreateAsync(data);
         return userAdmin != null
             ? RequestResponse<object>.Success("Đăng kí thành công!")
@@ -50,27 +56,40 @@ public sealed class AuthService(IUserService userService) : IAuthService
     }
 
     /// <summary>
-    ///     Lấy token mới bằng refesh token
+    ///     Lấy token mới bằng refresh token
     /// </summary>
-    /// <param name="dto">Thông tin token</param>
+    /// <param name="accessToken">Access token đã/sắp hết hạn</param>
+    /// <param name="refreshToken">Refresh token đọc từ cookie HttpOnly</param>
     /// <returns></returns>
-    public async Task<RequestResponse<string>> RefreshToken(TokenModel dto)
+    public async Task<RequestResponse<TokenModel>> RefreshToken(string accessToken, string refreshToken)
     {
-        if (string.IsNullOrEmpty(dto.AccessToken) || string.IsNullOrEmpty(dto.RefreshToken))
-            return RequestResponse<string>.Error("Không được để trống thông tin!");
-        var claims = AuthExtension.GetPrincipalFromExpiredToken(dto.AccessToken, AppCommon.Audience);
-        if (claims == null)
-            return RequestResponse<string>.Error("Token không được để trống!");
-        var userName = claims.GetUserName();
-        var userInfo = await userService.FindByNameAsync(userName!);
-        if (userInfo == null || userInfo.RefreshToken != dto.RefreshToken)
-            return RequestResponse<string>.Error("Token không hợp lệ!");
+        if (string.IsNullOrEmpty(accessToken) || string.IsNullOrEmpty(refreshToken))
+            return RequestResponse<TokenModel>.Error("Không được để trống thông tin!");
 
-        var isRefreshValid = AuthExtension.ValidRefreshToken(dto.RefreshToken, AppCommon.AudienceRefresh);
-        return isRefreshValid
-            ? RequestResponse<string>.Success("Lấy token thành công!",
-                userService.CreateTokenJwt(AppCommon.Audience, userInfo, TimeSpan.FromHours(8)), 1)
-            : RequestResponse<string>.Error("Token đã hết hạn!");
+        var claims = AuthExtension.GetPrincipalFromExpiredToken(accessToken, AppCommon.Audience);
+        if (claims == null)
+            return RequestResponse<TokenModel>.Error("Token không hợp lệ!");
+
+        var userName = claims.GetUserName();
+        var userInfo = await userService.FindByNameAsync(userName);
+        if (userInfo == null || userInfo.RefreshToken != refreshToken)
+            return RequestResponse<TokenModel>.Error("Token không hợp lệ!");
+
+        if (!AuthExtension.ValidRefreshToken(refreshToken, AppCommon.AudienceRefresh))
+            return RequestResponse<TokenModel>.Error("Token đã hết hạn!");
+
+        var customClaims = await tokenClaimsResolver.ResolveAsync(userInfo.Id, userInfo.Roles);
+        var tokens = await userService.CreateTokenJwt(
+            AppCommon.Audience,
+            AppCommon.AudienceRefresh,
+            userInfo,
+            customClaims,
+            TimeSpan.FromHours(8));
+
+        return RequestResponse<TokenModel>.Success(
+            "Lấy token thành công!",
+            new TokenModel(tokens.Item1, tokens.Item2),
+            1);
     }
 
     /// <summary>
@@ -103,6 +122,7 @@ public sealed class AuthService(IUserService userService) : IAuthService
         user.PhoneNumber = dto.PhoneNumber;
         if (!string.IsNullOrEmpty(dto.Email))
             user.SetEmail(dto.Email);
+        user.ModifiedBy = userName;
         user.Modified = DateTime.UtcNow;
         await userService.UpdateAsync(user);
 
@@ -127,9 +147,33 @@ public sealed class AuthService(IUserService userService) : IAuthService
             return RequestResponse<bool>.Error("Mật khẩu hiện tại không đúng!");
 
         user.PasswordHash = dto.NewPassword.GetPasswordHash(AppCommon.SaltPassHash!);
+        // Đổi mật khẩu phải chặn luôn refresh token cũ: nếu không, cookie bị đánh cắp vẫn xin được
+        // access token mới vô hạn dù mật khẩu đã đổi.
+        user.RefreshToken = null;
+        user.ModifiedBy = userName;
         user.Modified = DateTime.UtcNow;
         await userService.UpdateAsync(user);
 
         return RequestResponse<bool>.Success("Đổi mật khẩu thành công!", true, 1);
+    }
+
+    /// <summary>
+    ///     Thu hồi refresh token đang lưu của người dùng (logout / đổi mật khẩu)
+    /// </summary>
+    public async Task<RequestResponse<bool>> RevokeRefreshToken(string userName)
+    {
+        if (string.IsNullOrEmpty(userName))
+            return RequestResponse<bool>.Error("Không xác định được người dùng!");
+
+        var user = await userService.FindByNameAsync(userName);
+        if (user == null)
+            return RequestResponse<bool>.Error("Không tìm thấy thông tin!");
+
+        user.RefreshToken = null;
+        user.ModifiedBy = userName;
+        user.Modified = DateTime.UtcNow;
+        await userService.UpdateAsync(user);
+
+        return RequestResponse<bool>.Success("Đăng xuất thành công!", true, 1);
     }
 }

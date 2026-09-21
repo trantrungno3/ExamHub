@@ -1,13 +1,14 @@
 import {useMemo, useState} from 'react'
 import {useNavigate} from 'react-router-dom'
 import type {TableColumnsType} from 'antd'
-import {Button, Input, Modal, Popconfirm, Select, Table, Tooltip, message} from 'antd'
+import {Badge, Button, Form, Input, Modal, Popconfirm, Select, Table, Tooltip, message} from 'antd'
 import {
     CheckCircleFilled,
     CheckOutlined,
     ClockCircleFilled,
     CloseCircleFilled,
     DatabaseOutlined,
+    FilterOutlined,
     PlusOutlined,
     SearchOutlined,
     StopOutlined,
@@ -26,13 +27,32 @@ import {
 import {
     useCognitiveLevelsQuery,
     useDifficultyLevelsQuery,
+    useGradeLevelsListQuery,
     useQuestionTypesQuery,
+    useSubjectsQuery,
     useTopicsQuery,
 } from '../../hooks/queries/useCategoryLists'
 import {questionService} from '../../services/questionService'
+import {statusCode} from '../../services/requestService'
 import {StatusTag} from '../../components/StatusTag'
 import {BulkImportModal} from './BulkImportModal'
 import {BLOOM_CHIP, BLOOM_NUM, DEFAULT_PAGE, DEFAULT_PAGE_SIZE, DIFF_CHIP, NEUTRAL_CHIP, TYPE_CHIP, type ChipColor} from '../../constants'
+import PageHeader from '../../components/PageHeader'
+import {stripHtml} from '../../utils/snapshot'
+import {toOptions} from '../../utils/options'
+import {useDebounced} from '../../hooks/useDebounced'
+import {StatCard} from '../../components/StatCard'
+import {BRAND} from '../../constants/theme'
+
+interface FilterFormValues {
+    gradeLevelId?: number
+    subjectId?: number
+    topicId?: number
+    difficultyLevelId?: number
+    questionTypeId?: number
+    cognitiveLevelId?: number
+    reviewStatus?: string
+}
 
 type ReviewState = 'approved' | 'rejected' | 'pending'
 const reviewState = (q: Question): ReviewState => (q.status as ReviewState) ?? 'pending'
@@ -46,25 +66,6 @@ function Chip({label, color}: {label: string; color: ChipColor}) {
     )
 }
 
-function StatCard({label, value, icon, color, bg}: {
-    label: string; value?: number; icon: React.ReactNode; color: string; bg: string
-}) {
-    return (
-        <div className="flex-1 bg-white rounded-xl border p-4 flex items-center gap-3" style={{borderColor: '#eceef2'}}>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center text-[18px]"
-                 style={{background: bg, color}}>
-                {icon}
-            </div>
-            <div>
-                <div className="text-[22px] font-bold leading-tight" style={{color: '#191d27'}}>
-                    {value != null ? value.toLocaleString('vi-VN') : '—'}
-                </div>
-                <div className="text-[12px]" style={{color: '#6f7788'}}>{label}</div>
-            </div>
-        </div>
-    )
-}
-
 export default function QuestionBankPage() {
     const navigate = useNavigate()
     const qc = useQueryClient()
@@ -72,25 +73,52 @@ export default function QuestionBankPage() {
     const [page, setPage] = useState(DEFAULT_PAGE)
     const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE)
     const [keyword, setKeyword] = useState('')
-    const [topicId, setTopicId] = useState<number>()
-    const [questionTypeId, setQuestionTypeId] = useState<number>()
-    const [difficultyLevelId, setDifficultyLevelId] = useState<number>()
-    const [cognitiveLevelId, setCognitiveLevelId] = useState<number>()
-    const [reviewStatus, setReviewStatus] = useState<string>()
     const [importOpen, setImportOpen] = useState(false)
+    const [filterOpen, setFilterOpen] = useState(false)
     const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([])
 
+    const [filterForm] = Form.useForm<FilterFormValues>()
+    // Giá trị đang chỉnh trong modal — chỉ dùng để tính option lồng nhau (lớp/môn/chủ đề), chưa áp dụng vào query.
+    const draft = Form.useWatch([], filterForm) ?? {}
+    const [appliedFilters, setAppliedFilters] = useState<FilterFormValues>({})
+    const {topicId, questionTypeId, difficultyLevelId, cognitiveLevelId, reviewStatus, subjectId, gradeLevelId} = appliedFilters
+
+    const activeFilterCount = Object.values(appliedFilters).filter(v => v !== undefined).length
+    const openFilters = () => { filterForm.setFieldsValue(appliedFilters); setFilterOpen(true) }
+    const applyFilters = () => { setAppliedFilters(filterForm.getFieldsValue()); setPage(1); setFilterOpen(false) }
+    const resetFilters = () => filterForm.resetFields()
+
+    const debouncedKeyword = useDebounced(keyword)
     const query: QuestionPagedQuery = useMemo(
-        () => ({page, pageSize, keyword, topicId, questionTypeId, difficultyLevelId, cognitiveLevelId, reviewStatus}),
-        [page, pageSize, keyword, topicId, questionTypeId, difficultyLevelId, cognitiveLevelId, reviewStatus],
+        () => ({page, pageSize, keyword: debouncedKeyword, topicId, questionTypeId, difficultyLevelId, cognitiveLevelId, reviewStatus, subjectId, gradeLevelId}),
+        [page, pageSize, debouncedKeyword, topicId, questionTypeId, difficultyLevelId, cognitiveLevelId, reviewStatus, subjectId, gradeLevelId],
     )
 
     const {data, isLoading} = useQuestionsQuery(query)
     const stats = useQuestionStatsQuery()
+    const grades = useGradeLevelsListQuery()
+    const subjects = useSubjectsQuery()
     const topics = useTopicsQuery()
     const questionTypes = useQuestionTypesQuery()
     const difficulties = useDifficultyLevelsQuery()
     const cognitives = useCognitiveLevelsQuery()
+
+    const subjectOptions = useMemo(
+        () => (subjects.data ?? [])
+            .filter(s => s.gradeLevelId === draft.gradeLevelId)
+            .map(s => ({value: s.id, label: s.name})),
+        [subjects.data, draft.gradeLevelId],
+    )
+    const subjectIdsInGrade = useMemo(
+        () => new Set((subjects.data ?? []).filter(s => s.gradeLevelId === draft.gradeLevelId).map(s => s.id)),
+        [subjects.data, draft.gradeLevelId],
+    )
+    const topicOptions = useMemo(
+        () => (topics.data ?? [])
+            .filter(t => draft.subjectId ? t.subjectId === draft.subjectId : !draft.gradeLevelId || subjectIdsInGrade.has(t.subjectId))
+            .map(t => ({value: t.id, label: t.name})),
+        [topics.data, draft.subjectId, draft.gradeLevelId, subjectIdsInGrade],
+    )
 
     const deleteMutation = useDeleteQuestionMutation()
     const verifyMutation = useVerifyQuestionMutation()
@@ -115,19 +143,39 @@ export default function QuestionBankPage() {
     const cogCodeById = useMemo(
         () => Object.fromEntries((cognitives.data ?? []).map(c => [c.id, c.code])),
         [cognitives.data])
+    const bloomLegend = useMemo(
+        () => (cognitives.data ?? []).toSorted((a, b) => a.levelOrder - b.levelOrder),
+        [cognitives.data])
 
     const invalidate = () => {
         void qc.invalidateQueries({queryKey: QUESTION_KEYS.all})
         void qc.invalidateQueries({queryKey: QUESTION_KEYS.stats})
     }
     const bulkVerify = async () => {
-        await Promise.all(selectedRowKeys.map(id => questionService.verify(id)))
-        message.success(`Đã duyệt ${selectedRowKeys.length} câu hỏi`)
+        const results = await Promise.allSettled(selectedRowKeys.map(id => questionService.verify(id)))
+        const succeeded = results.filter(
+            r => r.status === 'fulfilled' && r.value.status !== statusCode.Error).length
+        const failed = results.length - succeeded
+        if (failed === 0) {
+            message.success(`Đã duyệt ${succeeded} câu hỏi`)
+        } else if (succeeded === 0) {
+            message.error(`Không thể duyệt ${failed} câu hỏi`)
+        } else {
+            message.warning(`Đã duyệt ${succeeded} câu hỏi, ${failed} câu hỏi thất bại`)
+        }
         setSelectedRowKeys([]); invalidate()
     }
     const bulkDelete = async () => {
-        await Promise.all(selectedRowKeys.map(id => questionService.remove(id)))
-        message.success(`Đã xoá ${selectedRowKeys.length} câu hỏi`)
+        const results = await Promise.all(selectedRowKeys.map(id => questionService.remove(id)))
+        const succeeded = results.filter(r => r.status === statusCode.Deleted).length
+        const failed = results.length - succeeded
+        if (failed === 0) {
+            message.success(`Đã xoá ${succeeded} câu hỏi`)
+        } else if (succeeded === 0) {
+            message.error(`Không thể xoá ${failed} câu hỏi (đang được sử dụng hoặc lỗi khác)`)
+        } else {
+            message.warning(`Đã xoá ${succeeded} câu hỏi, ${failed} câu hỏi không thể xoá (đang được sử dụng hoặc lỗi khác)`)
+        }
         setSelectedRowKeys([]); invalidate()
     }
 
@@ -136,16 +184,16 @@ export default function QuestionBankPage() {
             title: 'Nội dung câu hỏi', dataIndex: 'content', key: 'content',
             render: (_, q) => (
                 <div className="min-w-0">
-                    <div className="font-medium line-clamp-1" style={{color: '#1d2129'}}>
+                    <div className="font-medium line-clamp-1" style={{color: BRAND.inkStrong}}>
                         {q.contentPlain || stripHtml(q.content)}
                     </div>
-                    {q.topicName && <div className="text-[12px]" style={{color: '#9aa2b1'}}>{q.topicName}</div>}
+                    {q.topicName && <div className="text-[12px]" style={{color: BRAND.mutedSoft}}>{q.topicName}</div>}
                 </div>
             ),
         },
         {
             title: 'Chủ đề', dataIndex: 'topicName', key: 'topicName', width: 140,
-            render: v => <span style={{color: '#6f7788'}}>{v ?? '—'}</span>,
+            render: v => <span style={{color: BRAND.muted}}>{v ?? '—'}</span>,
         },
         {
             title: 'Loại', dataIndex: 'questionTypeName', key: 'questionTypeName', width: 150,
@@ -162,7 +210,7 @@ export default function QuestionBankPage() {
         {
             title: 'Bloom', dataIndex: 'cognitiveLevelName', key: 'cognitiveLevelName', width: 130,
             render: (_, q) => {
-                if (!q.cognitiveLevelId || !q.cognitiveLevelName) return <span style={{color: '#c4cad3'}}>—</span>
+                if (!q.cognitiveLevelId || !q.cognitiveLevelName) return <span style={{color: BRAND.borderStrong}}>—</span>
                 const code = cogCodeById[q.cognitiveLevelId]
                 const b = BLOOM_CHIP[code]
                 const num = BLOOM_NUM[code]
@@ -190,14 +238,14 @@ export default function QuestionBankPage() {
                     <div className="flex gap-2 items-center">
                         <button className="btn-edit" onClick={() => navigate(`/app/questions/${q.id}/edit`)}>Sửa</button>
                         {st === 'approved' ? (
-                            <button className="text-[13px] hover:underline" style={{color: '#d98a00'}}
+                            <button className="text-[13px] hover:underline" style={{color: BRAND.warning}}
                                     onClick={() => unverifyMutation.mutate(q.id)}>Bỏ duyệt</button>
                         ) : (
-                            <button className="text-[13px] hover:underline flex items-center gap-1" style={{color: '#1ea375'}}
+                            <button className="text-[13px] hover:underline flex items-center gap-1" style={{color: BRAND.success}}
                                     onClick={() => verifyMutation.mutate(q.id)}><CheckOutlined/> Duyệt</button>
                         )}
                         {st === 'pending' && (
-                            <button className="text-[13px] hover:underline" style={{color: '#e74242'}}
+                            <button className="text-[13px] hover:underline" style={{color: BRAND.danger}}
                                     onClick={() => { setRejectTarget(q); setRejectReason('') }}>Từ chối</button>
                         )}
                         <Popconfirm title="Xóa câu hỏi này?" okText="Xóa" cancelText="Hủy" okButtonProps={{danger: true}}
@@ -212,22 +260,17 @@ export default function QuestionBankPage() {
 
     return (
         <>
-            <div className="top-bar">
-                <div>
-                    <p className="top-bar-title">Ngân hàng câu hỏi</p>
-                    <p className="top-bar-subtitle">Quản lý toàn bộ câu hỏi theo môn học · chủ đề · độ khó · cấp độ Bloom</p>
-                </div>
-                <div className="top-bar-avatar">TT</div>
-            </div>
+            <PageHeader title="Ngân hàng câu hỏi"
+                        subtitle="Quản lý toàn bộ câu hỏi theo môn học · chủ đề · độ khó · cấp độ Bloom"/>
 
             <div className="flex-1 overflow-auto p-6 flex flex-col gap-4">
                 {/* Stat cards */}
                 <div className="flex gap-4 flex-wrap">
-                    <StatCard label="Tổng câu hỏi" value={stats.data?.total} icon={<DatabaseOutlined/>} color="#3a74f5" bg="#eef1ff"/>
-                    <StatCard label="Đã duyệt" value={stats.data?.verified} icon={<CheckCircleFilled/>} color="#1ea375" bg="#e7f7ef"/>
-                    <StatCard label="Chờ duyệt" value={stats.data?.pending} icon={<ClockCircleFilled/>} color="#d98a00" bg="#fff4e5"/>
-                    <StatCard label="Bị từ chối" value={stats.data?.rejected} icon={<CloseCircleFilled/>} color="#e74242" bg="#fee5e5"/>
-                    <StatCard label="Không HĐ" value={stats.data?.inactive} icon={<StopOutlined/>} color="#6f7788" bg="#eef0f3"/>
+                    <StatCard label="Tổng câu hỏi" value={stats.data?.total} icon={<DatabaseOutlined/>} color={BRAND.primary} bg="#eef1ff"/>
+                    <StatCard label="Đã duyệt" value={stats.data?.verified} icon={<CheckCircleFilled/>} color={BRAND.success} bg="#e7f7ef"/>
+                    <StatCard label="Chờ duyệt" value={stats.data?.pending} icon={<ClockCircleFilled/>} color={BRAND.warning} bg={BRAND.warningSoft}/>
+                    <StatCard label="Bị từ chối" value={stats.data?.rejected} icon={<CloseCircleFilled/>} color={BRAND.danger} bg={BRAND.dangerSoft}/>
+                    <StatCard label="Không HĐ" value={stats.data?.inactive} icon={<StopOutlined/>} color={BRAND.muted} bg="#eef0f3"/>
                 </div>
 
                 {/* Filters */}
@@ -235,25 +278,9 @@ export default function QuestionBankPage() {
                     <Input prefix={<SearchOutlined className="text-gray-400"/>} placeholder="Tìm nội dung câu hỏi..."
                            style={{width: 220}} allowClear value={keyword}
                            onChange={e => { setKeyword(e.target.value); setPage(1) }}/>
-                    <Select placeholder="Chủ đề" allowClear showSearch optionFilterProp="label" style={{width: 160}}
-                            value={topicId} onChange={v => { setTopicId(v); setPage(1) }}
-                            options={(topics.data ?? []).map(t => ({value: t.id, label: t.name}))}/>
-                    <Select placeholder="Độ khó" allowClear style={{width: 130}}
-                            value={difficultyLevelId} onChange={v => { setDifficultyLevelId(v); setPage(1) }}
-                            options={(difficulties.data ?? []).map(d => ({value: d.id, label: d.name}))}/>
-                    <Select placeholder="Loại câu hỏi" allowClear style={{width: 160}}
-                            value={questionTypeId} onChange={v => { setQuestionTypeId(v); setPage(1) }}
-                            options={(questionTypes.data ?? []).map(t => ({value: t.id, label: t.name}))}/>
-                    <Select placeholder="Bloom" allowClear style={{width: 140}}
-                            value={cognitiveLevelId} onChange={v => { setCognitiveLevelId(v); setPage(1) }}
-                            options={(cognitives.data ?? []).map(c => ({value: c.id, label: c.name}))}/>
-                    <Select placeholder="Trạng thái" allowClear style={{width: 140}}
-                            value={reviewStatus} onChange={v => { setReviewStatus(v); setPage(1) }}
-                            options={[
-                                {value: 'approved', label: 'Đã duyệt'},
-                                {value: 'pending', label: 'Chờ duyệt'},
-                                {value: 'rejected', label: 'Bị từ chối'},
-                            ]}/>
+                    <Badge count={activeFilterCount} size="small">
+                        <Button icon={<FilterOutlined/>} onClick={openFilters}>Bộ lọc</Button>
+                    </Badge>
                     <div className="flex gap-2 ml-auto">
                         <Button icon={<UploadOutlined/>} onClick={() => setImportOpen(true)}>Nhập Excel</Button>
                         <Button type="primary" icon={<PlusOutlined/>} onClick={() => navigate('/app/questions/add')}>
@@ -264,8 +291,8 @@ export default function QuestionBankPage() {
 
                 {/* Bloom legend */}
                 <div className="flex items-center gap-2 flex-wrap text-[12px]">
-                    <span style={{color: '#6f7788'}}>Bloom:</span>
-                    {[...(cognitives.data ?? [])].sort((a, b) => a.levelOrder - b.levelOrder).map(c => (
+                    <span style={{color: BRAND.muted}}>Bloom:</span>
+                    {bloomLegend.map(c => (
                         <Chip key={c.id} label={`${c.levelOrder}.${c.name}`} color={BLOOM_CHIP[c.code] ?? NEUTRAL_CHIP}/>
                     ))}
                 </div>
@@ -273,8 +300,8 @@ export default function QuestionBankPage() {
                 {/* Bulk action bar */}
                 {selectedRowKeys.length > 0 && (
                     <div className="flex items-center gap-3 px-3 py-2 rounded-lg"
-                         style={{background: '#eef1ff', border: '1px solid #d6e0fb'}}>
-                        <span className="text-[13px] font-medium" style={{color: '#3a74f5'}}>
+                         style={{background: BRAND.primaryTint, border: '1px solid #d6e0fb'}}>
+                        <span className="text-[13px] font-medium" style={{color: BRAND.primary}}>
                             Đã chọn {selectedRowKeys.length}
                         </span>
                         <Button size="small" type="primary" onClick={bulkVerify}>Duyệt hàng loạt</Button>
@@ -307,6 +334,62 @@ export default function QuestionBankPage() {
             </div>
 
             <Modal
+                title="Bộ lọc câu hỏi"
+                open={filterOpen}
+                onCancel={() => setFilterOpen(false)}
+                footer={[
+                    <Button key="reset" onClick={resetFilters}>Xóa lọc</Button>,
+                    <Button key="apply" type="primary" onClick={applyFilters}>Xong</Button>,
+                ]}
+            >
+                <Form
+                    form={filterForm}
+                    layout="vertical"
+                    onValuesChange={changed => {
+                        // Đổi lớp -> bỏ môn/chủ đề đã chọn nếu không còn thuộc lớp mới.
+                        if ('gradeLevelId' in changed)
+                            filterForm.setFieldsValue({subjectId: undefined, topicId: undefined})
+                        else if ('subjectId' in changed)
+                            filterForm.setFieldValue('topicId', undefined)
+                    }}
+                >
+                    <div className="grid grid-cols-2 gap-3">
+                        <Form.Item name="gradeLevelId" label="Lớp">
+                            <Select placeholder="Lớp" allowClear
+                                    options={toOptions(grades.data)}/>
+                        </Form.Item>
+                        <Form.Item name="subjectId" label="Môn học">
+                            <Select placeholder="Môn học" allowClear showSearch optionFilterProp="label"
+                                    disabled={!draft.gradeLevelId} options={subjectOptions}/>
+                        </Form.Item>
+                        <Form.Item name="topicId" label="Chủ đề">
+                            <Select placeholder="Chủ đề" allowClear showSearch optionFilterProp="label" options={topicOptions}/>
+                        </Form.Item>
+                        <Form.Item name="difficultyLevelId" label="Độ khó">
+                            <Select placeholder="Độ khó" allowClear
+                                    options={toOptions(difficulties.data)}/>
+                        </Form.Item>
+                        <Form.Item name="questionTypeId" label="Loại câu hỏi">
+                            <Select placeholder="Loại câu hỏi" allowClear
+                                    options={toOptions(questionTypes.data)}/>
+                        </Form.Item>
+                        <Form.Item name="cognitiveLevelId" label="Bloom">
+                            <Select placeholder="Bloom" allowClear
+                                    options={toOptions(cognitives.data)}/>
+                        </Form.Item>
+                        <Form.Item name="reviewStatus" label="Trạng thái">
+                            <Select placeholder="Trạng thái" allowClear
+                                    options={[
+                                        {value: 'approved', label: 'Đã duyệt'},
+                                        {value: 'pending', label: 'Chờ duyệt'},
+                                        {value: 'rejected', label: 'Bị từ chối'},
+                                    ]}/>
+                        </Form.Item>
+                    </div>
+                </Form>
+            </Modal>
+
+            <Modal
                 title="Từ chối câu hỏi"
                 open={!!rejectTarget}
                 onCancel={() => { setRejectTarget(undefined); setRejectReason('') }}
@@ -315,7 +398,7 @@ export default function QuestionBankPage() {
                 cancelText="Huỷ"
                 okButtonProps={{danger: true, disabled: !rejectReason.trim(), loading: rejectMutation.isPending}}
             >
-                <p className="text-[13px] mb-2" style={{color: '#6f7788'}}>
+                <p className="text-[13px] mb-2" style={{color: BRAND.muted}}>
                     Nhập lý do từ chối câu hỏi. Câu hỏi sẽ chuyển sang trạng thái <b>Bị từ chối</b> và không dùng để sinh đề.
                 </p>
                 <Input.TextArea
@@ -336,8 +419,4 @@ export default function QuestionBankPage() {
             />
         </>
     )
-}
-
-function stripHtml(html: string): string {
-    return html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
 }

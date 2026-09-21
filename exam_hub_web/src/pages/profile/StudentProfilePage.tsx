@@ -1,10 +1,11 @@
 import {useMemo} from 'react'
 import {ProfileCard} from './ProfileCard'
-import {useAuth} from '../../AuthProvider'
+import {useAuth} from '../../hooks/useAuth'
 import {useMySubmissionsQuery} from '../../hooks/queries/useSubmissions'
+import {BRAND} from '../../constants/theme'
 
 function StatBox({label, value, tone}: {label: string; value: string | number; tone: 'blue' | 'green'}) {
-    const c = tone === 'blue' ? {bg: '#eef1ff', fg: '#3a74f5'} : {bg: '#e7f7ef', fg: '#1ea375'}
+    const c = tone === 'blue' ? {bg: BRAND.primaryTint, fg: BRAND.primary} : {bg: BRAND.successTint, fg: BRAND.success}
     return (
         <div className="rounded-xl p-5 flex-1" style={{background: c.bg}}>
             <p className="text-[28px] font-bold" style={{color: c.fg}}>{value}</p>
@@ -29,7 +30,7 @@ export default function StudentProfilePage() {
     return (
         <div className="p-6 sm:p-8 flex flex-col gap-4 max-w-5xl mx-auto w-full">
             <div>
-                <h1 className="text-[26px] font-bold" style={{color: '#191d27'}}>Hồ sơ của tôi</h1>
+                <h1 className="text-[26px] font-bold" style={{color: BRAND.ink}}>Hồ sơ của tôi</h1>
                 <p className="text-[13.5px] mt-1" style={{color: '#6f6a60'}}>Thông tin cá nhân và kết quả học tập</p>
             </div>
 

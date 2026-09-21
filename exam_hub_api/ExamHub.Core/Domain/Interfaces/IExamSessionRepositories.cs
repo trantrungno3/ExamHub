@@ -33,6 +33,9 @@ public interface IExamSessionRepository
     Task AddAssignmentAsync(ExamSessionAssignment a, CancellationToken ct = default);
     Task RemoveAssignmentAsync(Guid assignmentId, CancellationToken ct = default);
 
+    /// <summary>Chi tiết một assignment theo Id (dùng để kiểm tra quyền trước khi gỡ).</summary>
+    Task<ExamSessionAssignment?> GetAssignmentByIdAsync(Guid assignmentId, CancellationToken ct = default);
+
     /// <summary>Đếm số HS active thuộc phạm vi 1 assignment (cả khoá hoặc 1 lớp/section).</summary>
     Task<int> CountStudentsForAssignmentAsync(ExamSessionAssignment a, CancellationToken ct = default);
 
@@ -41,7 +44,10 @@ public interface IExamSessionRepository
     Task<IReadOnlyList<ExamSession>> GetAssignedToStudentAsync(Guid studentId, CancellationToken ct = default);
     /// <summary>Học sinh có được giao kỳ thi này không.</summary>
     Task<bool> IsStudentAssignedAsync(Guid sessionId, Guid studentId, CancellationToken ct = default);
-    /// <summary>Đếm số lượt đã nộp (submitted/graded) của học sinh trong kỳ thi.</summary>
+    /// <summary>
+    /// Đếm số lượt đã dùng của học sinh trong kỳ thi — mọi bản nộp KHÔNG còn ở trạng thái
+    /// InProgress (submitted / pending_manual_grade / graded).
+    /// </summary>
     Task<int> CountSubmittedAttemptsAsync(Guid sessionId, Guid studentId, CancellationToken ct = default);
     /// <summary>Bài nộp đang làm dở (in_progress) của học sinh trong kỳ thi.</summary>
     Task<ExamSubmission?> GetInProgressAsync(Guid sessionId, Guid studentId, CancellationToken ct = default);

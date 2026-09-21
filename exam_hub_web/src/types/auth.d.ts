@@ -12,11 +12,16 @@ interface RegisterFormValues {
     displayName: string
 }
 
-interface TokenModel {
+/**
+ * Phần token duy nhất frontend được thấy. Refresh token nằm trong cookie HttpOnly
+ * `examhub_refresh` nên JS không đọc/ghi được — đó là mục đích.
+ */
+interface AccessTokenResponse {
     accessToken: string
-    refreshToken: string
+}
+
+interface TokenModel extends AccessTokenResponse {
     expiresAt: number
-    refreshExpiresAt: number
 }
 
 interface UserInfo {
@@ -26,5 +31,8 @@ interface UserInfo {
     phoneNumber?: string
     email?: string
     roles: string[]
+    schoolIds: number[]
+    cohortClassIds: number[]
+    subjectIds: number[]
 }
 

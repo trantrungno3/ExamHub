@@ -1,6 +1,6 @@
 /* ─── Exam Submission types (mirrors ExamSubmissionDto.cs) ─── */
 
-type SubmissionStatus = 'InProgress' | 'Submitted' | 'Graded'
+type SubmissionStatus = 'InProgress' | 'Submitted' | 'PendingManualGrade' | 'Graded'
 
 interface SubmissionAnswer {
     id: string
@@ -35,6 +35,8 @@ interface ExamSubmission {
     studentName?: string
     /** Tên lớp của học sinh — chỉ enrich ở danh sách theo kỳ thi (by-session). */
     studentClassName?: string
+    /** Kỳ thi (nếu nộp bài trong luồng kỳ thi). */
+    sessionId?: string
 }
 
 interface ExamSubmissionBody {
@@ -52,4 +54,12 @@ interface GradeAnswerBody {
     isCorrect: boolean
     feedback?: string
     gradedBy: string
+}
+
+/** Kết quả phân trang từ API: khớp PagedResult<T> phía backend. */
+interface Paged<T> {
+    total: number
+    page: number
+    pageSize: number
+    items: T[]
 }

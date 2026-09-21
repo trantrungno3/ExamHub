@@ -12,6 +12,9 @@ namespace ExamHub.API.Controllers.School;
 public class CohortClassTeacherController(ICohortClassTeacherService service) : ControllerBase
 {
     /// <summary>Danh sách phân công của một lớp</summary>
+    /// <param name="cohortClassId">Id lớp học cần lọc.</param>
+    /// <param name="ct">Token huỷ yêu cầu.</param>
+    /// <returns>Danh sách phân công GV-môn của lớp.</returns>
     [HttpGet("by-class/{cohortClassId:int}")]
     [Authorize]
     public async Task<ActionResult<RequestResponse<IReadOnlyList<CohortClassTeacherResponse>>>> GetByClass(int cohortClassId, CancellationToken ct = default)
@@ -24,6 +27,10 @@ public class CohortClassTeacherController(ICohortClassTeacherService service) : 
     }
 
     /// <summary>Danh sách Id GV hợp lệ để phân công môn cho lớp</summary>
+    /// <param name="cohortClassId">Id lớp học cần phân công.</param>
+    /// <param name="subjectId">Id môn học cần phân công.</param>
+    /// <param name="ct">Token huỷ yêu cầu.</param>
+    /// <returns>Danh sách Id giáo viên đủ điều kiện (phụ trách môn, chưa được phân công trùng).</returns>
     [HttpGet("eligible-teachers")]
     [Authorize]
     public async Task<ActionResult<RequestResponse<IReadOnlyList<Guid>>>> GetEligibleTeachers(
@@ -34,16 +41,25 @@ public class CohortClassTeacherController(ICohortClassTeacherService service) : 
     }
 
     /// <summary>Phân công GV dạy môn cho lớp (validate + kiểm ràng buộc)</summary>
+    /// <param name="request">Thông tin lớp/môn/giáo viên cần phân công.</param>
+    /// <param name="ct">Token huỷ yêu cầu.</param>
+    /// <returns>Bản ghi phân công vừa tạo.</returns>
     [HttpPost("assign")]
     [Authorize]
     public async Task<ActionResult<RequestResponse<CohortClassTeacherResponse>>> Assign([FromBody] AssignTeacherRequest request, CancellationToken ct = default)
     {
-        var e = await service.AssignAsync(request.CohortClassId, request.SubjectId, request.TeacherId, ct);
+        var result = await service.AssignAsync(request.CohortClassId, request.SubjectId, request.TeacherId, ct);
+        if (result.Status == TVT.Core.Enums.RequestResponseStatus.Error)
+            return Ok(RequestResponse<CohortClassTeacherResponse>.Error(result.Message!));
+        var e = result.Data!;
         var dto = new CohortClassTeacherResponse(e.Id, e.CohortClassId, e.SubjectId, e.TeacherId);
-        return Ok(RequestResponse<CohortClassTeacherResponse>.Success("Phân công giáo viên thành công!", dto, 1));
+        return Ok(RequestResponse<CohortClassTeacherResponse>.Success(result.Message!, dto, 1));
     }
 
     /// <summary>Xoá một phân công theo Id</summary>
+    /// <param name="id">Id bản ghi phân công cần xoá.</param>
+    /// <param name="ct">Token huỷ yêu cầu.</param>
+    /// <returns>Kết quả xoá.</returns>
     [HttpDelete("remove/{id:int}")]
     [Authorize]
     public async Task<ActionResult<RequestResponse<bool>>> Remove(int id, CancellationToken ct = default)

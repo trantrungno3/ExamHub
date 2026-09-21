@@ -13,14 +13,16 @@ import {
     useSubjectsQuery,
     useTopicsQuery,
 } from '../../hooks/queries/useCategoryLists'
+import PageHeader from '../../components/PageHeader'
+import {BRAND} from '../../constants/theme'
 
 const ROMAN = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X']
 const roman = (n: number) => ROMAN[n] ?? String(n)
 
 const PCT_FIELDS = [
-    {name: 'pctEasy', label: 'Dễ', bg: '#dff5ed', fg: '#1ea375'},
-    {name: 'pctMedium', label: 'TB', bg: '#fff4e5', fg: '#d98a00'},
-    {name: 'pctHard', label: 'Khó', bg: '#fee5e5', fg: '#e74242'},
+    {name: 'pctEasy', label: 'Dễ', bg: BRAND.successSoft, fg: BRAND.success},
+    {name: 'pctMedium', label: 'TB', bg: BRAND.warningSoft, fg: BRAND.warning},
+    {name: 'pctHard', label: 'Khó', bg: BRAND.dangerSoft, fg: BRAND.danger},
     {name: 'pctVeryHard', label: 'RK', bg: '#f3ecfe', fg: '#8b5cf6'},
 ] as const
 
@@ -37,9 +39,12 @@ const EMPTY_SECTION: ExamTemplateSectionBody = {
     pctVeryHard: 10,
 }
 
-const EMPTY: ExamTemplateBody = {
-    gradeLevelId: 0,
-    subjectId: 0,
+type ExamTemplateFormValues = Omit<ExamTemplateBody, 'gradeLevelId' | 'subjectId'> & {
+    gradeLevelId?: number
+    subjectId?: number
+}
+
+const EMPTY: ExamTemplateFormValues = {
     title: '',
     durationMinutes: 45,
     totalScore: 10,
@@ -54,7 +59,7 @@ export default function CreateExamTemplatePage() {
     const navigate = useNavigate()
     const {id} = useParams<{ id: string }>()
     const isEdit = !!id
-    const [form] = Form.useForm<ExamTemplateBody>()
+    const [form] = Form.useForm<ExamTemplateFormValues>()
     const qc = useQueryClient()
 
     const grades = useGradeLevelsListQuery()
@@ -68,6 +73,14 @@ export default function CreateExamTemplatePage() {
     const watchedGradeId = Form.useWatch('gradeLevelId', form)
     const watchedSubjectId = Form.useWatch('subjectId', form)
     const watchedSections = Form.useWatch('sections', form)
+
+    // Môn học lọc theo lớp đã chọn.
+    const subjectOptions = useMemo(
+        () => (subjects.data ?? [])
+            .filter(s => s.gradeLevelId === watchedGradeId)
+            .map(s => ({value: s.id, label: s.name})),
+        [subjects.data, watchedGradeId],
+    )
 
     // Chủ đề lọc theo lớp + môn đã chọn ở phần thông tin mẫu đề.
     const topicOptions = useMemo(() => {
@@ -140,7 +153,7 @@ export default function CreateExamTemplatePage() {
 
     const submit = async (generateAfter: boolean) => {
         const v = await form.validateFields()
-        const res = await saveMutation.mutateAsync(v)
+        const res = await saveMutation.mutateAsync({...v, gradeLevelId: v.gradeLevelId!, subjectId: v.subjectId!})
         if (res.status === statusCode.Error || !res.data) return
         if (generateAfter && res.data.id) navigate(`/app/generate?templateId=${res.data.id}`)
         else navigate('/app/exams')
@@ -148,17 +161,16 @@ export default function CreateExamTemplatePage() {
 
     return (
         <>
-            <div className="top-bar">
-                <div>
-                    <p className="top-bar-title">{isEdit ? 'Sửa mẫu đề thi' : 'Tạo mẫu đề thi mới'}</p>
-                    <p className="top-bar-subtitle">
+            <PageHeader
+                title={isEdit ? 'Sửa mẫu đề thi' : 'Tạo mẫu đề thi mới'}
+                subtitle={
+                    <>
                         <span className="text-blue-500 cursor-pointer hover:underline"
                               onClick={() => navigate('/app/exams')}>Mẫu đề thi</span>
                         {' / '}{isEdit ? 'Chỉnh sửa' : 'Tạo mới'}
-                    </p>
-                </div>
-                <div className="top-bar-avatar">TT</div>
-            </div>
+                    </>
+                }
+            />
 
             <div className="flex-1 overflow-auto p-6">
                 <Form
@@ -166,6 +178,13 @@ export default function CreateExamTemplatePage() {
                     layout="vertical"
                     initialValues={EMPTY}
                     onValuesChange={changed => {
+                        // Đổi lớp -> bỏ môn đã chọn nếu môn đó không thuộc lớp mới.
+                        if ('gradeLevelId' in changed) {
+                            const currentSubjectId = form.getFieldValue('subjectId')
+                            const subj = (subjects.data ?? []).find(s => s.id === currentSubjectId)
+                            if (subj && subj.gradeLevelId !== changed.gradeLevelId)
+                                form.setFieldValue('subjectId', undefined)
+                        }
                         // Đổi lớp / môn -> bỏ chủ đề đã chọn ở các phần vì không còn hợp lệ.
                         if ('gradeLevelId' in changed || 'subjectId' in changed) {
                             const sections = (form.getFieldValue('sections') ?? []) as ExamTemplateSectionBody[]
@@ -196,10 +215,7 @@ export default function CreateExamTemplatePage() {
                                     <Form.Item label="Môn học" name="subjectId"
                                                rules={[{required: true, message: 'Chọn môn'}]}>
                                         <Select placeholder="Chọn môn" showSearch optionFilterProp="label"
-                                                options={(subjects.data ?? []).map(s => ({
-                                                    value: s.id,
-                                                    label: s.name
-                                                }))}/>
+                                                disabled={!watchedGradeId} options={subjectOptions}/>
                                     </Form.Item>
                                 </div>
                                 <div className="grid grid-cols-3 gap-4">
@@ -225,7 +241,7 @@ export default function CreateExamTemplatePage() {
 
                             <div className="form-section">
                                 <p className="form-section-title">Cấu hình sinh đề</p>
-                                <div className="flex flex-col gap-2">
+                                <div className="grid grid-cols-2 gap-x-4 gap-y-2">
                                     <Form.Item label="Trộn câu hỏi" name="shuffleQuestions" valuePropName="checked"
                                                className="!mb-0">
                                         <Switch/>
@@ -268,9 +284,9 @@ export default function CreateExamTemplatePage() {
                                         </div>
                                         {fields.map((field, idx) => (
                                             <div key={field.key} className="rounded-xl overflow-hidden border"
-                                                 style={{borderColor: '#eceef2'}}>
+                                                 style={{borderColor: BRAND.border}}>
                                                 <div className="flex items-center justify-between px-4 py-2.5"
-                                                     style={{background: '#191d27'}}>
+                                                     style={{background: BRAND.ink}}>
                                                     <span className="text-[13px] font-semibold text-white">
                                                         Phần {roman(idx + 1)}{watchedSections?.[idx]?.sectionName ? `: ${watchedSections[idx].sectionName}` : ''}
                                                     </span>
@@ -347,10 +363,10 @@ export default function CreateExamTemplatePage() {
                                                     return (
                                                         <div className="flex items-center justify-between mt-2">
                                                             <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-[12px] font-medium"
-                                                                  style={ok ? {background: '#dff5ed', color: '#1ea375'} : {background: '#fee5e5', color: '#e74242'}}>
+                                                                  style={ok ? {background: BRAND.successSoft, color: BRAND.success} : {background: BRAND.dangerSoft, color: BRAND.danger}}>
                                                                 Tổng: {sum}% {ok ? '✓ Hợp lệ' : '✗'}
                                                             </span>
-                                                            <span className="text-[12px]" style={{color: '#9aa2b1'}}>
+                                                            <span className="text-[12px]" style={{color: BRAND.mutedSoft}}>
                                                                 Điểm/câu: {s?.scorePerQuestion ?? 0}
                                                             </span>
                                                         </div>
@@ -375,7 +391,7 @@ export default function CreateExamTemplatePage() {
                 </Button>
                 {!isEdit && (
                     <Button loading={saveMutation.isPending} onClick={() => submit(true)}
-                            style={{background: '#1ea375', borderColor: '#1ea375', color: '#fff'}}>
+                            style={{background: BRAND.success, borderColor: BRAND.success, color: '#fff'}}>
                         Lưu & Sinh đề ngay
                     </Button>
                 )}

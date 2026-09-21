@@ -19,8 +19,8 @@ class SubmissionService {
         return AuthHttp.get<ExamSubmission>(`/${this.basePath}/by-exam/${examId}/student/${studentId}`)
     }
 
-    getBySession(sessionId: string) {
-        return AuthHttp.get<ExamSubmission[]>(`/${this.basePath}/by-session/${sessionId}`)
+    getBySession(sessionId: string, page = 1, pageSize = 20) {
+        return AuthHttp.get<Paged<ExamSubmission>>(`/${this.basePath}/by-session/${sessionId}`, {page, pageSize})
     }
 
     getBySessionAndStudent(sessionId: string, studentId: string) {
@@ -40,6 +40,11 @@ class SubmissionService {
     /** Giáo viên chốt điểm: tổng hợp điểm từng câu, chuyển trạng thái → Graded. */
     finalize(id: string) {
         return AuthHttp.post<ExamSubmission>(`/${this.basePath}/${id}/finalize`)
+    }
+
+    /** Lưu tiến trình làm bài (autosave định kỳ, không đổi trạng thái). */
+    saveProgress(submissionId: string, answers: SubmissionAnswerBody[]) {
+        return AuthHttp.put<void>(`/${this.basePath}/${submissionId}/progress`, answers)
     }
 }
 

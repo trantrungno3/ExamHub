@@ -1,4 +1,4 @@
-import {useEffect, useMemo, useRef, useState} from 'react'
+import {useCallback, useEffect, useMemo, useRef, useState} from 'react'
 import {useNavigate, useSearchParams} from 'react-router-dom'
 import {Button, Empty, Form, Input, Modal, Radio, Spin, message} from 'antd'
 import {
@@ -6,18 +6,26 @@ import {
 } from '@ant-design/icons'
 import {useExamWithQuestionsQuery} from '../../hooks/queries/useExams'
 import {useSubmitExamMutation} from '../../hooks/queries/useSubmissions'
-import {useAuth} from '../../AuthProvider'
+import {useAuth} from '../../hooks/useAuth'
 import {parseAnswers, stripHtml} from '../../utils/snapshot'
 import QuestionMedia from '../../components/QuestionMedia'
+import {submissionService} from '../../services/submissionService'
+import {deadlineFromDuration} from './examTimer'
+import {ExamCountdown} from './ExamCountdown'
+import {answeredIds, sameSet} from './answerState'
+import {ROUTES} from '../../routes/paths'
 
 const letter = (i: number) => String.fromCharCode(65 + i)
-const hasAnswer = (v: unknown) => (typeof v === 'string' ? v.trim().length > 0 : v != null)
 
 export default function ExamTakingPage() {
     const [params] = useSearchParams()
     const examId = params.get('examId') ?? undefined
     const sessionId = params.get('sessionId') ?? undefined
     const submissionId = params.get('submissionId') ?? undefined
+    const rawDeadlineAt = Number(params.get('deadlineAt'))
+    const deadlineAt = Number.isFinite(rawDeadlineAt) && rawDeadlineAt > 0 ? rawDeadlineAt : undefined
+    const rawDurationMinutes = Number(params.get('durationMinutes'))
+    const durationMinutes = Number.isFinite(rawDurationMinutes) && rawDurationMinutes > 0 ? rawDurationMinutes : undefined
     const {data: exam, isLoading} = useExamWithQuestionsQuery(examId)
     const {user} = useAuth()
 
@@ -25,11 +33,11 @@ export default function ExamTakingPage() {
     if (!exam) return <div className="take-shell flex items-center justify-center"><Empty description="Không tìm thấy đề thi"/></div>
 
     return <ExamRunner exam={exam} studentId={user?.id} studentName={user?.displayName ?? user?.userName}
-        sessionId={sessionId} submissionId={submissionId}/>
+        sessionId={sessionId} submissionId={submissionId} deadlineAt={deadlineAt} durationMinutes={durationMinutes}/>
 }
 
-function ExamRunner({exam, studentId, studentName, sessionId, submissionId}: {
-    exam: Exam; studentId?: string; studentName?: string; sessionId?: string; submissionId?: string
+function ExamRunner({exam, studentId, studentName, sessionId, submissionId, deadlineAt, durationMinutes}: {
+    exam: Exam; studentId?: string; studentName?: string; sessionId?: string; submissionId?: string; deadlineAt?: number; durationMinutes?: number
 }) {
     const className = exam.className
     const navigate = useNavigate()
@@ -42,66 +50,100 @@ function ExamRunner({exam, studentId, studentName, sessionId, submissionId}: {
     )
     const parsed = useMemo(() => questions.map(q => parseAnswers(q.answersSnapshot)), [questions])
 
-    const [values, setValues] = useState<Record<string, unknown>>({})
+    const [answered, setAnswered] = useState<Set<string>>(new Set())
     const [activeIdx, setActiveIdx] = useState(0)
     const [flagged, setFlagged] = useState<Set<string>>(new Set())
-    const [timeLeft, setTimeLeft] = useState(() => exam.durationMinutes * 60)
-    const autoSubmitted = useRef(false)
+    const [effectiveDeadline, setEffectiveDeadline] = useState(
+        () => deadlineAt ?? Date.now() + exam.durationMinutes * 60_000,
+    )
+    const timerSyncSubmission = useRef<string | undefined>(undefined)
+
+    // Hàm chuyển state đáp án sang payload (tái dùng logic của buildAndSubmit)
+    const toAnswerPayload = useCallback((vals: Record<string, unknown>): SubmissionAnswerBody[] =>
+        questions.map((eq, idx) => {
+            const v = vals[eq.id]
+            const essay = parsed[idx].length === 0
+            return {
+                examQuestionId: eq.id,
+                selectedAnswerIds: !essay && typeof v === 'string' && v ? [v] : undefined,
+                essayContent: essay && typeof v === 'string' ? v : undefined,
+            }
+        }), [questions, parsed])
+
+    // Khôi phục đáp án đã lưu khi vào lại (chỉ luồng kỳ thi có submissionId InProgress)
+    useEffect(() => {
+        if (!submissionId) return
+        if (timerSyncSubmission.current === submissionId) return
+        timerSyncSubmission.current = submissionId
+        submissionService.getById(submissionId).then(res => {
+            const submission = res.data
+            if (!submission) return
+            if (durationMinutes != null && submission.durationSeconds != null) {
+                const fromDuration = deadlineFromDuration(durationMinutes, submission.durationSeconds)
+                setEffectiveDeadline(deadlineAt == null ? fromDuration : Math.min(fromDuration, deadlineAt))
+            }
+            const saved = submission.answers
+            if (!saved || saved.length === 0) return
+            const restored: Record<string, unknown> = {}
+            for (const a of saved) {
+                if (a.essayContent != null) {
+                    restored[a.examQuestionId] = a.essayContent
+                } else if (a.selectedAnswerIds && a.selectedAnswerIds.length > 0) {
+                    restored[a.examQuestionId] = a.selectedAnswerIds[0]
+                }
+            }
+            // Merge: existing in-progress values win over restored ones
+            const merged = { ...restored, ...form.getFieldsValue(true) }
+            form.setFieldsValue(merged)
+            setAnswered(answeredIds(merged))
+        }).catch(() => {})
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [submissionId, durationMinutes, deadlineAt])
+
+    // Autosave định kỳ mỗi 20 giây (chỉ luồng kỳ thi có submissionId InProgress)
+    useEffect(() => {
+        if (!submissionId) return
+        const id = setInterval(() => {
+            const vals = form.getFieldsValue(true)
+            submissionService.saveProgress(submissionId, toAnswerPayload(vals)).catch(() => {})
+        }, 20000)
+        return () => clearInterval(id)
+    }, [submissionId, toAnswerPayload, form])
 
     const total = questions.length
-    const answeredCount = questions.filter(q => hasAnswer(values[q.id])).length
+    const answeredCount = questions.reduce((n, q) => n + (answered.has(q.id) ? 1 : 0), 0)
     const unanswered = total - answeredCount
     const progress = total ? Math.round((answeredCount / total) * 100) : 0
-    const mm = String(Math.floor(timeLeft / 60)).padStart(2, '0')
-    const ss = String(timeLeft % 60).padStart(2, '0')
-    const danger = timeLeft <= 300
 
     const activeQ = questions[activeIdx]
     const activeOpts = parsed[activeIdx] ?? []
     const isEssay = activeOpts.length === 0
 
-    // Đồng hồ đếm ngược
-    useEffect(() => {
-        const id = setInterval(() => setTimeLeft(t => (t > 0 ? t - 1 : 0)), 1000)
-        return () => clearInterval(id)
-    }, [])
-
     const buildAndSubmit = async () => {
         if (!studentId) { message.error('Không xác định được học sinh đang đăng nhập'); return }
-        const vals = form.getFieldsValue()
+        const vals = form.getFieldsValue(true)
         const body: ExamSubmissionBody = {
             examId: exam.id,
             studentId,
-            answers: questions.map((eq, idx) => {
-                const v = vals[eq.id]
-                const essay = parsed[idx].length === 0
-                return {
-                    examQuestionId: eq.id,
-                    selectedAnswerIds: !essay && typeof v === 'string' && v ? [v] : undefined,
-                    essayContent: essay && typeof v === 'string' ? v : undefined,
-                }
-            }),
+            answers: toAnswerPayload(vals),
             sessionId,
             submissionId,
         }
         const res = await submit.mutateAsync(body)
         if (res.data) {
             message.success('Nộp bài thành công')
-            navigate(`/student/exam/result?submissionId=${res.data.id}`)
+            navigate(`${ROUTES.STUDENT_EXAM_RESULT}?submissionId=${res.data.id}`)
         } else {
             message.error(res.message || 'Nộp bài thất bại')
         }
     }
 
-    // Hết giờ → tự động nộp bài
-    useEffect(() => {
-        if (timeLeft === 0 && !autoSubmitted.current && studentId) {
-            autoSubmitted.current = true
-            message.warning('Đã hết giờ làm bài. Hệ thống tự động nộp bài.')
-            void buildAndSubmit()
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [timeLeft])
+    // Hết giờ → tự động nộp bài (ExamCountdown đảm bảo chỉ gọi một lần)
+    const handleExpire = () => {
+        if (!studentId) return
+        message.warning('Đã hết giờ làm bài. Hệ thống tự động nộp bài.')
+        void buildAndSubmit()
+    }
 
     const confirmSubmit = () => {
         Modal.confirm({
@@ -119,9 +161,10 @@ function ExamRunner({exam, studentId, studentName, sessionId, submissionId}: {
         return n
     })
     const cellClass = (q: {id: string}, idx: number) => {
-        if (idx === activeIdx) return 'take-cell take-cell--current'
+        const isAnswered = answered.has(q.id)
+        if (idx === activeIdx) return `take-cell take-cell--current${isAnswered ? ' take-cell--current-answered' : ''}`
         if (flagged.has(q.id)) return 'take-cell take-cell--flagged'
-        if (hasAnswer(values[q.id])) return 'take-cell take-cell--answered'
+        if (isAnswered) return 'take-cell take-cell--answered'
         return 'take-cell'
     }
     const avatarChar = (studentName ?? 'A').charAt(0).toUpperCase()
@@ -140,12 +183,14 @@ function ExamRunner({exam, studentId, studentName, sessionId, submissionId}: {
                         </p>
                     </div>
                 </div>
-                <div className={`take-timer ${danger ? 'take-timer--danger' : ''}`}>
-                    <span className="take-timer-dot"/>{mm}:{ss}
-                </div>
+                <ExamCountdown deadlineAt={effectiveDeadline} onExpire={handleExpire}/>
             </div>
 
-            <Form form={form} component={false} onValuesChange={() => setValues(form.getFieldsValue())}>
+            <Form form={form} component={false}
+                  onValuesChange={() => {
+                      const next = answeredIds(form.getFieldsValue(true))
+                      setAnswered(prev => (sameSet(prev, next) ? prev : next))
+                  }}>
                 <div className="take-body">
                     {/* Khu câu hỏi (tối) */}
                     <div className="take-main">
@@ -214,7 +259,7 @@ function ExamRunner({exam, studentId, studentName, sessionId, submissionId}: {
                             </div>
                         </div>
 
-                        <div className="px-4 py-3 flex border-b border-[#eceef2]">
+                        <div className="px-4 py-3 flex border-b border-border">
                             <div className="take-stat">
                                 <p className="take-stat-num text-emerald-600">{answeredCount}</p>
                                 <p className="take-stat-label">Đã trả lời</p>
@@ -229,7 +274,7 @@ function ExamRunner({exam, studentId, studentName, sessionId, submissionId}: {
                             </div>
                         </div>
 
-                        <div className="px-4 py-3 border-b border-[#eceef2]">
+                        <div className="px-4 py-3 border-b border-border">
                             <div className="flex items-center justify-between text-[12px] text-stone-500 mb-1.5">
                                 <span>Tiến độ</span><span className="font-semibold text-stone-700">{progress}%</span>
                             </div>
@@ -238,9 +283,11 @@ function ExamRunner({exam, studentId, studentName, sessionId, submissionId}: {
 
                         <div className="px-4 py-3 flex-1 overflow-auto">
                             <p className="text-[12px] font-semibold text-stone-600 mb-2">Bảng câu hỏi</p>
-                            <div className="take-grid">
+                            <div className="take-grid" role="group" aria-label="Bảng câu hỏi">
                                 {questions.map((q, idx) => (
                                     <button key={q.id} type="button" className={cellClass(q, idx)}
+                                            aria-current={idx === activeIdx ? 'true' : undefined}
+                                            aria-label={`Câu ${idx + 1}${answered.has(q.id) ? ', đã trả lời' : ', chưa trả lời'}${flagged.has(q.id) ? ', đã đánh dấu' : ''}`}
                                             onClick={() => go(idx)}>
                                         {idx + 1}
                                     </button>
@@ -248,7 +295,7 @@ function ExamRunner({exam, studentId, studentName, sessionId, submissionId}: {
                             </div>
                         </div>
 
-                        <div className="p-3 border-t border-[#eceef2]">
+                        <div className="p-3 border-t border-border">
                             {unanswered > 0 && (
                                 <p className="text-center text-[12px] text-stone-500 mb-2">Còn {unanswered} câu chưa trả lời</p>
                             )}
@@ -263,7 +310,7 @@ function ExamRunner({exam, studentId, studentName, sessionId, submissionId}: {
             </Form>
 
             {/* Thanh nộp bài cho màn nhỏ (không có panel bên) */}
-            <div className="lg:hidden flex items-center gap-3 px-4 py-3 bg-white border-t border-[#eceef2]">
+            <div className="lg:hidden flex items-center gap-3 px-4 py-3 bg-white border-t border-border">
                 <span className="text-[13px] text-stone-600 flex-1">
                     Đã làm <b className="text-emerald-600">{answeredCount}</b>/{total} câu
                 </span>

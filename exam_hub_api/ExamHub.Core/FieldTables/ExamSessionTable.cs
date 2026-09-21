@@ -10,6 +10,7 @@ public readonly struct ExamSessionTable
     public const string GradeLevelId = "grade_level_id";
     public const string OpenAt = "open_at";
     public const string CloseAt = "close_at";
+    public const string DurationMinutes = "duration_minutes";
     public const string MaxAttempts = "max_attempts";
     public const string PickMode = "pick_mode";
     public const string Status = "status";

@@ -17,6 +17,9 @@ import {
     useTopicsQuery,
 } from '../../hooks/queries/useCategoryLists'
 import {BLOOM_CHIP, NEUTRAL_CHIP} from '../../constants'
+import PageHeader from '../../components/PageHeader'
+import {stripHtml} from '../../utils/snapshot'
+import {BRAND} from '../../constants/theme'
 
 
 type AnswerForm = { content: string; isCorrect: boolean }
@@ -183,17 +186,16 @@ export default function AddQuestionPage() {
     return (
         <>
             <Spin fullscreen spinning={!!busyTip} tip={busyTip}/>
-            <div className="top-bar">
-                <div>
-                    <p className="top-bar-title">{isEdit ? 'Sửa câu hỏi' : 'Thêm câu hỏi mới'}</p>
-                    <p className="top-bar-subtitle">
-                        <span className="cursor-pointer hover:underline" style={{color: '#3a74f5'}}
+            <PageHeader
+                title={isEdit ? 'Sửa câu hỏi' : 'Thêm câu hỏi mới'}
+                subtitle={
+                    <>
+                        <span className="cursor-pointer hover:underline" style={{color: BRAND.primary}}
                               onClick={() => navigate('/app/questions')}>Câu hỏi</span>
                         {' / '}{isEdit ? 'Chỉnh sửa' : 'Thêm mới'}
-                    </p>
-                </div>
-                <div className="top-bar-avatar">TT</div>
-            </div>
+                    </>
+                }
+            />
 
             <div className="flex-1 overflow-auto p-6">
                 <Form form={form} layout="vertical" initialValues={EMPTY}>
@@ -223,7 +225,7 @@ export default function AddQuestionPage() {
                                             className="flex-1">
                                         <div
                                             className={`flex flex-col items-center justify-center gap-1 rounded-lg py-6 border border-dashed w-full ${imageUploading ? 'cursor-wait' : 'cursor-pointer'}`}
-                                            style={{borderColor: '#c4cad3', background: '#f9fafb', color: '#9aa2b1'}}>
+                                            style={{borderColor: BRAND.borderStrong, background: '#f9fafb', color: BRAND.mutedSoft}}>
                                             {imageUploading ? <LoadingOutlined className="text-[18px]"/> : <PictureOutlined className="text-[18px]"/>}
                                             <span className="text-[13px]">{imageUploading ? 'Đang tải ảnh...' : 'Tải ảnh lên'}</span>
                                         </div>
@@ -237,13 +239,13 @@ export default function AddQuestionPage() {
                                             className="flex-1">
                                         <div
                                             className={`flex flex-col items-center justify-center gap-1 rounded-lg py-6 border border-dashed w-full ${audioUploading ? 'cursor-wait' : 'cursor-pointer'}`}
-                                            style={{borderColor: '#c4cad3', background: '#f9fafb', color: '#9aa2b1'}}>
+                                            style={{borderColor: BRAND.borderStrong, background: '#f9fafb', color: BRAND.mutedSoft}}>
                                             {audioUploading ? <LoadingOutlined className="text-[18px]"/> : <SoundOutlined className="text-[18px]"/>}
                                             <span className="text-[13px]">{audioUploading ? 'Đang tải audio...' : 'Tải audio lên'}</span>
                                         </div>
                                     </Upload>
                                 </div>
-                                <p className="text-[12px] mt-2" style={{color: '#9aa2b1'}}>
+                                <p className="text-[12px] mt-2" style={{color: BRAND.mutedSoft}}>
                                     Tệp sẽ được lưu khi bấm {isEdit ? 'Cập nhật' : 'Lưu câu hỏi'}.
                                 </p>
                                 <QuestionMedia imageUrl={shownImageUrl} audioUrl={shownAudioUrl} className="mt-3"/>
@@ -275,14 +277,14 @@ export default function AddQuestionPage() {
                                                     <div key={field.key}
                                                          className="flex items-center gap-2 rounded-lg px-2.5 py-1.5"
                                                          style={isCorrect
-                                                             ? {background: '#e7f7ef', border: '1px solid #b8e6cf'}
-                                                             : {background: '#fff', border: '1px solid #eceef2'}}>
+                                                             ? {background: BRAND.successTint, border: '1px solid #b8e6cf'}
+                                                             : {background: '#fff', border: `1px solid ${BRAND.border}`}}>
                                                         <Form.Item name={[field.name, 'isCorrect']}
                                                                    valuePropName="checked" noStyle>
                                                             <Checkbox/>
                                                         </Form.Item>
                                                         <span className="font-semibold text-[13px] w-5 text-center"
-                                                              style={{color: isCorrect ? '#1ea375' : '#6f7788'}}>{letter}.</span>
+                                                              style={{color: isCorrect ? BRAND.success : BRAND.muted}}>{letter}.</span>
                                                         <Form.Item name={[field.name, 'content']}
                                                                    className="flex-1 !mb-0"
                                                                    rules={[{
@@ -358,7 +360,7 @@ export default function AddQuestionPage() {
                                 </Form.Item>
                                 <div className="flex items-center gap-1.5 flex-wrap rounded-lg px-2.5 py-2"
                                      style={{background: '#f7f8fa'}}>
-                                    <span className="text-[11px]" style={{color: '#9aa2b1'}}>Gợi ý:</span>
+                                    <span className="text-[11px]" style={{color: BRAND.mutedSoft}}>Gợi ý:</span>
                                     {[...(cognitives.data ?? [])].sort((a, b) => a.levelOrder - b.levelOrder).map(c => {
                                         const col = BLOOM_CHIP[c.code] ?? NEUTRAL_CHIP
                                         return (
@@ -375,7 +377,7 @@ export default function AddQuestionPage() {
                                 <p className="form-section-title">Cài đặt</p>
                                 <div className="flex items-center justify-between py-1">
                                     <div>
-                                        <div className="text-[13px] font-medium" style={{color: '#1d2129'}}>Hiển thị
+                                        <div className="text-[13px] font-medium" style={{color: BRAND.inkStrong}}>Hiển thị
                                         </div>
                                     </div>
                                     <Form.Item name="isActive" valuePropName="checked" noStyle>
@@ -384,7 +386,7 @@ export default function AddQuestionPage() {
                                 </div>
                                 <div className="flex items-center justify-between py-1">
                                     <div>
-                                        <div className="text-[13px] font-medium" style={{color: '#1d2129'}}>Đã xác
+                                        <div className="text-[13px] font-medium" style={{color: BRAND.inkStrong}}>Đã xác
                                             minh
                                         </div>
                                     </div>
@@ -406,8 +408,4 @@ export default function AddQuestionPage() {
             </div>
         </>
     )
-}
-
-function stripHtml(html: string): string {
-    return html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
 }

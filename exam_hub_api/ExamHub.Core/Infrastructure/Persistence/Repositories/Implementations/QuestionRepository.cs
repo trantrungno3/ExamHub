@@ -87,6 +87,8 @@ public class QuestionRepository : BaseRepository<Question, Guid>, IQuestionRepos
         int? cognitiveLevelId = null,
         string? keyword = null,
         string? reviewStatus = null,
+        int? subjectId = null,
+        int? gradeLevelId = null,
         CancellationToken ct = default)
     {
         var query = Set.AsNoTracking()
@@ -98,6 +100,12 @@ public class QuestionRepository : BaseRepository<Question, Guid>, IQuestionRepos
 
         if (topicId.HasValue)
             query = query.Where(x => x.TopicId == topicId.Value);
+
+        if (subjectId.HasValue)
+            query = query.Where(x => x.Topic!.SubjectId == subjectId.Value);
+
+        if (gradeLevelId.HasValue)
+            query = query.Where(x => x.Topic!.Subject!.GradeLevelId == gradeLevelId.Value);
 
         if (questionTypeId.HasValue)
             query = query.Where(x => x.QuestionTypeId == questionTypeId.Value);
@@ -211,40 +219,63 @@ public class QuestionRepository : BaseRepository<Question, Guid>, IQuestionRepos
     public async Task IncrementUsageCountAsync(IEnumerable<Guid> questionIds, CancellationToken ct = default)
     {
         var ids = questionIds.ToList();
+        var now = DateTime.UtcNow;
+        var modifiedBy = Db.CurrentUserName;
         await Set
             .Where(x => ids.Contains(x.Id))
-            .ExecuteUpdateAsync(s => s.SetProperty(x => x.UsageCount, x => x.UsageCount + 1), ct);
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(x => x.UsageCount, x => x.UsageCount + 1)
+                .SetProperty(x => x.Modified, now)
+                .SetProperty(x => x.ModifiedBy, modifiedBy), ct);
     }
 
     /// <inheritdoc/>
     public async Task VerifyAsync(Guid id, Guid verifiedBy, CancellationToken ct = default)
-        => await Set
+    {
+        var now = DateTime.UtcNow;
+        var modifiedBy = Db.CurrentUserName;
+        await Set
             .Where(x => x.Id == id)
             .ExecuteUpdateAsync(s => s
                 .SetProperty(x => x.Status, "approved")
                 .SetProperty(x => x.RejectionReason, (string?)null)
                 .SetProperty(x => x.VerifiedBy, verifiedBy)
-                .SetProperty(x => x.VerifiedAt, DateTime.UtcNow), ct);
+                .SetProperty(x => x.VerifiedAt, now)
+                .SetProperty(x => x.Modified, now)
+                .SetProperty(x => x.ModifiedBy, modifiedBy), ct);
+    }
 
     /// <inheritdoc/>
     public async Task UnverifyAsync(Guid id, CancellationToken ct = default)
-        => await Set
+    {
+        var now = DateTime.UtcNow;
+        var modifiedBy = Db.CurrentUserName;
+        await Set
             .Where(x => x.Id == id)
             .ExecuteUpdateAsync(s => s
                 .SetProperty(x => x.Status, "pending")
                 .SetProperty(x => x.RejectionReason, (string?)null)
                 .SetProperty(x => x.VerifiedBy, (Guid?)null)
-                .SetProperty(x => x.VerifiedAt, (DateTime?)null), ct);
+                .SetProperty(x => x.VerifiedAt, (DateTime?)null)
+                .SetProperty(x => x.Modified, now)
+                .SetProperty(x => x.ModifiedBy, modifiedBy), ct);
+    }
 
     /// <inheritdoc/>
     public async Task RejectAsync(Guid id, Guid reviewedBy, string reason, CancellationToken ct = default)
-        => await Set
+    {
+        var now = DateTime.UtcNow;
+        var modifiedBy = Db.CurrentUserName;
+        await Set
             .Where(x => x.Id == id)
             .ExecuteUpdateAsync(s => s
                 .SetProperty(x => x.Status, "rejected")
                 .SetProperty(x => x.RejectionReason, reason)
                 .SetProperty(x => x.VerifiedBy, reviewedBy)
-                .SetProperty(x => x.VerifiedAt, DateTime.UtcNow), ct);
+                .SetProperty(x => x.VerifiedAt, now)
+                .SetProperty(x => x.Modified, now)
+                .SetProperty(x => x.ModifiedBy, modifiedBy), ct);
+    }
 
     /// <inheritdoc/>
     public async Task<QuestionStatsResponse> GetStatsAsync(CancellationToken ct = default)
@@ -259,19 +290,29 @@ public class QuestionRepository : BaseRepository<Question, Guid>, IQuestionRepos
 
     /// <inheritdoc/>
     public async Task SetImageUrlAsync(Guid id, string imageUrl, CancellationToken ct = default)
-        => await Set
+    {
+        var now = DateTime.UtcNow;
+        var modifiedBy = Db.CurrentUserName;
+        await Set
             .Where(x => x.Id == id)
             .ExecuteUpdateAsync(s => s
                 .SetProperty(x => x.ImageUrl, imageUrl)
-                .SetProperty(x => x.Modified, DateTime.UtcNow), ct);
+                .SetProperty(x => x.Modified, now)
+                .SetProperty(x => x.ModifiedBy, modifiedBy), ct);
+    }
 
     /// <inheritdoc/>
     public async Task SetAudioUrlAsync(Guid id, string audioUrl, CancellationToken ct = default)
-        => await Set
+    {
+        var now = DateTime.UtcNow;
+        var modifiedBy = Db.CurrentUserName;
+        await Set
             .Where(x => x.Id == id)
             .ExecuteUpdateAsync(s => s
                 .SetProperty(x => x.AudioUrl, audioUrl)
-                .SetProperty(x => x.Modified, DateTime.UtcNow), ct);
+                .SetProperty(x => x.Modified, now)
+                .SetProperty(x => x.ModifiedBy, modifiedBy), ct);
+    }
 
     // ── SQL cho pool cache + nạp theo ID ──────────────────────────────────
     // Pool: chỉ SELECT id (cache được). 4 biến thể tránh truyền NULL int gây lỗi

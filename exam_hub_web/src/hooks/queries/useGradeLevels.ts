@@ -54,7 +54,11 @@ export function useDeleteGradeLevelMutation() {
     const qc = useQueryClient()
     return useMutation({
         mutationFn: (id: number) => gradeLevelService.remove(id),
-        onSuccess: () => {
+        onSuccess: (res) => {
+            if (res.status === statusCode.Error || res.status === statusCode.Conflict) {
+                message.error(res.message || 'Không thể xóa')
+                return
+            }
             message.success('Đã xóa')
             void qc.invalidateQueries({ queryKey: GRADE_LEVEL_KEYS.all })
         },

@@ -25,7 +25,7 @@ export function QuestionTypeTab() {
             render: v => <span className="text-gray-400">{v}</span>,
         },
         {
-            title: 'Mã (code)', dataIndex: 'code', key: 'code',
+            title: 'Mã', dataIndex: 'code', key: 'code',
             render: v => <span className="badge bg-indigo-50 text-indigo-700">{v}</span>,
         },
         {

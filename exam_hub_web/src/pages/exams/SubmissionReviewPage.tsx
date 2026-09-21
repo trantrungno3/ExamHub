@@ -2,7 +2,7 @@ import {useState} from 'react'
 import {useLocation, useNavigate, useParams} from 'react-router-dom'
 import {Button, Empty, InputNumber, Spin, message} from 'antd'
 import {ArrowLeftOutlined} from '@ant-design/icons'
-import {useAuth} from '../../AuthProvider'
+import {useAuth} from '../../hooks/useAuth'
 import {
     useFinalizeSubmissionMutation,
     useGradeAnswerMutation,
@@ -13,6 +13,8 @@ import {parseAnswers, stripHtml} from '../../utils/snapshot'
 import QuestionMedia from '../../components/QuestionMedia'
 import {formatTimestamp} from '../../utils/datetime'
 import {OPTION_LETTER, SUBMISSION_STATUS_LABEL} from '../../constants'
+import PageHeader from '../../components/PageHeader'
+import {BRAND} from '../../constants/theme'
 
 export default function SubmissionReviewPage() {
     const {id} = useParams<{id: string}>()
@@ -48,13 +50,7 @@ export default function SubmissionReviewPage() {
 
     return (
         <>
-            <div className="top-bar">
-                <div>
-                    <p className="top-bar-title">Xem bài làm học sinh</p>
-                    <p className="top-bar-subtitle">{exam?.title ?? 'Đang tải…'}</p>
-                </div>
-                <div className="top-bar-avatar">TT</div>
-            </div>
+            <PageHeader title="Xem bài làm học sinh" subtitle={exam?.title ?? 'Đang tải…'}/>
 
             <div className="flex-1 overflow-auto p-6 flex flex-col gap-4">
                 {/* Action bar */}
@@ -69,7 +65,7 @@ export default function SubmissionReviewPage() {
                 <div className="section-card shrink-0 p-5 flex items-start justify-between gap-4">
                     <div className="flex items-start gap-4">
                         <div className="w-14 h-14 rounded-full flex items-center justify-center text-lg font-semibold"
-                             style={{background: '#e9ecfe', color: '#3a74f5'}}>
+                             style={{background: BRAND.primarySoft, color: BRAND.primary}}>
                             {studentName.slice(0, 2).toUpperCase()}
                         </div>
                         <div>
@@ -81,7 +77,7 @@ export default function SubmissionReviewPage() {
                         </div>
                     </div>
                     <div className="rounded-xl px-5 py-3 text-right" style={{background: '#f0f4ff'}}>
-                        <span className="text-3xl font-bold" style={{color: '#3a74f5'}}>
+                        <span className="text-3xl font-bold" style={{color: BRAND.primary}}>
                             {sub.totalScore != null ? sub.totalScore : '—'}
                         </span>
                         <span className="text-sm text-gray-500"> / 10</span>
@@ -120,12 +116,12 @@ export default function SubmissionReviewPage() {
                                             {!isEssay && (
                                                 <span className="text-xs font-semibold px-2 py-0.5 rounded-full"
                                                       style={ok
-                                                          ? {background: '#dff5ed', color: '#1ea375'}
+                                                          ? {background: BRAND.successSoft, color: BRAND.success}
                                                           : {background: '#fee2e2', color: '#dc3c3c'}}>
                                                     {ok ? 'Đúng' : 'Sai'}
                                                 </span>
                                             )}
-                                            <span className="text-[13px] font-semibold" style={{color: ok ? '#1ea375' : '#6f7788'}}>
+                                            <span className="text-[13px] font-semibold" style={{color: ok ? BRAND.success : BRAND.muted}}>
                                                 {a.scoreEarned ?? 0} đ
                                             </span>
                                         </div>
@@ -148,10 +144,10 @@ export default function SubmissionReviewPage() {
                                         </div>
                                     ) : (
                                         <div className="grid grid-cols-2 gap-x-8 mt-1">
-                                            <span className="text-[13px] font-semibold" style={{color: ok ? '#1ea375' : '#dc3c3c'}}>
+                                            <span className="text-[13px] font-semibold" style={{color: ok ? BRAND.success : '#dc3c3c'}}>
                                                 HS chọn: {fmt(chosen)} {ok ? '✓' : '✗'}
                                             </span>
-                                            <span className="text-[13px] font-medium" style={{color: '#1ea375'}}>
+                                            <span className="text-[13px] font-medium" style={{color: BRAND.success}}>
                                                 Đáp án đúng: {fmt(correct)}
                                             </span>
                                         </div>

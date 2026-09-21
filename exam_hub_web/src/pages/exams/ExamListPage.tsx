@@ -1,19 +1,17 @@
-import {useMemo, useState} from 'react'
+import {Suspense, useMemo, useState} from 'react'
 import {useNavigate} from 'react-router-dom'
-import {Dropdown, Input, Popconfirm, Select, Table, message} from 'antd'
 import type {TableColumnsType} from 'antd'
+import {Dropdown, Input, message, Popconfirm, Select, Table} from 'antd'
 import {BarChartOutlined, DownloadOutlined, EyeOutlined, SearchOutlined} from '@ant-design/icons'
-import {AnalyticsDrawer} from './AnalyticsDrawer'
-import {
-    useDeleteExamMutation,
-    useExamsQuery,
-    usePublishExamMutation,
-} from '../../hooks/queries/useExams'
+import {AnalyticsDrawer} from './AnalyticsDrawerLazy'
+import {useDeleteExamMutation, useExamsQuery, usePublishExamMutation,} from '../../hooks/queries/useExams'
 import {useGradeLevelsListQuery, useSubjectsQuery} from '../../hooks/queries/useCategoryLists'
 import {examService} from '../../services/examService'
 import {StatusTag} from '../../components/StatusTag'
 import {DEFAULT_PAGE, DEFAULT_PAGE_SIZE, EXAM_STATUS_LABEL, EXAM_STATUS_VARIANT} from '../../constants'
 import {ROUTES} from '../../routes/paths'
+import PageHeader from '../../components/PageHeader'
+import {useDebounced} from '../../hooks/useDebounced'
 
 export default function ExamListPage() {
     const navigate = useNavigate()
@@ -29,9 +27,16 @@ export default function ExamListPage() {
     const [analyticsExamId, setAnalyticsExamId] = useState<string>()
     const [exporting, setExporting] = useState<string>()
 
+    const debouncedKeyword = useDebounced(keyword)
     const query: ExamPagedQuery = useMemo(
-        () => ({page, pageSize, gradeLevelId, subjectId, status, keyword}),
-        [page, pageSize, gradeLevelId, subjectId, status, keyword],
+        () => ({page, pageSize, gradeLevelId, subjectId, status, keyword: debouncedKeyword}),
+        [page, pageSize, gradeLevelId, subjectId, status, debouncedKeyword],
+    )
+    const subjectOptions = useMemo(
+        () => (subjects.data ?? [])
+            .filter(s => s.gradeLevelId === gradeLevelId)
+            .map(s => ({value: s.id, label: s.name})),
+        [subjects.data, gradeLevelId],
     )
     const {data, isLoading} = useExamsQuery(query)
     const publish = usePublishExamMutation()
@@ -51,8 +56,13 @@ export default function ExamListPage() {
     }
 
     const columns: TableColumnsType<Exam> = [
-        {title: 'Tiêu đề', dataIndex: 'title', key: 'title', render: v => <span className="font-medium text-gray-800">{v}</span>},
-        {title: 'Mã đề', dataIndex: 'examCode', key: 'examCode', width: 100, render: v => v ?? '—'},
+        {
+            title: 'Tiêu đề',
+            dataIndex: 'title',
+            key: 'title',
+            render: v => <span className="font-medium text-gray-800">{v}</span>
+        },
+        {title: 'Mã đề', dataIndex: 'examCode', key: 'examCode', width: 150, render: v => v ?? '—'},
         {title: 'Lớp', dataIndex: 'gradeLevelName', key: 'gradeLevelName', width: 90, render: v => v ?? '—'},
         {title: 'Môn', dataIndex: 'subjectName', key: 'subjectName', width: 120, render: v => v ?? '—'},
         {title: 'Điểm', dataIndex: 'totalScore', key: 'totalScore', width: 70},
@@ -100,13 +110,7 @@ export default function ExamListPage() {
 
     return (
         <>
-            <div className="top-bar">
-                <div>
-                    <p className="top-bar-title">Đề thi</p>
-                    <p className="top-bar-subtitle">Danh sách đề thi đã sinh — xem trước & xuất file</p>
-                </div>
-                <div className="top-bar-avatar">TT</div>
-            </div>
+            <PageHeader title="Đề thi" subtitle="Danh sách đề thi đã sinh — xem trước & xuất file"/>
 
             <div className="flex-1 overflow-auto p-6 flex flex-col gap-4">
                 <div className="flex items-center gap-2 flex-wrap">
@@ -119,21 +123,26 @@ export default function ExamListPage() {
                     <Select placeholder="Lớp" allowClear style={{width: 130}} value={gradeLevelId}
                             onChange={v => {
                                 setGradeLevelId(v)
+                                setSubjectId(undefined)
                                 setPage(1)
                             }}
                             options={(grades.data ?? []).map(g => ({value: g.id, label: g.name}))}/>
                     <Select placeholder="Môn" allowClear showSearch optionFilterProp="label" style={{width: 160}}
+                            disabled={!gradeLevelId}
                             value={subjectId} onChange={v => {
-                                setSubjectId(v)
-                                setPage(1)
-                            }}
-                            options={(subjects.data ?? []).map(s => ({value: s.id, label: s.name}))}/>
+                        setSubjectId(v)
+                        setPage(1)
+                    }}
+                            options={subjectOptions}/>
                     <Select placeholder="Trạng thái" allowClear style={{width: 150}} value={status}
                             onChange={v => {
                                 setStatus(v)
                                 setPage(1)
                             }}
-                            options={(['Draft', 'Published', 'Archived'] as ExamStatus[]).map(s => ({value: s, label: EXAM_STATUS_LABEL[s]}))}/>
+                            options={(['Draft', 'Published', 'Archived'] as ExamStatus[]).map(s => ({
+                                value: s,
+                                label: EXAM_STATUS_LABEL[s]
+                            }))}/>
                 </div>
 
                 <div className="section-card shrink-0">
@@ -150,7 +159,9 @@ export default function ExamListPage() {
                 </div>
             </div>
 
-            <AnalyticsDrawer examId={analyticsExamId} onClose={() => setAnalyticsExamId(undefined)}/>
+            <Suspense fallback={null}>
+                <AnalyticsDrawer examId={analyticsExamId} onClose={() => setAnalyticsExamId(undefined)}/>
+            </Suspense>
         </>
     )
 }

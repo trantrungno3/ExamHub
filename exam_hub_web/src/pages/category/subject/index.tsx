@@ -52,7 +52,7 @@ export function SubjectTab() {
             ),
         },
         {
-            title: 'Mã (code)', dataIndex: 'code', key: 'code',
+            title: 'Mã', dataIndex: 'code', key: 'code',
             render: v => <span className="badge bg-blue-50 text-blue-600">{v}</span>,
         },
         {

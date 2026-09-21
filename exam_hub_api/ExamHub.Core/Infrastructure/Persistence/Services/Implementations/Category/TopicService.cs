@@ -1,3 +1,4 @@
+using ExamHub.Core.Application.Services;
 using ExamHub.Core.Domain.Entities;
 using ExamHub.Core.Domain.Interfaces;
 using TVT.Core.Db.Redis;
@@ -5,7 +6,7 @@ using TVT.Core.Db.Redis;
 namespace ExamHub.Core.Infrastructure.Persistence.Services.Implementations;
 
 /// <summary>Triển khai service cho Topic</summary>
-public class TopicService(ITopicRepository repo, IRedisService cache)
+public class TopicService(ITopicRepository repo, IRedisService cache, IQuestionRepository questionRepo)
     : ITopicService
 {
     private const string AllKey    = "category:topics:all";
@@ -52,6 +53,13 @@ public class TopicService(ITopicRepository repo, IRedisService cache)
 
     public async Task DeleteAsync(int id, CancellationToken ct = default)
     {
+        if (await questionRepo.ExistsAsync(q => q.TopicId == id, ct))
+            throw new EntityInUseException("Chủ đề đang được dùng bởi câu hỏi, không thể xoá.");
+        // topics.parent_id tự tham chiếu (RESTRICT) — không kiểm tra ở đây thì xoá chủ đề cha
+        // sẽ ném DbUpdateException. Các tham chiếu còn lại (vd. exam_template_sections.topic_id)
+        // do backstop DbUpdateException → 409 ở CategoryBaseController.Delete xử lý.
+        if (await repo.ExistsAsync(t => t.ParentId == id, ct))
+            throw new EntityInUseException("Chủ đề đang có chủ đề con, không thể xoá.");
         await repo.DeleteByIdAsync(id, ct);
         await InvalidateCacheAsync(ct);
     }

@@ -9,6 +9,10 @@ class CohortMemberService {
         return AuthHttp.get<CohortMember[]>(`/cohortmember/by-cohort/${cohortId}`)
     }
 
+    getBySchool(schoolId: number) {
+        return AuthHttp.get<CohortMember[]>(`/cohortmember/by-school/${schoolId}`)
+    }
+
     getByStudent(studentId: string) {
         return AuthHttp.get<CohortMember[]>(`/cohortmember/by-student/${studentId}`)
     }

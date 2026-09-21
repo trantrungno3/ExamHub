@@ -1,4 +1,4 @@
-import {useAuth} from '../../AuthProvider'
+import {useAuth} from '../../hooks/useAuth'
 import AdminProfilePage from './AdminProfilePage'
 import TeacherProfilePage from './TeacherProfilePage'
 

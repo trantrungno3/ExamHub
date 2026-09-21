@@ -15,34 +15,19 @@ import {
 } from '@ant-design/icons'
 import {
     useDeleteExamTemplateMutation,
-    useExamTemplatesByGradeQuery,
+    useExamTemplatesQuery,
     useExamTemplateStatsQuery,
 } from '../../hooks/queries/useExamTemplates'
 import {useGradeLevelsListQuery, useSubjectsQuery} from '../../hooks/queries/useCategoryLists'
 import {StatusTag} from '../../components/StatusTag'
-
-function StatCard({label, value, icon, color, bg}: {
-    label: string; value?: number; icon: React.ReactNode; color: string; bg: string
-}) {
-    return (
-        <div className="flex-1 bg-white rounded-xl border p-4 flex items-center gap-3" style={{borderColor: '#eceef2'}}>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center text-[18px]" style={{background: bg, color}}>
-                {icon}
-            </div>
-            <div>
-                <div className="text-[22px] font-bold leading-tight" style={{color: '#191d27'}}>
-                    {value != null ? value.toLocaleString('vi-VN') : '—'}
-                </div>
-                <div className="text-[12px]" style={{color: '#6f7788'}}>{label}</div>
-            </div>
-        </div>
-    )
-}
+import PageHeader from '../../components/PageHeader'
+import {StatCard} from '../../components/StatCard'
+import {BRAND} from '../../constants/theme'
 
 function BoolIcon({on}: {on?: boolean}) {
     return on
-        ? <CheckOutlined style={{color: '#1ea375'}}/>
-        : <CloseOutlined style={{color: '#c4cad3'}}/>
+        ? <CheckOutlined style={{color: BRAND.success}}/>
+        : <CloseOutlined style={{color: BRAND.borderStrong}}/>
 }
 
 export default function ExamTemplatePage() {
@@ -55,18 +40,21 @@ export default function ExamTemplatePage() {
     const [subjectId, setSubjectId] = useState<number>()
     const [search, setSearch] = useState('')
 
-    const effectiveGradeId = gradeId ?? grades.data?.[0]?.id
+    const effectiveGradeId = gradeId
 
-    const {data: templates, isLoading} = useExamTemplatesByGradeQuery(effectiveGradeId)
+    const {data: templates, isLoading} = useExamTemplatesQuery({subjectId, gradeLevelId: effectiveGradeId})
     const deleteMutation = useDeleteExamTemplateMutation()
 
+    const subjectOptions = useMemo(
+        () => (subjects.data ?? [])
+            .filter(s => s.gradeLevelId === effectiveGradeId)
+            .map(s => ({value: s.id, label: s.name})),
+        [subjects.data, effectiveGradeId],
+    )
+
     const filtered = useMemo(
-        () => (templates ?? []).filter(t => {
-            const matchSubject = subjectId === undefined || t.subjectId === subjectId
-            const matchSearch = t.title.toLowerCase().includes(search.toLowerCase())
-            return matchSubject && matchSearch
-        }),
-        [templates, subjectId, search],
+        () => (templates ?? []).filter(t => t.title.toLowerCase().includes(search.toLowerCase())),
+        [templates, search],
     )
 
     const columns: TableColumnsType<ExamTemplate> = [
@@ -75,8 +63,8 @@ export default function ExamTemplatePage() {
             render: (v, t) => (
                 <span className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full inline-block shrink-0"
-                          style={{background: t.isActive ? '#1ea375' : '#c4cad3'}}/>
-                    <span className="font-medium" style={{color: '#1d2129'}}>{v}</span>
+                          style={{background: t.isActive ? BRAND.success : BRAND.borderStrong}}/>
+                    <span className="font-medium" style={{color: BRAND.inkStrong}}>{v}</span>
                 </span>
             ),
         },
@@ -84,7 +72,7 @@ export default function ExamTemplatePage() {
             title: 'Lớp', dataIndex: 'gradeLevelName', key: 'gradeLevelName', width: 90,
             render: v => v
                 ? <span className="inline-flex items-center rounded-md px-2 py-0.5 text-[12px] font-medium"
-                        style={{background: '#eef0f3', color: '#6f7788'}}>{v}</span>
+                        style={{background: BRAND.neutralSoft, color: BRAND.muted}}>{v}</span>
                 : '—',
         },
         {title: 'Môn', dataIndex: 'subjectName', key: 'subjectName', width: 120, render: v => v ?? '—'},
@@ -108,7 +96,7 @@ export default function ExamTemplatePage() {
             render: (_, t) => (
                 <div className="flex gap-2 items-center">
                     <button className="btn-edit" onClick={() => navigate(`/app/exams/${t.id}/edit`)}>Sửa</button>
-                    <button className="text-[13px] hover:underline flex items-center gap-1" style={{color: '#1ea375'}}
+                    <button className="text-[13px] hover:underline flex items-center gap-1" style={{color: BRAND.success}}
                             onClick={() => navigate(`/app/generate?templateId=${t.id}`)}>
                         <ThunderboltOutlined/> Sinh đề
                     </button>
@@ -123,32 +111,30 @@ export default function ExamTemplatePage() {
 
     return (
         <>
-            <div className="top-bar">
-                <div>
-                    <p className="top-bar-title">Mẫu đề thi</p>
-                    <p className="top-bar-subtitle">Cấu hình cấu trúc đề thi để sinh đề tự động</p>
-                </div>
-                <div className="top-bar-avatar">TT</div>
-            </div>
+            <PageHeader title="Mẫu đề thi" subtitle="Cấu hình cấu trúc đề thi để sinh đề tự động"/>
 
             <div className="flex-1 overflow-auto p-6 flex flex-col gap-4">
                 {/* Stat cards */}
                 <div className="flex gap-4 flex-wrap">
-                    <StatCard label="Tổng mẫu" value={stats.data?.totalTemplates} icon={<DatabaseOutlined/>} color="#3a74f5" bg="#eef1ff"/>
-                    <StatCard label="Đang dùng" value={stats.data?.activeTemplates} icon={<CheckCircleFilled/>} color="#1ea375" bg="#e7f7ef"/>
+                    <StatCard label="Tổng mẫu" value={stats.data?.totalTemplates} icon={<DatabaseOutlined/>} color={BRAND.primary} bg="#eef1ff"/>
+                    <StatCard label="Đang dùng" value={stats.data?.activeTemplates} icon={<CheckCircleFilled/>} color={BRAND.success} bg="#e7f7ef"/>
                     <StatCard label="Tổng đề sinh" value={stats.data?.totalExamsGenerated} icon={<ThunderboltFilled/>} color="#8b5cf6" bg="#f3ecfe"/>
-                    <StatCard label="Trung bình câu" value={stats.data?.avgQuestions} icon={<BarsOutlined/>} color="#d98a00" bg="#fff4e5"/>
+                    <StatCard label="Trung bình câu" value={stats.data?.avgQuestions} icon={<BarsOutlined/>} color={BRAND.warning} bg={BRAND.warningSoft}/>
                 </div>
 
                 <div className="flex items-center gap-2 flex-wrap">
                     <Input prefix={<SearchOutlined className="text-gray-400"/>} placeholder="Tìm mẫu đề..."
                            style={{width: 220}} allowClear value={search} onChange={e => setSearch(e.target.value)}/>
-                    <Select placeholder="Chọn cấp lớp" style={{width: 150}}
-                            value={effectiveGradeId} onChange={setGradeId}
+                    <Select placeholder="Chọn cấp lớp" allowClear style={{width: 150}}
+                            value={effectiveGradeId} onChange={v => {
+                                setGradeId(v)
+                                setSubjectId(undefined)
+                            }}
                             options={(grades.data ?? []).map(g => ({value: g.id, label: g.name}))}/>
                     <Select placeholder="Môn học" allowClear showSearch optionFilterProp="label" style={{width: 170}}
+                            disabled={!effectiveGradeId}
                             value={subjectId} onChange={setSubjectId}
-                            options={(subjects.data ?? []).map(s => ({value: s.id, label: s.name}))}/>
+                            options={subjectOptions}/>
                     <Button type="primary" icon={<PlusOutlined/>} className="ml-auto"
                             onClick={() => navigate('/app/exams/create')}>
                         Tạo mẫu đề thi
@@ -162,7 +148,11 @@ export default function ExamTemplatePage() {
                         rowKey="id"
                         loading={isLoading}
                         scroll={{x: 900}}
-                        locale={{emptyText: <Empty description="Chưa có mẫu đề cho cấp lớp này"/>}}
+                        locale={{
+                            emptyText: <Empty description={effectiveGradeId
+                                ? 'Chưa có mẫu đề cho cấp lớp này'
+                                : 'Chưa có mẫu đề nào'}/>,
+                        }}
                         pagination={{pageSize: 10, showTotal: total => `Hiển thị ${filtered.length} trong tổng số ${total} mẫu đề`}}
                     />
                 </div>

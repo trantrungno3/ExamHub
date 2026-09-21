@@ -1,4 +1,5 @@
 using ExamHub.Core.Domain.Entities;
+using ExamHub.Core.Domain.Enums;
 using TVT.Core.Extensions;
 
 namespace ExamHub.Core.DataTransferObjects.Exam;
@@ -89,29 +90,45 @@ public record ExamSubmissionResponse(
     /// <summary>Tên hiển thị của học sinh (enrich cho màn chấm bài). Null nếu không tra được.</summary>
     string? StudentName = null,
     /// <summary>Tên lớp của học sinh (enrich cho màn chấm bài). Null nếu không tra được.</summary>
-    string? StudentClassName = null
+    string? StudentClassName = null,
+    /// <summary>Kỳ thi (nếu nộp bài trong luồng kỳ thi) — dùng để FE gọi lại "làm lại".</summary>
+    Guid? SessionId = null
 )
 {
     /// <summary>Map từ entity</summary>
-    public static ExamSubmissionResponse FromEntity(ExamSubmission e, bool includeAnswers = false) =>
-        FromEntity(e, null, null, includeAnswers);
+    public static ExamSubmissionResponse FromEntity(ExamSubmission e, bool includeAnswers = false, DateTime? now = null) =>
+        FromEntity(e, null, null, includeAnswers, now);
 
     /// <summary>Map từ entity kèm thông tin học sinh (tên + lớp).</summary>
     public static ExamSubmissionResponse FromEntity(
-        ExamSubmission e, string? studentName, string? studentClassName, bool includeAnswers = false) =>
-        new(
+        ExamSubmission e, string? studentName, string? studentClassName,
+        bool includeAnswers = false, DateTime? now = null)
+    {
+        var durationSeconds = e.Status == SubmissionStatusEnum.InProgress
+            ? (int)Math.Max(0, ((now ?? DateTime.UtcNow) - e.StartedAt).TotalSeconds)
+            : e.DurationSeconds;
+
+        return new(
             e.Id, e.ExamId, e.StudentId,
             e.StartedAt.ToTimestamp(),
             e.SubmittedAt?.ToTimestamp(),
-            e.DurationSeconds,
+            durationSeconds,
             e.TotalScore,
             e.IsPassed,
             e.Status.ToString(),
             e.Created.ToTimestamp(),
-            includeAnswers ? e.Answers.Select(SubmissionAnswerResponse.FromEntity).ToList() : null,
+            // Sắp theo thứ tự câu trong đề: DB không đảm bảo thứ tự dòng (autosave xoá-rồi-ghi
+            // liên tục làm xáo trộn), mà FE đánh số "Câu i+1" theo vị trí mảng.
+            includeAnswers
+                ? e.Answers
+                    .OrderBy(a => a.ExamQuestion?.SortOrder ?? int.MaxValue)
+                    .Select(SubmissionAnswerResponse.FromEntity).ToList()
+                : null,
             studentName,
-            studentClassName
+            studentClassName,
+            e.SessionId
         );
+    }
 }
 
 /// <summary>Thông tin danh bạ học sinh dùng để enrich bài nộp (tên + lớp).</summary>

@@ -1,3 +1,4 @@
+using ExamHub.Core.Application.Submissions;
 using ExamHub.Core.Domain.Entities;
 using ExamHub.Core.Domain.Enums;
 using ExamHub.Core.Domain.Interfaces;
@@ -24,12 +25,8 @@ public class ExamSessionRepository(AppDbContext _db) : IExamSessionRepository
         int page, int pageSize, int? subjectId, int? gradeLevelId,
         ExamSessionStatusEnum? status, string? keyword, CancellationToken ct = default)
     {
-        var query = _db.Set<ExamSession>()
-            .Include(s => s.Subject)
-            .Include(s => s.GradeLevel)
-            .Include(s => s.Exams)
-            .Include(s => s.Assignments)
-            .AsQueryable();
+        // Base query chỉ có filter: COUNT không cần kéo theo navigation nào.
+        var query = _db.Set<ExamSession>().AsNoTracking();
 
         if (subjectId is not null) query = query.Where(s => s.SubjectId == subjectId.Value);
         if (gradeLevelId is not null) query = query.Where(s => s.GradeLevelId == gradeLevelId.Value);
@@ -41,10 +38,18 @@ public class ExamSessionRepository(AppDbContext _db) : IExamSessionRepository
         }
 
         var total = await query.CountAsync(ct);
+
+        // Page trước rồi mới nạp quan hệ, và AsSplitQuery vì include hai collection trong cùng một
+        // query là tích Descartes: mỗi session sinh Exams × Assignments dòng.
         var items = await query
             .OrderByDescending(s => s.Created)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
+            .Include(s => s.Subject)
+            .Include(s => s.GradeLevel)
+            .Include(s => s.Exams)
+            .Include(s => s.Assignments)
+            .AsSplitQuery()
             .ToListAsync(ct);
         return (items, total);
     }
@@ -139,6 +144,10 @@ public class ExamSessionRepository(AppDbContext _db) : IExamSessionRepository
     }
 
     /// <inheritdoc/>
+    public Task<ExamSessionAssignment?> GetAssignmentByIdAsync(Guid assignmentId, CancellationToken ct = default)
+        => _db.Set<ExamSessionAssignment>().FirstOrDefaultAsync(a => a.Id == assignmentId, ct);
+
+    /// <inheritdoc/>
     public async Task<int> CountStudentsForAssignmentAsync(ExamSessionAssignment a, CancellationToken ct = default)
     {
         if (a.CohortClassId != null && a.CohortClass != null)
@@ -176,7 +185,10 @@ public class ExamSessionRepository(AppDbContext _db) : IExamSessionRepository
 
         return await _db.Set<ExamSession>()
             .Include(s => s.Subject).Include(s => s.GradeLevel).Include(s => s.Assignments)
-            .Where(s => s.Status == ExamSessionStatusEnum.Published)
+            // Cả Closed: kỳ thi đóng sớm vẫn phải hiện phía HS để xem lại kết quả (Draft thì không,
+            // vì chưa từng công bố). Chặn làm bài là việc của StudentAccessErrorAsync, không phải
+            // của query này — giấu kỳ thi đi làm bài đã nộp biến mất khỏi danh sách.
+            .Where(s => s.Status == ExamSessionStatusEnum.Published || s.Status == ExamSessionStatusEnum.Closed)
             .Where(s => s.Assignments.Any(a =>
                 (a.CohortId != null && cohortIds.Contains(a.CohortId.Value)) ||
                 (a.CohortClassId != null && classIds.Contains(a.CohortClassId.Value))))
@@ -209,8 +221,7 @@ public class ExamSessionRepository(AppDbContext _db) : IExamSessionRepository
     /// <inheritdoc/>
     public Task<int> CountSubmittedAttemptsAsync(Guid sessionId, Guid studentId, CancellationToken ct = default)
         => _db.Set<ExamSubmission>().CountAsync(
-            x => x.SessionId == sessionId && x.StudentId == studentId
-                 && (x.Status == SubmissionStatusEnum.Submitted || x.Status == SubmissionStatusEnum.Graded), ct);
+            SubmissionAttempts.UsedAttemptFilter(sessionId, studentId), ct);
 
     /// <inheritdoc/>
     public Task<ExamSubmission?> GetInProgressAsync(Guid sessionId, Guid studentId, CancellationToken ct = default)

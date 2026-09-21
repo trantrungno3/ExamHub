@@ -18,6 +18,10 @@ public sealed record GenerateExamApiRequest( )
     public int DurationMinutes{ get; set; }
     public  bool ShuffleQuestions{ get; set; }
     public  bool ShuffleAnswers{ get; set; }
+    /// <summary>
+    /// Không có tác dụng khi sinh 1 đề đơn (không có đề khác để so trùng) — giữ lại để tương thích
+    /// với request sinh lô. Chống trùng câu hỏi giữa các phần thi trong đề luôn được áp dụng mặc định.
+    /// </summary>
     public  bool PreventDuplicate{ get; set; } = true;
     /// <summary>Tổng điểm của đề (tuỳ chọn) — bỏ trống/0 để tự tính từ các phần.</summary>
     [property: Range(0, 9999999, ErrorMessage = "Tổng điểm không hợp lệ.")]

@@ -34,6 +34,8 @@ public interface IQuestionRepository : IBaseRepository<Question, Guid>
         int? cognitiveLevelId = null,
         string? keyword = null,
         string? reviewStatus = null,
+        int? subjectId = null,
+        int? gradeLevelId = null,
         CancellationToken ct = default);
 
     /// <summary>
@@ -96,5 +98,8 @@ public interface ITeacherSubjectRepository : IBaseRepository<TeacherSubject, int
 
     /// <summary>Xóa phụ trách môn học</summary>
     Task RemoveSubjectAsync(Guid userId, int subjectId, CancellationToken ct = default);
+
+    /// <summary>Đặt lại toàn bộ danh sách môn học phụ trách của giáo viên (thêm/xoá theo diff)</summary>
+    Task SetSubjectsAsync(Guid userId, IReadOnlyList<int> subjectIds, CancellationToken ct = default);
 }
 

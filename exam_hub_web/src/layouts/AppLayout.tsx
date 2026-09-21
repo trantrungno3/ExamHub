@@ -1,5 +1,6 @@
-import {useCallback, useEffect, useState} from 'react'
-import {Outlet, useLocation, useNavigate} from 'react-router-dom'
+import {Suspense, useCallback, useEffect, useState} from 'react'
+import {Spin} from 'antd'
+import {NavLink, Outlet, useLocation, useNavigate} from 'react-router-dom'
 import {
     AppstoreOutlined,
     UnorderedListOutlined,
@@ -12,12 +13,12 @@ import {
     ScheduleOutlined,
     LogoutOutlined,
     DownOutlined,
-    RightOutlined,
 } from '@ant-design/icons'
 import type {ReactNode} from 'react'
-import {useAuth} from '../AuthProvider'
+import {useAuth} from '../hooks/useAuth'
 import {isTokenExpired} from '../utils/jwt'
 import {useMenuQuery} from '../hooks/queries/useMenu'
+import {ROUTES} from '../routes/paths'
 
 const ICON_MAP: Record<string, ReactNode> = {
     dashboard:  <AppstoreOutlined/>,
@@ -69,11 +70,8 @@ export default function AppLayout() {
             navigate('/login', {replace: true})
             return
         }
-        if (isTokenExpired(token.refreshExpiresAt)) {
-            logout()
-            navigate('/login', {replace: true})
-            return
-        }
+        // Không còn kiểm tra refresh expiry ở client: cookie HttpOnly là nguồn sự thật, refresh
+        // thất bại mới là tín hiệu hết phiên.
         if (isTokenExpired(token.expiresAt)) {
             void refresh().then(ok => {
                 if (!ok) navigate('/login', {replace: true})
@@ -83,6 +81,18 @@ export default function AppLayout() {
         }
     }, [location.pathname, token, navigate, refresh, logout])
 
+    // TEMP-PERF: đo click → paint của mỗi lần đổi page. Xoá sau khi debug xong.
+    useEffect(() => {
+        const t0 = performance.now()
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+            const paint = performance.now() - t0
+            const net = performance.getEntriesByType('resource')
+                .filter(e => e.startTime >= t0 - 50 && e.name.includes('/api/'))
+                .map(e => `${e.name.split('/api/')[1].split('?')[0]}:${Math.round(e.duration)}ms`)
+            console.log(`[nav] ${location.pathname} paint=${Math.round(paint)}ms api=[${net.join(' ')}]`)
+        }))
+    }, [location.pathname])
+
     const handleLogout = useCallback(() => {
         logout()
         navigate('/login')
@@ -91,10 +101,10 @@ export default function AppLayout() {
     return (
         <div className="app-layout">
             <aside className="sidebar">
-                <div className="sidebar-logo">
+                <button className="sidebar-logo" aria-label="Về trang chủ" onClick={() => navigate(ROUTES.APP)}>
                     <div className="sidebar-logo-icon">EH</div>
                     <span className="sidebar-logo-name">ExamHub</span>
-                </div>
+                </button>
 
                 <nav className="sidebar-nav">
                     {navItems.map((item) => {
@@ -105,25 +115,24 @@ export default function AppLayout() {
                                 <div key={item.key}>
                                     <button
                                         onClick={() => toggleGroup(item.key, activeChild)}
-                                        className={`sidebar-nav-item ${activeChild ? 'sidebar-nav-item--active' : ''}`}
+                                        aria-expanded={open}
+                                        className={`sidebar-nav-item ${open || activeChild ? 'sidebar-nav-item--open' : ''}`}
                                     >
                                         <span className="text-base">{ICON_MAP[item.icon] ?? <AppstoreOutlined/>}</span>
                                         <span className="flex-1 text-left">{item.label}</span>
-                                        <span className="text-xs">{open ? <DownOutlined/> : <RightOutlined/>}</span>
+                                        <DownOutlined className={`sidebar-chevron ${open ? '' : '-rotate-90'}`}/>
                                     </button>
                                     {open && (
-                                        <div className="ml-4">
+                                        <div className="sidebar-submenu" role="group">
                                             {item.children.map((child) => (
-                                                <button
+                                                <NavLink
                                                     key={child.key}
-                                                    onClick={() => child.path && navigate(child.path)}
-                                                    className={`sidebar-nav-item ${
-                                                        child.path && location.pathname.startsWith(child.path) ? 'sidebar-nav-item--active' : ''
-                                                    }`}
+                                                    to={child.path ?? '#'}
+                                                    className={({isActive}) =>
+                                                        `sidebar-subitem ${isActive ? 'sidebar-nav-item--active' : ''}`}
                                                 >
-                                                    <span className="text-base">{ICON_MAP[child.icon] ?? <AppstoreOutlined/>}</span>
                                                     <span>{child.label}</span>
-                                                </button>
+                                                </NavLink>
                                             ))}
                                         </div>
                                     )}
@@ -131,30 +140,27 @@ export default function AppLayout() {
                             )
                         }
                         return (
-                            <button
+                            <NavLink
                                 key={item.key}
-                                onClick={() => item.path && navigate(item.path)}
-                                className={`sidebar-nav-item ${
-                                    item.path && location.pathname.startsWith(item.path) ? 'sidebar-nav-item--active' : ''
-                                }`}
+                                to={item.path ?? '#'}
+                                className={({isActive}) =>
+                                    `sidebar-nav-item ${isActive ? 'sidebar-nav-item--active' : ''}`}
                             >
                                 <span className="text-base">{ICON_MAP[item.icon] ?? <AppstoreOutlined/>}</span>
                                 <span>{item.label}</span>
-                            </button>
+                            </NavLink>
                         )
                     })}
                 </nav>
 
                 <div className="sidebar-footer">
-                    <button
-                        onClick={() => navigate('/app/profile')}
-                        className={`sidebar-nav-item ${
-                            location.pathname.startsWith('/app/profile') ? 'sidebar-nav-item--active' : ''
-                        }`}
+                    <NavLink
+                        to="/app/profile"
+                        className={({isActive}) => `sidebar-nav-item ${isActive ? 'sidebar-nav-item--active' : ''}`}
                     >
                         <UserOutlined/>
                         <span>Tài khoản</span>
-                    </button>
+                    </NavLink>
                     <button
                         onClick={handleLogout}
                         className="sidebar-nav-item text-red-400 hover:!text-red-300 hover:!bg-red-500/10"
@@ -166,7 +172,9 @@ export default function AppLayout() {
             </aside>
 
             <div className="page-canvas">
-                <Outlet/>
+                <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Spin size="large"/></div>}>
+                    <Outlet/>
+                </Suspense>
             </div>
         </div>
     )

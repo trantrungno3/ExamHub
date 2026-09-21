@@ -20,20 +20,22 @@ public class ExamTemplateRepository : BaseRepository<ExamTemplate, Guid>, IExamT
             .FirstOrDefaultAsync(x => x.Id == id, ct);
 
     /// <inheritdoc/>
-    public async Task<IReadOnlyList<ExamTemplate>> GetBySubjectAsync(int subjectId, CancellationToken ct = default)
+    public override async Task<IReadOnlyList<ExamTemplate>> GetAllAsync(CancellationToken ct = default)
         => await Set.AsNoTracking()
             .Include(x => x.GradeLevel)
             .Include(x => x.Subject)
-            .Where(x => x.SubjectId == subjectId && x.IsActive)
             .OrderByDescending(x => x.Created)
             .ToListAsync(ct);
 
     /// <inheritdoc/>
-    public async Task<IReadOnlyList<ExamTemplate>> GetByGradeLevelAsync(int gradeLevelId, CancellationToken ct = default)
-        => await Set.AsNoTracking()
+    public async Task<IReadOnlyList<ExamTemplate>> GetFilteredAsync(int? subjectId, int? gradeLevelId, CancellationToken ct = default)
+    {
+        var query = Set.AsNoTracking()
             .Include(x => x.GradeLevel)
             .Include(x => x.Subject)
-            .Where(x => x.GradeLevelId == gradeLevelId && x.IsActive)
-            .OrderByDescending(x => x.Created)
-            .ToListAsync(ct);
+            .AsQueryable();
+        if (subjectId is not null) query = query.Where(x => x.SubjectId == subjectId);
+        if (gradeLevelId is not null) query = query.Where(x => x.GradeLevelId == gradeLevelId);
+        return await query.OrderByDescending(x => x.Created).ToListAsync(ct);
+    }
 }

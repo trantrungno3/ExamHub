@@ -1,4 +1,5 @@
-using System.Text.Json;
+using ExamHub.Core.DataTransferObjects.Common;
+using ExamHub.Core.Application.Grading;
 using ExamHub.Core.Application.Services;
 using ExamHub.Core.DataTransferObjects.Exam;
 using ExamHub.Core.Domain.Entities;
@@ -14,17 +15,20 @@ public class ExamSubmissionService : IExamSubmissionService
     private readonly ISubmissionAnswerRepository _answerRepo;
     private readonly IExamQuestionRepository _examQuestionRepo;
     private readonly IUserManagementService _userService;
+    private readonly IExamSessionRepository _sessionRepo;
 
     public ExamSubmissionService(
         IExamSubmissionRepository submissionRepo,
         ISubmissionAnswerRepository answerRepo,
         IExamQuestionRepository examQuestionRepo,
-        IUserManagementService userService)
+        IUserManagementService userService,
+        IExamSessionRepository sessionRepo)
     {
         _submissionRepo   = submissionRepo;
         _answerRepo       = answerRepo;
         _examQuestionRepo = examQuestionRepo;
         _userService      = userService;
+        _sessionRepo      = sessionRepo;
     }
 
     /// <inheritdoc/>
@@ -66,30 +70,52 @@ public class ExamSubmissionService : IExamSubmissionService
     public Task<IReadOnlyList<ExamSubmission>> GetBySessionAsync(Guid sessionId, CancellationToken ct = default)
         => _submissionRepo.GetBySessionAsync(sessionId, ct);
 
+    // Clamp ngay trong service: mọi caller đều bị chặn, không phụ thuộc controller nào nhớ clamp.
+    public async Task<(IReadOnlyList<ExamSubmission> Items, int Total, int Page, int PageSize)> GetPageBySessionAsync(
+        Guid sessionId, int page, int pageSize, CancellationToken ct = default)
+    {
+        var (safePage, safeSize) = PageRequest.Normalize(page, pageSize);
+        var (items, total) = await _submissionRepo.GetPageBySessionAsync(sessionId, safePage, safeSize, ct);
+        return (items, total, safePage, safeSize);
+    }
+
+    public async Task<(IReadOnlyList<ExamSubmission> Items, int Total, int Page, int PageSize)> GetPageByStudentAsync(
+        Guid studentId, int page, int pageSize, CancellationToken ct = default)
+    {
+        var (safePage, safeSize) = PageRequest.Normalize(page, pageSize);
+        var (items, total) = await _submissionRepo.GetPageByStudentAsync(studentId, safePage, safeSize, ct);
+        return (items, total, safePage, safeSize);
+    }
+
     public Task<IReadOnlyList<ExamSubmission>> GetBySessionAndStudentAsync(Guid sessionId, Guid studentId, CancellationToken ct = default)
         => _submissionRepo.GetBySessionAndStudentAsync(sessionId, studentId, ct);
 
     public async Task<ExamSubmission> SubmitAsync(
         ExamSubmission submission,
         IEnumerable<SubmissionAnswer> answers,
+        Guid currentUserId,
         CancellationToken ct = default)
     {
-        // Luồng kỳ thi: có sẵn bản in_progress (đã bốc/khoá đề) → cập nhật thay vì tạo mới.
         if (submission.Id != Guid.Empty)
         {
-            var existing = await _submissionRepo.GetByIdAsync(submission.Id, ct);
-            if (existing is not null && existing.Status == SubmissionStatusEnum.InProgress)
-                return await SubmitInProgressAsync(existing, answers, ct);
+            var existing = await _submissionRepo.GetByIdAsync(submission.Id, ct)
+                ?? throw new InvalidOperationException("Không tìm thấy bài làm.");
+            if (existing.StudentId != currentUserId)
+                throw new UnauthorizedAccessException("Bạn không có quyền nộp bài làm này.");
+            if (existing.Status != SubmissionStatusEnum.InProgress)
+                throw new InvalidOperationException("Bài làm đã được nộp.");
+            await EnsureSessionOpenAsync(existing, ct);
+            return await SubmitInProgressAsync(existing, answers, ct);
         }
 
         // Luồng đề trực tiếp (giữ nguyên): tạo bản nộp mới.
+        submission.StudentId = currentUserId;
+        await EnsureSessionOpenAsync(submission, ct);
         submission.Id          = Guid.NewGuid();
         submission.SubmittedAt = DateTime.UtcNow;
         submission.Status      = SubmissionStatusEnum.Submitted;
         submission.Created   = DateTime.UtcNow;
         submission.Modified   =  DateTime.UtcNow;
-
-        await _submissionRepo.AddAsync(submission, ct);
 
         var answerList = answers.Select(a =>
         {
@@ -99,12 +125,21 @@ public class ExamSubmissionService : IExamSubmissionService
             return a;
         }).ToList();
 
-        await AutoGradeObjectiveAsync(submission.ExamId, answerList, ct);
+        var examQuestions = await _examQuestionRepo.GetByExamAsync(submission.ExamId, ct);
+        ApplyAutoGrade(examQuestions, answerList);
+        submission.TotalScore = answerList.Sum(a => a.ScoreEarned);
+        submission.Status     = SubmissionGrading.DecideStatus(examQuestions);
 
-        if (answerList.Count > 0)
-            await _answerRepo.AddRangeAsync(answerList, ct);
-
-        return submission;
+        // Insert submission + insert đáp án là một đơn vị: nếu ghi đáp án lỗi thì bản nộp rỗng
+        // cũng không được tồn tại.
+        return await _submissionRepo.ExecuteInTransactionAsync(async token =>
+        {
+            // Điểm/trạng thái đã tính xong trước khi insert, nên không cần UPDATE ngay sau ADD.
+            await _submissionRepo.AddAsync(submission, token);
+            if (answerList.Count > 0)
+                await _answerRepo.AddRangeAsync(answerList, token);
+            return submission;
+        }, ct);
     }
 
     /// <summary>
@@ -116,12 +151,6 @@ public class ExamSubmissionService : IExamSubmissionService
         IEnumerable<SubmissionAnswer> answers,
         CancellationToken ct)
     {
-        var now = DateTime.UtcNow;
-        existing.SubmittedAt     = now;
-        existing.Status          = SubmissionStatusEnum.Submitted;
-        existing.DurationSeconds = (int)Math.Max(0, (now - existing.StartedAt).TotalSeconds);
-        existing.Modified        = now;
-
         var answerList = answers.Select(a =>
         {
             a.Id           = Guid.NewGuid();
@@ -129,65 +158,51 @@ public class ExamSubmissionService : IExamSubmissionService
             return a;
         }).ToList();
 
-        // Chấm theo đề đã khoá của bản nộp, không theo ExamId gửi lên.
-        await AutoGradeObjectiveAsync(existing.ExamId, answerList, ct);
-        existing.TotalScore = answerList.Sum(a => a.ScoreEarned);
+        // Đổi trạng thái sang Submitted và thay đáp án phải cùng sống hoặc cùng chết: nếu chỉ
+        // ReplaceForSubmissionAsync lỗi, bài sẽ bị đánh dấu đã nộp mà đáp án đã bị xoá trắng.
+        // Việc mutate entity cũng nằm trong transaction để rollback trả bài về đúng in_progress.
+        return await _submissionRepo.ExecuteInTransactionAsync(async token =>
+        {
+            var now = DateTime.UtcNow;
+            existing.SubmittedAt     = now;
+            existing.Status          = SubmissionStatusEnum.Submitted;
+            existing.DurationSeconds = (int)Math.Max(0, (now - existing.StartedAt).TotalSeconds);
+            existing.Modified        = now;
 
-        await _submissionRepo.UpdateAsync(existing, ct);
+            // Chấm theo đề đã khoá của bản nộp, không theo ExamId gửi lên.
+            var examQuestions = await _examQuestionRepo.GetByExamAsync(existing.ExamId, token);
+            ApplyAutoGrade(examQuestions, answerList);
+            existing.TotalScore = answerList.Sum(a => a.ScoreEarned);
+            existing.Status     = SubmissionGrading.DecideStatus(examQuestions);
 
-        if (answerList.Count > 0)
-            await _answerRepo.AddRangeAsync(answerList, ct);
+            await _submissionRepo.UpdateAsync(existing, token);
 
-        return existing;
+            // Bản in_progress CÓ THỂ đã có sẵn đáp án do autosave (SaveProgressAsync) ghi trước
+            // đó. Vì vậy phải xoá sạch rồi ghi lại (ReplaceForSubmissionAsync = delete-then-
+            // insert, cùng ngữ nghĩa autosave đang dùng) — nếu chỉ AddRange sẽ sinh bản ghi trùng
+            // cho mỗi câu: vi phạm UNIQUE (submission_id, exam_question_id), và nếu lọt qua thì
+            // màn chấm hiện mỗi câu hai lần còn FinalizeAsync cộng điểm sai. Gọi cả khi danh sách
+            // rỗng để không sót lại đáp án autosave cũ.
+            await _answerRepo.ReplaceForSubmissionAsync(existing.Id, answerList, token);
+            return existing;
+        }, ct);
     }
 
-    /// <summary>
-    /// Chấm tự động các câu trắc nghiệm (có <see cref="SubmissionAnswer.SelectedAnswerIds"/>):
-    /// so khớp tập đáp án đã chọn với tập đáp án đúng trong snapshot.
-    /// Câu tự luận (chỉ có EssayContent) giữ nguyên IsCorrect = null để giáo viên chấm tay.
-    /// </summary>
-    private async Task AutoGradeObjectiveAsync(
-        Guid examId, IReadOnlyList<SubmissionAnswer> answers, CancellationToken ct)
+    /// <summary>Chấm tự động câu trắc nghiệm dựa trên danh sách examQuestions đã nạp.</summary>
+    private static void ApplyAutoGrade(
+        IReadOnlyList<ExamQuestion> examQuestions, IReadOnlyList<SubmissionAnswer> answers)
     {
-        if (!answers.Any(a => a.SelectedAnswerIds is { Length: > 0 }))
-            return;
-
-        var examQuestions = await _examQuestionRepo.GetByExamAsync(examId, ct);
         var byId = examQuestions.ToDictionary(eq => eq.Id);
-
         foreach (var answer in answers)
         {
-            if (answer.SelectedAnswerIds is not { Length: > 0 } selected)
-                continue;
-            if (!byId.TryGetValue(answer.ExamQuestionId, out var examQuestion))
-                continue;
+            if (answer.SelectedAnswerIds is not { Length: > 0 } selected) continue;
+            if (!byId.TryGetValue(answer.ExamQuestionId, out var examQuestion)) continue;
 
-            var correctIds = CorrectAnswerIdsFromSnapshot(examQuestion.AnswersSnapshot);
+            var correctIds = SubmissionGrading.CorrectAnswerIds(examQuestion.AnswersSnapshot);
             var isCorrect  = correctIds.Count > 0 && correctIds.SetEquals(selected);
-
             answer.IsCorrect   = isCorrect;
             answer.ScoreEarned = isCorrect ? examQuestion.Score ?? 1m : 0m;
         }
-    }
-
-    /// <summary>Trích tập UUID đáp án đúng từ snapshot JSON [{id, is_correct, ...}].</summary>
-    private static HashSet<Guid> CorrectAnswerIdsFromSnapshot(string? snapshotJson)
-    {
-        var result = new HashSet<Guid>();
-        if (string.IsNullOrWhiteSpace(snapshotJson))
-            return result;
-
-        using var doc = JsonDocument.Parse(snapshotJson);
-        if (doc.RootElement.ValueKind != JsonValueKind.Array)
-            return result;
-
-        foreach (var el in doc.RootElement.EnumerateArray())
-        {
-            if (el.TryGetProperty("is_correct", out var ic) && ic.ValueKind == JsonValueKind.True &&
-                el.TryGetProperty("id", out var idEl) && idEl.TryGetGuid(out var id))
-                result.Add(id);
-        }
-        return result;
     }
 
     public async Task<ExamSubmission> FinalizeAsync(
@@ -204,6 +219,52 @@ public class ExamSubmissionService : IExamSubmissionService
 
         await _submissionRepo.UpdateAsync(submission, ct);
         return submission;
+    }
+
+    public async Task SaveProgressAsync(
+        Guid submissionId, Guid currentUserId, IEnumerable<SubmissionAnswer> answers, CancellationToken ct = default)
+    {
+        var existing = await _submissionRepo.GetByIdAsync(submissionId, ct)
+            ?? throw new InvalidOperationException("Không tìm thấy bài làm.");
+        // Chỉ chủ nhân bài làm được ghi đè. ReplaceForSubmissionAsync là delete-then-insert nên
+        // nếu thiếu kiểm tra này, bất kỳ tài khoản nào biết/đoán được submissionId đều có thể
+        // xoá trắng bài làm đang thi của học sinh khác.
+        if (existing.StudentId != currentUserId)
+            throw new UnauthorizedAccessException("Bạn không có quyền lưu bài làm này.");
+        if (existing.Status != SubmissionStatusEnum.InProgress)
+            throw new InvalidOperationException("Bài làm đã nộp, không thể lưu tạm.");
+        await EnsureSessionOpenAsync(existing, ct);
+
+        var list = answers.Select(a =>
+        {
+            a.Id           = Guid.NewGuid();
+            a.SubmissionId = submissionId;
+            a.EssayContent = a.EssayContent?.Trim();
+            return a;
+        }).ToList();
+
+        // ReplaceForSubmissionAsync xoá trước rồi mới insert: không có transaction thì insert lỗi
+        // sẽ để học sinh mất trắng đáp án đã lưu.
+        await _submissionRepo.ExecuteInTransactionAsync<object?>(async token =>
+        {
+            await _answerRepo.ReplaceForSubmissionAsync(submissionId, list, token);
+            return null;
+        }, ct);
+    }
+
+    private async Task EnsureSessionOpenAsync(ExamSubmission submission, CancellationToken ct)
+    {
+        if (submission.SessionId is null) return;
+
+        var session = await _sessionRepo.GetByIdAsync(submission.SessionId.Value, ct)
+            ?? throw new InvalidOperationException("Không tìm thấy kỳ thi.");
+        var now = DateTime.UtcNow;
+        if (session.Status == ExamSessionStatusEnum.Closed || now > session.CloseAt)
+            throw new InvalidOperationException("Kỳ thi đã đóng.");
+        if (session.Status != ExamSessionStatusEnum.Published)
+            throw new InvalidOperationException("Kỳ thi chưa mở.");
+        if (now < session.OpenAt)
+            throw new InvalidOperationException("Kỳ thi chưa đến giờ mở.");
     }
 
     public async Task GradeAnswerAsync(

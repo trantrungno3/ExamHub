@@ -1,15 +1,18 @@
-import {useCallback, useEffect, useMemo, useState} from 'react'
+import {useCallback, useMemo, useState} from 'react'
 import type {TableColumnsType} from 'antd'
-import {Button, Input, Popconfirm, Switch, Table, Tag, Tooltip} from 'antd'
+import {Button, Input, Modal, Popconfirm, Switch, Table, Tag, Tooltip} from 'antd'
 import {BookOutlined, DeleteOutlined, EditOutlined, KeyOutlined, PlusOutlined, SearchOutlined, TeamOutlined, UploadOutlined} from '@ant-design/icons'
 import {message} from 'antd'
 import {userService} from '../../services/userService'
+import {ROLE_COLOR, ROLE_LABEL} from '../../constants'
+import {statusCode} from '../../services/requestService'
 import {UserFormModal} from './UserFormModal'
 import {ResetPasswordModal} from './ResetPasswordModal'
 import {RolesModal} from './RolesModal'
 import {TeacherSubjectsModal} from './TeacherSubjectsModal'
 import {UserBulkImportModal} from './UserBulkImportModal'
 import {useGradeLevelsListQuery, useSubjectsQuery} from '../../hooks/queries/useCategoryLists'
+import {useInvalidateUsers, useUsersQuery} from '../../hooks/queries/useUsers'
 
 type ModalState =
     | {type: 'none'}
@@ -19,8 +22,8 @@ type ModalState =
     | {type: 'subjects'; record: UserResponse}
 
 export default function UserPage() {
-    const [data, setData] = useState<UserResponse[]>([])
-    const [loading, setLoading] = useState(true)
+    const {data, isLoading: loading} = useUsersQuery()
+    const invalidateUsers = useInvalidateUsers()
     const [search, setSearch] = useState('')
     const [modal, setModal] = useState<ModalState>({type: 'none'})
     const [lockingId, setLockingId] = useState<string | null>(null)
@@ -30,18 +33,8 @@ export default function UserPage() {
     useSubjectsQuery()
     useGradeLevelsListQuery()
 
-    const fetchData = useCallback(() => {
-        setLoading(true)
-        void userService.getAll()
-            .then(res => setData(res.data ?? []))
-            .catch(() => message.error('Không thể tải danh sách người dùng'))
-            .finally(() => setLoading(false))
-    }, [])
-
-    useEffect(() => { fetchData() }, [fetchData])
-
     const filtered = useMemo(
-        () => data.filter(u =>
+        () => (data ?? []).filter(u =>
             u.displayName.toLowerCase().includes(search.toLowerCase()) ||
             (u.userName ?? '').toLowerCase().includes(search.toLowerCase()) ||
             (u.email ?? '').toLowerCase().includes(search.toLowerCase())
@@ -57,18 +50,49 @@ export default function UserPage() {
                 : await userService.create(body as CreateUserRequest)
             if (!res.data) { message.error(res.message || 'Có lỗi xảy ra'); return false }
             message.success(editing ? 'Cập nhật thành công' : 'Thêm người dùng thành công')
-            fetchData()
+            invalidateUsers()
             return true
         } catch { message.error('Có lỗi xảy ra'); return false }
-    }, [modal, fetchData])
+    }, [modal, invalidateUsers])
 
-    const handleDelete = useCallback(async (id: string) => {
+    const removeUser = useCallback(async (id: string, force: boolean) => {
         try {
-            await userService.remove(id)
-            message.success('Đã xóa người dùng')
-            setData(prev => prev.filter(u => u.id !== id))
-        } catch { message.error('Không thể xóa người dùng') }
+            return await userService.remove(id, force)
+        } catch {
+            message.error('Không thể xóa người dùng')
+            return null
+        }
     }, [])
+
+    const requestDelete = useCallback(async (id: string) => {
+        const res = await removeUser(id, false)
+        if (!res) return
+        if (res.status === statusCode.Conflict) {
+            Modal.confirm({
+                title: 'Đang được sử dụng',
+                content: res.message,
+                okText: 'Xoá bắt buộc',
+                okType: 'danger',
+                cancelText: 'Hủy',
+                onOk: async () => {
+                    const forced = await removeUser(id, true)
+                    if (forced?.status === statusCode.Deleted) {
+                        message.success('Đã xóa người dùng')
+                        invalidateUsers()
+                    } else if (forced) {
+                        message.error(forced.message || 'Không thể xóa người dùng')
+                    }
+                },
+            })
+            return
+        }
+        if (res.status !== statusCode.Deleted) {
+            message.error(res.message || 'Không thể xóa người dùng')
+            return
+        }
+        message.success('Đã xóa người dùng')
+        invalidateUsers()
+    }, [removeUser, invalidateUsers])
 
     const handleLockToggle = useCallback(async (record: UserResponse) => {
         setLockingId(record.id)
@@ -76,10 +100,10 @@ export default function UserPage() {
             const next = !record.lockoutEnabled
             await userService.setLock(record.id, next)
             message.success(next ? 'Đã khóa tài khoản' : 'Đã mở khóa tài khoản')
-            setData(prev => prev.map(u => u.id === record.id ? {...u, lockoutEnabled: next} : u))
+            invalidateUsers()
         } catch { message.error('Có lỗi xảy ra') }
         finally { setLockingId(null) }
-    }, [])
+    }, [invalidateUsers])
 
     const handleResetPassword = useCallback(async (body: ResetPasswordRequest): Promise<boolean> => {
         if (modal.type !== 'password') return false
@@ -95,10 +119,10 @@ export default function UserPage() {
         try {
             await userService.setRoles(modal.record.id, body)
             message.success('Cập nhật phân quyền thành công')
-            setData(prev => prev.map(u => u.id === modal.record.id ? {...u, roles: body.roles} : u))
+            invalidateUsers()
             return true
         } catch { message.error('Có lỗi xảy ra'); return false }
-    }, [modal])
+    }, [modal, invalidateUsers])
 
     const columns: TableColumnsType<UserResponse> = [
         {
@@ -130,7 +154,7 @@ export default function UserPage() {
         {
             title: 'Vai trò', dataIndex: 'roles', key: 'roles', width: 200,
             render: (roles: string[]) => roles.length
-                ? roles.map(r => <Tag key={r} color={r === 'Admin' ? 'red' : r === 'Teacher' ? 'orange' : 'green'}>{r}</Tag>)
+                ? roles.map(r => <Tag key={r} color={ROLE_COLOR[r] ?? 'default'}>{ROLE_LABEL[r] ?? r}</Tag>)
                 : <span className="text-gray-300 text-xs">Chưa có</span>,
         },
         {
@@ -182,7 +206,7 @@ export default function UserPage() {
                         description={`Tài khoản "${r.displayName}" sẽ bị xóa vĩnh viễn.`}
                         okText="Xóa" cancelText="Hủy"
                         okButtonProps={{danger: true}}
-                        onConfirm={() => handleDelete(r.id)}
+                        onConfirm={() => requestDelete(r.id)}
                     >
                         <Tooltip title="Xóa">
                             <button className="btn-icon btn-icon-danger"><DeleteOutlined/></button>
@@ -225,7 +249,7 @@ export default function UserPage() {
                     pagination={{pageSize: 15, showSizeChanger: false}}
                     footer={() => (
                         <span className="text-[12px] text-gray-400">
-                            Hiển thị {filtered.length} trong tổng số {data.length} người dùng
+                            Hiển thị {filtered.length} trong tổng số {(data ?? []).length} người dùng
                         </span>
                     )}
                 />
@@ -244,23 +268,25 @@ export default function UserPage() {
                 onClose={() => setModal({type: 'none'})}
                 onSave={handleResetPassword}
             />
-            <RolesModal
-                open={modal.type === 'roles'}
-                userName={modal.type === 'roles' ? modal.record.userName : null}
-                currentRoles={modal.type === 'roles' ? modal.record.roles : []}
-                onClose={() => setModal({type: 'none'})}
-                onSave={handleSetRoles}
-            />
-            <TeacherSubjectsModal
-                open={modal.type === 'subjects'}
-                userId={modal.type === 'subjects' ? modal.record.id : null}
-                userName={modal.type === 'subjects' ? modal.record.userName : null}
-                onClose={() => setModal({type: 'none'})}
-            />
+            {modal.type === 'roles' && (
+                <RolesModal
+                    userName={modal.record.userName}
+                    currentRoles={modal.record.roles}
+                    onClose={() => setModal({type: 'none'})}
+                    onSave={handleSetRoles}
+                />
+            )}
+            {modal.type === 'subjects' && (
+                <TeacherSubjectsModal
+                    userId={modal.record.id}
+                    userName={modal.record.userName}
+                    onClose={() => setModal({type: 'none'})}
+                />
+            )}
             <UserBulkImportModal
                 open={importOpen}
                 onClose={() => setImportOpen(false)}
-                onImported={fetchData}
+                onImported={invalidateUsers}
             />
         </div>
     )

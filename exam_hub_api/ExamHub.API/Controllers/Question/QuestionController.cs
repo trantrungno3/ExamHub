@@ -1,3 +1,5 @@
+using ExamHub.Core.DataTransferObjects.Common;
+using Microsoft.AspNetCore.RateLimiting;
 using ExamHub.Core.Application.Services;
 using ExamHub.Core.DataTransferObjects.Question;
 using ExamHub.Core.Domain.Interfaces;
@@ -25,6 +27,9 @@ public class QuestionController(
         ["audio/mpeg", "audio/mp3", "audio/wav", "audio/x-wav", "audio/ogg", "audio/webm", "audio/mp4"];
 
     /// <summary>Lấy câu hỏi theo ID (kèm đáp án)</summary>
+    /// <param name="id">Id câu hỏi cần lấy.</param>
+    /// <param name="ct">Token huỷ yêu cầu.</param>
+    /// <returns>Câu hỏi kèm đáp án; 404 nếu không tồn tại.</returns>
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<RequestResponse<QuestionResponse>>> GetById(Guid id, CancellationToken ct)
     {
@@ -34,24 +39,32 @@ public class QuestionController(
     }
 
     /// <summary>Lấy danh sách câu hỏi phân trang với bộ lọc</summary>
+    /// <param name="request">Tham số phân trang và bộ lọc (chủ đề, loại câu hỏi, độ khó, mức nhận thức, từ khoá, trạng thái duyệt).</param>
+    /// <param name="ct">Token huỷ yêu cầu.</param>
+    /// <returns>Danh sách câu hỏi đã lọc kèm tổng số bản ghi.</returns>
     [HttpGet]
     public async Task<ActionResult<RequestResponse<object>>> GetPaged([FromQuery] QuestionPagedRequest request, CancellationToken ct)
     {
+        // Clamp trước khi xuống DB và dùng đúng giá trị đã clamp trong response, để client biết
+        // nó thực sự nhận trang nào chứ không phải trang nó đã hỏi.
+        var (page, pageSize) = PageRequest.Normalize(request.Page, request.PageSize);
         var (items, total) = await service.GetPagedAsync(
-            request.Page, request.PageSize,
+            page, pageSize,
             request.TopicId, request.QuestionTypeId, request.DifficultyLevelId,
-            request.CognitiveLevelId, request.Keyword, request.ReviewStatus, ct);
+            request.CognitiveLevelId, request.Keyword, request.ReviewStatus,
+            request.SubjectId, request.GradeLevelId, ct);
 
-        return Ok(RequestResponse<object>.Success("Lấy danh sách thành công!", new
-        {
-            Total    = total,
-            Page     = request.Page,
-            PageSize = request.PageSize,
-            Items    = items.Select(q => QuestionResponse.FromEntity(q)).ToList()
-        }, total));
+        return Ok(RequestResponse<object>.Success(
+            "Lấy danh sách thành công!",
+            PagedResult<QuestionResponse>.Create(
+                items.Select(q => QuestionResponse.FromEntity(q)).ToList(), total, page, pageSize),
+            total));
     }
 
     /// <summary>Lấy danh sách câu hỏi theo chủ đề</summary>
+    /// <param name="topicId">Id chủ đề cần lọc.</param>
+    /// <param name="ct">Token huỷ yêu cầu.</param>
+    /// <returns>Danh sách câu hỏi thuộc chủ đề.</returns>
     [HttpGet("by-topic/{topicId:int}")]
     public async Task<ActionResult<RequestResponse<IReadOnlyList<QuestionResponse>>>> GetByTopic(int topicId, CancellationToken ct)
     {
@@ -61,6 +74,9 @@ public class QuestionController(
     }
 
     /// <summary>Tạo câu hỏi mới kèm đáp án</summary>
+    /// <param name="request">Nội dung câu hỏi và danh sách đáp án.</param>
+    /// <param name="ct">Token huỷ yêu cầu.</param>
+    /// <returns>Câu hỏi vừa tạo (HTTP 201); 403 nếu không phụ trách môn học của chủ đề.</returns>
     [HttpPost]
     public async Task<ActionResult<RequestResponse<QuestionResponse>>> Create(
         [FromBody] QuestionRequest request,
@@ -81,6 +97,10 @@ public class QuestionController(
     }
 
     /// <summary>Cập nhật câu hỏi (tuỳ chọn kèm đáp án mới)</summary>
+    /// <param name="id">Id câu hỏi cần cập nhật.</param>
+    /// <param name="request">Nội dung câu hỏi mới và danh sách đáp án.</param>
+    /// <param name="ct">Token huỷ yêu cầu.</param>
+    /// <returns>Câu hỏi sau khi cập nhật; 404 nếu không tồn tại; 403 nếu không phụ trách môn học.</returns>
     [HttpPut("{id:guid}")]
     public async Task<ActionResult<RequestResponse<QuestionResponse>>> Update(
         Guid id,
@@ -106,16 +126,30 @@ public class QuestionController(
     }
 
     /// <summary>Xóa câu hỏi</summary>
+    /// <param name="id">Id câu hỏi cần xoá.</param>
+    /// <param name="ct">Token huỷ yêu cầu.</param>
+    /// <returns>204 khi xoá thành công; 404 nếu không tồn tại; 409 nếu đang được tham chiếu (đã dùng trong đề thi).</returns>
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
     {
         var existing = await service.GetByIdAsync(id, ct);
         if (existing is null) return NotFound();
-        await service.DeleteAsync(id, ct);
-        return NoContent();
+        try
+        {
+            await service.DeleteAsync(id, ct);
+            return NoContent();
+        }
+        catch (EntityInUseException ex)
+        {
+            return Conflict(RequestResponse<object>.Error(ex.Message));
+        }
     }
 
     /// <summary>Import câu hỏi hàng loạt từ file Excel (.xlsx)</summary>
+    /// <param name="request">File Excel chứa câu hỏi + đáp án cần import.</param>
+    /// <param name="ct">Token huỷ yêu cầu.</param>
+    /// <returns>Kết quả import kèm số dòng thành công/lỗi.</returns>
+    [EnableRateLimiting("write-heavy")]
     [HttpPost("bulk-import")]
     [Authorize(Roles = "Admin,Teacher")]
     public async Task<ActionResult<RequestResponse<BulkImportQuestionResponse>>> BulkImport(
@@ -134,6 +168,10 @@ public class QuestionController(
     /// URL chỉ được lưu khi Save câu hỏi (client gửi kèm <c>ImageUrl</c> trong QuestionRequest).
     /// Cho phép upload trước cả khi câu hỏi được tạo (không cần id).
     /// </summary>
+    /// <param name="file">Tệp ảnh/PDF cần upload, tối đa 10 MB.</param>
+    /// <param name="ct">Token huỷ yêu cầu.</param>
+    /// <returns>URL của tệp trên MinIO.</returns>
+    [EnableRateLimiting("write-heavy")]
     [HttpPost("attachment")]
     [Authorize(Roles = "Admin,Teacher")]
     public async Task<ActionResult<RequestResponse<object>>> UploadAttachment(IFormFile file, CancellationToken ct)
@@ -158,6 +196,10 @@ public class QuestionController(
     /// Tải tệp audio (≤ 10 MB) lên MinIO → trả URL. KHÔNG ghi DB;
     /// URL chỉ được lưu khi Save câu hỏi (client gửi kèm <c>AudioUrl</c> trong QuestionRequest).
     /// </summary>
+    /// <param name="file">Tệp audio cần upload, tối đa 10 MB.</param>
+    /// <param name="ct">Token huỷ yêu cầu.</param>
+    /// <returns>URL của tệp trên MinIO.</returns>
+    [EnableRateLimiting("write-heavy")]
     [HttpPost("audio")]
     [Authorize(Roles = "Admin,Teacher")]
     public async Task<ActionResult<RequestResponse<object>>> UploadAudio(IFormFile file, CancellationToken ct)
@@ -179,6 +221,9 @@ public class QuestionController(
     }
 
     /// <summary>Kiểm duyệt câu hỏi</summary>
+    /// <param name="id">Id câu hỏi cần duyệt.</param>
+    /// <param name="ct">Token huỷ yêu cầu.</param>
+    /// <returns>204 khi duyệt thành công; 404 nếu không tồn tại.</returns>
     [HttpPost("{id:guid}/verify")]
     public async Task<IActionResult> Verify(Guid id, CancellationToken ct)
     {
@@ -189,6 +234,9 @@ public class QuestionController(
     }
 
     /// <summary>Bỏ duyệt câu hỏi</summary>
+    /// <param name="id">Id câu hỏi cần bỏ duyệt.</param>
+    /// <param name="ct">Token huỷ yêu cầu.</param>
+    /// <returns>204 khi thành công; 404 nếu không tồn tại.</returns>
     [HttpPost("{id:guid}/unverify")]
     public async Task<IActionResult> Unverify(Guid id, CancellationToken ct)
     {
@@ -199,6 +247,10 @@ public class QuestionController(
     }
 
     /// <summary>Từ chối câu hỏi kèm lý do</summary>
+    /// <param name="id">Id câu hỏi cần từ chối.</param>
+    /// <param name="req">Lý do từ chối.</param>
+    /// <param name="ct">Token huỷ yêu cầu.</param>
+    /// <returns>204 khi thành công; 400 nếu thiếu lý do; 404 nếu không tồn tại.</returns>
     [HttpPost("{id:guid}/reject")]
     public async Task<ActionResult<RequestResponse<object>>> Reject(Guid id, [FromBody] RejectQuestionRequest req, CancellationToken ct)
     {
@@ -211,6 +263,8 @@ public class QuestionController(
     }
 
     /// <summary>Thống kê số câu hỏi theo trạng thái</summary>
+    /// <param name="ct">Token huỷ yêu cầu.</param>
+    /// <returns>Số lượng câu hỏi theo từng trạng thái duyệt.</returns>
     [HttpGet("stats")]
     public async Task<ActionResult<RequestResponse<QuestionStatsResponse>>> GetStats(CancellationToken ct)
     {

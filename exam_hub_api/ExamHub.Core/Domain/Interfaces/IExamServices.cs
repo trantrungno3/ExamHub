@@ -18,7 +18,7 @@ public interface IQuestionService
     Task<IReadOnlyList<Question>> GetByTopicAsync(int topicId, CancellationToken ct = default);
 
     /// <summary>Lấy câu hỏi phân trang với bộ lọc</summary>
-    Task<(IReadOnlyList<Question> Items, int Total)> GetPagedAsync(int page, int pageSize, int? topicId = null, int? questionTypeId = null, int? difficultyLevelId = null, int? cognitiveLevelId = null, string? keyword = null, string? reviewStatus = null, CancellationToken ct = default);
+    Task<(IReadOnlyList<Question> Items, int Total)> GetPagedAsync(int page, int pageSize, int? topicId = null, int? questionTypeId = null, int? difficultyLevelId = null, int? cognitiveLevelId = null, string? keyword = null, string? reviewStatus = null, int? subjectId = null, int? gradeLevelId = null, CancellationToken ct = default);
 
     /// <summary>Tạo câu hỏi kèm đáp án</summary>
     Task<Question> CreateAsync(Question entity, IEnumerable<QuestionAnswer> answers, CancellationToken ct = default);
@@ -62,6 +62,9 @@ public interface ITeacherSubjectService
 
     /// <summary>Xóa phụ trách môn học</summary>
     Task RemoveSubjectAsync(Guid userId, int subjectId, CancellationToken ct = default);
+
+    /// <summary>Đặt lại toàn bộ danh sách môn học phụ trách của giáo viên</summary>
+    Task SetSubjectsAsync(Guid userId, IReadOnlyList<int> subjectIds, CancellationToken ct = default);
 }
 
 /// <summary>Service interface cho ExamTemplate</summary>
@@ -73,11 +76,8 @@ public interface IExamTemplateService
     /// <summary>Lấy template kèm phần thi</summary>
     Task<ExamTemplate?> GetWithSectionsAsync(Guid id, CancellationToken ct = default);
 
-    /// <summary>Lấy danh sách template theo môn học</summary>
-    Task<IReadOnlyList<ExamTemplate>> GetBySubjectAsync(int subjectId, CancellationToken ct = default);
-
-    /// <summary>Lấy danh sách template theo lớp</summary>
-    Task<IReadOnlyList<ExamTemplate>> GetByGradeLevelAsync(int gradeLevelId, CancellationToken ct = default);
+    /// <summary>Lấy danh sách template theo bộ lọc (môn học và/hoặc lớp)</summary>
+    Task<IReadOnlyList<ExamTemplate>> GetFilteredAsync(int? subjectId, int? gradeLevelId, CancellationToken ct = default);
 
     /// <summary>Tạo template kèm phần thi</summary>
     Task<ExamTemplate> CreateAsync(ExamTemplate entity, IEnumerable<ExamTemplateSection> sections, CancellationToken ct = default);
@@ -147,6 +147,14 @@ public interface IExamSubmissionService
     /// <summary>Lấy danh sách bài nộp theo kỳ thi</summary>
     Task<IReadOnlyList<ExamSubmission>> GetBySessionAsync(Guid sessionId, CancellationToken ct = default);
 
+    /// <summary>Một trang bài nộp của kỳ thi; page/pageSize được clamp trong service.</summary>
+    Task<(IReadOnlyList<ExamSubmission> Items, int Total, int Page, int PageSize)> GetPageBySessionAsync(
+        Guid sessionId, int page, int pageSize, CancellationToken ct = default);
+
+    /// <summary>Một trang bài nộp của học sinh; page/pageSize được clamp trong service.</summary>
+    Task<(IReadOnlyList<ExamSubmission> Items, int Total, int Page, int PageSize)> GetPageByStudentAsync(
+        Guid studentId, int page, int pageSize, CancellationToken ct = default);
+
     /// <summary>Lấy các lần nộp của một học sinh trong một kỳ thi</summary>
     Task<IReadOnlyList<ExamSubmission>> GetBySessionAndStudentAsync(Guid sessionId, Guid studentId, CancellationToken ct = default);
 
@@ -158,7 +166,11 @@ public interface IExamSubmissionService
         IReadOnlyCollection<Guid> studentIds, CancellationToken ct = default);
 
     /// <summary>Nộp bài kèm câu trả lời</summary>
-    Task<ExamSubmission> SubmitAsync(ExamSubmission submission, IEnumerable<SubmissionAnswer> answers, CancellationToken ct = default);
+    Task<ExamSubmission> SubmitAsync(
+        ExamSubmission submission,
+        IEnumerable<SubmissionAnswer> answers,
+        Guid currentUserId,
+        CancellationToken ct = default);
 
     /// <summary>Chấm điểm một câu trả lời tự luận</summary>
     Task GradeAnswerAsync(Guid submissionAnswerId, decimal scoreEarned, bool isCorrect, string? feedback, Guid gradedBy, CancellationToken ct = default);
@@ -168,4 +180,11 @@ public interface IExamSubmissionService
     /// <see cref="ExamSubmission.TotalScore"/> và chuyển trạng thái sang Graded.
     /// </summary>
     Task<ExamSubmission> FinalizeAsync(Guid submissionId, Guid gradedBy, CancellationToken ct = default);
+
+    /// <summary>
+    /// Lưu tạm đáp án cho bài đang làm (InProgress) — không đổi trạng thái, không chấm.
+    /// Ném <see cref="UnauthorizedAccessException"/> nếu <paramref name="currentUserId"/> không
+    /// phải học sinh sở hữu bài làm.
+    /// </summary>
+    Task SaveProgressAsync(Guid submissionId, Guid currentUserId, IEnumerable<SubmissionAnswer> answers, CancellationToken ct = default);
 }

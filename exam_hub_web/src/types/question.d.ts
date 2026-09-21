@@ -68,6 +68,8 @@ interface QuestionPagedQuery {
     cognitiveLevelId?: number
     keyword?: string
     reviewStatus?: string
+    subjectId?: number
+    gradeLevelId?: number
 }
 
 /* Thống kê ngân hàng câu hỏi (mirrors QuestionStatsResponse.cs) */

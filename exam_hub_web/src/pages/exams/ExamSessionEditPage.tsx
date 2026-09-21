@@ -1,9 +1,23 @@
-import {useEffect, useMemo, useState} from 'react'
+import {Suspense, useEffect, useMemo, useState} from 'react'
 import {useNavigate, useParams} from 'react-router-dom'
-import {Button, Checkbox, DatePicker, Form, Input, InputNumber, Modal, Popconfirm, Select, Spin, Table, Tag, message} from 'antd'
 import type {TableColumnsType} from 'antd'
+import {
+    Button,
+    Checkbox,
+    DatePicker,
+    Form,
+    Input,
+    InputNumber,
+    message,
+    Modal,
+    Popconfirm,
+    Select,
+    Spin,
+    Table,
+    Tag
+} from 'antd'
 import dayjs, {type Dayjs} from 'dayjs'
-import {ArrowLeftOutlined, PlusOutlined} from '@ant-design/icons'
+import {PlusOutlined} from '@ant-design/icons'
 import {
     useAddAssignmentMutation,
     useCreateExamSessionMutation,
@@ -21,7 +35,10 @@ import {useCohortsQuery} from '../../hooks/queries/useCohorts'
 import {useCohortClassesQuery} from '../../hooks/queries/useCohortClasses'
 import {statusCode} from '../../services/requestService'
 import {ROUTES} from '../../routes/paths'
-import {AnalyticsDrawer} from './AnalyticsDrawer'
+import {AnalyticsDrawer} from './AnalyticsDrawerLazy'
+import PageHeader from '../../components/PageHeader'
+import {toOptions, toOptionsBy} from '../../utils/options'
+import {BRAND} from '../../constants/theme'
 
 const PICK_MODE_OPTIONS = [
     {value: 'Random', label: 'Ngẫu nhiên (hệ thống bốc đề)'},
@@ -35,12 +52,13 @@ type ExamSessionFormValues = {
     gradeLevelId: number
     openLocal: Dayjs
     closeLocal: Dayjs
+    durationMinutes: number
     maxAttempts: number
     pickMode: ExamSessionPickMode
 }
 
 export default function ExamSessionEditPage() {
-    const {id} = useParams<{id: string}>()
+    const {id} = useParams<{ id: string }>()
     const navigate = useNavigate()
     const isEdit = !!id
 
@@ -53,6 +71,14 @@ export default function ExamSessionEditPage() {
     const publish = usePublishSessionMutation()
 
     const [form] = Form.useForm<ExamSessionFormValues>()
+    const watchedGradeId = Form.useWatch('gradeLevelId', form)
+    const watchedSubjectId = Form.useWatch('subjectId', form)
+    const subjectOptions = useMemo(
+        () => (subjects.data ?? [])
+            .filter(s => s.gradeLevelId === watchedGradeId)
+            .map(s => ({value: s.id, label: s.name})),
+        [subjects.data, watchedGradeId],
+    )
 
     useEffect(() => {
         if (!detail) return
@@ -63,17 +89,19 @@ export default function ExamSessionEditPage() {
             gradeLevelId: detail.gradeLevelId,
             openLocal: dayjs(detail.openAt),
             closeLocal: dayjs(detail.closeAt),
+            durationMinutes: detail.durationMinutes,
             maxAttempts: detail.maxAttempts,
             pickMode: detail.pickMode,
         })
     }, [detail, form])
 
-    const handleSave = async () => {
+    /** Trả về true khi đã lưu thành công — "Xuất bản" dựa vào đây để lưu trước rồi mới phát hành. */
+    const handleSave = async (): Promise<boolean> => {
         let v: ExamSessionFormValues
         try {
             v = await form.validateFields()
         } catch {
-            return // AntD tự hiển thị lỗi trên từng field
+            return false // AntD tự hiển thị lỗi trên từng field
         }
         const body: ExamSessionBody = {
             title: v.title.trim(),
@@ -82,110 +110,138 @@ export default function ExamSessionEditPage() {
             gradeLevelId: v.gradeLevelId,
             openAt: v.openLocal.toISOString(),
             closeAt: v.closeLocal.toISOString(),
+            durationMinutes: v.durationMinutes,
             maxAttempts: v.maxAttempts ?? 1,
             pickMode: v.pickMode,
         }
         if (new Date(body.closeAt) <= new Date(body.openAt)) {
             message.warning('Thời điểm đóng phải sau thời điểm mở.')
-            return
+            return false
         }
-        if (isEdit) {
-            await update.mutateAsync({id: id!, body})
-        } else {
-            const res = await create.mutateAsync(body)
-            if (res.status !== statusCode.Error && res.data) {
-                navigate(`${ROUTES.EXAM_SESSIONS}/${res.data}/edit`, {replace: true})
+        try {
+            if (isEdit) {
+                const res = await update.mutateAsync({id: id!, body})
+                return res.status !== statusCode.Error
             }
+            const res = await create.mutateAsync(body)
+            if (res.status === statusCode.Error || !res.data) return false
+            navigate(`${ROUTES.EXAM_SESSIONS}/${res.data}/edit`, {replace: true})
+            return true
+        } catch {
+            return false // mutation đã báo lỗi qua message
         }
+    }
+
+    /** Lưu thay đổi đang mở trên form trước, lưu hỏng thì không phát hành. */
+    const handlePublish = async (sessionId: string) => {
+        if (await handleSave()) publish.mutate(sessionId)
     }
 
     const isPublished = detail?.status === 'published'
 
     return (
         <>
-            <div className="top-bar">
-                <div className="flex items-center gap-3">
-                    <button className="text-gray-500 hover:text-gray-800" onClick={() => navigate(ROUTES.EXAM_SESSIONS)}>
-                        <ArrowLeftOutlined/>
-                    </button>
-                    <div>
-                        <p className="top-bar-title">{isEdit ? 'Sửa kỳ thi' : 'Tạo kỳ thi'}</p>
-                        <p className="top-bar-subtitle">Cấu hình, chọn đề và giao cho lớp/khoá</p>
-                    </div>
-                </div>
-                {detail && (
+            <PageHeader
+                title={isEdit ? 'Sửa kỳ thi' : 'Tạo kỳ thi'}
+                subtitle="Cấu hình, chọn đề và giao cho lớp/khoá"
+                backTo={ROUTES.EXAM_SESSIONS}
+                right={detail && (
                     <Tag color={isPublished ? 'green' : detail.status === 'closed' ? 'default' : 'gold'}>
                         {isPublished ? 'Đã phát hành' : detail.status === 'closed' ? 'Đã đóng' : 'Nháp'}
                     </Tag>
                 )}
-            </div>
+            />
 
             <div className="flex-1 overflow-auto p-6">
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 items-start">
-                {isLoading && isEdit ? (
-                    <Spin/>
-                ) : (
-                    <>
-                        {/* ── Cấu hình ── */}
-                        <div className="bg-white rounded-xl border border-[#eceef2] p-5">
-                        <Form form={form} layout="vertical"
-                            initialValues={{maxAttempts: 1, pickMode: 'Random'}}
-                            className="session-info-form">
-                            <h3 className="text-[15px] font-semibold text-[#191d27] mb-4">Thông tin kỳ thi</h3>
-                            <Form.Item label="Tiêu đề" name="title" rules={[{required: true, message: 'Nhập tiêu đề kỳ thi'}]}>
-                                <Input placeholder="VD: Kiểm tra giữa kỳ 1"/>
-                            </Form.Item>
-                            <Form.Item label="Mô tả" name="description">
-                                <Input.TextArea rows={2}/>
-                            </Form.Item>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
-                                <Form.Item label="Môn" name="subjectId" rules={[{required: true, message: 'Chọn môn'}]}>
-                                    <Select showSearch optionFilterProp="label" disabled={isPublished}
-                                        options={(subjects.data ?? []).map(s => ({value: s.id, label: s.name}))}/>
-                                </Form.Item>
-                                <Form.Item label="Cấp lớp" name="gradeLevelId" rules={[{required: true, message: 'Chọn cấp lớp'}]}>
-                                    <Select disabled={isPublished}
-                                        options={(grades.data ?? []).map(g => ({value: g.id, label: g.name}))}/>
-                                </Form.Item>
-                                <Form.Item label="Mở lúc" name="openLocal" rules={[{required: true, message: 'Chọn thời điểm mở'}]}>
-                                    <DatePicker className="w-full" showTime format="DD/MM/YYYY HH:mm"
-                                        placeholder="Chọn ngày giờ mở"/>
-                                </Form.Item>
-                                <Form.Item label="Đóng lúc" name="closeLocal" rules={[{required: true, message: 'Chọn thời điểm đóng'}]}>
-                                    <DatePicker className="w-full" showTime format="DD/MM/YYYY HH:mm"
-                                        placeholder="Chọn ngày giờ đóng"/>
-                                </Form.Item>
-                                <Form.Item label="Số lượt tối đa" name="maxAttempts">
-                                    <InputNumber className="w-full" min={1} max={100}/>
-                                </Form.Item>
-                                <Form.Item label="Cách chọn đề" name="pickMode">
-                                    <Select options={PICK_MODE_OPTIONS}/>
-                                </Form.Item>
+                    {isLoading && isEdit ? (
+                        <Spin/>
+                    ) : (
+                        <>
+                            {/* ── Cấu hình ── */}
+                            <div className="bg-white rounded-xl border border-border p-5">
+                                <Form form={form} layout="vertical"
+                                      initialValues={{durationMinutes: 45, maxAttempts: 1, pickMode: 'Random'}}
+                                      className="session-info-form"
+                                      onValuesChange={changed => {
+                                          // Đổi lớp -> bỏ môn đã chọn nếu môn đó không thuộc lớp mới.
+                                          if ('gradeLevelId' in changed) {
+                                              const currentSubjectId = form.getFieldValue('subjectId')
+                                              const subj = (subjects.data ?? []).find(s => s.id === currentSubjectId)
+                                              if (subj && subj.gradeLevelId !== changed.gradeLevelId)
+                                                  form.setFieldValue('subjectId', undefined)
+                                          }
+                                      }}>
+                                    <h3 className="text-[15px] font-semibold text-ink mb-4">Thông tin kỳ thi</h3>
+                                    <Form.Item label="Tiêu đề" name="title"
+                                               rules={[{required: true, message: 'Nhập tiêu đề kỳ thi'}]}>
+                                        <Input placeholder="VD: Kiểm tra giữa kỳ 1"/>
+                                    </Form.Item>
+                                    <Form.Item label="Mô tả" name="description">
+                                        <Input.TextArea rows={2}/>
+                                    </Form.Item>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
+                                        <Form.Item label="Cấp lớp" name="gradeLevelId"
+                                                   rules={[{required: true, message: 'Chọn cấp lớp'}]}>
+                                            <Select disabled={isPublished} options={toOptions(grades.data)}/>
+                                        </Form.Item>
+                                        <Form.Item label="Môn" name="subjectId"
+                                                   rules={[{required: true, message: 'Chọn môn'}]}>
+                                            <Select showSearch optionFilterProp="label"
+                                                    disabled={isPublished || !watchedGradeId}
+                                                    options={subjectOptions}/>
+                                        </Form.Item>
+                                        <Form.Item label="Mở lúc" name="openLocal"
+                                                   rules={[{required: true, message: 'Chọn thời điểm mở'}]}>
+                                            <DatePicker className="w-full" showTime format="DD/MM/YYYY HH:mm"
+                                                        placeholder="Chọn ngày giờ mở"/>
+                                        </Form.Item>
+                                        <Form.Item label="Đóng lúc" name="closeLocal"
+                                                   rules={[{required: true, message: 'Chọn thời điểm đóng'}]}>
+                                            <DatePicker className="w-full" showTime format="DD/MM/YYYY HH:mm"
+                                                        placeholder="Chọn ngày giờ đóng"/>
+                                        </Form.Item>
+                                        <Form.Item label="Thời gian làm bài (phút)" name="durationMinutes"
+                                                   rules={[{required: true, message: 'Nhập thời gian làm bài'}]}>
+                                            <InputNumber className="w-full" min={1} max={1440} precision={0}/>
+                                        </Form.Item>
+                                        <Form.Item label="Số lượt tối đa" name="maxAttempts">
+                                            <InputNumber className="w-full" min={1} max={100}/>
+                                        </Form.Item>
+                                        <Form.Item label="Cách chọn đề" name="pickMode">
+                                            <Select options={PICK_MODE_OPTIONS}/>
+                                        </Form.Item>
+                                    </div>
+                                    <div className="flex items-center gap-3 mt-2">
+                                        <Button type="primary" loading={create.isPending || update.isPending}
+                                                onClick={handleSave}>
+                                            {isEdit ? 'Lưu thay đổi' : 'Tạo & tiếp tục'}
+                                        </Button>
+                                        {isEdit && detail && (
+                                            <Button className="border-success text-success"
+                                                    disabled={isPublished}
+                                                    loading={publish.isPending || update.isPending}
+                                                    onClick={() => handlePublish(detail.id)}>
+                                                {isPublished ? 'Đã xuất bản' : 'Xuất bản'}
+                                            </Button>
+                                        )}
+                                    </div>
+                                </Form>
                             </div>
-                            <div className="flex items-center gap-3 mt-2">
-                                <Button type="primary" loading={create.isPending || update.isPending} onClick={handleSave}>
-                                    {isEdit ? 'Lưu thay đổi' : 'Tạo & tiếp tục'}
-                                </Button>
-                                {isEdit && detail && (
-                                    <Button className="border-[#1ea375] text-[#1ea375]"
-                                            disabled={isPublished} loading={publish.isPending}
-                                            onClick={() => publish.mutate(detail.id)}>
-                                        {isPublished ? 'Đã xuất bản' : 'Xuất bản'}
-                                    </Button>
-                                )}
-                            </div>
-                        </Form>
-                        </div>
 
-                        {isEdit && detail && (
-                            <div className="flex flex-col gap-4">
-                                <PoolSection sessionId={detail.id} exams={detail.exams}
-                                             subjectId={detail.subjectId} gradeLevelId={detail.gradeLevelId}/>
-                                <AssignmentSection sessionId={detail.id} assignments={detail.assignments}/>
-                            </div>
-                        )}
-                    </>
-                )}
+                            {isEdit && detail && (
+                                <div className="flex flex-col gap-4">
+                                    {/* Lọc đề theo môn/cấp lớp đang chọn trên form, không theo bản đã lưu. */}
+                                    <PoolSection sessionId={detail.id} exams={detail.exams}
+                                                 subjectId={watchedSubjectId ?? detail.subjectId}
+                                                 gradeLevelId={watchedGradeId ?? detail.gradeLevelId}
+                                                 unsavedFilter={(watchedSubjectId ?? detail.subjectId) !== detail.subjectId
+                                                     || (watchedGradeId ?? detail.gradeLevelId) !== detail.gradeLevelId}/>
+                                    <AssignmentSection sessionId={detail.id} assignments={detail.assignments}/>
+                                </div>
+                            )}
+                        </>
+                    )}
                 </div>
             </div>
         </>
@@ -193,8 +249,8 @@ export default function ExamSessionEditPage() {
 }
 
 // ── Pool đề ─────────────────────────────────────────────────────────────
-function PoolSection({sessionId, exams, subjectId, gradeLevelId}: {
-    sessionId: string; exams: SessionExam[]; subjectId: number; gradeLevelId: number
+function PoolSection({sessionId, exams, subjectId, gradeLevelId, unsavedFilter}: {
+    sessionId: string; exams: SessionExam[]; subjectId: number; gradeLevelId: number; unsavedFilter: boolean
 }) {
     const [modalOpen, setModalOpen] = useState(false)
     const [analyticsExamId, setAnalyticsExamId] = useState<string>()
@@ -208,8 +264,9 @@ function PoolSection({sessionId, exams, subjectId, gradeLevelId}: {
             title: 'Thao tác', key: 'actions', width: 140,
             render: (_, e) => (
                 <div className="flex items-center gap-3">
-                    <button className="text-[13px] hover:underline" style={{color: '#3a74f5'}}
-                            onClick={() => setAnalyticsExamId(e.examId)}>Phân tích</button>
+                    <button className="text-[13px] hover:underline" style={{color: BRAND.primary}}
+                            onClick={() => setAnalyticsExamId(e.examId)}>Phân tích
+                    </button>
                     <Popconfirm title="Gỡ đề khỏi kỳ thi?" okText="Gỡ" cancelText="Hủy"
                                 onConfirm={() => removeExam.mutate({id: sessionId, examId: e.examId})}>
                         <button className="btn-delete">Gỡ</button>
@@ -220,31 +277,34 @@ function PoolSection({sessionId, exams, subjectId, gradeLevelId}: {
     ]
 
     return (
-        <div className="bg-white rounded-xl border border-[#eceef2] p-5 flex flex-col gap-3">
+        <div className="bg-white rounded-xl border border-border p-5 flex flex-col gap-3">
             <div className="flex items-center justify-between">
-                <h3 className="text-[15px] font-semibold text-[#191d27]">Đề trong kỳ thi ({exams.length})</h3>
+                <h3 className="text-[15px] font-semibold text-ink">Đề trong kỳ thi ({exams.length})</h3>
                 <Button type="primary" icon={<PlusOutlined/>} onClick={() => setModalOpen(true)}>Thêm đề</Button>
             </div>
             <Table columns={columns} dataSource={exams} rowKey="examId" size="small" pagination={false}
                    scroll={{x: 700}}
                    locale={{emptyText: 'Chưa có đề nào'}}/>
             <AddExamsModal open={modalOpen} onClose={() => setModalOpen(false)} sessionId={sessionId}
-                           subjectId={subjectId} gradeLevelId={gradeLevelId}
+                           subjectId={subjectId} gradeLevelId={gradeLevelId} unsavedFilter={unsavedFilter}
                            existingIds={exams.map(e => e.examId)}/>
-            <AnalyticsDrawer examId={analyticsExamId} onClose={() => setAnalyticsExamId(undefined)}/>
+            <Suspense fallback={null}>
+                <AnalyticsDrawer examId={analyticsExamId} onClose={() => setAnalyticsExamId(undefined)}/>
+            </Suspense>
         </div>
     )
 }
 
-function AddExamsModal({open, onClose, sessionId, subjectId, gradeLevelId, existingIds}: {
+function AddExamsModal({open, onClose, sessionId, subjectId, gradeLevelId, existingIds, unsavedFilter}: {
     open: boolean; onClose: () => void; sessionId: string
-    subjectId: number; gradeLevelId: number; existingIds: string[]
+    subjectId: number; gradeLevelId: number; existingIds: string[]; unsavedFilter: boolean
 }) {
     const query: ExamPagedQuery = useMemo(
         () => ({page: 1, pageSize: 100, status: 'Published', subjectId, gradeLevelId}),
         [subjectId, gradeLevelId],
     )
-    const {data, isLoading} = useExamsQuery(query)
+    // Chỉ gọi API khi modal mở — trang chi tiết kỳ thi không cần danh sách đề cho tới lúc bấm "Thêm đề".
+    const {data, isLoading} = useExamsQuery(query, open)
     const setExams = useSetSessionExamsMutation()
     const [selected, setSelected] = useState<string[]>([])
 
@@ -263,6 +323,12 @@ function AddExamsModal({open, onClose, sessionId, subjectId, gradeLevelId, exist
     return (
         <Modal title="Thêm đề vào kỳ thi" open={open} onCancel={onClose} onOk={handleOk}
                okText="Thêm" cancelText="Hủy" confirmLoading={setExams.isPending}>
+            {/* BE chấm theo môn/cấp lớp ĐÃ LƯU, nên thêm đề trước khi lưu sẽ bị từ chối. */}
+            {unsavedFilter && (
+                <p className="text-[13px] mb-3" style={{color: BRAND.warning}}>
+                    Đang lọc theo môn/cấp lớp chưa lưu — hãy bấm "Lưu thay đổi" trước khi thêm đề.
+                </p>
+            )}
             {isLoading ? <Spin/> : available.length === 0 ? (
                 <p className="text-gray-500">Không có đề đã phát hành cùng môn/cấp lớp.</p>
             ) : (
@@ -280,7 +346,7 @@ function AddExamsModal({open, onClose, sessionId, subjectId, gradeLevelId, exist
 }
 
 // ── Giao lớp/khoá ───────────────────────────────────────────────────────
-function AssignmentSection({sessionId, assignments}: {sessionId: string; assignments: SessionAssignment[]}) {
+function AssignmentSection({sessionId, assignments}: { sessionId: string; assignments: SessionAssignment[] }) {
     const schools = useSchoolsQuery()
     const [schoolId, setSchoolId] = useState<number>()
     const [cohortId, setCohortId] = useState<number>()
@@ -321,7 +387,7 @@ function AssignmentSection({sessionId, assignments}: {sessionId: string; assignm
             title: '', key: 'actions', width: 70,
             render: (_, a) => (
                 <Popconfirm title="Gỡ giao này?" okText="Gỡ" cancelText="Hủy"
-                    onConfirm={() => removeAssignment.mutate({id: sessionId, assignmentId: a.id})}>
+                            onConfirm={() => removeAssignment.mutate({id: sessionId, assignmentId: a.id})}>
                     <button className="btn-delete">Gỡ</button>
                 </Popconfirm>
             ),
@@ -329,8 +395,8 @@ function AssignmentSection({sessionId, assignments}: {sessionId: string; assignm
     ]
 
     return (
-        <div className="bg-white rounded-xl border border-[#eceef2] p-5 flex flex-col gap-3">
-            <h3 className="text-[15px] font-semibold text-[#191d27]">Giao cho lớp/khoá ({assignments.length})</h3>
+        <div className="bg-white rounded-xl border border-border p-5 flex flex-col gap-3">
+            <h3 className="text-[15px] font-semibold text-ink">Giao cho lớp/khoá ({assignments.length})</h3>
             <div className="flex items-end gap-2 flex-wrap">
                 <div>
                     <label className="block text-xs text-gray-500 mb-1">Trường</label>
@@ -340,7 +406,7 @@ function AssignmentSection({sessionId, assignments}: {sessionId: string; assignm
                                 setCohortId(undefined)
                                 setCohortClassId(undefined)
                             }}
-                            options={(schools.data ?? []).map(s => ({value: s.id, label: s.name}))}/>
+                            options={toOptions(schools.data)}/>
                 </div>
                 <div>
                     <label className="block text-xs text-gray-500 mb-1">Khoá</label>
@@ -349,13 +415,13 @@ function AssignmentSection({sessionId, assignments}: {sessionId: string; assignm
                                 setCohortId(v)
                                 setCohortClassId(undefined)
                             }}
-                            options={(cohorts.data ?? []).map(c => ({value: c.id, label: c.name}))}/>
+                            options={toOptions(cohorts.data)}/>
                 </div>
                 <div>
                     <label className="block text-xs text-gray-500 mb-1">Lớp (tuỳ chọn)</label>
                     <Select className="w-48" placeholder="Cả khoá" allowClear value={cohortClassId} disabled={!cohortId}
                             onChange={v => setCohortClassId(v)}
-                            options={(classes.data ?? []).map(c => ({value: c.id, label: c.className}))}/>
+                            options={toOptionsBy(classes.data, c => c.id, c => c.className)}/>
                 </div>
                 <Button type="primary" loading={addAssignment.isPending} onClick={handleAdd}>Giao</Button>
             </div>

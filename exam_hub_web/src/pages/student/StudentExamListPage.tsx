@@ -6,22 +6,26 @@ import {SearchOutlined} from '@ant-design/icons'
 import {useExamsQuery} from '../../hooks/queries/useExams'
 import {useMySubmissionsQuery} from '../../hooks/queries/useSubmissions'
 import {useGradeLevelsListQuery, useSubjectsQuery} from '../../hooks/queries/useCategoryLists'
-import {useAuth} from '../../AuthProvider'
+import {useAuth} from '../../hooks/useAuth'
+import {SUBMISSION_STATUS_LABEL_STUDENT, SUBMISSION_STATUS_TAG_COLOR} from '../../constants'
+import {useDebounced} from '../../hooks/useDebounced'
+import {ROUTES} from '../../routes/paths'
 
-/** Trạng thái làm bài nhìn từ phía học sinh. */
-type StudentStatus = 'NotStarted' | 'InProgress' | 'Submitted' | 'Graded'
+/**
+ * Trạng thái làm bài nhìn từ phía học sinh = mọi SubmissionStatus + 'NotStarted' (chưa có bài nộp).
+ * Nhãn/màu lấy từ constants dùng chung (Task A4) — KHÔNG khai báo bản sao cục bộ, vì bản sao cũ
+ * thiếu 'PendingManualGrade' làm <Tag> render rỗng cho mọi bài tự luận.
+ */
+type StudentStatus = SubmissionStatus | 'NotStarted'
 
+// NotStarted đứng đầu để thứ tự option trong dropdown lọc đi theo vòng đời bài làm.
 const STUDENT_STATUS_LABEL: Record<StudentStatus, string> = {
     NotStarted: 'Chưa làm',
-    InProgress: 'Đang làm',
-    Submitted: 'Đã nộp (chờ chấm)',
-    Graded: 'Đã chấm',
+    ...SUBMISSION_STATUS_LABEL_STUDENT,
 }
 const STUDENT_STATUS_COLOR: Record<StudentStatus, string> = {
     NotStarted: 'default',
-    InProgress: 'processing',
-    Submitted: 'gold',
-    Graded: 'green',
+    ...SUBMISSION_STATUS_TAG_COLOR,
 }
 
 interface ExamRow extends Exam {
@@ -43,9 +47,10 @@ export default function StudentExamListPage() {
     const [keyword, setKeyword] = useState('')
 
     // Load đề đã phát hành (pageSize lớn — lọc/phân trang client-side để gộp trạng thái làm bài)
+    const debouncedKeyword = useDebounced(keyword)
     const examsQuery: ExamPagedQuery = useMemo(
-        () => ({page: 1, pageSize: 100, status: 'Published', gradeLevelId, subjectId, keyword}),
-        [gradeLevelId, subjectId, keyword],
+        () => ({page: 1, pageSize: 100, status: 'Published', gradeLevelId, subjectId, keyword: debouncedKeyword}),
+        [gradeLevelId, subjectId, debouncedKeyword],
     )
     const {data: examPage, isLoading: examsLoading} = useExamsQuery(examsQuery)
     const {data: submissions = [], isLoading: subsLoading} = useMySubmissionsQuery(user?.id)
@@ -108,7 +113,7 @@ export default function StudentExamListPage() {
                     )
                 }
                 return (
-                    <Button size="small" onClick={() => navigate(`/student/exam/result?submissionId=${r.submissionId}`)}>
+                    <Button size="small" onClick={() => navigate(`${ROUTES.STUDENT_EXAM_RESULT}?submissionId=${r.submissionId}`)}>
                         Xem kết quả
                     </Button>
                 )

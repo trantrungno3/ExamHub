@@ -33,7 +33,14 @@ public class SchoolMemberRepository : BaseRepository<SchoolMember, Guid>, ISchoo
             .FirstOrDefaultAsync(x => x.SchoolId == schoolId && x.UserId == userId, ct);
 
     public async Task<bool> SetActiveAsync(Guid id, bool isActive, CancellationToken ct = default)
-        => await Set
+    {
+        var now = DateTime.UtcNow;
+        var modifiedBy = Db.CurrentUserName;
+        return await Set
             .Where(x => x.Id == id)
-            .ExecuteUpdateAsync(s => s.SetProperty(x => x.IsActive, isActive), ct) > 0;
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(x => x.IsActive, isActive)
+                .SetProperty(x => x.Modified, now)
+                .SetProperty(x => x.ModifiedBy, modifiedBy), ct) > 0;
+    }
 }

@@ -1,3 +1,5 @@
+using TVT.Core;
+
 namespace ExamHub.Core.Application.Services;
 
 /// <summary>
@@ -6,9 +8,8 @@ namespace ExamHub.Core.Application.Services;
 public interface IExportService
 {
     /// <summary>Xuất đề thi ra file PDF (QuestPDF) và lưu lên MinIO. Trả về presigned URL.</summary>
-    Task<string> ExportPdfAsync(Guid examId, CancellationToken ct = default);
+    Task<RequestResponse<string>> ExportPdfAsync(Guid examId, CancellationToken ct = default);
 
     /// <summary>Xuất đề thi ra file Word (ClosedXML) và lưu lên MinIO. Trả về presigned URL.</summary>
-    Task<string> ExportDocxAsync(Guid examId, CancellationToken ct = default);
+    Task<RequestResponse<string>> ExportDocxAsync(Guid examId, CancellationToken ct = default);
 }
-

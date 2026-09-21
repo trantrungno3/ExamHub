@@ -107,6 +107,12 @@ public record ExamTemplateRequest(
         Sections.Select(s => s.ToEntity());
 }
 
+/// <summary>Bộ lọc cho danh sách mẫu đề thi</summary>
+public record ExamTemplateFilterRequest(
+    int? SubjectId = null,
+    int? GradeLevelId = null
+);
+
 /// <summary>Response DTO cho mẫu đề thi</summary>
 public record ExamTemplateResponse(
     Guid Id,

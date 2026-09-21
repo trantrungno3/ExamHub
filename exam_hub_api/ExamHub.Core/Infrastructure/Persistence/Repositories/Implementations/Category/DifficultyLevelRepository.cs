@@ -27,9 +27,16 @@ public class DifficultyLevelRepository : CategoryRepository<DifficultyLevel, int
 
     /// <inheritdoc/>
     public override async Task<bool> SetActiveAsync(int id, bool isActive, CancellationToken ct = default)
-        => await Set
+    {
+        var now = DateTime.UtcNow;
+        var modifiedBy = Db.CurrentUserName;
+        return await Set
             .Where(x => x.Id == id)
-            .ExecuteUpdateAsync(s => s.SetProperty(x => x.IsActive, isActive), ct) > 0;
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(x => x.IsActive, isActive)
+                .SetProperty(x => x.Modified, now)
+                .SetProperty(x => x.ModifiedBy, modifiedBy), ct) > 0;
+    }
 
     /// <inheritdoc/>
     public async Task<DifficultyLevel?> GetByCodeAsync(string code, CancellationToken ct = default)
